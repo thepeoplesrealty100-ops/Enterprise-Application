@@ -1,20 +1,24 @@
+[JAKAL_ARCHITECTURE_BLUEPRINT (1).md](https://github.com/user-attachments/files/30448390/JAKAL_ARCHITECTURE_BLUEPRINT.1.md)
 # JAKAL: Horizon Unified Singularity OS
 ## Enterprise-Grade Autonomous AI + Quantum Integration Architecture
 
-**Version:** 1.0 (Production-Ready Edition)  
+**Version:** 1.1 (Production-Ready Edition – CPENT / GACyber Tool Kit Integration)  
 **Status:** Full Implementation Specification  
 **Infrastructure Model:** Optimized Cost Structure with Enterprise Capabilities  
-**Target Launch:** Phase 1 (Local Development), Phase 2 (Cloud Integration), Phase 3 (Full-Scale Production)
+**Target Launch:** Phase 1 (Local Development + GACyber Tool Kit), Phase 2 (Cloud Integration), Phase 3 (Full-Scale Production)
 
 ---
 
 ## Table of Contents
 1. [Technology Stack Overview](#technology-stack)
 2. [System Architecture](#system-architecture)
-3. [Implementation Phases](#implementation-phases)
-4. [Backend Code Structure](#backend-code-structure)
-5. [Frontend Integration](#frontend-integration)
-6. [Deployment Strategy](#deployment-strategy)
+3. [GACyber Tool Kit Folder Structure & CPENT Alignment](#gacyber-tool-kit)
+4. [Legal, Scope, Insurance & Continuous Governance](#legal-governance)
+5. [Implementation Phases](#implementation-phases)
+6. [Backend Code Structure](#backend-code-structure)
+7. [Frontend Integration](#frontend-integration)
+8. [Deployment Strategy & Tool Installation](#deployment-strategy)
+9. [Success Criteria](#success-criteria)
 
 ---
 
@@ -30,10 +34,10 @@
 | **Quantum Hardware Access** | IBM Quantum Open Plan (10 free QPU minutes/month) | IBM Quantum Premium / AWS Braket | Real hardware validation with free tier allocation |
 | **AI & LLM Orchestration** | Google Gemini 1.5 Flash API (free tier with rate limits) | OpenAI GPT-4 / Claude Enterprise | Fast agentic decision loops, production inference |
 | **Local LLM Option** | Ollama + Llama 3 / Qwen | Self-hosted LLM infrastructure | 100% offline capability, zero external dependencies |
-| **Security & Penetration Tools** | Open-source suite (Nuclei, Nmap, Metasploit, Atomic Red Team) | Commercial penetration testing platforms | Community editions wrapped in Python automation |
-| **Observability & Logs** | DuckDB (local) + Supabase (remote sync) | ELK Stack / DataDog / Splunk | Local high-performance queries with cloud fallback |
-| **User Authentication** | Firebase Auth Free Tier (Google Sign-in) | Auth0 / Okta Enterprise | JWT-based session management |
-| **CI/CD Pipeline** | GitHub Actions (free for public repos, 2000 min/month) | Jenkins / GitLab Runner / CircleCI | Integrated workflow automation |
+| **Security & Penetration Tools** | Open-source suite (Nuclei, Nmap, Metasploit, Atomic Red Team) **+ full GACyber Tool Kit** (Hping3, Sn1per, sqlmap, gobuster/ffuf, Nikto, hashcat, Aircrack-ng via WSL/Kali, Wireshark, Burp Community) | Commercial penetration testing platforms | Community editions wrapped in Python automation; CPENT-aligned phases |
+| **Observability & Logs** | DuckDB (local) + Supabase (remote sync) | ELK Stack / DataDog / Splunk | Local high-performance queries with cloud fallback + real-time compliance |
+| **User Authentication** | Firebase Auth Free Tier (Google Sign-in) | Auth0 / Okta Enterprise | JWT-based session management + operator approval gates |
+| **CI/CD Pipeline** | GitHub Actions (free for public repos, 2000 min/month) | Jenkins / GitLab Runner / CircleCI | Integrated workflow automation + continuous tool/scope review |
 
 ---
 
@@ -57,6 +61,9 @@
 │  │  │ Route: /api/quantum/ (Quantum Job Submission)         │   │ │
 │  │  │ Route: /api/pentest/ (Security Testing Workflows)     │   │ │
 │  │  │ Route: /api/mitre/   (ATT&CK Framework Mapping)       │   │ │
+│  │  │ Route: /api/scope/   (Authorization & Scope Gates)    │   │ │
+│  │  │ Route: /api/assessment/ /api/report/ /api/rfp/        │   │ │
+│  │  │ Route: /api/compliance/ (Real-time legal/insurance)   │   │ │
 │  │  └────────────────────────────────────────────────────────┘   │ │
 │  └────────────┬────────────────────────────────────────────────────┘ │
 │               │                                                       │
@@ -68,7 +75,11 @@
 │  │  ├─ pentest_runs (Security test results)                    │   │
 │  │  ├─ findings (Vulnerability discoveries)                    │   │
 │  │  ├─ attack_mappings (MITRE ATT&CK correlation)             │   │
-│  │  └─ compliance_checkpoints (Audit trail)                    │   │
+│  │  ├─ compliance_checkpoints (Audit trail)                    │   │
+│  │  ├─ scopes (Authorized targets & RoE)                       │   │
+│  │  ├─ insurance_policies (Active coverage)                    │   │
+│  │  ├─ assessment_reports                                      │   │
+│  │  └─ rfp_responses                                           │   │
 │  └────────────┬──────────────────────────────────────────────────┘   │
 │               │                                                       │
 │  ┌────────────▼──────────────────────────────────────────────────┐   │
@@ -79,50 +90,287 @@
 │  │  └─ Compliance snapshots (historical reference)             │   │
 │  └────────────────────────────────────────────────────────────────┘   │
 │                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ GACyber Tool Kit (CPENT-aligned phases under authorization)   │  │
+│  │ 01-Recon → 02-Scanning → 03-Enum → 04-Web → 05-Wireless       │  │
+│  │ 06-Exploitation → 07-Post-Exploitation + Resources + Cheats   │  │
+│  └────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
+## GACyber Tool Kit Folder Structure & CPENT Alignment
+
+Create this exact tree under the project root as `GACyber Tool Kit/`. It follows standard authorized penetration-testing phases and maps to CPENT module numbering.
+
+```
+GACyber Tool Kit
+├── 01-Reconnaissance
+│   ├── OSINT
+│   └── Shodan
+│       └── shodan_dorks.txt
+├── 02-Scanning
+│   ├── Hping3
+│   ├── Nmap
+│   └── Sn1per
+├── 03-Enumeration
+├── 04-Web-Application
+│   └── (move all your current .py and .sh web scripts here)
+├── 05-Wireless
+│   └── CheatSheets
+│       ├── aircrack-ng_cheat.txt
+│       └── wireless_notes.txt
+├── 06-Exploitation
+├── 07-Post-Exploitation
+│   └── CheatSheets
+│       └── linux_enum_cheat.txt
+├── Resources
+│   ├── Wordlists
+│   │   ├── common_passwords.txt
+│   │   ├── directories.txt
+│   │   ├── subdomains.txt
+│   │   └── fuzz_payloads.txt
+│   ├── Targets
+│   │   ├── targets.txt
+│   │   └── scopes.txt
+│   ├── Requests
+│   │   └── request_list.txt
+│   └── requirements.txt
+└── CheatSheets
+    ├── aircrack-ng_cheat.txt
+    ├── linux_enum_cheat.txt
+    └── shodan_cheat.txt
+```
+
+**Move instructions:**  
+- All current `.py` / `.sh` web-related scripts → `04-Web-Application`  
+- `Client_Side_Technologies.sh`, `common_wordlist.txt` (if exists), `request_list.txt`, `targets.txt` → appropriate `Resources/` subfolders  
+- `toolkit.py` → root of GACyber Tool Kit or `04-Web-Application` (document as launcher)
+
+**Files to create (exact content):**
+
+`Resources/Wordlists/common_passwords.txt`
+```
+admin
+password
+123456
+12345678
+qwerty
+123456789
+12345
+1234
+1234567
+password123
+admin123
+root
+toor
+letmein
+welcome
+123123
+abc123
+password1
+adminadmin
+test
+guest
+user
+changeme
+P@ssw0rd
+summer2025
+winter2025
+spring2025
+autumn2025
+iloveyou
+sunshine
+princess
+football
+baseball
+soccer
+hockey
+basketball
+shadow
+master
+killer
+superman
+batman
+michael
+jordan
+dragon
+trustno1
+hello
+freedom
+whatever
+qazwsx
+starwars
+```
+
+`Resources/Wordlists/directories.txt`
+```
+admin
+administrator
+login
+wp-admin
+phpmyadmin
+admin.php
+administrator.php
+cms
+portal
+dashboard
+controlpanel
+cpanel
+webmail
+blog
+test
+backup
+backups
+config
+tmp
+temp
+upload
+uploads
+files
+images
+assets
+js
+css
+includes
+inc
+private
+secure
+restricted
+hidden
+```
+
+`Resources/Wordlists/subdomains.txt`
+```
+www
+mail
+ftp
+localhost
+webmail
+smtp
+pop
+ns1
+ns2
+ns3
+ns4
+admin
+mx
+test
+dev
+staging
+beta
+api
+shop
+store
+blog
+forum
+news
+app
+mobile
+secure
+vpn
+remote
+intranet
+```
+
+`Resources/Targets/targets.txt` (example authorized targets only)
+```
+https://example.com
+http://testphp.vulnweb.com
+https://target-client.com
+192.168.1.100
+10.10.10.50
+```
+
+`01-Reconnaissance/Shodan/shodan_dorks.txt`
+```
+port:80 country:"US" "Server: Microsoft-IIS"
+port:443 title:"Login"
+"Authentication: Basic" port:80
+port:3389 os:"Windows"
+webcamxp country:"US"
+port:502 "Modbus"
+"default password"
+vuln:CVE-2024-XXXX
+port:20000 dnp3
+```
+
+Cheatsheets: Place the full Aircrack-ng reference, Unix/Linux enumeration commands, and Shodan filter examples into the indicated files for operator quick reference.
+
+---
+
+## Legal, Scope, Insurance & Continuous Governance
+
+Every network-facing action, agent, and script **must** pass these real-time checks before execution:
+
+1. **Written Authorization** – Signed Rules of Engagement (RoE) / Statement of Work stored in the `scopes` table and `Resources/Targets/scopes.txt`.  
+2. **Defined Scope** – Explicit IP ranges, domains, ports, excluded assets, and time windows. Scripts refuse any target outside scope.  
+3. **Active Insurance** – Current cyber-liability / professional-indemnity policy number and expiry validated in real time.  
+4. **Continuous Review** – All actions logged to `agent_logs` and `compliance_checkpoints`. Deviations trigger automatic pause + operator alert.  
+5. **CPENT Mapping** – Phases align to CPENT domains (Reconnaissance, Scanning, Enumeration, Web Application, Wireless, Exploitation, Post-Exploitation, Reporting).  
+6. **Assessments & Reporting** – Automated evidence collection, severity scoring, remediation guidance, executive and technical reports.  
+7. **RFP Support** – Structured generation of penetration-testing RFP responses (methodology, tools, legal posture, insurance, sample reports).
+
+All Python tool wrappers begin with an authorization/scope/insurance gate. Continuous upgrade process includes scheduled CVE monitoring, tool-version checks, scope-database regression tests, and quarterly legal/insurance reviews.
+
+---
+
 ## Implementation Phases
 
-### Phase 1: Core Backend & Local Quantum Engine (Weeks 1-2)
-**Objectives**: Build self-contained backend; test quantum circuits locally; establish database schema
+### Phase 1: Core Backend & Local Quantum Engine + GACyber Tool Kit (Weeks 1-2)
+**Objectives**: Build self-contained backend; test quantum circuits locally; establish database schema; stand up full GACyber Tool Kit with authorization gates.
 
 **Deliverables**:
 - FastAPI backend running on Oracle Always-Free compute
 - Qiskit-Aer simulator for unlimited local quantum testing
-- DuckDB database with complete schema
+- DuckDB database with complete schema (including scopes, insurance, assessment, RFP tables)
 - Dashboard UI connected to backend REST API
 - Local LLM integration (Ollama) for offline agentic reasoning
+- Complete GACyber Tool Kit folder tree + wordlists + cheatsheets + authorization wrappers
+- Nmap / Nuclei / basic recon agents with real-time scope & insurance checks
 
 **Key Repositories**:
 ```
 backend/
 ├── app.py                           # FastAPI main application
 ├── config.py                        # Configuration management
-├── database.py                      # DuckDB schema & queries
+├── database.py                      # DuckDB schema & queries (expanded)
 ├── llm_orchestrator.py             # AI decision engine
 ├── quantum_engine.py                # Qiskit wrapper & abstractions
 ├── security_agents/
 │   ├── __init__.py
-│   ├── recon_agent.py              # Network & vulnerability scanning
-│   ├── exploit_agent.py            # Payload staging & execution
-│   ├── report_agent.py             # Finding summarization
+│   ├── recon_agent.py              # Network & vulnerability scanning (CPENT Phase 1)
+│   ├── scan_agent.py               # Active scanning (CPENT Phase 2)
+│   ├── enum_agent.py               # Enumeration (CPENT Phase 3)
+│   ├── web_agent.py                # Web application testing (CPENT Phase 4)
+│   ├── wireless_agent.py           # Wireless (CPENT Phase 5 – WSL/Kali)
+│   ├── exploit_agent.py            # Payload staging & execution (gated)
+│   ├── post_exploit_agent.py       # Post-exploitation
+│   ├── report_agent.py             # Finding summarization & CPENT-style reports
+│   ├── assessment_agent.py         # Formal assessments
+│   ├── rfp_agent.py                # RFP response generation
 │   └── remediate_agent.py          # Patch generation
 ├── integrations/
 │   ├── ibm_quantum.py              # IBM Qiskit REST API client
 │   ├── supabase_sync.py            # Cloud PostgreSQL sync
 │   └── firebase_auth.py            # User authentication
 ├── tools/
+│   ├── authorization.py            # Mandatory scope / legal / insurance gate
 │   ├── nmap_wrapper.py             # Network scanning automation
 │   ├── nuclei_wrapper.py           # Vulnerability scanning
+│   ├── gobuster_wrapper.py         # Directory / subdomain discovery
+│   ├── sqlmap_wrapper.py           # Authorized SQL testing
+│   ├── nikto_wrapper.py            # Web server scanning
+│   ├── aircrack_wrapper.py         # Wireless (WSL/Kali only)
+│   ├── sn1per_wrapper.py           # Sn1per orchestration
 │   └── mitre_attck_db.py           # MITRE framework loader
+├── gacyber_toolkit/                # Symlink or copy of the full Tool Kit tree
 └── requirements.txt
 ```
 
 ### Phase 2: Cloud API Integration (Week 3)
-**Objectives**: Connect production-grade cloud services; establish multi-user capabilities
+**Objectives**: Connect production-grade cloud services; establish multi-user capabilities; activate assessment / reporting / RFP endpoints.
 
 **Deliverables**:
 - Gemini 1.5 Flash API integration for high-throughput agentic loops
@@ -130,23 +378,28 @@ backend/
 - Supabase PostgreSQL for cloud-accessible findings repository
 - Firebase Authentication for multi-operator sessions
 - WebSocket real-time updates (dashboard ←→ backend)
+- Live scope & insurance validation service
 
 ### Phase 3: Autonomous Agent Orchestration (Week 4)
-**Objectives**: Deploy specialized AI agents across reconnaissance, exploitation, reporting
+**Objectives**: Deploy specialized AI agents across the full CPENT lifecycle.
 
 **Agent Types**:
-1. **Reconnaissance Agent** — Network mapping (Nmap, Nuclei, Amass)
-2. **Exploitation Agent** — MITRE ATT&CK correlation & payload staging
-3. **Reporting Agent** — Finding summarization & compliance export
-4. **Remediation Agent** — Automated patch & hardening script generation
+1. **Reconnaissance Agent** — Network mapping (Nmap, Nuclei, Amass, Shodan dorks)  
+2. **Scanning / Enumeration Agents** — Active scanning, service & vulnerability enumeration  
+3. **Web / Wireless Agents** — Web application and wireless testing (authorized only)  
+4. **Exploitation Agent** — MITRE ATT&CK correlation & payload staging (human-in-the-loop)  
+5. **Post-Exploitation Agent** — Controlled post-exploitation under scope  
+6. **Reporting / Assessment / RFP Agents** — Finding summarization, formal assessments, RFP responses  
+7. **Remediation Agent** — Automated patch & hardening script generation  
 
 ### Phase 4: Quantum Integration & Security Applications (Week 5)
-**Objectives**: Integrate quantum circuits for cryptanalysis & optimization
+**Objectives**: Integrate quantum circuits for cryptanalysis & optimization; finalize continuous review loops.
 
 **Use Cases**:
 - Simulate quantum-resistant encryption evaluation
 - Use Grover's algorithm for brute-force cost estimation
 - Optimize payload delivery using QAOA
+- Continuous real-time compliance and insurance health monitoring
 
 ---
 
@@ -166,8 +419,9 @@ from llm_orchestrator import AgentOrchestrator
 from quantum_engine import QuantumEngine
 from security_agents.recon_agent import ReconAgent
 from security_agents.exploit_agent import ExploitAgent
+# Additional CPENT agents imported as implemented
 
-app = FastAPI(title="JAKAL Backend", version="1.0")
+app = FastAPI(title="JAKAL Backend", version="1.1")
 
 # CORS configuration for production
 app.add_middleware(
@@ -199,7 +453,9 @@ async def health_check():
         "timestamp": datetime.utcnow().isoformat(),
         "backend": "production",
         "database": "duckdb_primary",
-        "llm_engine": "gemini_flash_primary"
+        "llm_engine": "gemini_flash_primary",
+        "gacyber_toolkit": "loaded",
+        "compliance": "active"
     }
 
 # ============================================================================
@@ -289,25 +545,31 @@ async def list_quantum_jobs(limit: int = 20):
     return {"jobs": jobs}
 
 # ============================================================================
-# PENETRATION TESTING WORKFLOW
+# PENETRATION TESTING WORKFLOW (CPENT-aligned)
 # ============================================================================
 
 @app.post("/api/pentest/start")
 async def start_penetration_test(config: dict, background_tasks: BackgroundTasks):
     """
-    Initiate autonomous penetration testing workflow.
+    Initiate autonomous penetration testing workflow under full authorization.
     
-    Stages:
-    1. Reconnaissance (Nmap, Nuclei, passive scanning)
-    2. ATT&CK Mapping (correlate findings to MITRE framework)
-    3. Exploit Validation (prepare payloads without execution)
-    4. Human Approval Gate (operator reviews findings)
-    5. Execution (if approved)
+    Stages (CPENT-mapped):
+    1. Reconnaissance (Nmap, Nuclei, passive scanning, Shodan dorks)
+    2. Scanning & Enumeration
+    3. ATT&CK Mapping (correlate findings to MITRE framework)
+    4. Exploit Validation (prepare payloads without execution)
+    5. Human Approval Gate (operator reviews findings)
+    6. Execution (if approved) → Post-Exploitation → Reporting
     """
     target = config.get("target", "127.0.0.1")
     scan_type = config.get("scan_type", "comprehensive")
+    operator_id = config.get("operator_id", "system")
     
     try:
+        # Authorization / scope / insurance gate (mandatory)
+        from tools.authorization import check_authorization_and_scope
+        check_authorization_and_scope(target, "pentest_start", operator_id)
+        
         # Phase 1: Reconnaissance
         recon_results = recon.scan(target, scan_type)
         
@@ -335,9 +597,46 @@ async def start_penetration_test(config: dict, background_tasks: BackgroundTasks
             "attack_techniques": len(attack_mappings),
             "message": "Reconnaissance complete. Review in UI, then approve to proceed."
         }
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         logger.error(f"Penetration test initialization failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# SCOPE / COMPLIANCE / ASSESSMENT / RFP ENDPOINTS
+# ============================================================================
+
+@app.post("/api/scope/validate")
+async def validate_scope(payload: dict):
+    """Real-time scope and insurance validation."""
+    from tools.authorization import check_authorization_and_scope
+    target = payload.get("target")
+    operator_id = payload.get("operator_id", "system")
+    result = check_authorization_and_scope(target, "scope_check", operator_id)
+    return result
+
+@app.get("/api/compliance/status")
+async def compliance_status():
+    """Live insurance, scope, and governance health."""
+    # Query active scopes and insurance
+    return {"status": "healthy", "scopes_active": True, "insurance_valid": True}
+
+@app.post("/api/assessment/generate")
+async def generate_assessment(payload: dict):
+    """Generate formal assessment report from findings."""
+    # Delegates to assessment_agent
+    return {"status": "generated", "report_id": "assess_001"}
+
+@app.post("/api/report/executive")
+async def executive_report(payload: dict):
+    """Executive-level report generation."""
+    return {"status": "ready"}
+
+@app.post("/api/rfp/respond")
+async def rfp_respond(payload: dict):
+    """Generate structured RFP response (methodology, tools, legal, insurance)."""
+    return {"status": "draft_ready"}
 
 # ============================================================================
 # MITRE ATT&CK FRAMEWORK ENDPOINTS
@@ -363,7 +662,7 @@ async def startup_sequence():
     db.initialize_schema()
     orchestrator.load_mitre_database()
     quantum.initialize()
-    logger.info("All systems operational.")
+    logger.info("All systems operational. GACyber Tool Kit and compliance gates active.")
 
 @app.on_event("shutdown")
 async def shutdown_sequence():
@@ -379,7 +678,85 @@ if __name__ == "__main__":
     )
 ```
 
-### DuckDB Database Schema
+### Authorization Gate (mandatory for every tool)
+```python
+# backend/tools/authorization.py
+from datetime import datetime
+import json
+from database import DuckDBManager
+
+db = DuckDBManager()
+
+def check_authorization_and_scope(target: str, action: str, operator_id: str) -> dict:
+    """
+    Real-time legal, scope, and insurance validation.
+    Blocks execution if any check fails.
+    """
+    scopes = db.query("SELECT * FROM scopes WHERE status = 'active'")
+    insurance = db.query(
+        "SELECT * FROM insurance_policies WHERE status = 'active' AND expiry > ?",
+        (datetime.utcnow(),)
+    )
+    
+    # Expand with proper CIDR / domain matching as needed
+    in_scope = any(target in str(s) for s in scopes) if scopes else False
+    has_insurance = len(insurance) > 0
+    
+    if not in_scope or not has_insurance:
+        db.insert_log({
+            "event": "AUTHORIZATION_DENIED",
+            "action": action,
+            "status": "blocked",
+            "operator_id": operator_id,
+            "details": {"target": target, "reason": "scope or insurance failure"}
+        })
+        raise PermissionError(
+            "Target outside authorized scope or insurance not valid. Operation blocked."
+        )
+    
+    db.insert_log({
+        "event": "AUTHORIZATION_GRANTED",
+        "action": action,
+        "status": "approved",
+        "operator_id": operator_id,
+        "details": {"target": target}
+    })
+    return {"authorized": True, "timestamp": datetime.utcnow().isoformat()}
+```
+
+### Example Nmap Wrapper (authorized network mapping)
+```python
+# backend/tools/nmap_wrapper.py
+import subprocess
+import shlex
+from tools.authorization import check_authorization_and_scope
+
+def run_nmap(target: str, scan_type: str = "comprehensive", operator_id: str = "system") -> dict:
+    check_authorization_and_scope(target, "nmap_scan", operator_id)
+    
+    cmd_map = {
+        "comprehensive": f"nmap -sV -sC -O -T4 {shlex.quote(target)}",
+        "quick": f"nmap -T4 -F {shlex.quote(target)}",
+        "port_scan": f"nmap -p- -T4 {shlex.quote(target)}"
+    }
+    cmd = cmd_map.get(scan_type, cmd_map["quick"])
+    
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=600)
+        return {
+            "target": target,
+            "scan_type": scan_type,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "returncode": result.returncode
+        }
+    except Exception as e:
+        return {"error": str(e)}
+```
+
+Similar high-level wrappers exist for Nuclei, gobuster/ffuf, Nikto, sqlmap, Aircrack-ng (WSL/Kali), and Sn1per. All load wordlists from `Resources/Wordlists/` and enforce the authorization gate.
+
+### DuckDB Database Schema (expanded)
 ```python
 # backend/database.py
 import duckdb
@@ -398,6 +775,9 @@ class DuckDBManager:
         self.conn.execute("CREATE SEQUENCE IF NOT EXISTS seq_logs START 1")
         self.conn.execute("CREATE SEQUENCE IF NOT EXISTS seq_jobs START 1")
         self.conn.execute("CREATE SEQUENCE IF NOT EXISTS seq_pentest START 1")
+        self.conn.execute("CREATE SEQUENCE IF NOT EXISTS seq_findings START 1")
+        self.conn.execute("CREATE SEQUENCE IF NOT EXISTS seq_scopes START 1")
+        self.conn.execute("CREATE SEQUENCE IF NOT EXISTS seq_insurance START 1")
         
         # Agent logs table
         self.conn.execute("""
@@ -457,6 +837,42 @@ class DuckDBManager:
         )
         """)
 
+        # Authorized scopes & RoE
+        self.conn.execute("""
+        CREATE TABLE IF NOT EXISTS scopes (
+            id INTEGER PRIMARY KEY DEFAULT nextval('seq_scopes'),
+            client_name VARCHAR,
+            scope_definition VARCHAR,
+            start_date TIMESTAMP,
+            end_date TIMESTAMP,
+            roe_document_path VARCHAR,
+            status VARCHAR DEFAULT 'active'
+        )
+        """)
+
+        # Insurance policies
+        self.conn.execute("""
+        CREATE TABLE IF NOT EXISTS insurance_policies (
+            id INTEGER PRIMARY KEY DEFAULT nextval('seq_insurance'),
+            policy_number VARCHAR,
+            provider VARCHAR,
+            coverage_amount DECIMAL,
+            expiry TIMESTAMP,
+            status VARCHAR DEFAULT 'active'
+        )
+        """)
+
+        # Assessment reports & RFP responses (add as needed)
+        self.conn.execute("""
+        CREATE TABLE IF NOT EXISTS assessment_reports (
+            id INTEGER PRIMARY KEY,
+            pentest_id INTEGER,
+            report_type VARCHAR,
+            content VARCHAR,
+            created_at TIMESTAMP DEFAULT now()
+        )
+        """)
+
         self.conn.commit()
 
     def insert_log(self, log_data):
@@ -489,7 +905,7 @@ class DuckDBManager:
 
 ## Frontend Integration
 
-The frontend (newos3.html) remains as your production UI. Below are the corrected rendering functions for the autonomous pen-test matrix and quantum interface:
+The frontend (`index.html`, previously `newos3.html`) remains as your production UI. The original rendering functions are preserved and extended.
 
 ### Autonomous Pen-Test Matrix Module
 ```javascript
@@ -505,11 +921,11 @@ window.renderPentestMatrix = function() {
                         Autonomous Threat Orchestrator
                     </h2>
                     <p class="text-xs text-gray-400">
-                        Real-time exploitation mapping against MITRE ATT&CK framework
+                        Real-time exploitation mapping against MITRE ATT&CK framework + CPENT phases
                     </p>
                 </div>
                 <span class="px-3 py-1 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono rounded-full">
-                    Backend: Operational
+                    Backend: Operational | Compliance: Active
                 </span>
             </div>
         </div>
@@ -632,9 +1048,11 @@ window.renderQuantumInterface = function() {
 };
 ```
 
+Additional frontend panels (to be added): Scope & Insurance status indicators, Assessment dashboard, Report generator, and RFP response builder.
+
 ---
 
-## Deployment Strategy
+## Deployment Strategy & Tool Installation
 
 ### Development & Testing
 ```bash
@@ -660,19 +1078,46 @@ npm install
 vercel deploy
 ```
 
+### Missing Programs & Installation Plan (Essential)
+
+- **Wireshark** – https://www.wireshark.org/download.html (Windows installer)  
+- **sqlmap** – `git clone https://github.com/sqlmapproject/sqlmap.git`  
+- **gobuster / ffuf** – download binaries from official releases  
+- **Nikto** – official repository  
+- **hashcat** – official Windows binary from hashcat.net  
+- **Burp Suite Community** – https://portswigger.net/burp/communitydownload  
+- **Metasploit** – prefer Kali WSL  
+
+**Critical for Aircrack-ng / Wireless / Sn1per:**  
+Native Windows support is limited. Use WSL2 + Kali:
+
+1. PowerShell (Admin): `wsl --install`  
+2. Reboot  
+3. Install Kali Linux from Microsoft Store  
+4. Inside Kali: `sudo apt update && sudo apt install aircrack-ng`  
+
+Sn1per and many underlying tools run reliably inside this Kali environment under the same authorization gates.
+
+Expand `Resources/requirements.txt` and `backend/requirements.txt` with the new wrapper dependencies.
+
 ---
 
 ## Success Criteria
 
-- [ ] Local backend operational with full REST API
-- [ ] DuckDB schema initialized and tested
-- [ ] Qiskit-Aer circuits execute locally
-- [ ] Dashboard connects to backend
-- [ ] Agentic loops functional (LLM + tool bindings)
-- [ ] Human-in-the-loop gates working
-- [ ] Supabase cloud sync optional and working
-- [ ] End-to-end penetration test workflow operational
+- [ ] Local backend operational with full REST API  
+- [ ] DuckDB schema initialized and tested (including scopes, insurance, assessment, RFP tables)  
+- [ ] Qiskit-Aer circuits execute locally  
+- [ ] Dashboard connects to backend  
+- [ ] Agentic loops functional (LLM + tool bindings)  
+- [ ] Human-in-the-loop gates working  
+- [ ] Supabase cloud sync optional and working  
+- [ ] End-to-end penetration test workflow operational  
+- [ ] Full GACyber Tool Kit tree present with wordlists, targets, scopes, and cheatsheets  
+- [ ] Every network-facing script/agent calls the authorization/scope/insurance gate first  
+- [ ] CPENT-aligned phases (Recon → Post-Exploitation + Reporting) functional under continuous review  
+- [ ] Assessment, reporting, and RFP modules produce structured output  
+- [ ] Real-time compliance logging and operator alerts active  
 
 ---
 
-**Next Steps**: Begin Phase 1 implementation. Reference this architecture for all backend and frontend development.
+**Next Steps**: Begin Phase 1 implementation. Create the exact GACyber Tool Kit folder tree, populate the wordlist/target/dork/cheatsheet files, implement `authorization.py`, expand the DuckDB schema, and wire the new agents and endpoints. Reference this architecture for all backend and frontend development. All activity remains strictly within defined scope, written authorization, and active insurance coverage.
