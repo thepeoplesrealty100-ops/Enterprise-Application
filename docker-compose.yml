@@ -1,0 +1,199 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # JAKAL Backend - Core API with Enhanced EDR Testing & Fleet Management
+  # ============================================================================
+  jakal-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PYTHON_VERSION: "3.10"
+    image: jakal:2.0-enterprise
+    container_name: jakal-backend
+    restart: unless-stopped
+    
+    ports:
+      - "8000:8000"
+    
+    volumes:
+      # Persistent data storage
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+      
+      # Source code mounting for development
+      - ./backend:/app/backend
+      - ./dashboard.html:/app/dashboard.html
+    
+    environment:
+      # Core Settings
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      
+      # API Configuration
+      - API_PORT=8000
+      - API_HOST=0.0.0.0
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000,http://localhost
+      
+      # Database
+      - DATABASE_URL=/app/data/jakal.duckdb
+      
+      # LLM & Quantum (Optional - leave blank if not set)
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - IBM_QUANTUM_TOKEN=${IBM_QUANTUM_TOKEN:-}
+      - SHODAN_API_KEY=${SHODAN_API_KEY:-}
+      
+      # Feature Flags
+      - ENABLE_QUANTUM_SIMULATION=true
+      - ENABLE_COMPLIANCE_CHECKS=true
+      - ENABLE_TELEMETRY_INJECTION=true
+      - ENABLE_CORRELATION_TRACKING=true
+      
+      # EDR Testing Configuration
+      - EDR_TEST_TIMEOUT=30
+      - CORRELATION_ID_PREFIX=jkl-exec-uuid
+    
+    env_file:
+      - .env
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    networks:
+      - jakal-network
+    
+    # Resource limits for production stability
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 512M
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        labels: "jakal=backend"
+    
+    depends_on:
+      - jakal-db-init
+
+  # ============================================================================
+  # Database Initialization Service (One-time setup)
+  # ============================================================================
+  jakal-db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: jakal:2.0-enterprise
+    container_name: jakal-db-init
+    command: python /app/backend/db_init.py
+    
+    volumes:
+      - ./data:/app/data
+      - ./backend:/app/backend
+    
+    environment:
+      - DATABASE_URL=/app/data/jakal.duckdb
+      - LOG_LEVEL=DEBUG
+    
+    networks:
+      - jakal-network
+    
+    # Only runs once, then exits successfully
+    restart: "no"
+
+  # ============================================================================
+  # Frontend Dashboard Service (Optional - for serving static assets)
+  # ============================================================================
+  jakal-dashboard:
+    image: nginx:latest
+    container_name: jakal-dashboard
+    restart: unless-stopped
+    
+    ports:
+      - "3000:80"
+    
+    volumes:
+      # Serve dashboard.html
+      - ./dashboard.html:/usr/share/nginx/html/dashboard.html
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/dashboard.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+    networks:
+      - jakal-network
+    
+    depends_on:
+      - jakal-backend
+
+  # ============================================================================
+  # Monitoring & Logging Stack (Prometheus + Optional)
+  # ============================================================================
+  jakal-prometheus:
+    image: prom/prometheus:latest
+    container_name: jakal-prometheus
+    restart: unless-stopped
+    
+    ports:
+      - "9090:9090"
+    
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus_data:/prometheus
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    
+    networks:
+      - jakal-network
+    
+    depends_on:
+      - jakal-backend
+    
+    profiles: ["monitoring"]  # Only run if monitoring profile is active
+
+  # ============================================================================
+  # Network Definition
+  # ============================================================================
+networks:
+  jakal-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+# ============================================================================
+# Named Volumes for Persistence
+# ============================================================================
+volumes:
+  jakal-data:
+    driver: local
+  jakal-logs:
+    driver: local
+  jakal-backups:
+    driver: local
+  prometheus_data:
+    driver: local
