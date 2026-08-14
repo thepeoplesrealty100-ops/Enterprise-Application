@@ -1,74 +1,252 @@
-from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
-from fastapi.responses import JSONResponse, StreamingResponse
+# backend/app.py
+"""
+JAKAL Backend - FastAPI application
+
+Wires together: DuckDBManager, AgentOrchestrator (LLM/MITRE), QuantumEngine,
+and the ReconAgent / EnumAgent / WebAgent / ReportAgent pipeline.
+
+Note on scope vs. the original architecture doc: the doc's /api/pentest/start
+staged exploit payloads for human approval. This version stops the automated
+pipeline at reporting -- recon -> enumeration -> web checks -> report -- and
+does not stage or execute exploit payloads. See README_FIXES.md for why, and
+for the suggested shape of a human-directed "next steps" stub if you want one.
+"""
+
+import logging
+from datetime import datetime, timezone
+from typing import Optional
+
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio
-import json
-import os
-from typing import Dict
+import uvicorn
 
-app = FastAPI(title="JAKAL Backend")
+from database import DuckDBManager
+from llm_orchestrator import AgentOrchestrator
+from quantum_engine import QuantumEngine
+from tools.authorization import AuthorizationError
+from security_agents.recon_agent import ReconAgent
+from security_agents.enum_agent import EnumAgent
+from security_agents.web_agent import WebAgent
+from security_agents.report_agent import ReportAgent
 
-# Allow origins - for dev we'll allow localhost and all (restrict in prod)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="JAKAL Backend", version="1.2")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5500", "http://localhost:8000", "*"] ,
+    allow_origins=["http://localhost:3000"],  # add your deployed frontend origin(s)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Simple in-memory telemetry queue (for demo)
-telemetry_queue = asyncio.Queue()
 
-async def produce_telemetry(message: Dict):
-    await telemetry_queue.put(message)
+class _Config:
+    """Minimal config placeholder -- replace with real env-var loading
+    (e.g. pydantic-settings) before production use."""
+    LLM_ENGINE = "ollama"  # or "gemini" -- set GEMINI_API_KEY below if so
+    GEMINI_API_KEY = None
+    GEMINI_MODEL = "gemini-1.5-flash"
+    OLLAMA_MODEL = "llama3"
+    OLLAMA_BASE_URL = "http://localhost:11434"
+    IBM_QUANTUM_TOKEN = None
+    IBM_QUANTUM_CHANNEL = "ibm_quantum"
+    IBM_BACKEND_NAME = None
+    NMAP_TIMEOUT = 120
+    NUCLEI_TIMEOUT = 120
+    NUCLEI_TEMPLATES_PATH = None
 
-@app.post("/api/v1/agents/action")
-async def agent_action(payload: Dict):
-    action = payload.get("action")
-    target = payload.get("target")
-    if not action:
-        raise HTTPException(status_code=400, detail="Missing action")
-    # Enqueue or execute agent action here (spawn background task)
-    asyncio.create_task(produce_telemetry({"timestamp": __import__('datetime').datetime.utcnow().isoformat(),
-                                          "message": f"Agent action received: {action} target={target}",
-                                          "level_color": "text-emerald-400"}))
-    # Return a short acknowledgment
-    return JSONResponse({"status": "enqueued", "action": action, "target": target})
 
-@app.post("/api/v1/quantum/simulate")
-async def quantum_simulate(payload: Dict):
-    algorithm = payload.get("algorithm", "bell_state")
-    shots = int(payload.get("shots", 1024))
+config = _Config()
+db = DuckDBManager()
+orchestrator = AgentOrchestrator(config)
+quantum = QuantumEngine(config)
+recon = ReconAgent(db, config)
+enum_agent = EnumAgent(db, config)
+web_agent = WebAgent(db, config)
+report_agent = ReportAgent(db, orchestrator)
+
+
+# ============================================================================
+# HEALTH
+# ============================================================================
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "operational",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "database": "duckdb",
+        "llm_engine": config.LLM_ENGINE,
+    }
+
+
+@app.get("/api/llm/health")
+async def llm_health():
+    return {"engine": config.LLM_ENGINE, "status": "configured"}
+
+
+@app.get("/api/quantum/health")
+async def quantum_health():
+    from quantum_engine import QISKIT_AVAILABLE
+    return {"qiskit_available": QISKIT_AVAILABLE, "ibm_service_connected": quantum.ibm_service is not None}
+
+
+# ============================================================================
+# SCOPE / AUTHORIZATION
+# ============================================================================
+
+@app.post("/api/scope/add")
+async def add_scope(payload: dict):
+    """Register an authorized engagement scope. Do this BEFORE running anything
+    against a target -- every agent call is blocked without a matching row here."""
+    scope_id = db.add_scope(
+        client_name=payload["client_name"],
+        scope_definition=payload["scope_definition"],  # e.g. "203.0.113.0/24, staging.client.com"
+        start_date=datetime.fromisoformat(payload["start_date"]),
+        end_date=datetime.fromisoformat(payload["end_date"]),
+        roe_document_path=payload.get("roe_document_path"),
+    )
+    return {"scope_id": scope_id, "status": "created"}
+
+
+@app.post("/api/insurance/add")
+async def add_insurance(payload: dict):
+    policy_id = db.add_insurance_policy(
+        policy_number=payload["policy_number"],
+        provider=payload["provider"],
+        coverage_amount=payload["coverage_amount"],
+        expiry=datetime.fromisoformat(payload["expiry"]),
+    )
+    return {"policy_id": policy_id, "status": "created"}
+
+
+@app.post("/api/scope/validate")
+async def validate_scope(payload: dict):
+    from tools.authorization import check_authorization_and_scope
     try:
-        # Try to run qiskit Aer if available
-        from qiskit import QuantumCircuit, execute, Aer
-        if algorithm == "bell_state":
-            qc = QuantumCircuit(2, 2)
-            qc.h(0)
-            qc.cx(0,1)
-            qc.measure([0,1],[0,1])
-            backend = Aer.get_backend('aer_simulator')
-            job = execute(qc, backend=backend, shots=shots)
-            result = job.result().get_counts()
-        else:
-            result = {"info": f"Algorithm {algorithm} not implemented in demo"}
-    except Exception as exc:
-        # fallback mocked result
-        result = {"counts": {"00": shots // 2, "11": shots // 2}, "note": str(exc)}
+        result = check_authorization_and_scope(payload["target"], "scope_check", payload.get("operator_id", "system"), db=db)
+        return result
+    except AuthorizationError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
-    asyncio.create_task(produce_telemetry({"timestamp": __import__('datetime').datetime.utcnow().isoformat(),
-                                          "message": f"Quantum simulation {algorithm} finished",
-                                          "level_color": "text-primary-color"}))
-    return JSONResponse({"status": "ok", "result": result})
 
-# Server-Sent Events endpoint for telemetry
-async def telemetry_generator():
-    while True:
-        msg = await telemetry_queue.get()
-        payload = json.dumps(msg)
-        yield f"data: {payload}\n\n"
+# ============================================================================
+# QUANTUM
+# ============================================================================
 
-@app.get("/api/v1/telemetry/stream")
-async def telemetry_stream():
-    return StreamingResponse(telemetry_generator(), media_type="text/event-stream")
+@app.post("/api/quantum/submit")
+async def submit_quantum_job(job: dict):
+    circuit_name = job.get("circuit", "bell_state")
+    shots = job.get("shots", 1024)
+    backend_name = job.get("backend", "qiskit_aer")
+    result = quantum.run_circuit(circuit_name, shots, backend_name)
+    job_id = quantum.store_result(result)
+    return {"job_id": job_id, "result": result}
+
+
+@app.get("/api/quantum/jobs/{job_id}")
+async def get_quantum_job(job_id: str):
+    result = quantum.retrieve_result(job_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    return result
+
+
+@app.get("/api/quantum/risk-panel")
+async def quantum_risk_panel():
+    """Illustrative dashboard panel -- see quantum_engine.py docstring."""
+    return quantum.quantum_risk_panel()
+
+
+# ============================================================================
+# PENTEST WORKFLOW (recon -> enumeration -> web checks -> report)
+# ============================================================================
+
+@app.post("/api/pentest/run")
+async def run_pentest(config_payload: dict):
+    """
+    Runs the fully-automatable portion of the pipeline end to end:
+    recon -> enumeration -> web checks -> report.
+
+    Every stage independently re-checks authorization/scope -- this is
+    intentional defense in depth, not redundancy to remove.
+    """
+    target = config_payload["target"]
+    scan_type = config_payload.get("scan_type", "comprehensive")
+    operator_id = config_payload.get("operator_id", "system")
+    include_quantum_panel = config_payload.get("include_quantum_panel", False)
+
+    try:
+        recon_results = recon.scan(target, scan_type, operator_id)
+        enum_results = enum_agent.enumerate(target, recon_results.get("open_ports", []), operator_id)
+        web_results = web_agent.scan(target, operator_id)
+
+        attack_mappings = orchestrator.map_to_attack_framework(recon_results)
+
+        quantum_panel = quantum.quantum_risk_panel() if include_quantum_panel else None
+
+        report = report_agent.generate(
+            target=target,
+            recon_results=recon_results,
+            enum_results=enum_results,
+            web_results=web_results,
+            quantum_panel=quantum_panel,
+            operator_id=operator_id,
+        )
+
+        test_id = db.insert_pentest({
+            "target": target,
+            "scan_type": scan_type,
+            "recon_results": recon_results,
+            "attack_mappings": attack_mappings,
+            "staged_exploits": [],  # intentionally empty -- see module docstring
+            "status": "report_ready",
+        })
+
+        return {
+            "test_id": test_id,
+            "status": "report_ready",
+            "report": report,
+            "report_markdown": report_agent.to_markdown(report),
+        }
+
+    except AuthorizationError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.exception("Pentest run failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# AGENT LOGS
+# ============================================================================
+
+@app.get("/api/agent/logs")
+async def get_agent_logs(limit: int = 50, offset: int = 0):
+    rows = db.query(
+        "SELECT id, timestamp, event, action, status, operator_id, details "
+        "FROM agent_logs ORDER BY timestamp DESC LIMIT ? OFFSET ?",
+        (limit, offset),
+    )
+    return {"logs": rows, "count": len(rows)}
+
+
+# ============================================================================
+# MITRE
+# ============================================================================
+
+@app.get("/api/mitre/tactics")
+async def get_mitre_tactics():
+    return orchestrator.get_tactics()
+
+
+@app.get("/api/mitre/techniques")
+async def get_mitre_techniques(tactic: str):
+    return orchestrator.get_techniques(tactic)
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
