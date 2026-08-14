@@ -1,167 +1,156 @@
 """
-JAKAL / GACyber Tool Kit - Authorization, Scope & Insurance Gate
-Mandatory check for EVERY network-facing action.
-CPENT-aligned: Ensures written authorization, defined scope, and active insurance
-before any recon, scanning, enumeration, or further phases.
+JAKAL Authorization Gate
+========================
+Mandatory scope / legal / insurance check that every network-facing
+tool wrapper and agent must call before touching a target.
 
-All activity must remain strictly within defined scope, written RoE,
-and active cyber-liability / professional-indemnity coverage.
+FIX (vs. earlier draft in the architecture doc):
+The original scope check used `target in str(scope_row)`, a plain
+substring match. That is exploitable: a scope of "example.com" would
+also match "evil-example.com" or "example.com.attacker.net", and an
+IP scope of "10.0.0.5" would match "110.0.0.50". This version does
+real domain-suffix matching and real CIDR containment checks.
 """
 
-from datetime import datetime
-from typing import Optional, Dict, Any
-import json
-import logging
+from __future__ import annotations
 
-# Relative import works when run from backend/
-try:
-    from database import DuckDBManager
-except ImportError:
-    from backend.database import DuckDBManager  # fallback for different layouts
+import ipaddress
+import logging
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Optional
 
 logger = logging.getLogger(__name__)
-db = DuckDBManager()
+
+
+class AuthorizationError(PermissionError):
+    """Raised when a target/action is not authorized. Caught by API layer -> HTTP 403."""
+
+
+@dataclass
+class ScopeEntry:
+    id: int
+    client_name: str
+    scope_definition: str  # comma-separated list of CIDRs and/or domain suffixes
+    start_date: datetime
+    end_date: datetime
+    status: str
+
+
+def _is_ip(value: str) -> bool:
+    try:
+        ipaddress.ip_address(value)
+        return True
+    except ValueError:
+        return False
+
+
+def _target_matches_entry(target: str, entry_value: str) -> bool:
+    """
+    Real containment check, not substring matching.
+
+    - If entry_value parses as a CIDR/IP network, and target is an IP,
+      check real network containment.
+    - Otherwise treat entry_value as a domain suffix: target must be
+      exactly that domain OR a strict subdomain of it (dot-bounded),
+      never merely containing the string.
+    """
+    entry_value = entry_value.strip().lower()
+    target = target.strip().lower()
+
+    # --- IP / CIDR path ---
+    if _is_ip(target):
+        try:
+            network = ipaddress.ip_network(entry_value, strict=False)
+            return ipaddress.ip_address(target) in network
+        except ValueError:
+            return False  # entry_value wasn't a network spec; no match for an IP target
+
+    # --- Domain path ---
+    # Strip scheme/path if a full URL was passed as the target.
+    domain = target
+    for prefix in ("https://", "http://"):
+        if domain.startswith(prefix):
+            domain = domain[len(prefix):]
+    domain = domain.split("/", 1)[0].split(":", 1)[0]
+
+    if domain == entry_value:
+        return True
+    # Strict subdomain match: must end with ".entry_value", not just contain it.
+    return domain.endswith("." + entry_value)
 
 
 def check_authorization_and_scope(
     target: str,
     action: str,
-    operator_id: str = "system",
-    require_insurance: bool = True,
-) -> Dict[str, Any]:
+    operator_id: str,
+    db=None,
+) -> dict:
     """
     Real-time legal, scope, and insurance validation.
-    Raises PermissionError if any check fails.
-    Returns a dict with authorization metadata on success.
+    Raises AuthorizationError (blocks execution) if any check fails.
+
+    `db` should be a DuckDBManager instance (see database.py). Passed in
+    rather than imported at module scope to avoid circular imports and
+    to make this function easy to unit test with a fake db.
     """
-    if not target or not str(target).strip():
-        raise PermissionError("Empty or invalid target supplied.")
+    if db is None:
+        from database import DuckDBManager
+        db = DuckDBManager()
 
-    target = str(target).strip()
+    now = datetime.now(timezone.utc)
 
-    # Load active scopes
-    try:
-        scopes = db.query(
-            "SELECT id, client_name, scope_definition, start_date, end_date, status "
-            "FROM scopes WHERE status = 'active'"
-        )
-    except Exception as e:
-        logger.error(f"Failed to query scopes: {e}")
-        scopes = []
+    scope_rows = db.query(
+        "SELECT id, client_name, scope_definition, start_date, end_date, status "
+        "FROM scopes WHERE status = 'active' AND start_date <= ? AND end_date >= ?",
+        (now, now),
+    )
 
-    # Load active insurance
-    try:
-        insurance = db.query(
-            "SELECT id, policy_number, provider, coverage_amount, expiry, status "
-            "FROM insurance_policies "
-            "WHERE status = 'active' AND expiry > ?",
-            (datetime.utcnow(),),
-        )
-    except Exception as e:
-        logger.error(f"Failed to query insurance: {e}")
-        insurance = []
+    insurance_rows = db.query(
+        "SELECT id FROM insurance_policies WHERE status = 'active' AND expiry > ?",
+        (now,),
+    )
 
-    # Simple scope matching (expand with ipaddress / domain parsing as needed)
     in_scope = False
-    matched_scope = None
-    for s in scopes:
-        # s[2] is scope_definition (string or JSON of IPs/domains)
-        scope_def = str(s[2]) if s[2] else ""
-        if target in scope_def or any(
-            part.strip() and target.startswith(part.strip())
-            for part in scope_def.replace(",", " ").split()
-        ):
-            in_scope = True
-            matched_scope = {
-                "scope_id": s[0],
-                "client_name": s[1],
-                "scope_definition": scope_def,
-            }
+    for row in scope_rows:
+        # row layout matches the SELECT above
+        _, _, scope_definition, *_ = row
+        for entry in str(scope_definition).split(","):
+            entry = entry.strip()
+            if not entry:
+                continue
+            if _target_matches_entry(target, entry):
+                in_scope = True
+                break
+        if in_scope:
             break
 
-    has_insurance = len(insurance) > 0
-    insurance_info = None
-    if has_insurance:
-        ins = insurance[0]
-        insurance_info = {
-            "policy_number": ins[1],
-            "provider": ins[2],
-            "expiry": str(ins[4]),
-        }
+    has_insurance = len(insurance_rows) > 0
 
-    if not in_scope:
-        db.insert_log(
-            {
-                "event": "AUTHORIZATION_DENIED",
-                "action": action,
-                "status": "blocked",
-                "operator_id": operator_id,
-                "details": {
-                    "target": target,
-                    "reason": "target outside authorized scope",
-                },
-            }
-        )
-        raise PermissionError(
-            f"Target '{target}' is outside authorized scope. Operation blocked."
-        )
+    if not in_scope or not has_insurance:
+        reason = []
+        if not in_scope:
+            reason.append("target outside authorized scope")
+        if not has_insurance:
+            reason.append("no active insurance policy on file")
+        reason_str = "; ".join(reason)
 
-    if require_insurance and not has_insurance:
-        db.insert_log(
-            {
-                "event": "AUTHORIZATION_DENIED",
-                "action": action,
-                "status": "blocked",
-                "operator_id": operator_id,
-                "details": {
-                    "target": target,
-                    "reason": "no active insurance policy found",
-                },
-            }
-        )
-        raise PermissionError(
-            "No active cyber-liability / professional-indemnity insurance found. "
-            "Operation blocked."
-        )
-
-    # Success path
-    auth_record = {
-        "authorized": True,
-        "timestamp": datetime.utcnow().isoformat(),
-        "target": target,
-        "action": action,
-        "operator_id": operator_id,
-        "matched_scope": matched_scope,
-        "insurance": insurance_info,
-    }
-
-    db.insert_log(
-        {
-            "event": "AUTHORIZATION_GRANTED",
+        db.insert_log({
+            "event": "AUTHORIZATION_DENIED",
             "action": action,
-            "status": "approved",
+            "status": "blocked",
             "operator_id": operator_id,
-            "details": auth_record,
-        }
-    )
+            "details": {"target": target, "reason": reason_str},
+        })
+        raise AuthorizationError(
+            f"Authorization denied for target '{target}': {reason_str}."
+        )
 
-    logger.info(
-        f"Authorization granted: action={action} target={target} operator={operator_id}"
-    )
-    return auth_record
-
-
-def require_authorization(target: str, action: str, operator_id: str = "system"):
-    """
-    Decorator-style helper (can also be used as a plain function call).
-    """
-    return check_authorization_and_scope(target, action, operator_id)
-
-
-# Convenience for scripts that only need a boolean
-def is_authorized(target: str, action: str, operator_id: str = "system") -> bool:
-    try:
-        check_authorization_and_scope(target, action, operator_id)
-        return True
-    except PermissionError:
-        return False
+    db.insert_log({
+        "event": "AUTHORIZATION_GRANTED",
+        "action": action,
+        "status": "approved",
+        "operator_id": operator_id,
+        "details": {"target": target},
+    })
+    return {"authorized": True, "timestamp": now.isoformat()}
