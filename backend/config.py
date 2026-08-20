@@ -19,11 +19,11 @@ class Config:
     API_WORKERS = int(os.getenv('API_WORKERS', '4'))
     
     # LLM Configuration
-    GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
-    GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
+    CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY', '')
+    CLAUDE_MODEL = os.getenv('CLAUDE_MODEL', 'claude-3-5-sonnet-20241022')
     OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
     OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama2')
-    LLM_ENGINE = os.getenv('LLM_ENGINE', 'gemini')  # 'gemini' or 'ollama'
+    LLM_ENGINE = os.getenv('LLM_ENGINE', 'claude')  # 'claude' or 'ollama'
     
     # Quantum Configuration
     IBM_QUANTUM_TOKEN = os.getenv('IBM_QUANTUM_TOKEN', '')
@@ -54,8 +54,8 @@ class Config:
     @classmethod
     def validate(cls):
         """Validate critical configuration at startup."""
-        if cls.LLM_ENGINE == 'gemini' and not cls.GEMINI_API_KEY:
-            raise ValueError('GEMINI_API_KEY required when using Gemini LLM engine')
+        if cls.LLM_ENGINE == 'claude' and not cls.CLAUDE_API_KEY:
+            raise ValueError('CLAUDE_API_KEY required when using Claude LLM engine')
         if cls.IBM_QUANTUM_TOKEN and not cls.IBM_QUANTUM_CHANNEL:
             raise ValueError('IBM_QUANTUM_CHANNEL required when IBM_QUANTUM_TOKEN is set')
         return True
