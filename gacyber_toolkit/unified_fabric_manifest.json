@@ -1,0 +1,11 @@
+{
+  "modules": [
+    {"key": "mdr", "name": "Managed Detection & Response", "description": "EDR/MDR playbooks and detection orchestration"},
+    {"key": "zero_trust", "name": "Zero Trust Enforcement", "description": "Policy checks and enforcement patterns"},
+    {"key": "sase", "name": "SASE Network Tunnel", "description": "Network tunneling and posture for cloud edge"},
+    {"key": "pam", "name": "Privileged Access Management", "description": "Privileged account controls and rotation"},
+    {"key": "dns_filter", "name": "DNS Web Filtering", "description": "DNS-layer web filtering and threat blocking"},
+    {"key": "email_filter", "name": "Email Security Gateway", "description": "Inbound/outbound email filtering rules and playbooks"},
+    {"key": "dlp", "name": "Data Loss Prevention", "description": "DLP rules and monitoring"}
+  ]
+}
