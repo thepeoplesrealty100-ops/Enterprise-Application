@@ -1,0 +1,230 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jakal
+  labels:
+    name: jakal
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jakal-config
+  namespace: jakal
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  API_PORT: "8000"
+  DATABASE_URL: "/data/jakal.duckdb"
+  ENABLE_QUANTUM_SIMULATION: "true"
+  ENABLE_COMPLIANCE_CHECKS: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jakal-secrets
+  namespace: jakal
+type: Opaque
+stringData:
+  GEMINI_API_KEY: "your-key-here"
+  IBM_QUANTUM_TOKEN: "your-token-here"
+  SHODAN_API_KEY: "your-key-here"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jakal-data-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/jakal"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jakal-data-pvc
+  namespace: jakal
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  volumeName: jakal-data-pv
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jakal-backend
+  namespace: jakal
+  labels:
+    app: jakal
+    component: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: jakal
+      component: backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: jakal
+        component: backend
+    spec:
+      containers:
+      - name: jakal-backend
+        image: jakal:2.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        
+        env:
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: jakal-config
+              key: ENVIRONMENT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: jakal-config
+              key: LOG_LEVEL
+        - name: API_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jakal-config
+              key: API_PORT
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jakal-secrets
+              key: GEMINI_API_KEY
+        - name: IBM_QUANTUM_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: jakal-secrets
+              key: IBM_QUANTUM_TOKEN
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        - name: logs
+          mountPath: /app/logs
+      
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: jakal-data-pvc
+      - name: logs
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jakal-backend
+  namespace: jakal
+  labels:
+    app: jakal
+    component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: jakal
+    component: backend
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  sessionAffinity: ClientIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jakal-backend-hpa
+  namespace: jakal
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: jakal-backend
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: jakal-backend-pdb
+  namespace: jakal
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: jakal
+      component: backend
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: jakal-backend
+  namespace: jakal
+  labels:
+    app: jakal
+spec:
+  selector:
+    matchLabels:
+      app: jakal
+      component: backend
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /metrics
