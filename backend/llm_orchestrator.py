@@ -7,9 +7,9 @@ import requests
 from datetime import datetime
 
 try:
-    import google.generativeai as genai
+    import anthropic
 except ImportError:
-    genai = None
+    anthropic = None
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +25,12 @@ class AgentOrchestrator:
         self.load_mitre_database()
     
     def initialize_llm(self):
-        """Initialize LLM engine (Gemini or Ollama)."""
-        if self.config.LLM_ENGINE == 'gemini':
-            if not genai:
-                raise ImportError("google-generativeai not installed. Install: pip install google-generativeai")
-            genai.configure(api_key=self.config.GEMINI_API_KEY)
-            self.model = genai.GenerativeModel(self.config.GEMINI_MODEL)
-            logger.info(f"Initialized Gemini LLM: {self.config.GEMINI_MODEL}")
+        """Initialize LLM engine (Claude or Ollama)."""
+        if self.config.LLM_ENGINE == 'claude':
+            if not anthropic:
+                raise ImportError("anthropic not installed. Install: pip install anthropic")
+            self.client = anthropic.Anthropic(api_key=self.config.CLAUDE_API_KEY)
+            logger.info(f"Initialized Claude LLM: {self.config.CLAUDE_MODEL}")
         else:
             # Ollama fallback
             logger.info(f"Using Ollama LLM: {self.config.OLLAMA_MODEL}")
@@ -94,8 +93,8 @@ class AgentOrchestrator:
             # Prepare prompt
             prompt = self._build_reasoning_prompt(context)
             
-            if self.config.LLM_ENGINE == 'gemini':
-                response = await self._call_gemini(prompt)
+            if self.config.LLM_ENGINE == 'claude':
+                response = await self._call_claude(prompt)
             else:
                 response = await self._call_ollama(prompt)
             
@@ -136,21 +135,23 @@ Respond with JSON:
 """
         return prompt
     
-    async def _call_gemini(self, prompt: str) -> str:
-        """Call Gemini API for agentic decision."""
+    async def _call_claude(self, prompt: str) -> str:
+        """Call Claude API for agentic decision."""
         try:
-            response = self.model.generate_content(
-                prompt,
-                generation_config={
-                    'temperature': 0.3,
-                    'top_p': 0.8,
-                    'max_output_tokens': 512,
-                    'response_mime_type': 'application/json'
-                }
+            message = self.client.messages.create(
+                model=self.config.CLAUDE_MODEL,
+                max_tokens=1024,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.3
             )
-            return response.text
+            return message.content[0].text
         except Exception as e:
-            logger.error(f"Gemini API call failed: {str(e)}")
+            logger.error(f"Claude API call failed: {str(e)}")
             raise
     
     async def _call_ollama(self, prompt: str) -> str:
