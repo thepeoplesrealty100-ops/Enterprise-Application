@@ -1,0 +1,266 @@
+Certified Penetration Testing Professional Exam 412-80
+Metasploit Cheat Sheet
+Certified Penetration Testing Professional
+Metasploit Cheat Sheet
+Metasploit
+Source: https://www.metasploit.com
+Metasploit is an open-source project that provides the infrastructure, content, and tools to
+perform penetration tests and extensive security auditing. It is a tool that provides information
+about security vulnerabilities and aids in penetration testing. Metasploit framework is also used
+for developing and executing exploits which promotes in gaining remote access to a system by
+exploiting any vulnerability present in that server. Meterpreter is a payload inside the
+framework.
+The following table lists the various Metasploit commands and their respective scanning
+methods.
+1. Metasploit General Information
+2. Executing an Exploit / Scanner / Module
+3. Session Handling
+4. Using Database
+i. First Time Setup (Linux command line)
+ii. Inside msfconsole
+5. Meterpreter Session Commands
+i. Base Commands
+ii. Process Commands
+iii. File System Commands
+iv. Escalate Privileges
+v. Networking Commands
+vi. Additional Commands
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Metasploit Cheat Sheet
+6. Session Management
+7. Interface / Output commands
+8. Msfvenom Command Options
+9. Important Auxiliary Modules
+1. Metasploit General Information
+Metasploit Command Description
+msfconsole Launch program
+version Display current version
+msfupdate Pull weekly update
+makerc <FILE.rc> Saves recent commands to a file
+Loads resource file to automate Metasploit
+msfconsole -r <FILE.rc>
+commands
+2. Executing an Exploit / Scanner / Module
+Metasploit Command Description
+use <MODULE> Set the exploit to use
+set payload <PAYLOAD> Set the payload
+show options Show all options
+set <OPTION> <SETTING> Set a specific option setting
+exploit or run Execute exploit
+3. Session Handling
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Metasploit Cheat Sheet
+Metasploit Command Description
+sessions -l List all sessions
+sessions -i <ID> Interact with a session
+background or ^Z Detach from session
+4. Using Database
+i. First Time Setup (Linux command line)
+Metasploit Command Description
+service postgresql Start Start the PostgreSQL service
+msfdb Init Initialize the Metasploit database
+ii. Inside msfconsole
+Metasploit Command Description
+db_status Display connected status
+hosts Display hosts in database
+services Show ports in database
+vulns Exhibit all vulnerabilities
+5. Meterpreter Session Commands
+i. Base commands
+Metasploit Command Description
+sysinfo Display system name and OS type
+shutdown / reboot Shutdown or reboot the system
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Metasploit Cheat Sheet
+exit / quit Exit Meterpreter session
+ii. Process Commands
+Metasploit Command Description
+ps Show running processes list
+kill <PID> Terminate process
+getuid Show user ID
+Show process ID that Meterpreter is running
+getpid
+inside
+migrate <PID> Migrate to another process
+Execute given program with the privileges of the
+execute
+process
+iii. File System Commands
+Metasploit Command Description
+Display current working directory (local /
+pwd / lpwd/getwd
+remote)
+cd Change directory
+lcd Change directory (local)
+mkdir Make directory
+rmdir Remove directory
+cat Show contents of a file
+edit <FILE> Edit a file in default editor (vi)
+upload / download Upload / download a file from /to target machine
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Metasploit Cheat Sheet
+iv. Escalate Privileges
+Metasploit Command Description
+use priv Load the privilege escalation extension
+getsystem Gain administrative-level privileges
+getprivs Elevate privileges
+v. Networking Commands
+Metasploit Command Description
+ipconfig Show network interface information
+route Manage/view the system's routing table
+C Forward packets through TCP session
+route add <Target IP/ Subnet> Pivot through session by adding route in MSF
+route remove <Target IP/
+Delete route inside MSF
+Subnet>
+sniffer Allow network sniffing interaction commands
+portfwd Port forwarding connections
+portfwd -L <Local host> Local host to listen
+portfwd -l <Local port> Local port to listen
+Portfwd -p <Remote port> Remote port to connect
+portfwd -r <Remote host> Remote host to connect
+vi. Additional Commands
+Metasploit Command Description
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Metasploit Cheat Sheet
+shell Drop into a shell on the target machine
+hashdump Show all password hashes in Windows
+idletime Display idle time of the machine
+screenshot Save the screenshot
+clearev Clear the logs
+uictl [enable/disable] Enable or disable the mouse or keyboard of the
+[keyboard/mouse] machine
+use Extension load
+channel Display active channel
+reg Access machine registry
+Attempts to steal impersonation token from
+steal_token
+target
+espia Desktop spying by screenshots
+incognito Impersonation commands
+msf> search Search for any module
+msf > use exploit Specify and exploit to use
+6. Session Management
+Metasploit Command Description
+msf > exploit -z Run exploit in background expecting one session
+msf > sessions -i [SessionID] Interact with backgrounded session
+Run exploit in background expecting one or more
+msf > exploit –j
+sessions
+msf > sessions -l List all backgrounded sessions
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Metasploit Cheat Sheet
+msf > jobs –l List all current jobs
+msf > jobs –k [JobID] Kills job
+meterpreter > <Ctrl+Z> /
+Background current interactive session
+meterpreter > background
+7. Interface / Output Commands
+Metasploit Command Description
+enumdesktops Display all existing desktops
+getdesktop Display current desktop
+keyscan_start Start keylogger in target machine
+keyscan_stop Stop keylogger in target machine
+set_desktop Configure desktop
+keyscan_dump Dump keylogger content
+8. Msfvenom Command Options
+Metasploit Command Description
+-p (Payload option) Show payload standard options
+-l (list type) List module type
+-f (format) Output format
+-e(encoder) Define which encoder to use
+-a (Architecture or platform) Define which platform to use
+-s (Space) Define maximum payload capacity
+-b (characters)
+Define set of characters not to use
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Metasploit Cheat Sheet
+-i (Number of times) Define number of times to use encoder
+-x (File name) Define a custom file to use as template
+-o (output) Save payload
+-h Help
+9. Important Auxiliary Modules
+Metasploit Command Description
+msf > use auxiliary/scanner/portscan/tcp
+msf > set RHOSTS <Target IP/Subnet>
+Port scanning module
+msf > set PORTS 1-1000
+msf > run
+msf > use auxiliary/gather/dns_enum
+msf > set DOMAIN target.tgt DNS Enumeration module
+msf > run
+msf > use auxiliary/server/ftp
+msf > set FTPROOT /tmp/ftproot FTP Server module
+msf > run
+msf > use auxiliary/server/socks4
+Proxy Server module
+msf > run
+msf > use auxiliary/scanner/snmp/snmp_enum
+msf > set RHOSTS <Target IP> SNMP Enumeration module
+msf > exploit
+msf > use auxiliary/scanner/sip/enumerator
+msf > set RHOSTS <Target IP/Subnet> SIP Enumeration module
+msf > run
+msf > use auxiliary/scanner/ftp/ftp_version
+msf > set RHOSTS <Target IP> FTP Enumeration module
+msf > exploit
+msf > use
+auxiliary/scanner/discovery/arp_sweep
+msf > set RHOSTS <Target IP-Range> ARP Sweep module
+msf > set SHOSTS <Target IP>
+msf > set SMAC <MAC Address>
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Metasploit Cheat Sheet
+msf > set THREADS < Number of concurrent
+threads>
+msf > run
+msf > use
+auxiliary/scanner/discovery/ipv6_neighbor
+msf > set RHOSTS <Target IP-Range>
+msf > set SHOSTS <Target IP>
+IPV6 Neighbor module
+msf > set SMAC <MAC Address>
+msf > set THREADS < Number of concurrent
+threads>
+msf > run
+msf > use
+auxiliary/scanner/discovery/udp_probe
+msf > set RHOSTS <Target IP-Range>
+UDP Probe module
+msf > set THREADS < Number of concurrent
+threads>
+msf > run
+msf > use
+auxiliary/scanner/discovery/udp_sweep
+msf > set RHOSTS <Target IP-Range>
+UDP Sweep module
+msf > set THREADS < Number of concurrent
+threads>
+msf > run
+msf > use
+auxiliary/scanner/scada/modbus_findunitid Scan and detect Modbus
+msf > set RHOSTS <Target IP> Slaves
+msf > run
+msf > use x86/opty2
+Generates a NOP sled of a
+msf nop(opty2) > generate -h
+given length
+Usage: generate [options] length
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

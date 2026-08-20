@@ -1,0 +1,80 @@
+Certified Penetration Testing Professional Exam 412-80
+RustScan Cheat Sheet
+Certified Penetration Testing Professional
+RustScan Cheat Sheet
+RustScan
+Source: https://docs.rs
+RustScan is a modern port scanner written in the Rust programming language, designed to be
+both fast and efficient. It is especially noted for its speed, simplicity, and ability to integrate with
+other tools like Nmap.
+The following tables list the various options and commands associated with RustScan.
+Syntax
+rustscan [FLAGS] [OPTIONS] <ip> [command]...
+Options
+-a Used to specify the target IP address or URL
+-r, --range Used to specify the range of ports to scan
+-T, --timeout The timeout before a port is assumed to be close
+-b, --batch Increases speed of scanning
+Automatically ups the ULIMIT with the value you
+-u, --ulimit
+provided
+Specify a file to which the scan results should be
+-o, --output
+written
+--no-color Disabling Color Output
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+RustScan Cheat Sheet
+--no-banner Disabling the RustScan banner
+--no-dns Disabling DNS resolution
+--open-only Printing only open ports
+--no-summary Disabling summary printing
+Specifying the maximum number of packets to be
+--rate
+sent per second
+--no-closed Excluding closed ports from the scan results.
+These options can be associated with the Nmap
+network scanner for OS discovery, which can be
+-sC -O
+used in conjunction with RustScan for detailed
+scanning.
+Flags
+-h, --help Prints help information
+-q, --quiet Quiet mode. Only output the ports.
+-V, --version Prints version information
+RustScan Commands
+Command Description
+rustscan -a <target_ip> -r
+Scan TCP ports on a single IP address
+<port_range> --tcp
+rustscan -a <target_ip> -r
+Scan UDP ports on a single IP address
+<port_range> --udp
+rustscan -R <start_ip>-
+<end_ip> -r <port_range> -- Scan TCP ports over a range of IP addresses
+tcp
+rustscan -a <subnet> -r
+Scan TCP ports on a subnet
+<port_range> --tcp
+rustscan -a <target_ip> -r Scan a specific target IP address with a specific
+<Port Number> port number
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+RustScan Cheat Sheet
+rustscan -iL <path_to_file> - Scan TCP ports from a list of IPs in a file
+r <port_range> --tcp
+rustscan -a <target_ip> --
+ports-file <path_to_file> -- Scan a specific IP using ports listed in a file
+tcp
+rustscan -a <target_ip> -r
+Exclude certain ports when scanning a specific IP
+<port_range> --tcp --exclude-
+address
+ports <ports>
+rustscan -a <target_ip> -r
+<port_range> --tcp -o Save the results of a scan to a file
+<output_file>
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

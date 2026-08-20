@@ -1,0 +1,991 @@
+[Organization’s Logo]
+[Organization’s Name]
+[Organization’s Contact Details]
+[Title of the Report]
+Target Organization:
+Penetration Tester:	
+Date:	
+Location:
+Explore Techniques to Perform Active Directory Reconnaissance
+[*This section provides an overview of the techniques used to perform Active Directory Reconnaissance to gather critical information about the target infrastructure.]
+2.1 Perform AD Reconnaissance with dnsrecon
+2.2 Perform AD Reconnaissance with DHCP
+	2.3 Perform AD Reconnaissance with LDAP
+	2.4 Perform AD Reconnaissance with Network Traffic Analysis
+	2.5 Perform LLMNR/NBT-NS Poisoning Attack to Gain Initial Access
+3. Explore Techniques to Perform Active Directory Enumeration
+[*This section provides an overview of the techniques used to Perform Active Directory Enumeration to enumerate various details about the AD setup and structure with authenticated access]
+Enumerate Active Directory using LDAPSearch
+Enumerating AD Using Active Directory Explorer (ADExplorer)
+	3.3 Enumerate AD through Windows Command Line Utilities
+Enumerate AD through PowerShell
+Enumerate Service Principal Names (SPNs)
+Enumerate through BloodHound
+Enumerate through SharpHound
+Enumerate Using Nessus
+Enumerate Users with NetExec
+Enumerate through .NET Domain Classes and Active Directory Service Interfaces (ADSI)
+Enumerate through PowerSploit
+Enumerate through PowerView
+Enumerate through Microsoft Management Console
+Active Directory Enumeration using Sysvol
+Enumerate through Windows Management Instrumentation (WMI)
+Enumerate through Credential Injection
+Analyze Techniques to Exploit Identified Active Directory Vulnerabilities
+[*This section provides an overview of the techniques used to exploit Identified Active Directory Vulnerabilities such as credential theft, privilege escalation, Kerberoasting, NTLM relay attacks, and domain persistence mechanisms]
+Brute Force AD
+Brute Force via LDAP
+Password Spraying Attack
+Perform DCShadow Attack
+Perform AS-REP Roasting
+Perform LDAP Injection Attack
+	4.7 PetitPotam NTLM Relay Attack on Active Directory Certificate Services (AD CS)
+Exchange Server User Enumeration and Password Spraying
+Exchange Server Enumeration and Exploitation using Metasploit
+Exploit Exchange Server using Proxyshell RCE
+Exploit Exchange Server using ProxyNotShell
+Exploit Exchange Server using ProxyRelay and ProxyNotRelay
+Perform DcSync Attack
+Extract Password Hashes from ntds.dit File
+Dump AD Credentials using Mimikatz Sekurlsa
+Crack NTLM hashes with Hashcat
+Kerberos Pre-auth Brute Forcing
+Dump Kerberos Tickets
+Perform Credential Cache (CCACHE) Ticket Reuse Attacks
+SCF File Attack Against Writeable Share
+URL File Attack against Writeable Whare
+Exploit Kerberos Unconstrained Delegation
+Exploit Active Directory using LDAPSearch
+Exploit Active Directory by Abusing Windows Library Files
+Abuse GPO with SharpGPOAbuse
+Abuse GPO with PowerGPOAbuse
+Abuse the Enabled User Account Options
+Abusing Shadow Copies for Persistence
+5. Explore the Role of Artificial Intelligence in AD Penetration Testing Strategies
+[*This section provides an overview of the role of Artificial Intelligence in AD Penetration Testing Strategies.]
+OS and Port Enumeration Using AI
+Service Enumeration Using AI
+	5.3 LDAP Enumeration Using AI
+	5.4 USER Enumeration Using AI
+Group Enumeration Using AI
+NetBIOS Enumeration Using AI	
+Windows Shares Enumeration
+SNMP Enumeration
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified Internal Domain Successful | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Identified Internal Domain Successful | Yes | No
+Identified DHCP Servers Successful | Yes | No
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+DHCP Information Available | 
+Response/Commands Received from AI | 1.
+2.
+3.
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Ports Scanned | State of Ports
+389, ldap | Open | Filtered | Unfiltered | Closed
+53, domain | Open | Filtered | Unfiltered | Closed
+80, http | Open | Filtered | Unfiltered | Closed
+88, Kerberos-sec | Open | Filtered | Unfiltered | Closed
+135, msrpc | Open | Filtered | Unfiltered | Closed
+139, netbios-ssn | Open | Filtered | Unfiltered | Closed
+445, microsoft-ds | Open | Filtered | Unfiltered | Closed
+464, kpasswd5 | Open | Filtered | Unfiltered | Closed
+593, ncacn_http | Open | Filtered | Unfiltered | Closed
+636, tcpwrapped | Open | Filtered | Unfiltered | Closed
+1801, msmq | Open | Filtered | Unfiltered | Closed
+2103, msrpc | Open | Filtered | Unfiltered | Closed
+2105, msrpc | Open | Filtered | Unfiltered | Closed
+2107, msrpc | Open | Filtered | Unfiltered | Closed
+3268, ldap | Open | Filtered | Unfiltered | Closed
+3269, tcpwrapped | Open | Filtered | Unfiltered | Closed
+3389, ms-wbt-server | Open | Filtered | Unfiltered | Closed
+DHCP Information Available | 
+Response/Commands Received from AI | 1.
+2.
+3.
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Protocols Analyzed | 1.
+2.
+3.
+Response Received | 1.
+2.
+3.
+4.
+5.
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Identified DHCP Servers Successful | Yes | No
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+User Identified | 
+Password Crack Successful | Yes | No
+DHCP Information Available | 
+Captured NTLM Hashes | Yes | No
+Response/Commands Received from AI | 1.
+2.
+3.
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to Manual Method | High | Medium | Low
+Result Obtained
+Target LDAP Server Identified | Yes | No
+LDAP Service Name Identified | Yes | No
+Identified Internal Domain | 
+Identified Users | 
+Identified Groups | 
+Identified Domain Joined Systems | 
+Identified Computers | 
+Password Crack Successful | Yes | No
+DHCP Information Available | 
+Captured NTLM Hashes | Yes | No
+Response/Commands Received from AI | 1.
+2.
+3.
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Steps Performed | 1.
+2.
+3.
+4.
+5.
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified Internal Domain | 
+Identified Attributes | 
+Identified Groups | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified Internal Domain | 
+Identified Attributes | 
+Identified Groups | 
+Current User | 
+Current Group | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified Internal Domain Successful | Yes | No
+Alive Computers Identified | Yes | No
+Identified Domain Computers | Yes | No
+Identified Forests | Yes | No
+Identified GPOs | Yes | No
+Identified Policies | 
+Identified Kerberos Policies | 
+Identified Global Catalogs | 
+Identified Trusts | 
+Identified Trust Mappings | 
+Identified Kerberoastable Users | 
+Identified ACLs | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Result Obtained
+Identified SPNs Successful | Yes | No
+Retrieved SPN Hashes Successful | Yes | No
+Identified Service Accounts | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Result Obtained
+Identified Relationships Successful | Yes | No
+Identified Paths Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified Data | 
+Output Format | 
+Output Location | 
+File Collected | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Nessus Plugins Used | 
+Identified Vulnerabilities | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified SMB Shares Successful | Yes | No
+Shares Identified | Shares’ Status
+C | Read | Write | Full Control
+IPC | Read | Write | Full Control
+ADMIN$ | Read | Write | Full Control
+DATA | Read | Write | Full Control
+Response/Commands Received from AI | 1.
+2.
+3.
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified Objects | 
+Identified Attributes | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified Users | 
+Identified Groups | 
+Identified Computers | 
+Identified Policies | 
+Kerberos Policy | 
+Identified Trusts | 
+Identified Trusts Mapping Successful | Yes | No
+Identified GPOs | 
+Identified GPOs Users Successful | Yes | No
+Identified SPNs | 
+Identified Service Accounts Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified Users | 
+Identified Groups | 
+Identified Computers | 
+Identified Policies | 
+Kerberos Policy | 
+Identified Trusts | 
+Identified Trusts Mapping Successful | Yes | No
+Identified GPOs | 
+Identified GPOs Users Successful | Yes | No
+Identified SPNs | 
+Identified Service Accounts Successful | Yes | No
+Identified Local | 
+Identified Local Group Members Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Steps Performed | 1.
+2.
+3.
+4.
+5.
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified Objects | 
+Actions Taken | 
+Identified Computers | 
+Identified Policies | 
+Kerberos Policy | 
+Identified Trusts | 
+Identified Trusts Mapping Successful | Yes | No
+Identified GPOs | 
+Identified GPOs Users Successful | Yes | No
+Identified SPNs | 
+Identified Service Accounts Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Result Obtained
+Identified Path | 
+Identified Owners | 
+Group Name | Access Status
+ | Read | Write | Full Control
+ | Read | Write | Full Control
+ | Read | Write | Full Control
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified Objects | 
+Identified Attributes | 
+Identified Computer Names | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Target SMB IP | 
+Target Users | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified Permissions | 
+Injection Successful | Yes | No
+Enumeration Successful | Yes | No
+Response/Commands Received from AI | 1.
+2.
+3.
+4.
+5.
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Target File | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified AD Credentials Successful | Yes | No
+SMB Login Attempt Successful | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Identified LDAP Login Credentials Successful | Yes | No
+Valid Password Found | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Techniques Used | 1.
+2.
+3.
+4.
+5.
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+SMB Signing Status | True | False
+SMB Version | v1 | v2
+Enumerated Shares | Yes | No
+Identified Login Credentials Successful | Yes | No
+Username Identified | 
+Password Identified | 
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Domain Info Gathered | Yes | No
+Domain Name | 
+Server Info Gathered | Yes | No
+Server Name | 
+Modification Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+UF_DONT_REQUIRE_PREAUTH flag set | Yes | No
+Identified Password Hash Successful | Yes | No
+Identified Credentials from Hash Successful | Yes | No
+Valid Usernames Obtained | 1.
+2.
+3.
+4.
+5.
+Established Connection Successfully | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Techniques Used | 1.
+2.
+3.
+4.
+5.
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Found LDAP Injection Vulnerability | Yes | No
+LDAP Injection Successful | Yes | No
+Extracted Data | 1.
+2.
+3.
+4.
+5.
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Captured NTLM Hash | Yes | No
+NTLM Hash Successfully Relayed to AD CS | Yes | No
+Vulnerability Details | 
+Exploit Successful | Yes | No
+Certificate Details (if obtained) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+User Enumeration Successful | Yes | No
+Identified User Credentials Successful | Yes | No
+Accounts Authenticated Successfully | Yes | No
+Authenticated Account | 
+Response Received | 
+Attack triggered any lockouts | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Vulnerability Information | 
+Identified Exchange Version | Yes | No
+Enumeration through Metasploit Successful | Yes | No
+Target Vulnerable to known CVEs | Yes | No
+Exploitation Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Exchange Server Vulnerable to Proxyshell RCE | Yes | No
+Vulnerability Information | 
+Exploit Successful | Yes | No
+Remote Command Execution Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Exchange Server Vulnerable to ProxyNotShell RCE | Yes | No
+Vulnerability Information | 
+Exploitation Successful | Yes | No
+Remote Command Execution Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Vulnerability Information | 
+Valid User Credentials Extracted | Yes | No
+Exploitation Successful | Yes | No
+Remote Command Execution Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+NTLM Hash Extracted | Yes | No
+Attack Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Hash Extraction Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Credential Dumping Successful | Yes | No
+Domain Credentials Retrieved | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Cracking NTLM Hash Successful | Yes | No
+Cracked Password Value | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Kerberos Brute Forcing Successful | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Kerberos Ticket Dumping Successful | Yes | No
+Privilege Escalation Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Gaining Access Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Target Writable Share File Location | 
+NTLM Hash Extraction Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Target Writable Share File Location | 
+NTLM Hash Extraction Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Exploitation Successful | Yes | No
+Lateral Movement Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Target Port | 
+Target LDAP Server | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+LDAP Search Successful | Yes | No
+Search Result Path | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Target Vulnerable Files Path | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Exploitation Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Target GPOs | 
+GPO Modification Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Target GPOs | 
+GPO Modification Successful | Yes | No
+Impact | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Target Accounts | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+User Account Modification Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Target Accounts | 
+Target Shadow Copies | 
+Tools and Commands Used | 1.
+2.
+3.
+4.
+5.
+Scripts Used (if any) | 
+Result Obtained
+Response Received | 
+Shadow Copies Identified | Yes | No
+Persistence Successful | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified Internal OS and Port Successful | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified Internal Service Successful | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified Internal LDAP Successful | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified Internal LDAP Successful | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to Manual Method | High | Medium | Low
+Result Obtained
+Identified Group Successful | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified NetBIOS Details Successful | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified Windows Shares Successfully | Yes | No
+Response/Commands Received from AI | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Efficiency Compared to the Manual Method | High | Medium | Low
+Result Obtained
+Identified SNMP Successful | Yes | No
+Response/Commands Received from AI | 
+Result Analysis

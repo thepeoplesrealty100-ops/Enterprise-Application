@@ -1,0 +1,267 @@
+Certified Penetration Testing Professional Exam 412-80
+hping3 Cheat Sheet
+Certified Penetration Testing Professional
+hping3 Cheat Sheet
+hping3
+Source: http://hping.org
+hping is a command-line oriented TCP/IP packet assembler/analyzer for the TCP/IP protocol that
+sends ICMP echo requests and supports TCP, UDP, ICMP, and raw-IP protocols.
+Syntax
+hping3 [options] <Target>
+The following table lists the various Hping commands and their respective scanning methods.
+1. Scan Commands
+2. IP Related Commands
+3. TCP/UDP Related Commands
+4. TCP Flags
+5. ICMP Related Commands
+6. Common hping Commands
+7. Protocol Selection Commands
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+hping3 Cheat Sheet
+1. Scan Commands
+hping Command Description
+hping3 -q <Target> (or)
+Scans quietly
+hping3 --quiet <Target>
+hping3 -I <Target> (or)
+Interface name (to be used for sending packets)
+hping3 --interface <Target>
+hping3 -D <Target> (or)
+Debugging info
+hping3 --debug <Target>
+hping3 -c <Target> (or)
+Packet count (to be sent)
+hping3 --count <Target>
+hping3 -V <Target> (or) Enable verbose output
+hping3 --verbose <Target> Example: hping3 -V -S <target ip>
+hping3 -i <Target> (or) Wait (uX for X microseconds, for example -i
+hping3 --interval <Target> u1000)
+hping3 -v <Target> (or) Show version information and API used to access
+hping3 -- version <Target> to data link layer, linux sock packet or libpcap
+hping3 -n <Target> (or)
+Numeric output
+hping3 --numeric <Target>
+hping3 -z <Target> (or)
+Used to bind. Use ctrl+z to increment TTL
+hping3 --bind <Target>
+hping3 -Z <Target> (or)
+Used to unbind
+hping3 --unbind <Target>
+hping3 --beep <Target> Beep for every matching packet received
+Sent packets as fast as possible. Don't show
+hping3 --flood <Target>
+replies
+hping3 --fast <Target> Sends 10 packets / sec
+hping3 --faster <Target> Sends 1 packet / µs
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+hping3 Cheat Sheet
+2. IP Related Commands
+hping Command Description
+hping3 -a <Target> (or)
+Spoof source address
+hping3 --spoof <Target>
+hping3 -A <Target> -p 80 ACK scanning on port 80
+Random destination address mode
+hping3 --rand-dest <Target>
+Example: hping3 -1 10.0.1.x --rand-dest –I eth0
+hping3 --rand-source
+Random source address mode
+<Target>
+hping3 -t <Target> (or)
+Set TTL (time to live) value
+hping3 --ttl <Target>
+hping3 -N <Target> (or)
+id [default random]
+hping3 --id <Target>
+hping3 -H –ipproto <Target> Set the IP protocol field, only in RAW IP mode
+hping3 -W <Target> (or)
+Use win* id byte ordering
+hping3 --winid <Target>
+hping3 -r <Target> (or)
+Relativize id field to estimate host traffic
+hping3 --rel <Target>
+hping3 -f <Target> (or)
+Split packets in more fragments
+hping3 --frag <Target>
+hping3 -x <Target> (or)
+Set more fragments flag
+hping3 --morefrag <Target>
+hping3 -y <Target> (or)
+Set don't fragment flag
+hping3 --dontfrag <Target>
+hping3 -g <Target> (or)
+Set fragment offset value
+hping3 --fragoff <Target>
+hping3 -G <Target> (or) Includes RECORD_ROUTE option and display the
+hping3 --rroute <Target> route buffer
+set virtual MTU, implies --frag if packet size >MTU
+hping3 -m <Target> (or)
+hping3 --mtu <Target>
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+hping3 Cheat Sheet
+hping3 -o <Target> (or)
+Type of service (default 0x00)
+hping3 --tos <Target>
+hping3 --lsrr <Target> Loose source routing and record route
+hping3 --ssrr <Target> Strict source routing and record route
+3. TCP/UDP Related Commands
+hping Command Description
+hping3 -s <Target> (or)
+Base source port [random], +1 on received
+hping3 --baseport <Target>
+Destination port [0] if have, have:
+hping3 -p <Target> (or)
++port increased for each reply
+hping3 --destport <Target>
+++port increased for each sent
+hping3 -w <Target> (or)
+Set Win size [64]
+hping3 --win <Target>
+hping3 -O <Target> (or)
+Set fake TCP data offset
+hping3 --tcpoff <Target>
+hping3 --keep <Target> Still source port
+hping3 -b <Target> (or)
+Send packets with a bad IP checksum
+hping3 --badcksum <Target>
+hping3 -M <Target> (or)
+Set TCP sequence number
+hping3 --setseq <Target>
+hping3 -L <Target> (or)
+Set TCP ack
+hping3 --setack <Target>
+Collects initial sequence number
+hping3 -Q <Target> (or)
+Example: hping3 <target ip> -Q -p 139 –s
+hping3 --seqnum <Target>
+4. TCP Flags
+hping Command Description
+hping3 -R <Target> (or) Set Reset flag
+hping3 --rst <Target> Example: hping3 –rst -S <target ip>
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+hping3 Cheat Sheet
+hping3 –A <Target> (or) Set ACK flag
+hping3 --ack <Target> Example: hping3 –A <target ip> –p 80
+hping3 -F <Target> -p 80 (or) Set FIN flag scan on port 80
+hping3 --fin <Target> –p 80 Example: hping3 –F –P –U <target ip> –p 80
+Set SYN flag
+hping3 -S <Target> (or)
+Example: hping3 -S 192.168.1.1 -a 192.168.1.254 -
+hping3 --syn <Target> –p 80
+p 22 --flood
+hping3 -P <Target> -p 80(or) Set PUSH flag scan on port 80
+hping3 --push <Target> –p 80 Example: hping3 –F –P –U <target ip> –p 80
+hping3 -U <Target> -p 80 (or) Set URG flag scan on port 80
+hping3 --urg <Target> –p 80 Example: hping3 –F –P –U <target ip> –p 80
+hping3 -X <Target> (or) Set X unused flag (0x40)
+hping3 --xmas <Target>
+hping3 -Y <Target> (or)
+Set Y unused flag (0x80)
+hping3 --ymas <Target>
+5. ICMP Related Commands
+hping Command Description
+hping3 -C <Target> (or) Set icmp type, default is ICMP echo request
+hping3 --icmptype <Target> (implies --icmp).
+hping3 -K <Target> (or)
+Set icmp code, default is 0 (implies --icmp)
+hping3 --icmpcode <Target>
+Set IP version of IP header contained into ICMP
+hping3 --icmp-ipver <Target>
+data, default is 4
+hping3 --icmp-iphlen Set IP header length of IP header contained into
+<Target> ICMP data, default is 5 (5 words of 32 bits)
+hping3 --icmp-iplen ip Set IP packet length of IP header contained into
+<Target> ICMP data, default is the real length
+Set IP id of IP header contained into ICMP data,
+hping3 --icmp-ipid <Target>
+default is random
+hping3 --icmp-ipproto Set IP protocol of IP header contained into ICMP
+<Target> data, default is TCP.
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+hping3 Cheat Sheet
+Set ICMP checksum, for default is the valid
+hping3 --icmp-cksum <Target>
+checksum.
+hping3 --icmp-ts <Target> Alias for --icmp --icmptype 13 (ICMP timestamp)
+Alias for --icmp --icmptype 17 (ICMP address
+hping3 --icmp-addr <Target>
+subnet mask)
+Set gateway address for ICMP redirect (default
+hping3 --icmp-gw <Target>
+0.0.0.0)
+hping3 --icmp-help <Target> Display help for others ICMP options
+Send all ICMP types (default send only supported
+hping3 --force-icmp <Target>
+types)
+6. Common hping Commands
+hping Command Description
+hping3 -E <Target> (or)
+File inserted into packet’s data
+hping3 --file <Target>
+hping3 -e <Target> (or)
+Add 'signature'
+hping3 --sign <Target>
+hping3 -d <Target> (or)
+Data size of packet body size
+hping3 --data <Target>
+hping3 -j <Target> (or)
+Dump received packets in hex
+hping3 --dump <Target>
+hping3 -J <Target> (or)
+Print dump in printable character
+hping3 --print <Target>
+hping3 -B <Target> (or)
+Safe lost packets will be resent
+hping3 --safe <Target>
+hping3 -u <Target> (or)
+Tells when --file reached EOF and prevent rewind
+hping3 --end <Target>
+hping3 -T <Target> (or)
+Traceroute mode
+hping3 --traceroute <Target>
+hping3 --tr-keep-ttl <Target> Keeps TTL fixed
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+hping3 Cheat Sheet
+Exit when receive the first not ICMP in traceroute
+hping3 --tr-stop <Target>
+mode
+hping3 --tr-no-rtt <Target> Don’t show RTT
+hping3 --tcpexitcode <Target> Use last tcp->th_flags as exit code
+hping3 --tcp-mss <Target> Enable the TCP MSS option with the given value
+Enable the TCP timestamp option to guess the
+hping3 --tcp-timestamp HZ/uptime
+<Target>
+Example: hping3 -S <target ip> -p 80 --tcp-
+timestamp
+Send the packet described with APD (see
+hping3 --apd-send <Target>
+docs/APD.txt)
+7. Protocol Selection Commands
+hping Command Description
+hping3 -0 <Target> (or)
+Raw IP mode
+hping3 --rawip <Target>
+hping3 -1 <Target> (or) ICMP mode
+hping3 --icmp <Target> Example: hping3 -1 <target ip>
+hping3 -2 <Target> (or) UDP mode
+hping3 --udp <Target> Example: hping3 -2 <target ip> –p 80
+Scan mode
+hping3 -8 <Target> (or) Example: hping3 --scan 1-30,70-90 -S <target
+hping3 --scan <Target> website>
+Example: hping3 -8 50-60 –S <target ip> -V
+hping3 -9 <Target> (or) Listen mode
+hping3 --listen <Target> Example: hping3 -9 HTTP –I eth0
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

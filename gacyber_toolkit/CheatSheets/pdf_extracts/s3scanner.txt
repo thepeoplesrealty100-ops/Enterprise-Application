@@ -1,0 +1,67 @@
+Certified Penetration Testing Professional Exam 412-80
+s3scanner Cheat Sheet
+Certified Penetration Testing Professional
+s3scanner Cheat Sheet
+s3scanner
+Source: https://github.com
+s3scanner is designed to scan and enumerate object storage buckets across various cloud
+providers. It is beneficial for identifying publicly accessible buckets and assessing their security
+configurations. s3scanner offers a range of options for outputting scan results, such as saving
+data to a PostgreSQL database or printing logs in JSON format for easier processing and
+integration with other tools.
+Syntax
+$ s3scanner -bucket-file names.txt -enumerate
+Options
+-bucket Name of bucket to check.
+-bucket-file File of bucket names to check.
+Connect to RabbitMQ to get buckets. Requires config file
+-mq
+key "mq". Default: "false".
+-db Save results to a Postgres database. Requires config file
+key "db.uri". Default: "false".
+-json Print logs to stdout in JSON format instead of human-
+readable. Default: "false".
+-enumerate Enumerate bucket objects (can be time-consuming).
+Default: "false".
+-provider Object storage provider: aws, custom, digitalocean,
+dreamhost, gcp, linode, scaleway - custom requires config
+file. Default: "aws".
+-threads Number of threads to scan with. Default: "4".
+-verbose Enable verbose logging. Default: "false".
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+s3scanner Cheat Sheet
+-version Print version. Default: "false".
+s3scanner Commands
+Command Description
+s3scanner -bucket secret_uploads Scan a single bucket
+s3scanner -bucket-file names.txt Scans every bucket name listed in the file
+Scans AWS for bucket names listed in the file
+s3scanner -bucket-file names.txt
+names.txt and enumerates all objects within those
+-enumerate
+buckets.
+Scans a specified bucket (my-bucket) in GCP,
+s3scanner -provider gcp -db -
+enumerates all objects, and saves the results to a
+bucket my-bucket -enumerate
+PostgreSQL database.
+Connects to a RabbitMQ server and consumes
+s3scanner -mq
+messages containing bucket names to scan.
+s3scanner -bucket images -db Saves all scan results to a PostgreSQL database.
+Outputs scan results in machine-readable JSON
+s3scanner -bucket images -json
+format.
+s3scanner -bucket attachments - Enumerate all objects stored in the bucket.
+enumerate
+s3scanner -bucket assets - Specify the storage provider when checking
+provider gcp buckets.
+s3scanner -bucket secret_docs - Set the number of threads to scan with.
+threads 8
+s3scanner -bucket spreadsheets - Enables verbose logging of debug messages.
+verbose
+s3scanner -version Print the version info and exit.
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

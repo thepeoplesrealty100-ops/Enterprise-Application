@@ -1,0 +1,103 @@
+Certified Penetration Testing Professional Exam 412-80
+CloudGoat Cheat Sheet
+Certified Penetration Testing Professional
+CloudGoat Cheat Sheet
+CloudGoat
+Syntax
+./cloudgoat.py [ command ] [ sub-command ] [ --arg-name ] [ arg-
+value ]
+Options
+create Deploys a scenario to the AWS account you
+Syntax: create [ scenario-name ] choose
+list
+Shows some information about all,
+Syntax: list
+undeployed, or deployed scenarios
+<scenario>|all|deployed|undeployed
+destroy
+Shuts down and deletes a [ scenario-
+Syntax: destroy <scenario>|all [--
+name]'s cloud resources
+profile <name>]
+config Allows to manage various aspects of your
+CloudGoat installation
+config whitelist Creates the whitelist file with the result
+To instruct CloudGoat to use an AWS profile
+config profile
+by name using this command
+Help for setting up argcomplete, enabling
+config argcomplete
+tab completion for CloudGoat
+help Provides contextual help about commands
+./cloudgoat.py [ scenario-name ] Used to print to the console a summary of
+help the scenario
+To destroy the CloudGoat environment
+./kill.sh
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+CloudGoat Cheat Sheet
+CloudGoat Commands
+Commands Description
+./cloudgoat.py create
+Restore full admin privileges
+iam_privesc_by_rollback
+Acquire instance profile keys and use them
+./cloudgoat.py create
+to discover, access, and exfiltrate sensitive
+cloud_breach_s3
+data
+./cloudgoat.py create Delete the EC2 instance "cg-super-critical-
+iam_privesc_by_attachment security-server."
+Invoke the "cg-lambda-[ CloudGoat ID ]"
+./cloudgoat.py create ec2_ssrf
+Lambda function
+./cloudgoat.py create rce_web_app Find a secret stored in the RDS database
+./cloudgoat.py create A pair of secret strings stored in a secure
+codebuild_secrets RDS database
+aws configure --profile cloudgoat Configure the AWS CLI to use the keys
+./cloudgoat.py config whitelist -
+Configure the IP whitelist
+-auto
+./cloudgoat.py create rce_web_app Create the CloudGoat “rce_web_app”
+--profile cloudgoat scenario
+aws ec2 describe-instances –
+Check running instances
+profile <user>
+aws ec2 stop-instances –instance-
+Stop instance
+id <Instance Id> --profile <User>
+aws iam list-attached-role-
+policies -–role-nam ec2_role –- Check policy
+profile <User>
+aws iam get-policy -–policy-arn
+arn
+The current version of the ec2_ip_policy
+:aws:iam::<arn>:policy:/ec2_ip_po
+licy -–profile <user>
+aws iam get-policy –policy-arn
+arn:aws:iam:<arn>:policy/ec2_ip_p
+Policy permissions
+olicy –version-id v1 –profile
+<user>
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+CloudGoat Cheat Sheet
+aws iam create-policy-version -–
+policy-arn
+arn:aws:iam::<arn>:policy/ec2_ip_ Create a new version of ec2_ip_policy and
+policy –policy-document set it as a default one
+file://var/www.html/escalated_pol
+icy.json --set-as-default
+aws s3 ls s3://<bucket> --
+Find which buckets we can list
+recursive --profile <User>
+aws elbv2 describe-load-balancers
+Check load balancers, we may have access
+--profile Lara
+aws ec2 describe-security-groups
+Check security groups
+--profile <User>
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

@@ -1,0 +1,751 @@
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+Certified Penetration Testing Professional
+Aircrack-ng Cheat Sheet
+Aircrack-ng
+Aircrack-ng is a network software suite consisting of a detector, packet sniffer, WEP and
+WPA/WPA2-PSK cracker, and analysis tool for 802.11 wireless networks. This program runs on
+both Linux and Windows.
+Tools in Aircrack-ng Suite:
+1. Airbase-ng
+2. Aircrack-ng
+3. Airdecap-ng
+4. Airdecloak-ng
+5. Airdriver-ng
+6. Airdrop-ng
+7. Aireplay-ng
+8. Airgraph-ng
+9. Airmon-ng
+10. Airodump-ng
+11. Airolib-ng
+12. Airserv-ng
+13. Airtun-ng
+14. Besside-ng
+15. Dcrack
+16. Easside-ng
+17. Packetforge-ng
+18. Wesside-ng
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+1. Airbase-ng
+Syntax
+airbase-ng <options> <replay interface>
+Options
+-a bssid To set Access Point MAC address
+-i iface Capture packets from this interface
+-w WEP key Use this WEP key to encrypt/decrypt packets
+-h MAC Source mac for MITM mode
+-f disallow Disallow specified client MACs (default: allow)
+-W 0|1 [Do not] set WEP flag in beacons 0|1 (default: auto)
+-q Quiet (do not print statistics)
+-v Verbose (print more messages) (long --verbose)
+-M M-I-T-M between [specified] clients and bssids
+-A Ad-Hoc Mode (allows other clients to peer) (long --ad-hoc)
+-Y in|out|both External packet processing
+-c channel Sets the channel the AP is running on
+-X Hidden ESSID (long --hidden)
+-s Force shared key authentication
+-S Set shared key challenge length (default: 128)
+-L Caffe-Latte attack (long --caffe-latte)
+Hirte attack (cfrag attack), creates arp request against wep
+-N
+client (long –cfrag)
+-x nbpps Number of packets per second (default: 100)
+-y Disables responses to broadcast probes
+-0 Set all WPA,WEP,open tags. can't be used with -z & -Z
+Sets WPA1 tags. 1=WEP40 2=TKIP 3=WRAP 4=CCMP
+-z type
+5=WEP104
+-Z type Same as -z, but for WPA2
+-V type Fake EAPOL 1=MD5 2=SHA1 3=auto
+-F prefix Write all sent and received frames into pcap file
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+-P Respond to all probes, even when specifying ESSIDs
+-I interval Sets beacon interval value in ms
+-C seconds Enables beaconing of probed ESSID values (requires -P)
+--help Displays the usage screen (short -H)
+Filter Options
+--bssid <MAC> BSSID to filter/use (short -b)
+--bssids <file> Read a list of BSSIDs out of that file (short -B)
+--client <MAC> MAC of a client to accept (short -d)
+--clients <file> Read a list of MACs out of that file (short -D)
+--essid <ESSID> Specify a single ESSID (short -e)
+--essids <file> Read a list of ESSIDs out of that file (short -E)
+Airbase-ng Commands
+Commands Description
+airbase-ng -c 9 -e teddy
+Hirte Attack in Access Point mode
+-N -W 1 rausb0
+airbase-ng -c 9 -e teddy
+Hirte Attack in Ad-Hoc mode
+-N -W 1 -A rausb0
+airbase-ng -c 9 -e teddy
+Caffe Latte Attack in Access Point mode
+-L -W 1 rausb0
+airbase-ng -c 9 -e teddy
+Shared Key Capture
+-s -W 1 wlan0
+airbase-ng -c 9 -e teddy
+WPA Handshake Capture
+-z 2 -W 1 rausb0
+airbase-ng -c 9 -e teddy
+WPA2 Handshake Capture
+-Z 4 -W 1 rausb0
+airbase-ng -e teddy -c 6
+Basic Fake Access Point
+wlan0
+airbase-ng -e teddy -y
+Beacon Flood
+wlan0
+airbase-ng -e teddy -c 6
+Configure for WEP Encryption
+-W 1 -k 1234567890 wlan0
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+2. Aircrack-ng
+Syntax
+aircrack-ng [options] <capture file(s)>
+Options
+Common Options
+-a amode Force attack mode (1 = static WEP, 2 = WPA/WPA2-PSK)
+-e essid If set, all IVs from networks with the same ESSID will be used
+Long version –bssid Select the target network based on the
+-b bssid
+access point's MAC address
+-p nbcpu On SMP systems: # of CPU to use
+-q Enable quiet mode
+-C MACs Long version --combine. Merge the given Aps
+-l filename logs the key to the file specified
+Static WEP Cracking Options
+Restrict the search space to alphanumeric characters only (0x20 -
+-c
+0x7F)
+-t Restrict the search space to binary coded decimal hex characters
+-h Restrict the search space to numeric characters (0x30-0x39)
+Long version –debug. Set the beginning of the WEP key (in hex),
+-d start
+for debugging purposes
+-m maddr MAC address to filter WEP data packets
+Specify the length of the key: 64 for 40-bit WEP, 128 for 104-bit
+-n nbits
+WEP, etc
+-i index Only keep the IVs that have this key index (1 to 4)
+By default, this parameter is set to 2 for 104-bit WEP and to 5 for
+-f fudge
+40-bit WEP
+-k korek There are 17 korek statistical attacks
+-x/-x0 Disable last keybytes brute force
+-x1 Enable last keybyte brute forcing (default)
+-x2 Enable last two keybytes brute forcing
+-X Disable brute force multithreading (SMP only)
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+-s Show the key in ASCII while cracking
+-y Experimental single brute force attack
+-z Invokes the PTW WEP cracking method
+Long version --ptw-debug. Invokes the PTW debug mode: 1
+-P number
+Disable klein, 2 PTW.
+-K Invokes the Korek WEP cracking method.
+-D Long version --wep-decloak. Run in WEP decloak mode
+-1 Long version --oneshot
+-M number Specify the maximum number of IVs to use for WEP cracking
+-V Long version --visual-inspection. Run in visual inspection mode
+WEP and WPA-PSK cracking options
+-w words Path to a wordlist or “-” without the quotes for standard in (stdin)
+-N Create a new cracking session and save it to the specified file
+-R Restore cracking session from the specified file
+WPA-PSK options
+-E file> Create EWSA Project file v3
+-j file Create Hashcat v3.6+ Capture file
+-J file Create Hashcat Capture file
+-S none WPA cracking speed test
+-Z sec WPA cracking speed test execution length in seconds
+Utilizes a database generated by airolib-ng as input to determine
+-r database
+the WPA key
+SIMD Selection
+--simd
+Use user-specified SIMD optimization instead of the fastest one
+optimization
+--simd-list Shows a list of the SIMD optimizations available
+Other options
+-H Long version --help
+-u Long form --cpu-detect
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+Aircrack-ng Commands
+Commands Description
+aircrack-ng -K 128bit.ivs To crack WEP Key
+aircrack-ng -w password.lst *.cap To crack WPA Key
+To crack WPA/WPA2-PSK keys
+aircrack-ng --simd=avx wpa.cap -w
+using a wordlist with the AVX
+password.lst
+SIMD optimization
+aircrack-ng --new-session current.session -
+Cracking session
+w password.lst,english.txt wpa-01.cap
+aircrack-ng --restore-session It will keep updating the current
+current.session session every 10 minutes.
+List all the available SIMD
+aircrack-ng --simd-list optimizations supported by
+Aircrack-ng
+3. Airdecap-ng
+Syntax
+airdecap-ng [options] <pcap file>
+Options
+-l Don't remove the 802.11 header
+-b bssid Access point MAC address filter
+-k pmk WPA/WPA2 Pairwise Master Key in hex
+-e essid Target network ascii identifier
+-p pass Target network WPA/WPA2 passphrase
+-w key Target network WEP key in hexadecimal
+Airdecap-ng Commands
+Commands Description
+airdecap-ng -b <MAC Address> Removes the wireless headers from an open
+open-network.cap network (no WEP) capture
+airdecap-ng -w <hexadecimal Decrypts a WEP-encrypted capture using a
+WEP key>wep.cap hexadecimal WEP key
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+airdecap-ng -e 'the ssid' -p Decrypts a WPA/WPA2 encrypted capture using the
+passphrase tkip.cap passphrase
+4. Airdecloak-ng
+Syntax
+airdecloak-ng [options]
+Options
+-i <file> Input capture file
+--ssid <ESSID> ESSID of the network to filter
+--bssid <BSSID> BSSID of the network to filter
+--filters <filters> Apply filters (separated by a comma)
+signal Try to filter based on signal
+Remove all duplicate sequence numbers for both the AP
+duplicate_sn
+and the client.
+duplicate_sn_ap Remove duplicate sequence numbers for the AP only.
+duplicate_sn_client Remove duplicate sequence number for the client only
+consecutive_sn Filter based on the fact that IV should be consecutive
+duplicate_iv Remove all duplicate IV
+signal_dup_consec_sn Use signal duplicate and consecutive sequence number
+--null-packets Assume that null packets can be cloaked
+--disable-base_filter Do not apply base filter
+--drop-frag Drop fragmented packets
+--help Displays this usage screen
+Airdecloak-ng Commands
+Commands Description
+Filters out the cloaking attempts from the
+airdecloak-ng <input.pcap> -o
+input capture file and writes the cleaned
+<output.pcap>
+packets to the output file.
+Enables verbose output to provide more
+airdecloak-ng <input.pcap> -v detailed information about the filtering
+process.
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+5. Airdriver-ng
+Syntax
+airdriver-ng <command> [driver number | driver name]
+Airdriver-ng Commands
+Commands Description
+airdriver-ng supported Lists all supported drivers
+airdriver-ng kernel Lists all in-kernel drivers
+airdriver-ng installed Lists all installed drivers
+airdriver-ng loaded Lists all loaded drivers
+airdriver-ng load 34 Loads a driver
+airdriver-ng unload 34 Unloads a driver
+airdriver-ng reload 34 Reloads a driver
+airdriver-ng install 34 Installs a driver
+airdriver-ng remove 34 Removes a driver
+airdriver-ng install_stack 0 Installs a stack
+airdriver-ng remove_stack 0 Removes a stack
+airdriver-ng details 34 Prints driver details
+airdriver-ng detect Detects wireless cards
+6. Airdrop-ng
+Syntax
+airdrop-ng [options] <pcap file>
+Options
+-i Wireless card in monitor mode to inject from
+-t Airodump txt file in CSV format NOT the pcap
+-p Disable the use of Psyco JIT
+-r Rule File for matched deauths
+-u Updates OUI list
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+-d Injection driver. Default is mac80211
+-s Time to sleep between sending each packet
+-b Turn on Rule Debugging
+-l Enable Logging to a file
+-n Time to sleep between loops
+Airdrop-ng Commands
+Commands Description
+airdrop-ng -i mon0 -t Start airdrop-ng on mon0 reading from
+airodump.csv -r rulefile.txt airodump.csv and kick on the rules in rulefile.txt
+7. Aireplay-ng
+Syntax
+aireplay-ng <options> <replay interface>
+Options
+Filter Options
+-b bssid MAC address, Access Point
+-d dmac MAC address, Destination
+-s smac MAC address, Source
+-m len Minimum packet length
+-n len Maximum packet length
+-u type Frame control, type field
+-v subt Frame control, subtype field
+-t tods Frame control, To DS bit
+-f fromds Frame control, From DS bit
+-w iswep Frame control, WEP bit
+Replay options
+-x nbpps Number of packets per second
+-p fctrl Set frame control word (hex)
+-a bssid Set Access Point MAC address
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+-c dmac Set Destination MAC address
+-h smac Set Source MAC address
+-e essid For fakeauth attack or injection test, it sets target AP SSID
+-j arpreplay attack: inject FromDS pkts
+-g value Change ring buffer size (default: 8)
+-k IP Set destination IP in fragments
+-l IP Set source IP in fragments
+-o npckts Number of packets per burst (-1)
+-q sec Seconds between keep-alives (-1)
+-y prga Keystream for shared key auth
+“-B” or “–bittest” Bit rate test
+“-D” Disables AP detection
+“-F” or “–fast” Chooses first matching packet
+“-R” Disables /dev/rtc usage
+Source Options
+iface Capture packets from this interface
+-r file Extract packets from this pcap file
+Attack Modes
+Mode Description
+- -deauth count Deauthenticate 1 or all stations (-0)
+- -fakeauth delay Fake authentication with AP (-1)
+- -interactive Interactive frame selection (-2)
+- -arpreplay Standard ARP-request replay (-3)
+- -chopchop Decrypt/chopchop WEP packet (-4)
+- -fragment Generates valid keystream (-5)
+- -test Injection test (-9)
+Page | 10 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+Aireplay-ng Commands
+Commands Description
+aireplay-ng -0 1 -a 00:14:6C:7E:40:80
+Deauthentication
+-c 00:0F:B5:34:30:30 ath0
+aireplay-ng -1 0 -e teddy <Access
+point MAC address> <Our card MAC Fake authentication
+address> -y sharedkeyxor ath0
+aireplay-ng -2 <filter options>
+<replay options> -r <file name> Interactive packet replay
+<replay interface>
+aireplay-ng -3 -b 00:13:10:30:24:9C -
+ARP request replay attack
+h 00:11:22:33:44:55 ath0
+aireplay-ng -4 -h 00:09:5B:EC:EE:F2 -
+Korek chopchop attack
+b 00:14:6C:7E:40:80 ath0
+aireplay-ng -5 -b 00:14:6C:7E:40:80 -
+Fragmentation attack
+h 00:0F:B5:AB:CB:9D ath0
+aireplay-ng -6 -h 00:09:5B:EC:EE:F2 -
+Cafe Latte attack
+b 00:13:10:30:24:9C -D rausb0
+aireplay-ng -7 -h 00:09:5B:EC:EE:F2
+Hirte attack
+-D rausb0
+aireplay-ng -8 -b 00:26:0B:2A:BA:40
+Crack WPA migration mode
+-h 00:1f:3c:4e:88:46 mon0
+aireplay-ng -9 wlan0 Injection test
+aireplay-ng --test -e teddy -a
+Hidden or Specific SSID
+00:14:6C:7E:40:80 ath0
+airserv-ng -d wlan0 Airserv-ng Test
+8. Airgraph-ng
+Syntax
+python airgraph-ng -i [airodumpfile.txt] -o [outputfile.png] -g [CAPR
+OR CPG]
+Options
+-i Input File
+-o Output File
+-g Graph Type
+-a Print the about
+-h Print this help
+Page | 11 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+Airgraph-ng Commands
+Commands Description
+airgraph-ng -i demo.csv -o To create a Client to Access point
+demo.png -g CAPR Relationship Graph
+airgraph-ng -i demo.csv -o
+To create a Client to Probe Request Graph
+demo.png -g CPG
+9. Airmon-ng
+Syntax
+airmon-ng <start|stop> <interface> [channel] or airmon-ng
+<check|check kill>
+Options
+It gives information about the system as well as details
+--verbose flag
+about the wireless card
+It will give the same information as verbose and add
+--debug flag
+more details
+<start|stop> Indicates if you wish to start or stop the interface
+<interface> Specifies the interface
+[channel] Optionally set the card to a specific channel
+“Check” will show any processes that might interfere
+with the aircrack-ng suite.
+<check|check kill>
+“Check kill” will check and kill off processes that might
+interfere with the aircrack-ng suite
+Airmon-ng Commands
+Commands Description
+airmon-ng Check status and/or listing wireless interfaces
+airmon-ng check Checking for interfering processes
+airmon-ng check kill Killing interfering processes
+airmon-ng start wlan0 Enable monitor mode
+airmon-ng stop wlan0mon Disable monitor mode
+Page | 12 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+10. Airodump-ng
+Syntax
+airodump-ng <options> <interface>[,<interface>,...]
+Options
+--ivs Save only captured IVs
+--gpsd Use GPSd
+--write <prefix> Dump file prefix
+-w Same as --write
+--beacons Record all beacons in dump file
+--update <secs> Display update delay in seconds
+--showack Prints ack/cts/rts statistics
+-h Hides known stations for --showack
+-f <msecs> Time in ms between hopping channels
+Time before removing the AP/client from the screen when
+--berlin <secs>
+no more packets are received
+-r <file> Read packets from that file
+While reading packets from a file, simulate the arrival rate
+-T
+of them as if they were "live".
+-x <msecs> Active Scanning Simulation
+--manufacturer Display manufacturer from IEEE OUI list
+--uptime Display AP Uptime from Beacon Timestamp
+--wps Display WPS information
+--output-format Output format. Possible values: pcap, ivs, csv, gps, kismet,
+<formats> netxml, logcsv
+--ignore-negative-one Removes the message that says fixed channel
+--write-interval
+Output file(s) write interval in seconds
+<seconds>
+--background <enable> Override background detection
+-n <int> Minimum AP packets received before for displaying it
+Page | 13 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+Filter Options
+--encrypt <suite> Filter APs by cipher suite
+--netmask <netmask> Filter APs by mask
+--bssid <bssid> Filter APs by BSSID
+--essid <essid> Filter APs by ESSID
+--essid-regex <regex> Filter APs by ESSID using a regular expression
+-a Filter unassociated clients
+--ht20 Set channel to HT20 (802.11n)
+--ht40- Set channel to HT40- (802.11n)
+--ht40+ Set channel to HT40+ (802.11n)
+--channel <channels> Capture on specific channels
+--band <abg> Band on which airodump-ng should hop
+-C <frequencies> Uses these frequencies in MHz to hop
+--cswitch <method> Set channel switching method
+0 FIFO (default)
+1 Round Robin
+2 Hop on last
+-s Set channel switching method
+--help Displays this usage screen
+Airodump-ng Commands
+Commands Description
+airodump-ng -c 8 --bssid <AP MAC
+Limiting Data Capture to a Single AP
+address> -w capture ath0
+airodump-ng -c 8 --bssid <AP MAC
+Minimizing Disk Space for Captures
+address> -w capture --ivs ath0
+airodump-ng -d <MAC Address> -m
+Selecting all APs starting with similar BSSIDs
+FF:FF:FF:00:00:00 wlan0
+airodump-ng -c 11 wlan0 Captures data on channel 11
+Sets the capture to repeatedly use channel
+airodump-ng -c 11,11 wlan0
+11
+Captures data on channels 1, 6, and 11 using
+airodump-ng -c 1,6,11 wlan0
+the wlan0 wireless interface
+Page | 14 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+11. Airolib-ng
+Syntax
+airolib <database> <operation> [options]
+Operations Description
+Output some information about the database
+- -stats
+Example: airolib-ng testdb --stats
+Execute the specified SQL statement
+Example: airolib-ng testdb --sql 'update essid set
+- -sql {sql}
+prio=(select min(prio)-1 from essid) where
+essid="VeryImportantESSID";'
+Perform steps to clean the database from old junk
+- -clean [all]
+Example: airolib-ng testdb --clean
+Start batch-processing all combinations of ESSIDs and
+- -batch passwords
+Example: airolib-ng testdb --batch
+Verify a set of randomly chosen PMKs
+- -verify [all]
+Example: airolib-ng testdb --verify
+Export to a cowpatty file
+- -export cowpatty
+Example: airolib-ng testdb --export cowpatty test
+{essid} {file}
+cowexportoftest
+- -import cowpatty Import a cowpatty file and create the database if it does
+{file} not exist
+Import a text flat file as a list of either ESSIDs or
+passwords and create the database if it does not exist
+- -import {essid|passwd}
+{file} Example: 1) airolib-ng testdb --import essid ssidlist.txt
+2) airolib-ng testdb --import passwd password.lst
+Airolib-ng Commands
+Commands Description
+airolib-ng testdb –-stats Status Operation
+airolib-ng testdb -–sql ‘update
+essid set prio=(select min(prio)-
+SQL Operation
+1 from essid) where
+essid=”VeryImportantESSID”;’
+airolib-ng testdb -–clean Clean Operation
+Page | 15 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+airolib-ng testdb -–batch Batch Operation
+airolib-ng testdb -–verify Verify Operation
+airolib-ng testdb -–export
+Cowpatty table Export Operation
+cowpatty test cowexportoftest
+airolib-ng testdb -–import essid
+Import Operation (SSID)
+ssidlist.txt
+airolib-ng testdb -–import passwd
+Import Operation (Password)
+password.lst
+12. Airserv-ng
+Syntax
+airserv-ng <opts>
+Options
+-p <port> TCP port to listen on
+-d <dev> wifi device to serve.
+-c <chan> Channel to start on
+-v <level> debug level
+Airserv-ng Commands
+Commands Description
+Local machine (It has all the components
+airserv-ng -d ath0
+running on the same system)
+Remote machine (It has the server running
+airserv-ng -d ath0
+on one system with a specific IP address)
+13. Airtun-ng
+Syntax
+airtun-ng <options> <replay interface>
+Options
+-x nbpps Maximum number of packets per second
+-a bssi Set Access Point MAC address
+-i iface Capture packets from this interface
+Page | 16 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+-y file Read PRGA from this file
+-w wepkey Use this WEP-KEY to encrypt packets
+-p pass Use this WPA passphrase to decrypt packets
+-e essid Target network SSID
+Send frames to AP (1) or client (0) or tunnel them into a
+-t tods
+WDS/Bridge (2)
+-r file Read frames out of pcap file
+-h MAC source MAC address
+-H Display help. Long-form –help
+-s transmitter Set Transmitter MAC address for WDS Mode
+-b Bidirectional mode
+- -repeat Activates repeat mode. Short form -f
+- -bssid <mac> BSSID to repeat. Short form -d
+- -netmask <mask> Netmask for BSSID filter
+Airtun-ng Commands
+Commands Description
+airtun-ng <Access point MAC address> -w
+wIDS
+1234567890 ath0
+ifconfig at0 <Target IP> netmask
+WEP injection
+255.255.255.0 up
+airtun-ng <MAC Address> -y fragment-0124-
+PRGA injection
+153850.xor ath0
+airtun-ng -a <MAC address used by packets
+injected> --repeat –bssid <MAC address Repeater Mode
+used by packets injected> -i ath0 wlan0
+airtun-ng <MAC address used by packets
+Packet Replay Mode
+injected> -r ath0one-01.cap ath0
+airtun-ng -t 1 ath0 -h BB:BB:BB:BB:BB:BB - Tunneling traffic into WDS
+a AA:AA:AA:AA:AA:AA -i ath0 networks or WiFi Bridges
+Page | 17 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+14. Besside-ng
+Syntax
+besside-ng [options] <interface>
+Options Description
+-b Specifies the target's BSSID
+-s Where to upload capture file for cracking
+-c Channel lock
+-p Packages per second to send
+-W Crack only WPA networks
+-v Verbos mode, -vv for even more and so on
+-h Help screen
+Besside-ng Commands
+Commands Description
+To crack automatically all WEP networks in range and
+besside-ng mon0
+to get possible WPA handshakes
+besside-ng -W -c 6 -b
+To get WPA handshake from a specific target
+<Target MAC Address> mon0
+cat besside.log To check the log file
+15. Dcrack
+Commands Description
+./dcrack.py server Server set-up
+./dcrack.py client <SERVER_IP> Client set-up
+./dcrack.py cmd <SERVER_IP> cap <CAPTURE_FILENAME> Upload capture file
+./dcrack.py cmd <SERVER_IP> dict <WORDLIST_PATH> Upload wordlist
+./dcrack.py cmd <SERVER_IP> crack <BSSID> Run cracking job
+./dcrack.py cmd <SERVER_IP> status Status
+Page | 18 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+16. Easside-ng
+Syntax
+easside-ng <options>
+Options
+-h Displays the list of options
+-v MAC address of the Access Point
+-m Source MAC address to be used
+-i Source IP address to be used on the wireless LAN.
+-r IP address of the AP router.
+-s IP address of the “buddy” server
+-f Wireless interface name
+-c Locks the card to the specified channel
+Easside-ng Commands
+Commands Description
+easside-ng -f ath0 <MAC address
+Specific AP Usage Example
+of AP> -c 9 -s <Buddy server IP>
+17. Packetforge-ng
+Syntax
+packetforge-ng <mode> <options>
+Options
+-p <fctrl> Set frame control word
+-a <bssid> Set Access Point MAC address
+-c <dmac> Set Destination MAC address
+-h <smac> Set Source MAC address
+-j Set FromDS bit
+-o Clear ToDS bit
+-e Disables WEP encryption
+-k <ip[:port]> Set Destination IP Port
+Page | 19 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+-l <ip[:port]> Set Source IP port
+-t ttl Set Time to Live
+-w <file> Write packet to this pcap file
+-r <file> Read packet from this raw file
+-y <file> Read PRGA from this file
+Packetforge-ng Commands
+Commands Description
+packetforge-ng -0 -a <AP MAC> -h
+<Source MAC> -k <Source IP> -l
+Generating an arp request packet
+<Destination IP> -y <PRGA XOR
+file> -w <Output file>
+packetforge-ng --null -s 42 -a
+BSSID -h SMAC -w short-packet.cap Generating a null packet
+-y fragment.xor
+packetforge-ng -9 -r input.cap -y
+Generating a custom packet
+keystream.xor -w output.cap
+18. Wesside-ng
+Syntax
+wesside-ng <opts> -i <wireless interface name>
+Options
+-h Displays the list of options
+-i Wireless interface name
+Network IP as in “who has destination IP (netip) tell source IP
+-n
+(myip)”
+-m MY IP “who has destination IP (netip) tell source IP (myip)”
+-a Source MAC address
+-c Do not start aircrack-ng
+-f Allows the highest channel for scanning to be defined
+-k Ignores ACKs since some cards/drivers do not report them
+Determines the minimum number of bytes of PRGA which are
+-p
+gathered
+-t For each number of IVs specified, restart the aircrack-ng PTW engine
+-v Wireless access point MAC address
+Page | 20 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Aircrack-ng Cheat Sheet
+Wesside-ng Commands
+Commands Description
+Initiate the wesside-ng tool with a specific
+wesside-ng -i wlan0
+wireless interface
+Page | 21 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

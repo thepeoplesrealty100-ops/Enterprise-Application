@@ -1,0 +1,811 @@
+[Organization’s Logo]
+[Organization’s Name]
+[Organization’s Contact Details]
+[Title of the Report]
+Target Organization:
+Penetration Tester:	
+Date:	
+Location:
+Test Planning and Scoping
+[*Describe the key aspects defined during the social engineering penetration test's test planning and scoping phase.]
+Target Identification
+[*List identified targets along with their designation, information source, selection criteria, and relevant remarks for social engineering penetration testing]
+Off-Site Social Engineering Penetration Testing
+[*This section outlines methods and techniques used for conducting off-site social engineering penetration testing, focusing on email, phone, AI, and more to simulate realistic attack scenarios.]
+Attempt Social Engineering Using Email
+Attempt Phishing
+Attempt Spear Phishing
+Attempt Whaling
+Attempt Pharming
+Attempt Spimming
+Attempt Clone Phishing
+Attempt E-wallet Phishing
+Attempt Consent Phishing
+Attempt Search Engine Phishing
+Attempt Angler Phishing
+Attempt Vishing (Voice or VoIP Phishing)
+Attempt SMiShing (SMS Phishing)
+Attempt QRLJacking
+Attempt Deepfake Attack
+Attempt Voice Cloning Attack
+On-Site Social Engineering Penetration Testing
+[*This section covers on-site techniques to assess security by extracting sensitive information through physical and interpersonal methods.]
+Visit the Company as an Inquirer and Extract Privileged Information
+Visit the Company Locality
+Attempt to Use Fake ID to Gain Access to the Company Premises
+Attempt Piggybacking/Tailgating
+Attempt Pretexting
+Listen to Employee Conversations in Communal Areas/Cafeteria
+Identify “Disgruntled Employees” and Engage Them in Conversation to Extract Sensitive Information
+Attempt Eavesdropping
+Try to Shoulder Surf Users
+Conduct Media Dropping/Baiting
+Attempt Dumpster Diving
+Attempt Reverse Social Engineering
+Attempt Elicitation
+Attempt Motivation Techniques
+Document the Result
+[*List all the employees vulnerable to the social engineering attacks that have been simulated so far, including details of attacks performed, exploited vulnerabilities, compromised information, and associated risk levels.]
+Test Objectives | [e.g., employee awareness, physical security, response protocols]
+Scope Definition | Areas Included | [e.g., phishing, phone attacks, physical access]
+Scope Definition | Areas Excluded | [e.g., phishing, phone attacks, physical access]
+Compliance Considerations | 
+Risk Assessment | 
+Incident Handling Protocol/Procedure | 
+Reporting Structure | 
+Social Engineering Methods to be Used | [e.g., phishing, tailgating, impersonation]
+Success Criteria | 
+Team Members Involved in the Test | 1. |  | Tasks
+Team Members Involved in the Test | 2. |  | Tasks
+Team Members Involved in the Test | 3. |  | Tasks
+Team Members Involved in the Test | 4. |  | Tasks
+Management Consent | 
+Target Employee Name | Designation | Information Source | Criteria for Selection | Remarks
+ | [e.g., Company website, LinkedIn, Job boards] | [e.g., Publicly available details, Access level, Influence in the organization] | [e.g., Risk level, Ease of manipulation]
+Email Social Engineering Simulation Details
+Email Sent | To: 
+From: 
+Subject:
+Message:
+Redirected Fake Webpage | [Insert an image of the redirected fake landing page]
+Tools/Services Used | 
+Is Social Engineering Attempt Successful? | □ Yes                                            □ No
+Email Social Engineering Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Open Email | 
+Employees Who Did Not Open Email | 
+Employees Who Did Not Open Email | 
+Employees Who Did Not Open Email | 
+Employees Who Did Not Click the Attachment Link | 
+Employees Who Did Not Click the Attachment Link | 
+Employees Who Did Not Click the Attachment Link | 
+Employees Who Did Not Click the Attachment Link | 
+Employees Who Clicked Link But Did Not Provide Sensitive Information or Download Files | 
+Employees Who Clicked Link But Did Not Provide Sensitive Information or Download Files | 
+Employees Who Clicked Link But Did Not Provide Sensitive Information or Download Files | 
+Employees Who Clicked Link But Did Not Provide Sensitive Information or Download Files | 
+Employees Who Provided Sensitive Information or Downloaded Files | 
+Employees Who Provided Sensitive Information or Downloaded Files | 
+Employees Who Provided Sensitive Information or Downloaded Files | 
+Employees Who Provided Sensitive Information or Downloaded Files | 
+Extracted Privileged Information (if successful) | 
+Total Number of Emails Sent: |  | Total Number of Successful Clicks:
+Impact Rating | □ Informational   □ Low   □ Medium   □ High   □ Critical
+Result Analysis
+Phishing Simulation Details
+Phishing Techniques Used | [e.g., fake websites, pop-ups, emails]
+Phishing Email Sent | To: 
+From: 
+Subject:
+Message:
+Pop-up Used (if any) | [Insert an image of the fake pop-up used]
+Redirected Fake Webpage | [Insert an image of the redirected fake landing page]
+Tools / Services / Frameworks Used | 
+Is Phishing Successful? | □ Yes                                            □ No
+Phishing Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Open Phishing Email | 
+Employees Who Did Not Open Phishing Email | 
+Employees Who Did Not Open Phishing Email | 
+Employees Who Did Not Open Phishing Email | 
+Employees Who Did Not Click the Phishing Link | 
+Employees Who Did Not Click the Phishing Link | 
+Employees Who Did Not Click the Phishing Link | 
+Employees Who Did Not Click the Phishing Link | 
+Employees Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Employees Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Employees Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Employees Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Employees Who Provided Sensitive Details or Downloaded Files | 
+Employees Who Provided Sensitive Details or Downloaded Files | 
+Employees Who Provided Sensitive Details or Downloaded Files | 
+Employees Who Provided Sensitive Details or Downloaded Files | 
+Sensitive Information Obtained | 
+Total Phishing Emails Sent: |  | Total Phishing Clicks: | Total Successful Phish:
+Impact Rating | □ Informational   □ Low   □ Medium   □ High   □ Critical
+Result Analysis
+Spear Phishing Simulation Details
+Spear Phishing Email Sent | To: 
+From: 
+Subject:
+Message:
+Redirected Fake Webpage | [Insert an image of the redirected fake landing page]
+Tools / Services / Frameworks Used | 
+Is Spear Phishing Successful? | □ Yes                                            □ No
+Spear Phishing Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Open Spear Phishing Email | 
+Employees Who Did Not Open Spear Phishing Email | 
+Employees Who Did Not Open Spear Phishing Email | 
+Employees Who Did Not Click the Spear Phishing Link | 
+Employees Who Did Not Click the Spear Phishing Link | 
+Employees Who Did Not Click the Spear Phishing Link | 
+Employees Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Employees Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Employees Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Employees Who Provided Sensitive Details or Downloaded Files | 
+Employees Who Provided Sensitive Details or Downloaded Files | 
+Employees Who Provided Sensitive Details or Downloaded Files | 
+Sensitive Information Obtained | 
+Total Spear Phishing Emails Sent: |  | Total Spear Phishing Clicks: | Total Successful Spear Phish:
+Impact Rating | □ Informational        □ Low        □ Medium        □ High   □ Critical
+Result Analysis
+Whaling Simulation Details
+Whaling Email Sent | To: 
+From: 
+Subject:
+Message:
+Spoofed Website | [Insert an image of the spoofed website page]
+Tools / Services / Frameworks Used | [e.g., Social-Engineer Toolkit (SET), ShellPhish, etc.]
+Is Whaling Successful? | □ Yes                                            □ No
+Whaling Engagement Information
+Engagement Status | Name | Department | Designation
+Executives Who Did Not Open Whaling Email | 
+Executives Who Did Not Open Whaling Email | 
+Executives Who Did Not Open Whaling Email | 
+Executives Who Did Not Click the  Whaling Email Link | 
+Executives Who Did Not Click the  Whaling Email Link | 
+Executives Who Did Not Click the  Whaling Email Link | 
+Executives Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Executives Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Executives Who Clicked Link but Provided No Sensitive Details or Downloads | 
+Executives Who Provided Sensitive Details or Downloaded Files | 
+Executives Who Provided Sensitive Details or Downloaded Files | 
+Executives Who Provided Sensitive Details or Downloaded Files | 
+Sensitive Information Obtained | 
+Total Whaling Emails Sent: |  | Total Whaling Clicks: | Total Successful Whaling Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Pharming Simulation Details
+Pharming Email Sent
+(Including email attachment or download link) | To: 
+From: 
+Subject:
+Message:
+Pharming Website | [Insert an image of the pharming website page]
+Tools / Services / Frameworks Used | 
+Is Pharming Successful? | □ Yes                                            □ No
+Pharming Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Open Pharming Email | 
+Employees Who Did Not Open Pharming Email | 
+Employees Who Did Not Open Pharming Email | 
+Employees Who Did Not Open Pharming Email | 
+Employees Who Did Not Click the  Pharming Email Link | 
+Employees Who Did Not Click the  Pharming Email Link | 
+Employees Who Did Not Click the  Pharming Email Link | 
+Employees Who Did Not Click the  Pharming Email Link | 
+Employees Who Downloaded Files and Provided Sensitive Details | 
+Employees Who Downloaded Files and Provided Sensitive Details | 
+Employees Who Downloaded Files and Provided Sensitive Details | 
+Employees Who Downloaded Files and Provided Sensitive Details | 
+Sensitive Information Obtained | 
+Total Pharming Emails Sent: |  | Total Pharming Clicks: | Total Successful Pharming Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Spimming Simulation Details
+Spimming Email Sent
+(Including email attachment or embedded hyperlink) | To: 
+From: 
+Message Content:
+Instant Messaging Platform Used | 
+Redirected Website | [Insert an image of the redirected fake website page]
+Tools / Services / Frameworks Used | 
+Is Spimming Successful? | □ Yes                                            □ No
+Spimming Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Open the Spimming Message | 
+Employees Who Did Not Open the Spimming Message | 
+Employees Who Did Not Open the Spimming Message | 
+Employees Who Did Not Click the  Spimming Message Link | 
+Employees Who Did Not Click the  Spimming Message Link | 
+Employees Who Did Not Click the  Spimming Message Link | 
+Employees Who Clicked the Link but Did Not Provide Sensitive Information | 
+Employees Who Clicked the Link but Did Not Provide Sensitive Information | 
+Employees Who Clicked the Link but Did Not Provide Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total Spimming Messages Sent: |  | Total Interactions: | Total Successful Spimming Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Clone Phishing Simulation Details
+Cloned Email
+(Including email attachment or embedded hyperlink) | To: 
+From: 
+Message Content:
+Replaced Attachments or Links | 
+Redirected Website | [Insert an image of the redirected fake website page]
+Tools / Services / Frameworks Used | 
+Is Clone Phishing Successful? | □ Yes                                            □ No
+Clone Phishing Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Open the Clone Phishing Email | 
+Employees Who Did Not Open the Clone Phishing Email | 
+Employees Who Did Not Open the Clone Phishing Email | 
+Employees Who Did Not Click the  Clone Phishing Link | 
+Employees Who Did Not Click the  Clone Phishing Link | 
+Employees Who Did Not Click the  Clone Phishing Link | 
+Employees Who Clicked the Link but Did Not Provide Sensitive Information | 
+Employees Who Clicked the Link but Did Not Provide Sensitive Information | 
+Employees Who Clicked the Link but Did Not Provide Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total Clone Phishing Emails Sent: |  | Total Interactions: | Total Successful Clone Phishing Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+E-wallet Phishing Simulation Details
+E-wallet Phishing Email Sent
+(Including email attachment or embedded hyperlink) | To: 
+From: 
+Message Content:
+Redirected Website | [Insert an image of the redirected fake website page]
+Tools / Services / Frameworks Used | 
+Is E-wallet Phishing Successful? | □ Yes                                            □ No
+E-wallet Phishing Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Open the E-wallet Phishing Email | 
+Employees Who Did Not Open the E-wallet Phishing Email | 
+Employees Who Did Not Open the E-wallet Phishing Email | 
+Employees Who Opened the Email but Did Not Click the E-wallet Phishing Link | 
+Employees Who Opened the Email but Did Not Click the E-wallet Phishing Link | 
+Employees Who Opened the Email but Did Not Click the E-wallet Phishing Link | 
+Employees Who Clicked the Link but Did Not Provide Sensitive Information | 
+Employees Who Clicked the Link but Did Not Provide Sensitive Information | 
+Employees Who Clicked the Link but Did Not Provide Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total E-wallet Phishing Emails Sent: |  | Total Interactions: | Total Successful E-wallet Phishing Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Consent Phishing Simulation Details
+Consent Phishing Content Sent
+(Including the embedded hyperlink) | [Specify the consent phishing content sent to the targets. E.g., phishing email, social media post, or online advertisement]
+Redirected Website
+(Including the prompts seeking permissions) | [Insert an image of the redirected fake website page]
+Tools / Services / Frameworks Used | 
+Is Access Gained to the User Account through Consent Phishing? | □ Yes                                            □ No
+Consent Phishing Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Ignored the Consent Phishing Content | 
+Employees Who Ignored the Consent Phishing Content | 
+Employees Who Ignored the Consent Phishing Content | 
+Employees Who Engaged but Did Not Click the Consent Phishing Link | 
+Employees Who Engaged but Did Not Click the Consent Phishing Link | 
+Employees Who Engaged but Did Not Click the Consent Phishing Link | 
+Employees Who Clicked Link but Did Not Grant Permissions | 
+Employees Who Clicked Link but Did Not Grant Permissions | 
+Employees Who Clicked Link but Did Not Grant Permissions | 
+Employees Who Granted the Permissions | 
+Employees Who Granted the Permissions | 
+Employees Who Granted the Permissions | 
+Sensitive Information Obtained | 
+Total Consent Phishing Messages Sent: |  | Total Interactions: | Total Successful Consent Phishing Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Search Engine Phishing Simulation Details
+Malicious Search Engine Result | [Insert an image showing the altered or fraudulent search engine result]
+Redirected Website | [Insert an image of the redirected fake website page]
+Tools / Services / Frameworks Used | 
+Is Search Engine Phishing Successful? | □ Yes                                            □ No
+Search Engine Phishing Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Engage with the Fake Search Engine Result | 
+Employees Who Did Not Engage with the Fake Search Engine Result | 
+Employees Who Did Not Engage with the Fake Search Engine Result | 
+Employees Who Did Not Engage with the Fake Search Engine Result | 
+Employees Who Clicked the Result Link but Did Not Provide Sensitive Information | 
+Employees Who Clicked the Result Link but Did Not Provide Sensitive Information | 
+Employees Who Clicked the Result Link but Did Not Provide Sensitive Information | 
+Employees Who Clicked the Result Link but Did Not Provide Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total Interactions with the Fake Search Engine Result: |  | Total Successful Search Engine Phishing Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Angler Phishing Simulation Details
+Social Media Platforms Used | [e.g., Twitter, Facebook, Instagram]
+Fake Help-Desk Account Details | Name: 
+Username: 
+Profile Link:
+Fake Service Link Posted/Sent | [Insert an image showing the fake service posted on social media or sent as replies]
+Fake Service Link Action | □ Redirection to Fake Website
+□ Malware Download
+Redirected Website (if applicable) | [Insert an image of the redirected fake website page]
+Tools / Services / Frameworks Used | 
+Is Angler Phishing Successful? | □ Yes                                            □ No
+Angler Phishing Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Interact with Fake Service Posts/Replies | 
+Employees Who Did Not Interact with Fake Service Posts/Replies | 
+Employees Who Did Not Interact with Fake Service Posts/Replies | 
+Employees Who Did Not Interact with Fake Service Posts/Replies | 
+Employees Who Clicked on the Link Redirecting to a Fake Website but Did Not Provide Sensitive Information (if applicable) | 
+Employees Who Clicked on the Link Redirecting to a Fake Website but Did Not Provide Sensitive Information (if applicable) | 
+Employees Who Clicked on the Link Redirecting to a Fake Website but Did Not Provide Sensitive Information (if applicable) | 
+Employees Who Clicked on the Link Redirecting to a Fake Website but Did Not Provide Sensitive Information (if applicable) | 
+Employees Who Clicked on the Link Redirecting to a Fake Website and Provided Sensitive Information
+(if applicable) | 
+Employees Who Clicked on the Link Redirecting to a Fake Website and Provided Sensitive Information
+(if applicable) | 
+Employees Who Clicked on the Link Redirecting to a Fake Website and Provided Sensitive Information
+(if applicable) | 
+Employees Who Clicked on the Link Redirecting to a Fake Website and Provided Sensitive Information
+(if applicable) | 
+Employees Who Clicked on the Link Triggering Malware Download
+(if applicable) | 
+Employees Who Clicked on the Link Triggering Malware Download
+(if applicable) | 
+Employees Who Clicked on the Link Triggering Malware Download
+(if applicable) | 
+Employees Who Clicked on the Link Triggering Malware Download
+(if applicable) | 
+Sensitive Information Obtained | 
+Total Social Media Interactions: |  | Total Clicks on Malicious Links: | Total Successful Angler Phishing Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Vishing Simulation Details
+Impersonated Identity | [e.g., colleague, vendor, customer]
+Caller ID Spoofing Used | □ Yes                                           □ No
+Calling Script 
+(Including Pre-Recorded Messages/Instructions Used) | 
+Method of Communication | □ VoIP Call   □ Phone Call   □ SMS   □ Email
+Tools / Services / Frameworks Used | 
+Is Vishing Successful? | □ Yes                                            □ No
+Vishing Engagement Information
+Engagement Status | Name | Department | Designation
+Employees  Who Did Not Respond to the Call or Message | 
+Employees  Who Did Not Respond to the Call or Message | 
+Employees  Who Did Not Respond to the Call or Message | 
+Employees  Who Did Not Respond to the Call or Message | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Only Provided Informational or Low-Risk Information | 
+Employees Who Responded but Only Provided Informational or Low-Risk Information | 
+Employees Who Responded but Only Provided Informational or Low-Risk Information | 
+Employees Who Responded but Only Provided Informational or Low-Risk Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total Calls Made: |  | Total SMS/Emails Sent: | Total Responses: | Total Successful Vishing Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+SMiShing Simulation Details
+SMiShing Message Content (including the Fraudulent Number or Fake Website Link) | 
+Impersonated Entity | 
+Message Goal | □ Redirection to Fake Website
+□ Malware Download
+□ Call Fraudulent Number
+Method of Delivery | □ SMS    □ WhatsApp    □ Instagram 
+□ Other (Specify)
+Calling Script 
+(if applicable) | 
+Redirected Website (if applicable) | [Insert an image of the redirected fake website page]
+Tools / Services Used | 
+Is SMiShing Successful? | □ Yes                                            □ No
+SMiShing Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Respond to the Message | 
+Employees Who Did Not Respond to the Message | 
+Employees Who Did Not Respond to the Message | 
+Employees Who Called the Fraudulent Number but Did Not Share Sensitive Information (if applicable) | 
+Employees Who Called the Fraudulent Number but Did Not Share Sensitive Information (if applicable) | 
+Employees Who Called the Fraudulent Number but Did Not Share Sensitive Information (if applicable) | 
+Employees Who Called the Fraudulent Number and Shared Sensitive Information 
+(if applicable) | 
+Employees Who Called the Fraudulent Number and Shared Sensitive Information 
+(if applicable) | 
+Employees Who Called the Fraudulent Number and Shared Sensitive Information 
+(if applicable) | 
+Employees Who Visited the Malicious Webpage but Did Not Provide Sensitive Information (if applicable) | 
+Employees Who Visited the Malicious Webpage but Did Not Provide Sensitive Information (if applicable) | 
+Employees Who Visited the Malicious Webpage but Did Not Provide Sensitive Information (if applicable) | 
+Employees Who Visited the Malicious Webpage and Provided Sensitive Information (if applicable) | 
+Employees Who Visited the Malicious Webpage and Provided Sensitive Information (if applicable) | 
+Employees Who Visited the Malicious Webpage and Provided Sensitive Information (if applicable) | 
+Employees Who Downloaded Malware (if applicable) | 
+Employees Who Downloaded Malware (if applicable) | 
+Employees Who Downloaded Malware (if applicable) | 
+Sensitive Information Obtained | 
+Total Messages Sent: |  | Total Responses: | Total Successful Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+QRLJacking Simulation Details
+Targeted Web Service | [e.g., messaging app, online banking platform]
+Cloned QR Code Source | 
+Phishing Webpage Used | [Insert an image of the phishing webpage used, along with the cloned QR code]
+QR Code Refresh Mechanism Used | 
+Tools / Services / Frameworks Used | [e.g., QR TIGER]
+Is QRLJacking Successful? | □ Yes                                            □ No
+QRLJacking Engagement Information
+Engagement Status | Name | Department | Designation
+Employees  Who Did Not Access the Phishing Webpage | 
+Employees  Who Did Not Access the Phishing Webpage | 
+Employees  Who Did Not Access the Phishing Webpage | 
+Employees  Who Did Not Access the Phishing Webpage | 
+Employees  Who Accessed the Phishing Webpage but Did Not Scan the QR Code | 
+Employees  Who Accessed the Phishing Webpage but Did Not Scan the QR Code | 
+Employees  Who Accessed the Phishing Webpage but Did Not Scan the QR Code | 
+Employees  Who Accessed the Phishing Webpage but Did Not Scan the QR Code | 
+Employees Who Scanned the QR Code but Did Not Complete the Login Process | 
+Employees Who Scanned the QR Code but Did Not Complete the Login Process | 
+Employees Who Scanned the QR Code but Did Not Complete the Login Process | 
+Employees Who Scanned the QR Code but Did Not Complete the Login Process | 
+Employees Who Scanned the QR Code and had their Session Hijacked | 
+Employees Who Scanned the QR Code and had their Session Hijacked | 
+Employees Who Scanned the QR Code and had their Session Hijacked | 
+Employees Who Scanned the QR Code and had their Session Hijacked | 
+Sensitive Information Obtained | 
+Total Phishing URLs Sent: |  | Total Webpage Visits: | Total QR Codes Scanned: | Total Successful Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Deepfake Attack Simulation Details
+Impersonated Identity | 
+Source of Deepfake Media | [e.g., recorded audio/video samples, stolen account clips]
+Type of Deepfake Created | □ Video       □ Audio       □ Image
+Distribution Method | □ Social Media    □ Email    □ Messaging Apps
+□ Other (Specify)
+Tools/Services Used | [e.g., DeepFaceLab, Deepfakesweb, Synthesia]
+Purpose of Deepfake Attack | □ Phishing                 □ Reputation Damage    
+□ Financial Fraud     □ Other (Specify)
+Is Deepfake Attack Successful? | □ Yes                           □ No
+Deepfake Attack Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not View/Listen to the Deepfake Media | 
+Employees Who Did Not View/Listen to the Deepfake Media | 
+Employees Who Did Not View/Listen to the Deepfake Media | 
+Employees Who Did Not View/Listen to the Deepfake Media | 
+Employees Who Viewed/Heard the Deepfake but Did Not Respond | 
+Employees Who Viewed/Heard the Deepfake but Did Not Respond | 
+Employees Who Viewed/Heard the Deepfake but Did Not Respond | 
+Employees Who Viewed/Heard the Deepfake but Did Not Respond | 
+Employees Who Responded to the Deepfake but Did Not Provide Sensitive Information | 
+Employees Who Responded to the Deepfake but Did Not Provide Sensitive Information | 
+Employees Who Responded to the Deepfake but Did Not Provide Sensitive Information | 
+Employees Who Responded to the Deepfake but Did Not Provide Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total Deepfake Media Created: |  | Total Responses to the Deepfake: | Total Successful Exploitations:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Voice Cloning Attack Simulation Details
+Impersonated Identity | 
+Source of Voice Samples | [e.g., public speeches, recorded calls, social media clips]
+Cloning Method | □ Speech Synthesis    
+□ Neural Network-Based Model
+Distribution Method | □ Phone Call    □ VoIP    □ Messaging Apps
+□ Other (Specify)
+Tools/Services Used | [e.g., VEED.IO]
+Purpose of Voice Cloning Attack | □ Phishing                 □ Identity Theft    
+□ Fraud                      □ Other (Specify)
+Is Voice Cloning Attack Successful? | □ Yes                           □ No
+Voice Cloning Attack Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Respond to the Cloned Voice Message | 
+Employees Who Did Not Respond to the Cloned Voice Message | 
+Employees Who Did Not Respond to the Cloned Voice Message | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total Cloned Voice Messages Sent: |  | Total Responses to the Cloned Voice: | Total Successful Exploitations:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Pre-Visit Information Gathering | [List details gathered before the visit, such as employee names, designations, security checks, and products.]
+Role/Identity Assumed | [e.g., customer, vendor, relative]
+Target Location | 
+Date and Time of Visit | 
+Photographs Taken | □ Yes                          □ No         
+
+[Specify what was photographed, e.g., premises, internal rooms]
+Is Attempt Successful? | □ Yes                           □ No
+Questions Asked and Responses
+Name | Department | Designation | Question | Response
+Sensitive Information Obtained | 
+Total Employees Engaged: |  | Total Questions Asked: | Total Successful Responses Obtained:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Role/Identity Assumed | [e.g., customer, vendor, relative]
+Address Visited | 
+Date and Time of Visit | 
+Nearby Landmarks | 
+Is Attempt Successful? | □ Yes                           □ No
+Sources of Information and Engagement Details
+Name | Type | Question | Response
+Sensitive Information Obtained | 
+Total Individuals Engaged: |  | Total Questions Asked: | Total Successful Responses Obtained:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Pre-Attempt Information Gathered | 
+Role/Identity Assumed | [e.g., employee, contractor]
+Fake ID Details | Name:
+Designation:
+Employee ID:
+Date and Time of Attempt | 
+Type of Access Attempted | □ General Access      □ Restricted Area Access
+Security Measures Encountered | [e.g., ID scanning, guard questioning]
+Items/Attire Used for Impersonation | [e.g., company-branded attire, a laptop bag, clipboard, employee badge holder]
+Is Attempt Successful? | □ Yes                           □ No
+Engagement Information
+Number of Entry Points Attempted | Employees Interacted with During the Attempt (Name/Designation) | Conversations with Employees (if any) | Restricted Areas Accessed (if any)
+[e.g., main gate, back door] | 
+Sensitive Information Obtained | 
+Total Entry Points Targeted: |  | Total Restricted Areas Accessed: | Total Employees Engaged:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Techniques Used | □ Piggybacking            □ Tailgating
+Scenario Description | [e.g., following an employee carrying multiple items]
+Role/Identity Assumed | [e.g., employee, visitor, or vendor]
+Targeted Location | [e.g., main entrance, secure zone, restricted area]
+Items/Attire Used for Impersonation | [e.g., fake ID badge, documents, phone]
+Is Entry Attempt Successful? | □ Yes                           □ No
+Engagement Information
+Employees Engaged (Name/Designation) | Physical Security Controls Encountered | Conversations with Employees (if any) | Sensitive Areas Accessed
+ | [e.g., server room, restricted meeting rooms]
+Sensitive Information Obtained | 
+Total Employees Engaged: |  | Total Entry Attempts: | Total Successful Entry Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Pretext Assumed | [e.g., IT technician, delivery person, visiting employee]
+Backstory Developed to Support the Pretext | 
+Items/Attire Used for Impersonation | [e.g., fake IDs, uniforms, devices]
+Areas Accessed | [e.g., secure zone, restricted area]
+Is Pretexting Attempt Successful? | □ Yes                           □ No
+Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Respond to Pretexting | 
+Employees Who Did Not Respond to Pretexting | 
+Employees Who Did Not Respond to Pretexting | 
+Employees Who Did Not Respond to Pretexting | 
+Employees Who Did Not Respond to Pretexting | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded but Did Not Provide Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Employees Who Responded and Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total Employees Engaged: |  | Total Pretexting Attempts: | Total Successful Pretexting Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Targeted Location | [e.g., cafeteria, hallway, lounge]
+Role Assumed | [e.g., visitor, vendor, employee]
+Items/Attire Used for Impersonation | [e.g., fake ID badge, uniforms]
+Is Attempt Successful? | □ Yes                           □ No
+Engagement Information
+Conversations Monitored | Employees Engaged
+(Name/Designation) | Employee Vigilance 
+(if any) | Additional Observations
+[e.g., project discussion] |  | [Specify the name and designation of employees who questioned the pen tester]
+Sensitive Information Obtained | [e.g., Details of projects, partners, competitors, employee roles and names, employee dissatisfaction, etc.]
+Total Employees Engaged: |  | Total Conversations Overheard:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Target Location | [e.g., cafeteria, employee lounge, hallways.]
+Scenario Description | 
+Is Attempt Successful? | □ Yes                           □ No
+Engagement Information
+Employee Name | Department | Designation | Conversation/Question | Response | Exploitable Information?
+(Yes/No)
+Sensitive Information Obtained | 
+Total Employees Engaged: |  | Total Disgruntled Employees Identified: | Total Successful Responses Obtained:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Eavesdropping Techniques Used | □ Tapping Phone Calls            
+□ Monitoring Video Conferences    
+□ Intercepting Written Communications 
+□ Placing Audio Recording Devices
+□ Observing Conversations in Physical Locations
+□ Other (Specify)
+Communication Medium/Devices Used | [e.g., phone, video conference, instant messaging, fax, recording devices, etc.]
+Targeted Locations | [e.g., meeting rooms, hallways, offices.]
+Role Assumed by Pen Tester | [e.g., visitor, IT technician, cleaner.]
+Is Attempt Successful? | □ Yes                           □ No
+Engagement Information
+Employees Questioned Suspicious Behavior
+Name | Department | Designation | Conversation/Question (if any)
+Employees Involved in the Attempt and Provided Sensitive Information
+Name | Department | Designation | Conversations Monitored | Medium | Exploitable Information?
+(Yes/No)
+Sensitive Information Obtained | 
+Total Eavesdropping Attempts: |  | Total Successful Attempts:
+Impact Rating | □ Informational     □ Low     □ Medium     □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Shoulder Surfing Techniques Used | □ Observing Password or PIN via Binoculars/Optical Devices            
+□ UV Paint on Keypad    
+□ Observing and Listening to Keystrokes 
+□ Identifying PIN via Multi-Frequency Tones
+□ Other (Specify)
+ | [e.g., binoculars, telescope, cameras, UV paint]
+Targeted Environment | [e.g., office desks, ATM keypads, telephone keypads]
+Is Attempt Successful? | □ Yes                           □ No
+Engagement Information
+Target Employee | Department | Designation | Shoulder Surfing Technique Employed | Is Exploitable Information Obtained?
+(Yes/No)
+Sensitive Information Obtained | 
+Total Employees Targeted: |  | Total Shoulder Surfing Attempts: | Total Successful Attempts:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Baiting Method Used | □ USB Flash Drive    □ Other (Specify)
+Label/Text/Logo Used on Bait Media | 
+Bait Placement Locations | □ Parking Lot               □ Elevator    
+□ Bathroom                 □ Office Entrance     
+□ Other (Specify)
+Payload Type | □ Malware                  □ Keylogger     
+□ Phishing Page         □ Other (Specify)
+Execution Trigger | □ Auto-run                 □ Manual Execution    
+□ Other (Specify)
+Tools/Software Used | 
+Is Attack Successful? | □ Yes                           □ No
+Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Found the Bait but Did Not Connect It | 
+Employees Who Found the Bait but Did Not Connect It | 
+Employees Who Found the Bait but Did Not Connect It | 
+Employees Who Inserted the Bait but Did Not Open Files | 
+Employees Who Inserted the Bait but Did Not Open Files | 
+Employees Who Inserted the Bait but Did Not Open Files | 
+Employees Who Opened the Files but Did Not Execute Malicious Content (In Case of Manual Execution) | 
+Employees Who Opened the Files but Did Not Execute Malicious Content (In Case of Manual Execution) | 
+Employees Who Opened the Files but Did Not Execute Malicious Content (In Case of Manual Execution) | 
+Employees Who Opened the Files and Executed Malicious Content (In Case of Manual Execution) | 
+Employees Who Opened the Files and Executed Malicious Content (In Case of Manual Execution) | 
+Employees Who Opened the Files and Executed Malicious Content (In Case of Manual Execution) | 
+Individuals Who Inserted the Bait and Executed the Malware (In Case of Auto-run) | 
+Individuals Who Inserted the Bait and Executed the Malware (In Case of Auto-run) | 
+Individuals Who Inserted the Bait and Executed the Malware (In Case of Auto-run) | 
+Sensitive Information Obtained | 
+Total Baited Media Planted: |  | Total Employees Who Picked Up Bait:
+Total Interactions with the Bait: |  | Total Successful Executions:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Targeted Locations | □ Trash Bins                □ Disposal Areas    □ Desks                  □ Under Keyboards    □ Whiteboards       □ Other (Specify)
+Pretext Used (if any) | □ Technician                       □ Cleaner     
+□ Repair Person                 □ Other (Specify)
+Role/Identity Assumed | [e.g., employee, visitor, or vendor]
+Protective Equipment Used | □ Gloves                 □ Mask                  □ Other (Specify)
+Tools/Devices Used for Analysis | 
+Is Dumpster Diving Successful? | □ Yes                           □ No
+Engagement Information
+Collected Item | Location | Type of Information Retrieved
+Total Locations Searched: |  | Total Items Collected: | Total Sensitive Information Found:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Pretext/Role Assumed | [e.g., IT Support, Security Officer, Consultant]
+Medium Used to Establish Authority | □ In-Person                    □ Phone Call                   □ Email          □ Online Chat                □ Other (Specify)
+Method Used for Impersonation | [e.g., fake credentials, social media profiles]
+Incident/Problem Created | 
+Techniques Used | □ Faking system issues to prompt users to seek help
+□ Using fake business cards to advertise themselves
+□ Helping users post-exploitation to avoid suspicion
+□ Other (Specify)
+Is Reverse Social Engineering Successful? | □ Yes                           □ No
+Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Noticed the Problem but Did Not Seek Help | 
+Employees Who Noticed the Problem but Did Not Seek Help | 
+Employees Who Noticed the Problem but Did Not Seek Help | 
+Employees Who Contacted the Pen Tester but Did Not Reveal Sensitive Information | 
+Employees Who Contacted the Pen Tester but Did Not Reveal Sensitive Information | 
+Employees Who Contacted the Pen Tester but Did Not Reveal Sensitive Information | 
+Employees Who Contacted the Pen Tester and Revealed Only Low-Risk Information | 
+Employees Who Contacted the Pen Tester and Revealed Only Low-Risk Information | 
+Employees Who Contacted the Pen Tester and Revealed Only Low-Risk Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total Employees Targeted: |  | Total Employees Engaged: | Total Employees Who Provided Sensitive Data:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Pretext/Role Assumed | [e.g., consultant, vendor, client]
+Method of Communication | □ In-Person                    □ Phone Call                   □ Email          □ Online Chat                □ Other (Specify)
+Scenario Description | 
+Techniques Used | □ Gaining trust through sweet-talks or compliments
+□ Using inaccurate figures to provoke corrections
+□ Stating false statements to extract the correct information
+□ Pretending to be clueless to make the target explain
+□ Building trust by listening and responding to emotions
+□ Other (Specify)
+Tools/Devices Used | [e.g., voice recorders, chat applications]
+Is Elicitation Successful? | □ Yes                           □ No
+Engagement Information
+Engagement Status | Name | Department | Designation
+Employees Who Did Not Engage in Conversation | 
+Employees Who Did Not Engage in Conversation | 
+Employees Who Did Not Engage in Conversation | 
+Employees Who Engaged but Provided No Sensitive Information | 
+Employees Who Engaged but Provided No Sensitive Information | 
+Employees Who Engaged but Provided No Sensitive Information | 
+Employees Who Low-Risk Information | 
+Employees Who Low-Risk Information | 
+Employees Who Low-Risk Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Employees Who Provided Sensitive Information | 
+Sensitive Information Obtained | 
+Total Employees Targeted: |  | Total Employees Engaged: | Total Employees Who Provided Sensitive Data:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+On-Site Test Simulation Details
+Pretext/Role Assumed | [e.g., executive, security expert, technician]
+Method of Communication | □ In-Person                    □ Phone Call                   □ Email          □ Online Chat                □ Other (Specify)
+Tools/Methods Used | [e.g., phishing emails, fake websites, caller ID spoofing]
+Is Attempt Successful? | □ Yes                           □ No
+Engagement Information
+Name | Department | Designation | Motivation Technique Used | Is Exploitable Information Obtained?
+(Yes/No)
+Sensitive Information Obtained | 
+Total Employees Targeted: |  | Total Employees Engaged:
+Total Employees Who Provided Sensitive Data: |  | Most Effective Motivation Technique Used:
+Impact Rating | □ Informational      □ Low      □ Medium      □ High      □ Critical
+Result Analysis
+Employees Who are Vulnerable to Social Engineering Attacks
+Employee Name | 
+Employee ID | 
+Department | 
+Designation | 
+Email ID | 
+Contact Number | 
+Address | 
+Attacks Performed On | 
+Successfully Exploited Attacks | 
+Information Compromised | 
+Action Taken by Employee
+(Reported/Ignored/ Unaware) | 
+Risk Level | 

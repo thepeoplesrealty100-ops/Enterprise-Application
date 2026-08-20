@@ -1,0 +1,82 @@
+Certified Penetration Testing Professional Exam 412-80
+AWS pwn Cheat Sheet
+Certified Penetration Testing Professional
+AWS pwn Cheat Sheet
+AWS pwn Cheat Sheet
+Source: https://github.com
+Commands Description
+Information Gathering
+Checks access validity and return
+./validate_iam_access_keys.py -i
+identity information of the
+/tmp/keys.txt -o /tmp/out.json
+principal
+./validate_accounts.py -i /tmp/accounts.txt Checks for the existence of the
+-o /tmp/out.json account
+/validate_iam_principals.py -a 123456789012 Checks whether the principals
+-i /tmp/words.txt -o /tmp/out.json exist in each account
+Checks whether the buckets
+./validate_s3_buckets.py -i /tmp/words.txt
+exist and return basic identifying
+-o /tmp/out.json
+information
+Privilege Escalation
+Adds the administrator and all
+./add_iam_policy.py -u myuser -r myrole -g
+action policy to a given user,
+mygroup
+role, or group
+Attempts to assume all roles
+./assume_roles.py -o /tmp/out.json (ARNs) in a file or provided by
+the list-roles API
+./bouncy_bouncy_cloudy_cloud.py -i Bounces a given ec2 instance
+instance-id -e exfiltration-endpoint and rewrites its userData
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+AWS pwn Cheat Sheet
+Retrieves stack descriptions for
+./dump_cloudformation_stack_descriptions.py
+every existing stack and every
+-o /tmp/data
+stack deleted in the last 90 days
+Retrieves specified instance
+./dump_instance_attributes.py -u -o /tmp/ attributes from every EC2
+instance in the account
+Maintaining Access
+Responds to user delete events
+rabbit_lambda by creating more copies of the
+deleted user
+Acts as an aws cli proxy and does
+cli_lambda
+not require credentials
+Adds an access key to each
+backdoor_created_users_lambda
+newly created user
+Adds a trust relationship to each
+backdoor_created_roles_lambda
+newly created role
+Adds a given inbound access rule
+backdoor_created_security_groups_lambda to each newly created security
+group
+Adds an access key to every user
+backdoor_all_users.py
+in the account
+Adds a trust relationship to each
+backdoor_all_roles.py
+role in the account
+Adds a given inbound access rule
+backdoor_all_security_groups.py to each security group in the
+account
+Clearing Tracks
+Attempts to disrupt/cripple
+disrupt_cloudtrail.py cloud trail logging in a specified
+way
+Exploring the Gathered Data
+Calls a bunch of generic account-
+based read/list/get/describe
+./dump_account_data.sh /tmp/
+functions and saves the data to a
+given location
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

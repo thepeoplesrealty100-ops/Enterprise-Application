@@ -1,0 +1,107 @@
+Certified Penetration Testing Professional Exam 412-80
+Sn1per Cheat Sheet
+Certified Penetration Testing Professional
+Sn1per Cheat Sheet
+Sn1per
+Source: https://github.com
+Sn1per is an automated scanner that can be used to enumerate and scan for vulnerabilities. It
+automates the process of reconnaissance, scanning, and reporting on target hosts and networks.
+It combines multiple tools and techniques to gather information and identify vulnerabilities.
+Syntax
+sniper [options] -t <target>
+Options
+-t Target URL or IP address
+-m Mode to run (e.g., passive, active, full)
+-w Enable web module
+-r Enable reporting
+-f Enable full scan
+-n Enable non-intrusive mode
+-o Output directory
+-q Quiet mode
+-v Verbose mode
+-h Display help message
+--dns Enable DNS enumeration
+--osint Enable OSINT collection
+--recon Enable reconnaissance
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Sn1per Cheat Sheet
+--brute Enable brute-force attacks
+--nmap Enable Nmap scanning
+--ssl Enable SSL/TLS enumeration
+--update Update Sn1per to the latest version
+--check Check for Sn1per updates
+--report Generate a report from previous scan results
+--list List all available modules
+Sn1per Commands
+Command Description
+sniper -t <TARGET> Normal mode
+sniper -t <TARGET> -o -re Normal mode + osint + recon
+sniper -t <TARGET> -m stealth -o Stealth mode + osint + recon
+-re
+sniper -t <CIDR> -m discover -w Discover mode
+<WORKSPACE_ALIAS>
+sniper -t <TARGET> -m port -p
+Scan only specific port
+<portnum>
+sniper -t <TARGET> -fp Full port only scan mode
+sniper -t <TARGET> -m web Web mode - port 80 + 443 only!
+sniper -t <TARGET> -m webporthttp
+Http web port mode
+-p <port>
+sniper -t <TARGET> -m
+Https web port mode
+webporthttps -p <port>
+sniper -t <TARGET> -m webscan Http webscan mode
+sniper -t <TARGET> -b Enable brute-force
+sniper -f targets.txt -m
+Airstrike mode
+airstrike
+sniper -f targets.txt -m nuke -w
+Nuke mode with target list
+<WORKSPACE_ALIAS>
+sniper -f targets.txt -m
+Mass port scan mode
+massportscan
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Sn1per Cheat Sheet
+sniper -f targets.txt -m massweb Mass web scan mode
+sniper -f targets.txt -m
+Mass webscan scan mode
+masswebscan
+sniper -f targets.txt -m
+Mass vuln scan mode
+massvulnscan
+sniper -t <TARGET> -m port -p
+Port scan mode
+<PORT_NUM>
+sniper --list List workspaces
+sniper -w <WORKSPACE_ALIAS> -d Delete workspace
+sniper -w <WORKSPACE_ALIAS> -t
+Delete host from workspace
+<TARGET> -dh
+sniper --status Get sniper scan status
+sniper -w <WORKSPACE_ALIAS> --
+Loot reimport function
+reimport
+sniper -w <WORKSPACE_ALIAS> --
+Loot reload function
+reload
+sniper -w <WORKSPACE_ALIAS> --
+Loot reimportall function
+reimportall
+sniper -w <WORKSPACE_ALIAS> --
+Loot export function
+export
+sniper -w <WORKSPACE_ALIAS> -s
+Scheduled scans
+daily|weekly|monthly
+sniper -c /path/to/sniper.conf -t
+Use a custom config
+<TARGET> -w <WORKSPACE_ALIAS>
+sniper -u|--update Update sniper
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

@@ -1,0 +1,1141 @@
+[Organization’s Logo]
+[Organization’s Name]
+[Organization’s Contact Details]
+[Title of the Report]
+Target Organization:
+Penetration Tester:	
+Date:	
+Location:
+Assessing Firewall Security Implementation
+[*This section provides an overview of the techniques used to assess the security of a firewall, including identifying firewall rules, testing various bypass methods, and locating vulnerabilities.]
+Test the Firewall from Both Sides
+Find Information about the Firewall
+Locate the Firewall by Conducting Traceroute
+Try to Pass through the Firewall using Hping
+Enumerate Firewall Access Control List using Nmap
+Scan the Firewall for Vulnerabilities
+Map Firewall Make and Version with Associated Vulnerabilities
+1.8 Try to Bypass the Firewall using Fragmented Packets
+1.9 Try to Bypass the Firewall by Spoofing Packets
+1.10 Try to Bypass Firewall by Spoofed Source Port
+1.11 Try to Bypass Firewall by MAC Address Spoofing
+1.12 Try to Bypass the Firewall by IP Address Spoofing
+1.13 Try to Bypass the Firewall by Varying Packet Size
+1.14 Try to Bypass the Firewall by Sending Bad Checksums
+1.15 Try to Bypass the Firewall using a Proxy Server
+1.16 Try to Bypass the Firewall using Source Routing
+1.17 Try to Bypass the Firewall using HTTP Tunneling Method
+1.18 Try to Bypass the Firewall using ICMP Tunneling Method
+1.19 Try to Bypass the Firewall using ACK Tunneling Method
+Assessing Firewall Security Implementation
+[*This section provides an overview of the techniques used to assess firewall security by testing IDS limitations, performance, and attack resistance.]
+Test for Resource Exhaustion
+2.2 Test the IDS by Sending an ARP Flood
+2.3 Test the IDS by MAC Spoofing
+2.4: Test the IDS by IP Spoofing
+2.5 Test the IDS by Sending SYN Floods
+2.6 Test the IDS by Editing and Replaying Captured Network Traffic
+2.7 Test the IDS for a Denial-of-Service (DoS) Attack
+2.8 Try to Bypass IDS using Anonymous Website Surfing Sites and a Proxy Server
+2.9: Try to Bypass IDS using Botnet
+2.10 Test the IDS by Sending Inconsistent Packets
+2.11 Test the IDS for IP Packet Fragmentation
+2.12 Test the IDS for Polymorphic Shellcode
+2.13: Try to Evade the IDS by Obfuscating or Encoding the Attack Payload
+2.14 Check the IDS for False-Positive Generation
+2.15 Test the IDS for TTL Evasion
+2.16 Test the IDS by Sending a Packet to Port 0
+2.17 Test the IDS for UDP Checksum
+2.18 Test the IDS for TCP Retransmissions
+2.19 Test the IDS using Covert Channels
+2.20 Test the IDS for Reverse Traversal
+2.21 Test for Self-Referencing Directories
+2.22 Test for Premature Request Ending
+2.23 Test for the IDS Parameter Hiding
+2.24 Test the IDS for HTTP Misformatting
+2.25 Test the IDS for Long URLs
+2.26 Test for Null Method Processing
+2.27 Try to Bypass the IDS using Compressed Media Files
+2.28 Test Session Splicing
+2.29 Try to Bypass Invalid RST Packets through the IDS
+ Assessing the Security of Routers
+[*This section provides an overview of the techniques used to assess router security, including hostname identification, port scanning, OS and protocol detection, misconfiguration testing, vulnerability assessment, brute-force and unauthorized access attempts, SNMP analysis, routing weaknesses, IP spoofing, denial-of-service risks, and other potential threats.]
+3.1 Identify the Router Hostname
+3.2 Port Scan the Router
+3.3 Identify the Router Operating System and its Version
+3.4 Identify Protocols Running
+3.5 Test for TFTP Connections
+3.6 Try to Retrieve the Router Configuration File
+3.7 Test for Router Misconfigurations
+3.8 Try to Recover Router Passwords from Config File
+3.9 Test for VTY/TTY Connections
+3.10 Try to Gain Access to the Router
+3.11 Test for Router Running Modes
+3.12 Privileged Mode Attacks
+3.13 Test for SNMP Capabilities
+3.14: Perform SNMP Bruteforcing
+3.15 Try to Log in using the default SNMP Community String
+3.16 Test if Finger is Running on the Router
+3.17 Test for CDP Protocol Running on the Router
+3.18 Test for NTP Protocol
+3.19 Test for Loose and Strict Source Routing
+3.20 Test for IP Spoofing
+3.21 Test for IP Handling Bugs
+3.22 Test ARP Attacks
+3.23 Test BGP protocol
+3.24 Test for EIGRP protocol
+3.25 Test Router Denial-of-Service Attacks
+3.26 Test Router’s HTTP Capabilities
+3.27 Test for HTTP Configuration Vulnerabilities in Cisco Routers
+3.28 Test through HSRP Attack
+Assessing the Security of Switches
+[*This section provides an overview of the techniques used to assess switch security, including misconfiguration detection, performance, and latency testing, VLAN hopping, MAC table flooding, ARP and VTP attacks, spanning tree convergence, OSPF performance, QoS functionality, and overall network resilience against potential threats.]
+4.1 Look for Security Misconfigurations in Cisco Switch Configuration
+4.2 Test for Address of Cache Size
+4.3 Test for Data Integrity and Error Checking
+4.4 Test for Back-to-Back Frame Capacity
+4.5 Test for Frame Loss
+4.6 Test for Latency
+4.7 Test for Throughput
+4.8 Test for Frame Error Filtering
+4.9 Test for Fully Meshed Condition
+4.10 Functional Test for Stateless QoS
+4.11 Performance Test for Spanning Tree Network Convergence
+4.12 Test for OSPF Performance
+4.13 Test for VLAN Hopping
+4.14 Test for MAC Table Flooding
+4.15 Testing for ARP Attack
+4.16 Check for VTP Attack
+4.17 Router and Switch Security Auditing using Traffic IQ Professional
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Firewall Tested Successfully | Yes | No
+Activities Performed for Testing the Firewall from Inside | 
+Activities Performed for Testing the Firewall from Outside | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Identified Firewall Rules | 
+Identified Open/Closed Ports | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Information Available | 
+Company’s Name Server | 
+Topographic Information | 
+Target IP Address | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Firewall Details Identified | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Firewall Location | 
+Firewall IP Address | 
+Network Topology | 
+Routers | 
+Filtering Devices | 
+Protocols Allowed | 
+Protocols Denied | 
+IP Addresses Hoped
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Firewall Identified at Hop Number | 
+Latency Observed at Firewall Hop | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Command used | 
+IP of Tested Firewall | 
+Custom Packets Created | Yes | No
+Response Received | 
+Packet Crafter used | 
+Successfully Pass-Through Firewall using Hping | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Firewall Response Time | 
+Packet Loss Observed | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Command used | 
+Scanning methods | State of ports
+SYN stealth scan | Open | Filtered | Unfiltered | Closed
+SYN stealth scan through Firewall | Open | Filtered | Unfiltered | Closed
+Source ports scan | Open | Filtered | Unfiltered | Closed
+ACK scan | Open | Filtered | Unfiltered | Closed
+FIN scan | Open | Filtered | Unfiltered | Closed
+Null Scan | Open | Filtered | Unfiltered | Closed
+Win packet Scan | Open | Filtered | Unfiltered | Closed
+XMAS scan | Open | Filtered | Unfiltered | Closed
+UDP scan | Open | Filtered | Unfiltered | Closed
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Open/Closed Ports Identified | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Firewall Scanning  Successful | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Vulnerabilities Identified | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Firewall is Patched Up | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Response Received | 
+Exploit Obtained in Google Hacking Database | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+Command used | 
+MTU Number Specified | 
+Firewall Response to Fragmentation | 
+Successfully bypassed the firewall using fragmented packets | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Packets Dropped/Allowed | 
+Detection Mechanisms Triggered | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+Command used | 
+Successfully bypassed firewall by spoofing packets | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+IP Addresses of Decoys | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+Command used | 
+Source port number used | 
+AI Tool Used | 
+Prompt Used | 
+Commands Generated by AI | 
+Successfully bypassed the firewall by the spoofed source port | Yes | No
+Tools/Services Used | 
+Result Obtained
+Firewall Response to Spoofed Ports | 
+Detection Mechanisms Triggered (If Any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+Command used | 
+AI Tool Used | 
+Prompt Used | 
+Commands Generated by AI | 
+Successfully bypassed the firewall by MAC address spoofing | Yes | No
+Tools/Services Used | 
+Result Obtained
+Firewall Response to MAC Spoofing | 
+Detection Mechanisms Triggered (If Any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Command used | 
+Modified Addressing Information | 
+AI Tool Used | 
+Prompt Used | 
+Commands Generated by AI | 
+Successfully bypassed the firewall by IP address spoofing | Yes | No
+Tools/Services Used | 
+Result Obtained
+Packets Allowed/Dropped | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+Command used | 
+Packet size used | 
+AI Tool Used | 
+Prompt Used | 
+Commands Generated by AI | 
+Successfully bypassed the firewall by varying packet size | Yes | No
+Tools/Services Used | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+Command used | 
+AI Tool Used | 
+Prompt Used | 
+Commands Generated by AI | 
+Successfully bypassed the firewall by sending bad checksums | Yes | No
+Is the System well-configured | Yes | No
+Tools/Services Used | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+Proxy server used | 
+IP address used | 
+Port number used | 
+Successfully bypassed the firewall using a proxy server | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+Successfully bypassed the firewall using source routing | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+Target company | 
+Information required | 
+Successfully bypassed the firewall using HTTP tunneling method | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+ICMP Tunneling Technique Result | 
+Successfully bypassed the firewall using the ICMP tunneling method | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP of Tested Firewall | 
+ACK Tunneling Technique Result | 
+Successfully bypassed the firewall using the ACK tunneling method | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+IDS Limitations | 
+IDS Performance | 
+Point of Resource Exhaustion | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Resource Consumption Rate | 
+Impact on Network Performance | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Performed Network Flooding by sending ARP Packets Successfully | Yes | No
+IDS Response | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Detection Time (in seconds) | 
+Mitigation Actions Taken by IDS | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Spoofed MAC Address | 
+Sent spoofed MAC address to the IDS Successfully | Yes | No
+IDS Response | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Time Taken for IDS Response (ms) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Spoofed IP Address | 
+Sent Spoofed IP Address Successfully | Yes | No
+Response Received | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Detected by IDS | Yes | No
+Spoofed Packets Logged in IDS | Yes | No
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested IDS by Sending SYN Floods | YES | NO
+Result from the IDS Test Performed | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Detected by IDS | Yes | No
+System Performance Impact | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Attempted Packets | 
+Successful Packets | 
+Truncated Packets | 
+Retried Packets | 
+AI Tool Used | 
+Prompt Used | 
+Commands Generated by AI | 
+Tools/Services Used | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Does IDS have central logging servers | Yes | No
+Response of the DoS attack on IDS | 
+Central log server's IP address | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Impact on Target System (CPU usage, bandwidth saturation, downtime) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Anonymous Web-Surfing Sites | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Botnet Detection Successful | Yes | No
+Approach Used for Botnet Detection | 
+IDS Network Tested | 
+Response of the DoS Attack on IDS | 
+Number of Botnet Nodes Used | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Inconsistent Packets | 
+Sent Inconsistent TCP/IP or UDP/IP Packets with different TCP/UDP and IP Header Sizes Successfully | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+IDS Response | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Packet Size Sent | 
+Fragmentation Method Used | 
+Sent IP Packet Fragments Successfully | Yes | No
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+IDS Response | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Type of Polymorphic Shellcode Used | 
+Encoding Techniques Used | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Response of the IDS against the Polymorphic Shellcode | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Obfuscated Method Used | 
+Encoding Techniques Applied | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Response of IDS | 
+Response of Target System | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Does IDS activate a large number of false reports | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Does IDS activate a large number of false reports | YES | NO
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+How was TTL evasion attempted? | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Packets sent to Port 0 | 
+Response Received | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+UDP Checksum Information | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IDS Network Tested | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Retransmitted TCP Packets | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested IDS Using Covert Channels | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Information Gathered Using Covert Channels | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested the IDS for Reverse Traversal | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Findings from the Test | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested the IDS for Self-Referencing Directories | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Findings from the Test | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested the IDS for Premature Requests Ending | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Findings from the Test | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested for IDS Parameter Hiding | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Findings from the Test | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested IDS for HTTP Misformatting | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Findings from the Test | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested IDS for Long URLs | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Findings from the Test | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested IDS for Null Method Processing | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Findings from the Test | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Can IDS identify the attack code within the compressed data? | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Findings from the Test | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Tested IDS for Session Splicing | YES | NO
+Sessions Susceptible to Malicious Data | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Findings from the Test | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Expected Checksum | 
+Received Checksum | 
+Examined Two-way Communication TCP Protocols Using RST Packets | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Result from Verified RST Packets and Checksum | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router | 
+Hostname of the router | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Open Ports
+7       Echo | 113     IDENT
+13     DayTime | 115     Simple File Transfer Protocol (SFTP)
+17     Quote of the Day (QOTD) | 137     NetBIOS
+20     File Transfer Protocol (FTP) | 138     NetBIOS
+21     File Transfer Protocol (FTP) | 139     NetBIOS
+22     Secure Socket Shell (SSH) | 143     Internet Message Access Protocol (IMAP)
+23     Telnet | 161     Simple Network Management Protocol
+25     SMTP | 162     Simple Network Management Protocol
+53     Domain Name System (DNS) | 194     Internet Relay Chat (IRC)
+63     Whois | 443     HTTPS
+66     SQL*net (Oracle) | Other Ports:
+70     Gopher | Other Ports:
+79     Finger | Other Ports:
+80     HTTP | Other Ports:
+88     Kerberos | Other Ports:
+101   Host Name Server | Other Ports:
+109   Post Office Protocol 2 (POP2) | Other Ports:
+110     Post Office Protocol 3 (POP3) | Other Ports:
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Results Obtained
+Services Running on Open Ports | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Operating System and its version | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+Protocols running
+RIP | OSPF
+RIPv2 | BGP
+IGRP | Others
+EIGRP | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Vulnerabilities Identified (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+TFTP Allowed | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Files Discovered | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Command used | 
+IP used | 
+Sniffed TFTP traffic from the wire successfully to retrieve the router configuration file | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+Is the router misconfigured? | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Number of Misconfigurations Found | 
+Severity Level | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Input information to crack Router Password | 
+Router IP Address | 
+Router Username | 
+Router Password | 
+Successfully recovered router passwords from config file | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+Is console access possible? | YES | NO
+Authentication Method Used | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Command used | 
+IP address used | 
+Standard port used | 
+Is the modem connected to the device | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+Modes | USER MODE | PRIVILEGE MODE
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Command used | 
+Response received | 
+Performed brute-force password attacks to crack the password | YES | NO
+Is the password configured? | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+SNMP Strings used | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Successfully performed SNMP brute-forcing | YES | NO
+SNMP community strings | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Attack Results and Findings | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Is the default SNMP community string “public” changed at | YES | NO
+Successfully logged in using default SNMP community string | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target IP Address/Subnet | 
+Finger Service running | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+CDP Protocol running | YES | NO
+CDP Messages
+Device ID (hostname) | IOS software version being used
+Port ID (port information about the sender) | Capabilities of the router
+Operating system platform | Network IP address
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+NTP Protocol running | YES | NO
+Router Synchronized | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+Routing | Loose Source Routing | Strict Source Routing
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target Organization | 
+IP address of the router tested | 
+IP Spoofing possible | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+IP address used | 
+Are ICMP redirects manipulated by the host? | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+ARP spoofing is possible against the router | YES | NO
+Victim IP address | 
+Victim MAC address | 
+Poisoned IP address | 
+Poisoned MAC address | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+BGP Protocol present | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+EIGRP Protocol present | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+Malformed 
+Packet Attack | YES | NO
+Packet 
+Flood Attacks | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+Port Used to Connect | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Gained full remote administrative access to Cisco devices | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Response received | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP address of the router tested | 
+HSRP group forwarded to IP address | YES | NO
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+The common switch security misconfiguration checks for CISCO and other Manufacturers | Default vulnerable configurations | Unused ports | DHCP snooping | Port security | Correct timestamp
+The common switch security misconfiguration checks for CISCO and other Manufacturers | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Frame size relayed | 
+Address Cache Size | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Frame Size | 
+Traffic Rate | 
+Data Pattern | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Number of frames sent at once | 
+Inter-frame gaps | 
+Number of frames forwarded by the switch | 
+Number of test reruns | 
+Capacity detected | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Count the frames that are transmitted | 
+Frame loss equation | 
+Measurement | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Method used | 
+Latency detected | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Count the frames | 
+The rate of the offered stream | 
+Throughput | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Frame Size | 
+Illegal frame types | 
+Traffic Rate | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Frame Size | 
+Traffic Rate | 
+Traffic Data Type | 
+DUT setup | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Frame size | 
+Duration | 
+Traffic Rate | 
+DUT-QoS | 
+DUT-Line speed | 
+DUT-QoS type | 
+DUT-QoS Policies | 
+DUT-Queue type | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Test ports | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Frame Size | 
+Traffic Rate | 
+OSPF Parameters | 
+DUT setup | 
+DUT OSPF Area | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Dynamic Trunking Protocol | 
+DTP States | 
+DTP Negotiation | 
+VLAN Hopping | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Content Addressable Memory | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+MAC address | 
+IP address | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Command Output | 
+Cat2950# shows VTP status | 
+VTP Version | 
+Configuration Revision | 
+Maximum VLANs supported locally | 
+Number of existing VLANs | 
+VTP Operating Mode | 
+VTP Domain Name | 
+VTP Pruning Mode | 
+VTP V2 Mode | 
+VTP Traps Generation | 
+MD5 digest | 
+Configuration last modified by | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Target URL / IP Address | 
+Security Auditing Successful | Yes | No
+Number of Network Switches Identified | 
+Number of Routers Identified | 
+Systems Assessed | 
+Tools/Services Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Analysis

@@ -1,0 +1,63 @@
+Certified Penetration Testing Professional Exam 412-80
+SearchSploit Cheat Sheet
+Certified Penetration Testing Professional
+SearchSploit Cheat Sheet
+SearchSploit
+Source: https://www.exploit-db.com
+SearchSploit is a command-line tool that facilitates the search and utilization of the Exploit
+Database archives. This tool is particularly useful for attackers who are seeking quick access to a
+comprehensive repository of publicly available exploits and vulnerability data. Attackers can
+perform keyword searches, title-specific searches, and even exclude certain terms to fine-tune
+their search results.
+Syntax
+searchsploit [options] term1 [term2] ... [termN]
+Options
+-h, --help Displays the help screen with all available options and
+commands.
+-v, --verbose Enables verbose output for more detailed information.
+-t, --title Searches only in the title of exploits.
+-p, --path Displays the full path to the exploit file.
+-j, --json Outputs the search results in JSON format.
+-x, --examine Opens the selected exploit file with the default editor.
+-m, --mirror Creates a local copy of the exploit database.
+-u, --update Updates the local exploit database to the latest version.
+-s, --search Performs a strict search for the exact term provided.
+-e, --exact Shows only exact matches for the search term.
+-c, --case Case-sensitive search.
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SearchSploit Cheat Sheet
+-w, --www Searches Exploit-DB's website instead of the local copy.
+--exclude <terms> Excludes results containing the specified terms.
+-o, --overflow Suppresses 'Listing too many entries' warnings.
+--colour Disable color highlighting in search results.
+--id Display the EDB-ID value rather than local path.
+--exclude="term" Remove values from results
+SearchSploit Commands
+Command Description
+Searches for local exploits related to "afd"
+searchsploit afd windows local
+(Ancillary Function Driver) on Windows systems
+Searches for exploits related to "oracle" and
+searchsploit -t oracle windows
+"Windows" in the titles only
+searchsploit -p 39446 Displays the full path of the exploit file with the ID
+39446
+searchsploit -s Apache Struts Performs a strict search for exploits related to
+2.0.0 "Apache Struts 2.0.0"
+searchsploit linux reverse Searches for exploits related to "linux", "reverse",
+password and "password".
+Searches for the exploit related to CVE-2021-44228
+searchsploit --cve 2021-44228
+(Log4Shell vulnerability).
+This command searches for exploits related to
+searchsploit linux kernel 3.2 --
+"linux kernel 3.2" but excludes results containing
+exclude="(PoC)|/dos/"
+"(PoC)" or "/dos/" in their descriptions
+This command outputs the exploit with ID 55555 in
+searchsploit -j 55555 | jq JSON format and pipes it to jq for formatted
+viewing
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

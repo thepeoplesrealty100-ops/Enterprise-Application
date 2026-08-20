@@ -1,0 +1,132 @@
+Certified Penetration Testing Professional Exam 412-80
+Unicornscan Cheat Sheet
+Certified Penetration Testing Professional
+Unicornscan Cheat Sheet
+Unicornscan
+Source: https://sourceforge.net
+Unicornscan is an information-gathering tool used for scanning a single or multiple host for open
+ports and other information, it is an asynchronous TCP and UDP port scanner, it is also used for
+OS detection.
+1. Unicornscan Options
+2. Unicornscan Scanning Options
+3. Unicornscan Commands
+1. Unicornscan Options
+Syntax
+unicornscan [options] <Target>
+Options
+Set broken crc sums on Transport layer, [Network layer, or
+-b, --broken-crc
+both]
+Set source port or whatever the scan module expects as a
+-B, --source-port
+number
+-c, --proc-duplicates Process duplicate replies
+Set delay type
+-d, --delay-type
+-D, --no-defpayload No default Payload, only probe known protocols
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Unicornscan Cheat Sheet
+-e, --enable-module Enable modules listed as arguments
+For processing `non-open' responses (ICMP errors, tcp
+-E, --proc-errors
+rsts...)
+-F, --try-frags --
+Payload group (numeric) for tcp/udp type payload selection
+-G, --payload-group
+(default all)
+-h, --help Help
+-H, --do-dns Resolve hostnames during the reporting phase
+-i, --interface String representation of the interface to use
+-I, --immediate Immediate mode, display things as we find them
+-j, --ignore-seq A string representing the intended sequence ignorance level
+Path to a file where flat text will be dumped that normally
+-l, --logfile
+would go to the users terminal
+Numeric value representing the number of seconds to wait
+-L, --packet-timeout
+before declaring the scan over
+-m, --mode String representation of the desired scanning mode
+Path to a directory containing shared object 'modules' for
+-M, --module-dir
+unicornscan to search
+-o, --format Format of what to display for replies
+-p, --ports Global list of ports to scan
+-P, --pcap-filter Extra pcap filter string for receiver
+-q, --covertness Covertness value from 0 to 255
+This option is intended to make unicornscan play the 'quiet
+-Q, --quiet
+game'
+it is a numeric option containing the desired packets per
+-r, --pps
+second for the sender to use
+-R, --repeats Repeat packet scan N times
+The address to use to override the listeners default
+-s, --source-addr
+interfaces address
+-S, --no-shuffle Do not shuffle ports
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Unicornscan Cheat Sheet
+-t, --ip-ttl Set TTL on sent packets as in 62 or 6-16 or r64-128
+-T, --ip-tos Set TOS on sent packets
+-u, --debug Debug mask
+-U, --no-openclosed Don’t say open or closed
+-w, --safefile Write pcap file of received packets
+OS fingerprint 0=cisco(def) 1=openbsd 2=WindowsXP
+-W, --fingerprint
+3=p0fsendsyn 4=FreeBSD 5=nmap 6=linux 7=strangetcp
+-v, --verbose Verbose
+-V, --version Display version
+-z, --sniff Sniff alike
+-Z, --drone-str drone String
+2. Unicornscan Scanning Options
+Options
+-mT SYN scan
+-mTsA ACK scan
+-mTsF Fin scan
+-mTs Null scan
+-mTsFPU Xmas scan
+-mTFSRPAU Full Xmas scan
+(-mT) host:1-5 Scan ports 1 through 5
+-mTFSRPAUEC scan with all options
+3. Unicornscan Commands
+Command Description
+unicornscan <host> Basic Unicornscan scan
+unicornscan -r200 -mT <target
+TCP Scanning
+website>:80,443
+unicornscan -r300 -mU <Target
+UDP Scanning
+website>
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Unicornscan Cheat Sheet
+unicornscan <target ip> –Iv Scan a host for services & OS(TTL)
+unicornscan -mU -v -I <target
+Perform a UDP scan on the whole network
+ip>/24
+unicornscan <host ip>:5505 -r500
+-w huntfor5505.pcap -W1 -s Saving to a PCAP file
+<target ip>
+unicornscan -mTsA -v -I [IP
+ACK scan
+ADDRESS]
+unicornscan <target Scan the 256 hosts inside the network that
+website>/24:161,53,123 -mU -r 400 target resides
+unicornscan -mT -R2 -W2 -t5
+TCP syn Scan
+<target domain>/16:22
+unicornscan -mTs -r 5000 -R 10000 Send to the <Target>destination port 31425
+<target ip>:31425 TCP packets
+unicornscan -i eth0 -r 160 -E A basic connect scan to find all open ports in
+<target>:20-600 a range using unicornscan
+unicornscan -Iv -r 160 -mT
+unicornscan full tcp port scan
+<target IP>:<port_number>
+unicornscan <target1> <target2> Scan multiple hosts
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

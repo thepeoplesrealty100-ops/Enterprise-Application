@@ -1,0 +1,122 @@
+Certified Penetration Testing Professional Exam 412-80
+theHarvester Cheat Sheet
+Certified Penetration Testing Professional
+theHarvester Cheat Sheet
+theHarvester
+Source: https://www.edge-security.com
+theHarvester is a simple, powerful, and effective tool used in the early stages of a penetration
+test or red team engagement. It is also used for open-source intelligence (OSINT) gathering to
+help determine a company's external threat landscape. It can gather emails, names, subdomains,
+IPs, and URLs using multiple public data sources.
+1. theHarvester Options
+2. theHarvester Passive Data Source
+3. theHarvester Active Data Source
+4. theHarvester Commands
+1. theHarvester Options
+Syntax
+theharvester options
+Options
+-d Domain to search or company name
+Baidu, bing, bingapi, dogpile, google, googleCSE, googleplus,
+-b: data source
+google-profiles, LinkedIn, pgp, twitter, vhost, yahoo, all
+-s Start in result number X (default: 0)
+-v Verify hostname via DNS resolution and search for virtual hosts
+-f Save the results into an HTML and XML file
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+theHarvester Cheat Sheet
+-n Perform a DNS reverse query on all ranges discovered
+-c Perform a DNS brute force for the domain name
+-t Perform a DNS TLD expansion discovery
+-e Use this DNS server
+Limit the number of results to work with (bing goes from 50 to 50
+-l
+results, google 100 to 100)
+-h Use SHODAN database to query discovered hosts
+2. theHarvester Passive Data Source
+Data Source Description
+baidu Baidu search engine - www.baidu.com
+bing Microsoft search engine - www.bing.com
+bingapi Microsoft search engine, through the API
+dnsdumpster DNSdumpster search engine - https://dnsdumpster.com/
+dogpile Dogpile search engine - www.dogpile.com
+duckduckgo DuckDuckGo search engine - www.duckduckgo.com
+Exalead Meta search engine - www.exalead.com/search
+GitHub code search engine (Requires a GitHub Personal Access
+github-code
+Token, see below.) - www.github.com
+brave Brave search engine - https://search.brave.com/
+bufferoverun Requires an API key - https://tls.bufferover.run
+crtsh Comodo Certificate search - https://crt.sh
+Hunter search engine (Requires an API key, see below.)
+hunter
+- www.hunter.io
+Intelx search engine (Requires an API key, see below.)
+intelx
+- www.intelx.io
+Online vulnerability scanners and network intelligence to help
+hackertarget
+organizations - https://hackertarget.com
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+theHarvester Cheat Sheet
+Internet search engines for security researchers -
+hunterhow
+https://hunter.how
+otx AlienVault Open Threat Exchange - otx.alienvault.com
+Security Trails search engine, the world's largest repository of
+securityTrails historical DNS data
+- www.securitytrails.com
+Shodan search engine will search for ports and banners from
+shodan
+discovered hosts - www.shodanhq.com
+onyphe Cyber defense search engine - https://www.onyphe.io/
+DNS query tool which make querying subdomains or sites of a
+rapiddns
+same IP easy! https://rapiddns.io
+Find available information on a site -
+sitedossier
+http://www.sitedossier.com
+tomba Tomba search engine - https://tomba.io
+Sandbox for the web that is a URL and website scanner -
+urlscan
+https://urlscan.io
+vhost Bing virtual hosts search
+virustotal virustotal.com domain search
+yahoo Yahoo search engine
+PGP key server - pgp.rediris.es
+pgp
+Example: theharvester -d microsoft.com -b pgp
+3. theHarvester Active Data Source
+Data Source Description
+DNS brute force Runs dictionary brute force enumeration
+DNS reverse lookup Reverse lookup of IP´s discovered to find hostnames
+DNS TDL expansion TLD dictionary brute force enumeration
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+theHarvester Cheat Sheet
+4. theHarvester Commands
+Command Description
+theharvester -d
+Perform passive scanning on the target domain (Microsoft.com) by
+microsoft.com -l
+limiting the results to 500 (-l 500) using Google (-b)
+500 -b google
+theharvester -d
+Perform passive scanning on the target domain (kali.org) by
+kali.org -l 500 -b
+limiting the results to 500 (-l 500) using Google (-b) and saving the
+google -f
+output to a text file (-f output.txt)
+output.txt
+theHarvester.py -d
+Perform active scanning and brute-forcing subdomains of the
+google.com -c -b
+target domain (google.com) using option -c using Google (-b)
+google
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

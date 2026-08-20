@@ -1,0 +1,1849 @@
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Certified Penetration Testing Professional
+Google Dorks Cheat Sheet
+1. Google Advanced Search Operators
+2. List of The Search Operators
+3. VoIP Footprinting
+4. VPN Footprinting
+5. FTP Servers
+6. Detecting Footholds
+7. Files Containing Usernames
+8. Sensitive Directories
+9. Web Server Detection
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+1. Google Advanced Search Operators
+The following table lists the search operators that work with each Google search service.
+Search Service Search Operators
+allinanchor:, allintext:, allintitle, allinurl:,
+Web Search cache:, define:, filetype:, inanchor:, intext:,
+intitle:, inurl:, related:, site:
+allintitle:, allinurl:, filetype:, inurl:,
+Image Search
+intitle:, site:
+allintext:, allintitle:, author:, group:,
+Groups
+insubject:, intext:, intitle:
+allintext:, allintitle:, allinurl:, ext:,
+Directory
+filetype:, intext:, intitle:, inurl:
+allintext:, allintitle:, allinurl:, intext:,
+News
+intitle:, inurl:, location:, source:
+Product search allintext:, allintitle:
+2. List of The Search Operators
+Search Operators Description
+This operator restricts results to pages containing all query terms
+allinanchor: specified in the anchor text on links to the page
+Example: [ allinanchor: best museums sydney]
+This operator restricts results to those containing all the query
+allintext: terms specified in the text of the page
+Example: [ allintext: travel packing list]
+This operator restricts results to those containing all the query
+allintitle: terms specified in the title
+Example: [ allintitle: detect plagiarism
+This operator restricts results to those containing all the query
+allinurl: terms specified in the URL.
+Example: [ allinurl: google faq ]
+This operator will restrict your Google Groups results to include
+newsgroup articles specified by the author
+author:
+Example: [ children author:john author:doe ] or [ children
+author:doe@someaddress.com ]
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+This operator displays Google’s cached version of a web page,
+cache: instead of the current version of the page.
+Example: [ cache:www.eff.org ]
+This operator shows definitions from pages on the web for the
+define: term that follows.
+Example: [ define: blog ]
+ext: This is an undocumented alias for filetype:.
+This operator restricts the results to pages whose names end in
+filetype: suffix.
+Example: [ web page evaluation checklist filetype:pdf ]
+This operator restricts your Google Groups results in newsgroup
+group: articles from certain groups or subareas.
+Example: [ sleep group:misc.kids.moderated ]
+This operator restricts the results to pages containing the query
+inanchor: terms you specify in the anchor text or links to the page.
+Example: [ restaurants inanchor:gourmet ]
+This operator will present some information about the
+info: corresponding web page
+Example: [ info:gothotel.com ]
+This operator restricts articles in Google Groups to those that
+insubject: contain the terms you specify in the subject.
+Example: [ insubject:”falling asleep” ]
+This operator restricts results to documents containing the term in
+intext: the text.
+Example: [ Hamish Reid intext:pandemonia ]
+This operator restricts results to documents containing the term in
+intitle: the title.
+Example: [ flu shot intitle:help ]
+This operator restricts the results to documents containing that
+inurl: word in the URL.
+Example: [ inurl:print site:www.googleguide.com ]
+This operator finds information for a specific location.
+location:
+Example: [ queen location:canada ]
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+If you include this operator in your query, Google will find movie-
+movie: related information.
+Example: [ movie:steve jobs ]
+This operator will list web pages that are similar to the web page
+related: you specify.
+Example: [ related:www.consumerreports.org ]
+This operator restricts the results to the site or domain you specify.
+site:
+Example: [ admissions site:www.lse.ac.uk ]
+This operator restricts your search to articles from the news source
+source: with the ID you specify.
+Example: [ election source:new_york_times ]
+If you enter a query with the word weather and a city or location
+name, if Google recognizes the location, the forecast will appear at
+the top of the results page. Otherwise, your results will usually
+weather:
+include links to sites with the weather conditions and forecast for
+that location.
+Example: [ weather Sunnyvale CA ]
+3. VoIP Footprinting
+Google Dork Description
+intitle:"Login Page" intext:"Phone
+Pages containing login portals
+Adapter Configuration Utility"
+inurl:/voice/advanced/ Finds the Linksys VoIP router configuration
+intitle:Linksys SPA configuration page
+intitle:"D-Link VoIP Router"
+Pages containing D-Link login portals
+"Welcome"
+intitle:asterisk.management.portal
+Look for the Asterisk management portal
+web-access
+Finds Cisco SPA504G Configuration Utility for
+intitle:"SPA504G Configuration"
+IP phones
+intitle:"Sipura.SPA.Configuration" Finds configuration pages for online VoIP
+-.pdf devices
+intitle:asterisk.management.portal
+Finds the Asterisk web management portal
+web-access
+inurl:8080 intitle:”login”
+Finds VoIP login portals
+intext:”UserLogin” “English”
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+4. VPN Footprinting
+Google Dork Description
+Finds Cisco VPN files with group passwords
+filetype:pcf "cisco" "GroupPwd"
+for remote access
+"[main]" "enc_GroupPwd=" ext:txt Finds Cisco VPN client passwords
+"Config" intitle:"Index of"
+Finds directory with keys of VPN servers
+intext:vpn
+Finds FortiGate Firewall's SSL-VPN login
+inurl:/remote/login?lang=en
+portal
+!Host=*.* Look for .pcf files which contains user VPN
+intext:enc_UserPassword=* ext:pcf profiles
+Finds Sonicwall Global VPN Client files
+filetype:rcf inurl:vpn
+containing sensitive information and login
+Finds publicly accessible profile configuration
+filetype:pcf vpn OR Group
+files (.pcf) used by VPN clients
+Retrieves login portals containing VPNSSL
+vpnssl
+companies’ access
+intitle:"SSL VPN Service" +
+intext:"Your system administrator
+provided the following
+Finds Cisco ASA login web pages
+information to help understand
+and remedy the security
+conditions:"
+site:vpn.*.*/ intitle:"login" Retrieves pages Containing Login Portals
+Finds files configuration OpenVPN, some
+Index of / *.ovpn
+certs, keys
+inurl:"/vpn/tmindex.html" vpn Netscaler & Citrix Gateway VPN login portals
+intitle:"inc. vpn 3000 This search will show the login page for Cisco
+concentrator" VPN 3000 concentrators
+"intitle:Cisco Systems, Inc. VPN The Cisco VPN 3000 Concentrator is a remote
+3000 Concentrator" access VPN
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+5. FTP Servers
+Google Dork Description
+inurl:github.com Returns SFTP/FTP server credentials on
+intext:.ftpconfig -issues Github
+type:mil inurl:ftp ext:pdf | ps Returns sensitive directories on FTP
+intext:pure-ftpd.conf Returns servers exposing pure-ftpd
+intitle:index of configuration files
+intitle:"Index Of" intext:sftp- Extracts list of FTP/SFTP passwords from
+config.json sublime text
+inurl:"ftp://www." "Index of /" Displays various online FTP servers
+inurl:~/ftp://193 filetype:(php | Returns a List of FTP Servers by IP address,
+txt | html | asp | xml | cnf | mostly Windows NT servers with guest login
+sh) ~'/html'
+capabilities
+intitle:"index of" share.passwd
+OR cloud.passwd OR ftp.passwd - Dorks containing passwords
+public
+-pub -pool intitle:"index of"
+db.key OR server.key OR ftp.key This dork will give you a lot of private keys
+OR exchange.key OR host.key OR are also known as a secret key.
+mail.key
+intitle:"index of" "ftp.log" It contains FTP LOGS
+intitle:"index of" "ws_ftp.log" Finds sensitive directories
+intitle:"index of" inurl:ftp
+Finds files containing Juicy items
+intext:logs
+View *Backup* files on *FTP* server of
+site:ftp.* index of /ftp/backup
+various websites
+site:ftp://ftp.*.*/login -
+Finds Login Portals
+inurl:https://
+intitle:"index of" "ftp.passwd" Finds files containing password
+inurl:ftp://ftp Detecting FTP sites
+inurl:ftp://ftp robots.txt Finding robots.txt in FTP sites
+"/FTPSVC2" intitle:"index of" Finds Microsoft FTP server logs
+inurl:"/cgi-bin/WS_FTP.LOG" Find field in cgi-bin directory
+intitle:ProFTPD Admin - V1.04 Will show you admin page, no login needed
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+It will generate juicy information that may
+intext:"softperms.txt" ext:TXT lead to a parent directory, for best practice
+filter according to the country
+intitle:"Index Of" Retrieves FTP/SFTP credentials in. ftpconfig
+intext:.ftpconfig file from Atom text editor
+Finds files with FTP logins, server info, and
+"[FFFTP]" ext:ini
+more
+inurl:"http://ftp.dlink" Find lists of FTP directories of D-Link routers
+inurl:proftpdpasswd Dork of proftpd passwords
+"[HKEY_CURRENT_USER\Software\sota Finds some files with juicy information about
+\FFFTP]" filetype:reg Windows servers
+intext:"Powered by net2ftp" Web based FTP client login page
+inurl:"ftp" intext:"user" |
+"username" | "userID" | "user ID"
+| "logon" | "login" Retrieves Passwords
+intext:"password" | "passcode"
+filetype:xls | filetype:xlsx
+This dork finds open ftps. This is a base dork,
+intitle:"Index of ftp" where you can add intext:"ssh/" for folder
+search and intext:"-2015" for dates and years
+inurl:ftp inurl:Seagate
+inurl:Backup inurl:Plus Finds open Seagate NAS drives
+inurl:Drive
+Finds sensitive and interesting information
+filetype:xml inurl:/WEB-INF/
+under
+inurl:ftp:// -www
+WEB-INF directory via ftp protocol
+inurl:ws_ftp.ini "[WS_FTP]"
+Finds files containing passwords
+filetype:ini
+inurl:github.com intext:sftp- Find FTP logins and full path disclosures
+conf.json +intext:/wp-content/ pushed to github
+site:github.com inurl:sftp- Find disclosed FTP login credentials in GitHub
+config.json repositories
+Finds disclosed FTP for Wordpress installs,
+site:github.com inurl:sftp-
+which have been pushed to a public repo on
+config.json intext:/wp-content/
+GitHub
+Finds sensitive information of MySqlServer,
+filetype:config inurl:web.config
+"uid, and password" in web.config through
+inurl:ftp
+ftp
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+inurl:php intitle:"Cpanel , FTP
+Locates cpanel and ftp cracker
+CraCkeR"
+This string is used to find many low hanging
+inurl:ftp "password" filetype:xls
+fruits on FTP sites recently indexed by google
+filetype:ini "[FFFTP]"
+Run the password hash through John etc.
+(pass|passwd|password|pwd)
+Usernames and password hashes from web
+server backups generated by cpanel for
+ProFTPd. Password hashes can be cracked,
+"parent directory" +proftpdpasswd
+granting direct access to FTP accounts. Unix
+passwd and shadow files can sometimes be
+found with this query as well.
+This dork will return some FTP root
+intitle:"FTP root at"
+directories
+Adding "inurl:ftp (pub | incoming)" to the
+intitle:"index of" inurl:ftp (pub
+"index.of" searches help to locate FTP
+| incoming)
+websites
+Install it on a remote server and easily
+intitle:mywebftp "Please enter connect to your FTP servers through a
+your password" firewall or a proxy not allowing FTP
+connections
+"index of/" "ws_ftp.ini" "parent
+Cleans up the previous entry
+directory"
+Searches for Total commander FTP
+filetype:ini wcx_ftp passwords (encrypted) in a file called
+wcx_ftp.ini
+Finds LeapFTP client configuration file
+LeapFTP intitle:"index.of./"
+"sites.ini" holds the login credentials for
+sites.ini modified
+those sites in plain text
+Finds eastgame.net FTP servers, loads of
+"ftp://" "www.eastgame.net"
+warez and that sort of thing
+These files can be found with the "index of"
+filetype:ini ws_ftp pwd keyword or by searching directly for the
+PWD= value inside the configuration file
+Standard FTP configuration file that provides
+far too many details about how the server is
+filetype:conf inurl:proftpd.conf
+setup, including installation paths, location of
+-sample
+log files, generic username and associated
+group, etc
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
++htpasswd +WS_FTP.LOG WS_FTP.LOG can be used in many ways to
+filetype:log find more information about a server
+filetype:url +inurl:"ftp://" These are FTP Bookmarks, some of which
++inurl:"@" contain plaintext login names and passwords
+ws_ftp.ini is a configuration file for a popular
+FTP client that stores usernames, (weakly)
+intitle:index.of ws_ftp.ini
+encoded passwords, sites, and directories
+that the user can store for later reference
+6. Detecting Footholds
+Google Dork Description
+intitle:"net2ftp" "powered by
+net2ftp is a web-based FTP client written in
+net2ftp" inurl:ftp
+PHP
+OR intext:login OR inurl:login
+inurl:"index of" wso Access to WSO shell infected domains
+Common web shell that sets the HTML title
+intitle:"freedom is real - 1945"
+tag to '.[ freedom is real - 1945]
+site:*/wp-admin/install.php
+Finds files containing Juicy information
+intitle:WordPress Installation
+intitle:Administration -
+Dorks for mantisBT CMS installation
+Installation - MantisBT
+inurl:/phpmyadmin/index.php?db= Finds phpmyadmin authenticated panel
+inurl:"cs.html?url=" Open Redirects
+inurl:"urlstatusgo.html?url=" -
+intext:"Disallowed Open Redirects
+by URL filter"
+inurl:wp- Finds Wordpress sites with registration
+login.php?action=register enabled
+inurl:/phpMyAdmin/setup/
+Finds access sensitive page of phpmyadmin
+index.php?phpMyAdmin=
+Get the sidekiq dashboard that is used to run
+inurl:"/sidekiq/busy"
+Ruby systems
+intitle:"InfluxDB - Admin
+Dork about InfluxDB without password
+Interface" -github
+intitle:"FCKeditor - Connectors Finds unauthenticated file upload and
+Tests" directory list
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+intitle:"FCKeditor - Uploaders
+Finds unauthenticated file upload
+Tests"
+intext:"M3R1C4 SHELL BACKDOOR" Foothold web shell
+"index of" /wp- Google Dork discovers servers running
+content/uploads/shell.php Wordpress that are infected with web shells
+"File Manager - Current disk
+Google Dork to locate PhpSpy web shells
+free"
+inurl: "Mister Spy" | Google Dork discovers servers infected with
+intext:"Mister Spy & Souheyl the "Mister Spy" web
+Bypass Shell"
+shell
+inurl:"/tiny_mce/plugins/ajaxfile
+manager
+/inc/data.php" |
+Finds tiny_mce vulnerable targets
+inurl:"/tiny_mce/plugins/ajaxfile
+manager/
+ajax_create_folder.php" -github
+AJAX-based web application / file manager -
+intitle:Upload inurl:/cgi-
+“filechucker” that lets you upload arbitary
+bin/filechucker.cgi
+files on a website
+Finds the first install wizard of the TYPO3
+intitle:"Installing TYPO3 CMS"
+CMS
+DORK is useful to search moodle cms with
+inurl:/install/stringnames.txt
+install folder left on the hosted server
+intitle:"Solr Admin" "Solr Query
+Finds Apache Solr admin panels
+Syntax"
+ext:jsp intext:"jspspy"
+Find login portals of jspspy webshell
+intitle:"Jspspy web~shell V1.0"
+"Sorting Logs:" "Please enter
+your password" "Powered By" - Finds stealer botnet control panels
+urlscan -alamy
+intitle:"Authorization" "TF" Finds a bunch of unprotected botnet control
+inurl:"admin.php" panels
+ext:php intext:"-rwxr-xr-x"
+Discover affected software
+site:.in
+intitle:index of More information about the Wannacry
+intext:@WanaDecryptor@.exe Ransomware infected Servers
+Dork to find servers affected by Wannacry
+intitle:index of intext:wncry
+Ransomware
+Page | 10 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Finds pages which can be exploited to
+inurl:"go.cgi?url="
+redirect to any site
+"WHMCS Auto Xploiter" Finds WHMCS exploit shell in sites
+"El Moujahidin Bypass Shell"
+Simple upload/dir shell
+ext:php
+( ext:php ) ( inurl:/wp-
+Finds a few handy little web shells
+content/uploads/AAPL/loaders/ )
+inurl:?filesrc=**** ~"Current"
+Different uploaded shell names
+~"asp"
+inurl:/\\filesrc=**** ~"Current" Finds the extensive list of shell backdoors
+~":/" ~"upload" implemented on websites
+"File Manager Version 1.0" "Coded
+Finds file managers web shells
+By"
+inurl:"html/js/editor/ckeditor/" Finds liferay upload file
+"You have selected the following
+Finds file upload pages
+files for upload (0 Files)."
+intitle:"nstview v2.1::
+nst.void.ru" | intext:"nsTView
+Web shell
+v2.1 :: nst.void.ru. Password:
+Host:"
+filetype:php intext:Your Email:
+intext:Your Name: intext:Reply- Results in PHP mailers
+To: intext:mailer
+intitle:"Hamdida X_Shell
+Backdoor
+Backd00r"
+"Fenix Final Version v2.0"
+Web-Shell
+filetype:php
+intitle:Automatic cPanel An exploit to find uploaded cPanel
+Finder/Cracker | 3xp1r3 Cyber Finder/Cracker script and find cracked cpanel
+Army
+on it
+inurl:revslider inurl:temp Symlinks to files using the revslider
+inurl:update_extract inurl:sym1 vulnerability
+intitle:"Shell I" inurl:revslider Find shells inserted using the revslider
+inurl:error.php inurl:cmd vulnerability
+intext:Developed By Black.Hack3r
+Upload Shell Dorks
+ext:php
+ext:aspx intitle:aspxspy Asp shells
+intext:"Sw Bilgi" ext:php Upload Shell Dork
+Page | 11 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+intext:"Thehacker - Agd_Scorp -
+BLaSTER - Cr@zy_King - KinSize - BLaSTER Webshell Footholds
+JeXToXiC - s3f4 - rx5"
+intext:"Please select file to
+Various file upload forms
+upload:" ext:php
+inurl:sh3llZ/c99/ ind c99 shells uploaded on websites
+intitle:SN0X SHELL:
+Google Dork that brings up ddos shell
+WEEEEEEEEEEEEEEEEED
+ext:asp intext:Smart.Shell 1.0 BY
+New WebShell
+P0Uy@_$3r\/3R -
+intitle:"WSO 2.4" [ Sec. Info ],
+[ Files ], [ Console ], [ Sql ],
+Dork to find uploaded WSO 2.4 shell by
+[ Php ], [ Safe mode ], [ String
+hacker
+tools ], [ Bruteforce ], [
+Network ], [ Self remove ]
+intitle:"=[ 1n73ct10n privat The dork is used to find uploaded 1n73ct10n
+shell ]=" Shell on website
+filetype:php intext:"!C99Shell v.
+php backdoor: c99 shell
+1.0 beta"
+inurl:1337w0rm.php Finds websites that have 1337w0rm's CPanel
+intitle:1337w0rm cracker uploaded
+Re: intitle:Priv8 SCR Symlink User configs
+Finds websites that were hacked, backdoored
+Re: inurl:"r00t.php"
+and contains their system information
+Using this dork, you can find the User and the
+intitle:C0ded By web.sniper
+Domains of the Server
+inurl:"amfphp/browser/servicebrow AMFPHP service browser, debug interface.
+ser.swf" Author: syddd
+foothold using allintext:"fs-admin.php"
+shows the world-readable directories of a
+allintext:"fs-admin.php"
+plug-in that enables Wordpress to be used as
+a forum
+(intitle:"SHOUTcast
+SHOUTcast is a free-of-charge audio
+Administrator")|(intext:"U
+homesteading solution
+SHOUTcast D.N.A.S. Status")
+(intitle:"WordPress
+ÃƒÂ¢Ã¢â€šÂ¬Ã‚Âº Setup
+Configuration Alter setup configuration files.add ?step=1
+File")|(inurl:"setup-
+config.php?step=")
+Page | 12 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+"index of /" ( upload.cfm |
+upload.asp | upload.php | Searches for scripts that let you upload files
+upload.cgi | upload.jsp | which you can then execute on the server
+upload.pl )
+"Please re-enter your password It
+Invision Powerboard registration pages
+must match exactly"
+inurl:"tmtrack.dll?" Installations of Serena Teamtrack
+inurl:polly/CP Get into admin panel without logging
+intitle:MyShell 1.1.0 build Execute commands remotely on whichever
+20010923 server it's hosted on
+intitle:"YALA: Yet Another LDAP
+Web-based LDAP administration GUI
+Administrator"
+intitle:"ERROR: The requested URL
+could not be retrieved" "While Squid error messages, most likely from
+trying to retrieve the URL" "The reverse proxy servers
+following error was encountered:"
+PHPKonsole PHPShell filetype:php PHPKonsole is a little telnet like that can run
+-echo commands on the webserver
+The Haxplorer is a web-based file manager
+filetype:php HAXPLORER "Server
+which enables the user to browse files on the
+Files Browser"
+webserver
+(inurl:81/cgi-bin/.cobalt/) | The famous Sun Linux appliance. To replace
+(intext:"Welcome to the Cobalt this page, transfer your new content to the
+RaQ")
+directory /home/sites/home/web"
+Web Data Administrator is a utility program
+intitle:"Web Data Administrator -
+implemented in ASP.NET that enables to
+Login"
+easily manage SQL Server data
+"adding new user" Create an account on a server running
+inurl:addnewuser -"there are no Argosoft mail server pro for windows with
+domains"
+unlimited disk quota
+PHP Shell is a shell wrapped in a PHP script.
+intitle:"PHP Shell *" "Enable It's a tool that executes arbitrary shell-
+stderr" filetype:php commands or browses the filesystem on a
+remote Webserver
+"Powered by PHPFM" filetype:php - PHPFM is an open-source file manager
+username written in PHP
+Page | 13 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
++htpasswd +WS_FTP.LOG WS_FTP.LOG can be used in many ways to
+filetype:log find more information about a server
+intitle:admin intitle:login Admin Login pages
+7. Files Containing Usernames
+Google Dork Description
+"username.xlsx" ext:xlsx Excel files containing a username
+Access Microsoft SharePoint CMS
+inurl:/_layouts/mobile/view.aspx?List=
+based domains
+"authentication failure; logname=" Finds log files for failed logins,
+ext:log containing usernames and login paths
+Find administrator name in most
+inurl:/profile.php?lookup=1
+websites and forums
+The search reveals usernames and links
+site:extremetracking.com
+to the sites that are signed up with
+inurl:"login="
+extremetracking.com
+This will search for usernames and
+intext:"SteamUserPassphrase="
+passwords for steam
+intext:"SteamAppUser=" -"username" -
+(www.steampowered.com) taken from
+"user"
+the SteamApp.cfg file.
+This search jumps right to the main
+inurl:root.asp?acs=anon page of Outlook Web Access Public
+Folders and the Exchange Address Book
+Standard FTP configuration file that
+provides far too many details about
+filetype:conf inurl:proftpd.conf - how the server is setup, including
+sample installation paths, location of log files,
+generic username and associated
+group, etc
+Record info about the SSH client PUTTY.
+These files contain usernames, site
+filetype:log username putty
+names, IP addresses, ports and various
+other information about the SSH server
+Page | 14 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Reveals users’ names, pop3 passwords,
+filetype:reg reg +intext:"internet email addresses, servers connected to
+account manager" and more including IP addresses in
+some cases
+filetype:reg reg HKEY_CURRENT_USER Finds registry files from the Windows
+username Operating system
+Webalizer program displays various
++intext:"webalizer" +intext:"Total
+information but this query displays
+Usernames" +intext:"Usage Statistics
+usernames that have logged into the
+for"
+site
+inurl:php inurl:hlstats intext:"Server This page shows the half-life stat script
+Username" and reveals username to the system
+This file contains information about the
+index.of perform.ini mIRC client and may include channel
+and usernames
+These lock files often contain
+"index of" / lck usernames of the user that has locked
+the file
+Reveals user lists of administrative
+importance. User lists found using this
+inurl:admin filetype:asp
+method can range from benign
+inurl:userlist
+"message group" lists to system user
+lists containing passwords
+Reveals user lists of administrative
+importance. User lists found using this
+inurl:admin inurl:userlist method can range from benign
+"message group" lists to system user
+lists containing passwords
+The file contains what a user typed at a
+intitle:index.of .bash_history
+shell command prompt
+Consists of what a user typed at a shell
+intitle:index.of .sh_history
+command prompt
+8. Sensitive Directories
+Google Dork Description
+intitle:"index of" "/Cloudflare-
+Exposes Cloudflare-Cpanel sensitive files
+CPanel-7.0.1"
+Page | 15 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+-pool intitle:"index of" wget-log Provides good insight into what was
+-pub downloaded in a system
+intitle:"index of" "sms.log" Contains SMS LOGS
+intitle:"index of" "ftp.log" Contains FTP LOGS
+The primary function of the Vagrantfile is to
+describe the type of machine required for a
+-pub -pool intitle:"index of"
+project, and how to configure and provision
+vagrantfile -"How to"
+these machines. It can contain DB
+passwords, private keys, usernames, etc.
+intitle:"index of"
+Provides version of Java used by the target
+.oracle_jre_usage/
+-pub -pool intitle:"index of" Squirrel mail configuration files and
+squirrelmail/ sometimes credentials
+intitle:"index of" api_key OR "api
+API keys
+key" OR apiKey -pool
+intitle:"index of" domain.key -
+Domains private Keys
+public
+intitle:"index of" .zshrc~ OR
+.zshrc OR .zshenv OR .zshenv~ - Z shell (Zsh) juicy info
+pool -public
+*Java Web Start* (also known as *JavaWS*,
+*javaws* or *JAWS*) allows users to start
+"key" OR key.jar intitle:"index
+application software for the Java Platform
+of" webstart
+directly from the
+Internet using a web browser
+Provides informational Logs of the Laravel
+index of /storage/logs/
+framework
+intitle:index.of "chroot.conf" Contains sensitive information
+intitle:index of "uploads" The file contains Juicy items
+intitle:"index of" "ws_ftp.log" Sensitive directories
+Contains htaccess.txt clear text sensitive
+intitle:index.of "htaccess.txt"
+information
+intext:"index of" intext:..bak
+Div backup files
+intext:config
+site:* index.of:
+Android Files
+/android/manifest.xml
+intitle:index.of "system.db" Sensitive Directories
+Page | 16 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+intitle:index.of "database.db" Sensitive Directories
+intitle:"Index of" wp-upload Contains WordPress sensitive information
+site:*/logs/default.htm Sensitive directories
+site:* index of: /config Juicy Files
+site:* index of: *.exe Juicy Files
+intitle:"Index of" secret Secret Folder
+intitle:"index of" "/etc/mysql/" Sensitive directories and files
+inurl:/wp-content/uploads/ninja- WordPress Ninja Forms Plugin, Sensitive file
+forms/ intitle:"index of"
+uploads
+indexof:backup/web.config Backup files
+intitle:index.of./.htaccess Sensitive Directories
+inurl:/_vti_txt* Google Dorks for Sensitive Directories
+Gives result of Various backup files/Folders
+stored in wp-content/uploads directories of
+various websites
+inurl:wp-content intext:backup-db
+It also gives database backups consisting of
+SQL backup files of various websites who
+have not secured their sensitive directories
+Google Dork Submission for Apache servers,
+inurl:/scgi-bin*
+usually publicly facing directories
+inurl: /upload.php intitle:index
+Vulnerable Files
+of
+inurl:/database* ext:sql
+Files Containing Juicy Info
+intext:index of -site:github.com
+inurl:admin/data* intext:index of Files Containing Juicy Info
+Index.of/ Sensitive Directories (i.e */admin/
+inurl:/admin/ intitle:index.of
+)
+Used to find user authentication files from
+intitle:index.of.?.login
+the website directory
+site:*/wordpress/wordpress.bak/ Sensitive directory
+intitle:"index of" /config.ini Files containing password, sensitive info:
+inurl:/wp/wp-admin/ Sensitive directories
+Used to find sensitive database files (*.sql)
+intitle:index.of.?.database
+from the website directory
+Page | 17 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+intitle:"index of" /content/admin/ intitle:"index of" /content/admin/
+intitle:index.of.?.mysql Used to find sensitive. mysql files
+intitle:index.of./.db Dork to find the database information
+Used to find sensitive .bak files which are
+intitle:index.of.?.bak
+backup files, in web applications
+intitle:index.of./.sql SQL files can be downloaded from websites
+Contains sensitive information & sensitive
+intitle:"Index of" login.php
+files
+Contains sensitive information & sensitive
+intitle:"Index of" wp-config.php
+files
+intitle:"index of" sql inurl:./db/ Sensitive database credentials
+inurl:/sites/default/private Contains sensitive files & directories
+Contains Drupal Sensitive files and
+intitle:"index of" drupal
+information
+intitle:"Index of" inurl:wp- Contains sensitive files, links embedded with
+json/oembed WordPress and can be used to find CORS
+intitle:"Index of" phpmyadmin Contains sensitive information
+Contains WordPress sensitive information &
+intitle:"Index of" wp-admin
+sensitive files
+intitle:index.of.?.sql Download .sql files from website
+inurl: /filemanager/dialog.php Sensitive directories
+intitle:"Index of" wp-content Contains WordPress sensitive information
+intitle:"Index of" wp-config Contains WordPress sensitive files
+intitle:"Index of" portal Public Portal Directory's
+intitle:"Index of" public Public Folder Directories
+"Index of" inurl:config Open Directory listing with words "config"
+inurl:production and "production" in the URL
+Files configuration OpenVPN, some certs,
+Index of / *.ovpn
+keys
+"To Parent Directory" AND "dir>" Web Servers with Open Directory Listing
+AND "web.config" containing web.config file
+intitle:"index of" Wordpress based website having sensitive
+intext:"Includes wordpress" directories
+Page | 18 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+intitle:"index of" Allows access to the sensitive directories
+intext:"Includes
+using includes file
+This potential flaw can be used to download
+filetype:svn -gitlab -github
+content from the Web server that
+inurl:"/.svn"
+might otherwise be private
+This potential flaw can be used to download
+filetype:git -github.com
+content from the Web server that might
+inurl:"/.git"
+otherwise be private
+inurl:bc.googleusercontent.com Dork that enumerates GCP for sensitive
+intitle:index of directories
+intitle:"index of" scada SCADA Sensitive Directories Expose on Site
+"/var/cache/registry/" CS-Cart admin panel settings information
+type:mil inurl:ftp ext:pdf | ps Gives sensitive directories via FTP
+Access some admin login pages and parent
+directory structure and some vulnerable
+allintitle: "index of/admin" information like framework used for the
+web site technology used for building the
+web site etc
+intitle: "index of" "./"
+Bitcoin Directory Listing
+"./bitcoin"
+intitle:"index of"
+Cpanel Caches Config Directory Listing
+".cpanel/caches/config/"
+File Containing Juicy Info - Dorks allow you
+intitle: "Index of" intext:log to view logs. (e.g./log, file/log, ftplogs,
+server logs)
+intitle:"Directory Listing For" Access the sensitive directories of any web
+"Filename" intext:Tomcat/5.0.28 application using Apache Tomcat/5.0.28
+Access the sensitive directories (includes,
+intitle: "index of" "includes"
+wp-includes) using “includes" file
+Access the sensitive directories using “db"
+intitle:"index of" "db"
+file
+WooCommerce Classes Paypal Payment
+inurl:/uploads/wc-logs/
+Information
+inurl:/files/contao Shows some pdf files used in contao CMS
+Directories from typo3 cms exploiting
+inurl:typo3conf/l10n/
+directory listing
+Page | 19 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Access the Sensitive Directories using
+intitle:"index of" ".dockerignore"
+.dockerignore file
+Access the Sensitive Directories of Amazon-
+intitle:"index of" "/aws.s3/"
+Web-Services
+intitle:"index of" ".pem" Access the. pem (Privacy Enhanced Mail) file
+Access the Sensitive Directories using bitcoin
+intitle:"index of" "/bitcoin/"
+directories
+"description" & "size"
+Owncloud folders
+intitle:"index of" "owncloud"
+"Last modified" intitle:"index of"
+Dropbox folders
+"dropbox"
+inurl:"/cgi-bin/CVS/" Find filed in cgi-bin directories
+"sasl_passwd" | smtpd.conf
+Postfix sensitive files, also passwords
+intitle:"index of"
+intitle:"index of" "/user" | Show existing users in the system by simply
+"/users" going to the above-mentioned directories
+intitle:"index of" inurl:documents
+Backup folders containing very juicy info
+backup
+inurl:"/.Trash" intitle:"index of"
+Juicy info in some *nix Trash bins.
+~
+intitle:"index of" $Recycle.bin Windows trash bins with a lot of juicy info
+intitle:"index of"
+Can access most recently used files and
+"/Windows/Recent" |
+history data
+"/Windows/History/"
+intitle:"index of"
+Retrieve cookies from Windows users
+"WindowsCookies"
+intitle:"index of" "Application
+Retrieve credentials in Windows folder
+Data/Microsoft/Credentials"
+Dork for finding private directories inside
+allinurl:"wp-
+wordpress-popup plugin including admin
+content/plugins/wordpress-
+data which are present in Wordpress
+popup/views/admin/"
+websites
+Dork for finding a list of private directories
+allintitle:"Index of /ThinkPHP" | such as library, licence, config files, and
+inurl: "/ThinkPHP/" more in ThinkPHP framework used for
+websites
+Page | 20 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Obtain -Webserver Version
+- SSH Version
+intitle:"index of /" ssh - SSH Keys
+- SSH Logins
+- SSH .exe files
+intitle:"Index of /"
+Find a lot of passports
+inurl:passport
+Extract SAP server documents
+- Find SAP server
+- Find server structure
+inurl:"/irj/go/km/" - Find usernames and passwords
+intext:navigation
+- Find sensitive data
+- To exploit, go to the site and click on
+“Navigation user interface”
+- 1.890 results at the time of writing
+Large amounts of information
+- User data
+- Sensitive data
+- Documents
+- File structure of a server
+inurl:"/irj/go/km/docs/"
+- To exploit, go to the site and click on
+“Navigation user interface”
+- You can download the entire SAP server’s
+directory
+- 86.600 results at the time of writing
+- Discover software installed on servers
+- Version info
+- SAP J2EE exploits
+- Exploit server software
+inurl:"/webdynpro/resources/sap.co - Find adminconsole
+m/"
+- Possible SQL Injection:
+- https://www.exploit-
+db.com/exploits/43495
+- Create new users
+- 1.670 results at the time of writing
+Page | 21 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Find WordPress backup files and publicly
+inurl:"ai1wm-backups"
+accessible wp-content directories
+Search Private directories also work on
+intitle:"Index of /private/"
+Yahoo
+index of /etc/certs/ Certificate directories
+intitle:"index of /"
+Access to different backup files
+intext:/backup
+Obtain various Wordpress directories
+intitle:'index of' "access_log"
+containing access logs
+Discover various Wordpress directories
+intitle:'index of' "error_log"
+containing error logs.
+intitle:"index of /"
+Authorized keys ssh and some rsa file
+authorized_keys
+index of /ckeditor ckeditor directories
+index of kcfinder/ kcfinder directories
+Gather information by parent directory to
+inurl:/proc/tty/ index of
+discover vulnerable or credential file
+intitle:index of /.sql.gz Gather information of database schema and
+intext:/backup/ credentials data of MySQL backup
+intitle:" - Revision" +
+Apache subversion directory listing
+"subversion version"
+Index of /.svn Finds SVN directory
+intitle:"docker" intitle:"index
+Finds sensitive directories expose on site
+of" config
+inurl:filebrowser.wcgp?subDir Access Public and protected
+Communigate CommunigatePro mail server users' files
+Find sites running WordPress CMS and
+inurl:"/wp-json/" -wordpress access to the wp-json API endpoint which
+*might* be vulnerable to content injection
+Discovers Paytm config files and open
+intext:"paytm" intitle:"index of"
+directories of Sites
+Discovers servers exposing MySQL
+intext:my.cnf intitle:index of
+configuration files
+intext:pure-ftpd.conf Discovers servers exposing pure-ftpd
+intitle:index of configuration files
+inurl:/typo3/typo3conf Files from TYPO3 CMS installation
+Page | 22 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Checks for a public backup folder on the
+intitle:backup+index of webserver, It might include the sensitive
+files or database
+Discovers servers with open directories
+"index of" "database.sql.zip" exposing
+database backup files
+Discovers servers exposing sensitive SQL log
+"index of" "database_log"
+data
+Discovers servers with open directories
+"Index of" "database.sql"
+exposing database files
+A simple dork to find SSH private keys
+intitle:index.of id_rsa -
+indexed by google, Where many of the keys
+id_rsa.pub
+work
+inurl:/wp-includes/certificates/ Discover a lot of certificates from websites
+intitle:"index of /bins" arm Find servers infected with Mirai
+Dork about sensitive directory of HFS File
+allintext:'HttpFileServer 2.3k'
+Share Server
+Dork show a list of projects in Codebeamer
+inurl:'listprojects.spr'
+directory
+inurl:"RootFolder=" Allitems SharePoint directories exposing sensitive
+"confidential" | "classified" | information, usernames and sometimes
+"passwords" | username
+passwords
+inurl:revslider infos and symlinks to revslider folders
+inurl:'/revslider+port' upload, plugins and settings, server and port
+inurl:"paypal" intitle:"index of" Some juicy information regarding PayPal
+backup | db | access -github backups and more
+"Powered by Apache Subversion
+Looking for the SVN source code folder
+version"
+inurl:"/wp-content/uploads/db- Searching for the backup directory of WP-DB
+backup" Backup plugin (WordPress)
+index of /node_modules/ -github - Find several of nodejs folders with
+stackoverflow important files
+intitle:"index.of" |
+Open Custom File Uploader specifically in "/
+inurl:/filemanager/connectors/
+FCKeditor/.."
+intext:uploadtest.html
+intitle:index.of
+Sites with WebGais – Websendmail
+inurl:/websendmail/
+Page | 23 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+:DIR | intitle:index of Unconfirmed Websites leaking WhatsApp
+inurl://whatsapp/ Databases
+Dork will give application folder of parallels
+intitle:"Index.Of.Applications
+virtual machines showing what is installed in
+(Parallels)" -stackoverflow -quora
+the virtual machines
+intitle:index.of
+Lists files under Root Directory
+home/000~root~000/
+Dorks containing trash folders on Linux/Unix
+intitle:"Index Of" intext:".Trash"
+machines
+intitle:CV+index of Search and download CV from web directory
+Directories containing Symfony CMS juicy
+inurl:"apps/backend/config/"
+info and files
+intext:"Powered by ViewVC" |
+intitle:"ViewVC Repository ViewVC Repository Listing
+Listing"
+"lv_poweredBy" Folders with a lot of shared files
+intext:"/wp-content/uploads/wpsc/" Generates juicy information
+Returns files shared in Network File System
+inurl:"nfs://www." "index of /"
+(NFS)
+Create own shortcuts using aliases and shell
+intitle:index.of .bashrc functions. Aliases can be declared in bash
+files
+intext:"index of /userfiles/file/" Generate juicy information to user files
+Generate juicy information in the parent
+inurl:/wp-content/plugins/seo-
+directory, for best practice filter according
+pressor/classes/
+to the country
+intext:/wp- Generate juicy information in the parent
+content/plugins/woocommerce/ directory, for best practice filter according
+templates/emails/plain/ to the country
+Probable symbolic links to the root file
+inurl:/sym/root/ intitle:index.of system of the web server that can be
+browsable
+Obtain private database details including
+intext:"Index of /database" SQL and other database elements and
+contents
+Page | 24 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Most of the web-applications are
+maintained using git repositories reveals
+intext:"Index of /.git"
+sensitive information containing data like
+db-info, logs, configs, main-source code, etc.
+List those that are indexed and open for
+intitle:index.of intext:viewvc
+viewing
+Find unauthorized web-servers, and
+index of /htdocs sensitive info through 'htdocs' folder
+including xamp servers
+intitle:"Index of /" Finds directories with Joomla logs, often
+"joomla_update.php" containing juicy info
+-inurl:htm -inurl:html Explore the Images and photos uploaded
+intitle:"index of" NIKON and saved in Directories from Nikon
+-inurl:htm -inurl:html Explore the Images and photos uploaded
+intitle:"index of" 100CANON and saved in Directories from Canon
+inurl:"/drive/folders/"
+Google Drive folders
+site:drive.google.com
+"Index of" inurl:"/$Recycle.Bin/" Windows recycle bin
+inurl:"folderview?id=" Finds people's private folders on Google
+site:drive.google.com Drive
+powered by h5ai Browse through files
+site:onedrive.live.com shared by Identifies shared archives in OneDrive
+"Powered by AutoIndex PHP Script" Sensitive Directories and Files Containing
+ext:php Juicy Info
+inurl:admin inurl:uploads Fishes images and text from upload sites
+Refresh, Select All, Delete, Cut, Copy, Paste,
+inurl:/fckeditor/editor/plugins/aj New Folder, Upload ← vulnerable exploit in
+axfilemanager process for upload web shell, Close, Info
+/ajaxfilemanager.php Sensitive Directories and Files Containing
+Juicy Info
+Hostinger web hosting clients with default
+Hostinger © 2016. All rights
+Public page, list of Sensitive Directories and
+reserved inurl:default.php
+list of files in public_html folder
+index:"html/js/editor/fckeditor/ed
+itor/ name =find liferay file page
+filemanager/connectors"
+Page | 25 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+inurl:/FCKeditor/editor/filemanage Access unprotected files in the FCKeditor
+r/upload/ without authentication
+inurl:pictures intitle:index.of Access a lot of personal pictures
+inurl:.ssh intitle:index.of
+SSH Keys
+authorized_keys
+MAC OS X. Parent Directory Wordpress
+intitle:Index of /__MACOSX ...
+information
+(intext:"index of /.git") ("parent This dork will find git repository's which may
+directory") have sensitive information
+Awstats Log file's directory can reveal
+intitle: Index of /awstats/data
+file/directory location
+inurl:/server/webapps Apache Tomcat information disclosure
+intitle:index.of.mail Dork with juicy info
+inurl:"wp-content/uploads/private" Finds directories with juicy data
+inurl:pipermail intitle:index.of
+Finds Pipermail Archives
+parent
+intitle:index.of inurl:grades
+Finds directories containing grades.
+site:edu
+intitle:index.of parent
+Retrieve shared repositories
+inurl:repos
+"Desktop" parent intitle:index.of Find desktops shared on the interwebs
+"My Documents" "parent" Find "My Documents" folders shared on the
+intitle:index.of interwebs
+"sql" "parent" intitle:index.of - Find directories containing SQL Installs
+injection and/or SQL databases
+inurl:.DS_Store intitle:index.of Find directories with DS_Store files
+inurl:/aspnet_client/system_web/ Find juice directory "ASP"
+inurl:.listing intitle:index.of Find directories with. listing files
+mail spool intitle:index.of Dork for mail spools
+private parent intitle:index.of Dork for all sorts of juicy stuff
+inurl:users intitle:index.of Find user folders containing interesting files
+inurl:"default.php"
+Here is a list of files and directories in your
+intext:"website" "has been
+public HTML folder, it bypasses the
+successfully installed on the
+server!" directory-listening restriction
+Page | 26 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+intitle:"Index.of" "attachments" Find directories with interesting info
+intitle:"Index of" "WhatsApp Finds db.crypt/.db files of WhatsApp
+Databases" conversations
+intitle:"Index of" "WhatsApp Retrieve WhatsApp Images folder, usually
+Images" from backups
+intitle:"Index of" "DCIM" Access lot of camera photos dump
+Retrieve All config file stored in this sym
+intext:index of sym
+folder
+intitle:index.of.pubs Find sensitive directories
+intitle:"Index of" "wwwroot" Directory of wwwroot Dork
+Browse files stored on a personal
+server(home) using a dynamic DNS service
+intitle:"index of" inurl:"no-
+to update server IP.
+ip.com"
+You can replace "no-ip.com" with any other
+dynamic DNS hosts
+inurl:private_files Find directory private files xD
+View Onenote files stored in the
+open(*.one). These files can be read easily
+intitle:"index of" "onetoc2" "one"
+with Onenote or a compatible viewer, no
+password, no encryption
+inurl:wp-admin/ intext:css/ Finds misconfigured WordPress sites
+Finds open ftps. This is a base dork, where
+intitle:"Index of ftp" you can add intext:"ssh/" for folder search
+and intext:"-2015" for dates and years
+intitle:index.of.dropbox Find sensitive directories
+intitle:index.of +"Indexed by
+Google dork for finding Private pics
+Apache::Gallery"
+intitle:index.of.accounts Dork for a directory with accounts
+inurl:/wp- Sensitive data/site rips/db rips in publicly
+content/wpbackitup_backups accessible folders
+"Config" intitle:"Index of"
+Directory with keys of VPN servers
+intext:vpn
+Files of the configuration of user Joomla
+"jos_users" intitle:"Index of"
+servers
+inurl:/cgi-bin/.cgi Finds open index of /cgi-bin
+Page | 27 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+allinurl:/hide_my_wp= Show plugin file folder and all file
+intitle:"index of"
+Mac OSX directories
+intext:".ds_store"
+Gives access to often unconsciously shared
+intitle:"index of" myshare documents, programs or sensitive
+information
+inurl:8080 intitle:"Dashboard
+Access to Jenkins Dashboard
+[Jenkins]"
+intext:xampp-dav-
+Text file but by URL we can travel in paren
+unsecure:$apr1$6O9scpDQ$JGw2Tjz0jk
+directory
+rqfKh5hhiqD1
+intitle:index.of
+Home user’s directory path indexed
+intext:.bash_history
+"index of" inurl:sym Steal the symlinks of other servers
+"index of" inurl:root
+Steal Others Symlink
+intitle:symlink
+inurl:ckfinder
+intext:"ckfinder.html" Find root directory of CKFinder
+intitle:"Index of /ckfinder"
+inurl:/xampp Looks for servers with xampp installed
+Quick and dirty WebserverX HTTP server
+allintext:"WebServerX Server at"
+google dork
+intitle:index.of cisco asa -
+Google search for Pix/Asa images
+site:cisco.com
+intitle:index.of ios -
+Google search for Cisco IOS images
+site:cisco.com
+Give information about a web servers
+intitle:index.of.config
+configuration
+Firstclass directory listings go to
+http://[target]/[path]/Search type just ' in
+the search field to get a list of downloadable
+allintitle:"FirstClass Login" files, and can search for robots.txt with
+some folders path or other info for site
+structure, getting unauthorized access on all
+files on the target server
+inurl:install.pl intext:"Reading Everything from OS, to the forum software,
+path paramaters" -edu etc.
+Page | 28 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+"Warning: Installation directory
+Find fresh installations of Zen-Cartsee Full
+exists at" "Powered by Zen Cart" -
+Disclosure forums for details
+demo
+"Welcome to the directory listing
+NetworkActiv-Web-Server directory listing
+of" "NetworkActiv-Web-Server"
+log inurl:linklint filetype:txt - Linklint is an Open Source Perl program that
+"checking" checks links on web sites
+"Directory Listing for" "Hosted by
+Directory listing for Xerver web server
+Xerver"
+intitle:"Folder Listing" "Folder
+Directory listing for Fastream NETFile Web
+Listing" Name Size Date/Time File
+Server
+Folder
+intitle:"Backup-Management phpMyBackup is an mySQL backup tool,
+(phpMyBackup v.0.4 beta * )" - with features like copying backups to a
+johnny.ihackstuff
+different server using FTP
+intitle:"pictures thumbnails" Reveals photo albums taken by Sprint PCS
+site:pictures.sprintpcs.com customers
+Finds java powered web servers which have
+intitle:index.of WEB-INF
+indexing enabled on their config directory
+Provides mailbox dir. that contains a lot of
+intitle:index.of /maildir/new/
+mails
+filetype:ini Desktop.ini Finds any web shared windows folder inside
+intext:mydocs.dll my docs
+filetype:torrent torrent Torrent files
+"Index of" rar r01 nfo Modified
+New Warez Directory Lists
+2004
+"Web File Browser" "Use regular Search for a PHP script used to manage files
+expression" on a server
+"The HttpFileServer is a Java-based
+intitle:"HFS /" +"HttpFileServer" mechanism for providing web access to a set
+of files on a server
+intitle:upload inurl:upload
+intext:upload -forum -shop - Reveals server upload portals
+support -w3c
+Adding "inurl:ftp (pub | incoming)" to the
+intitle:"index of" inurl:ftp (pub
+"index.of" searches help to locate FTP
+| incoming)
+websites
+allinurl:"/*/_vti_pvt/" |
+Frontpage extensions for Unix
+allinurl:"/*/_vti_cnf/"
+Page | 29 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Reveal the configuration file of the abyss
+intitle:index.of abyss.conf
+webserver
+intitle:"index of" "parent Uses desktop.ini to track users with a
+directory" "desktop.ini" webserver running on their desktop
+site:dyndns.org
+computers
+TotalIndex v2.0 is an open-source script that
+intext:"Powered By: TotalIndex" is designed to replace the simple, and boring
+intitle:"TotalIndex" default index page of a site which lists the
+files in an indexed folder
+Looks for indexes with the following
+"intitle:Index.Of /" stats
+subdirectories: stats, merchant, online-
+merchant cgi-* etc
+store, and cgi-local or cgi-bin
+inurl:explorer.cfm
+Find file manager without authentication
+inurl:(dirpath|This_Directory)
+Indicates the "Local settings" dir in most
+intitle:"index of"
+cases, and browsable server directories in
+intext:"content.ie5"
+general
+DCIM directory is the default name for a few
+index.of.dcim
+brands of digital cameras
+intitle:"index of" -inurl:htm -
+Mp3 files
+inurl:html mp3
+Google Hackers Guide explains how to find
+intitle:"Directory Listing For"
+Apache directory indexes, which are the
+intext:Tomcat -int
+most common found on the Internet
+intitle:"webadmin - /*" Webadmin.php is a free simple Web-based
+filetype:php directory filename file manager. This search finds sites that use
+permission
+this software
+TYPO3 is a free Open Source content
+management system for enterprise
+intitle:index.of (inurl:fileadmin
+purposes on the web and in intranets,
+| intitle:fileadmin)
+featuring a set of ready-made interfaces,
+functions, and modules
+These are index pages of "My Shared
+intitle:"Index of *" inurl:"my
+Folder". Sometimes they contain juicy stuff
+shared folder" size modified
+like mp3's or avi files
+Find directories containing commercial
+music. AlbumArt_{.*}.jpg are
+intitle:index.of /AlbumArt_
+download/create by MS-Windows Media
+Player in the music directory
+Page | 30 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+Shows files that were transmitted. A
+intext:"d.aspx?id" ||
+malicious user could download them from
+inurl:"d.aspx?id"
+these pages
+Picasa is an 'Automated Digital Photo
+"index of" / picasa.ini
+Organizer' recently acquired by Google
+phpMyAdmin is a tool written in PHP
+intitle:"index of /phpmyadmin"
+intended to handle the administration of
+modified
+MySQL over the Web
+Anaconda is a Linux configuration tool like
+yast on suse linux. The root password is
+filetype:cfg ks intext:rootpw -
+often encrypted - like md5 or read from the
+sample -test -howto
+shadow. Sometimes an attacker can also get
+a cleartext password
+Gallery (http://gallery.menalto.com) is
+intitle:"album permissions" "Users
+software that allows users to create
+who can modify photos" "EVERYBODY"
+webalbums and upload pictures to it
+"Index Of /network" "last Find directories contain information about
+modified" network
+Access the company’s private network and
+intitle:intranet inurl:intranet provides employee listings and other
++intext:"human resources" sensitive information useful for any social
+engineering
+Reveal temporary files and directories on
+inurl:/tmp
+the webserver
+Files in this directory may contain sensitive
+"index of" inurl:recycler
+information
+The default installation location of Oracle
+inurl:/pls/sample/admin_/help/
+manuals
+The directory contains sample Oracle JSP
+inurl:ojspdemos
+scripts installed on the server
+The directory contains sample JSP scripts
+inurl:j2ee/examples/jsp
+which are installed on the server
+CGI directories contain scripts which can
+"index of cgi-bin"
+often be exploited by attackers
+The top-level directory of ColdFusion, a
+intitle:"Index of" cfide
+powerful web development environment
+Page | 31 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+The directory has various personal
+intitle:"index.of.personal"
+documents and pictures
+Reveals backup directories and contain
+inurl:backup intitle:index.of various information ranging from source
+inurl:admin code, SQL tables, user lists, and even
+passwords
+Indicate that they share the C:\WINDOWS
+intitle:"Index of c:\Windows" directory, which is the system folder for
+many Windows installations
+phpMyAdmin is a widely spread web
+frontend used to maintain SQL databases.
+"Welcome to phpMyAdmin" " The default security mechanism is to leave it
+Create new database" up to the admin of the website to put a
+.htaccess file in the directory of the
+application
+index.of.private Find directory with some private files
+"Index of /backup" Reveal contents of their backup directories
+9. Web Server Detection
+Google Dork Description
+intitle:"Welcome to nginx!"
+intext:"Welcome to nginx on Finds nginx server welcome page
+Debian!" intext:"Thank you for"
+intitle:"index of" "Served by Sun-
+Finds Sun-ONE web servers
+ONE"
+-pub -pool intitle:"index of"
+Finds LiteSpeed Webservers
+"Served by" "Web Server"
+Another way to spot Apache web servers in
+intitle:"index of" "server at"
+case the service name is hidden
+site:*/server-status
+Finds files containing Juicy information
+intext:"Apache server status for"
+inurl:/phpmyadmin/changelog.php -
+Finds Phpmyadmin changelog file
+github -gitlab
+Finds list of banks in ger hosted by the same
+inurl:"WebPortal?bankid"
+hoster
+intitle:"IIS Windows Server" -
+Finds IIS windows server
+inurl:"IIS Windows Server"
+Page | 32 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+intitle:"Apache2 Ubuntu Default Finds Apache2 Ubuntu default welcome
+Page: It works" page.
+inurl:/server-status + "Server
+Finds Apache server-status
+MPM:"
+inurl:phpinfo.php intext:build Finds web servers that have been
+2600 unmaintained for literal decades.
+intext:"Brought to you by List of sites all hosted by eVetSites, hosting
+eVetSites" platform for veterinarians
+Finds all websites using ADSelfService and
+authorizing guest access to the LDAP
+inurl:OrganizationChart.cc
+directory. Access name, mail, mobile
+number, function...
+intext:"Powered by GetSimple" -
+Find sites using the GetSimple CMS
+site:get-simple.info
+inurl:jsmol.php Moodle sites using Jsmol
+intitle:"WAMPSERVER homepage"
+Dork for instances of WAMPSERVER
+"Server Configuration" "Apache
+homepages
+Version"
+"Powered by BOINC" Find websites powered by BOINC
+"Proudly created with Wix.com" Find Websites made with WIX
+"I have been invoked by
+Find many improperly set up tomcat servlets
+servletToJSP"
+intext:" - 2019 Cott Systems,
+Local Government Websites
+Inc."
+intitle:Test Page for the Nginx
+Web server detected
+HTTP Server on Fedora
+Find websites that are used to upload files
+"Powered by vShare"
+and videos
+intext:"Powered by Abyss Web
+Machines running Abyss webserver
+Server"
+Dork to locate LiveZilla consoles and version,
+intitle:livezilla "Server Time" as well as additional information about the
+server such as PHP version
+intext:"Powered by phpSQLiteCMS" |
+intitle:"phpSQLiteCMS - A simple & phpSQLiteCMS detect
+lightweight CMS"
+intitle:"Sucuri WebSite Firewall -
+Sucuri Firewall detected
+Access Denied"
+Page | 33 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+"This server is operated by Find websites using the OpenX webserver
+OpenX." software
+intext:"Powered by Nesta" Nesta, a Ruby CMS
+Coldbox | contentbox | commandbox Finds ContentBox content management
+"Powered by ContentBox" tools and CMS
+intext:"Powered by Typesetter" Typesetter CMS dorks
+intext:"Powered by (Quantum |
+Finds sites using Quantum CMS builder
+Quantum CMS | CMS)
+intext:"Powered by Sentora" -
+Finds sites using Sentora CMS
+github.com
+Get all sites using Hubspot's Content
+inurl:/_hcms/
+Management system (CMS)
+inurl:tests/mocks
+Identify websites made with codeigniter
+intext:autoloader
+intitle:HTTP Server Test Page
+CentOS detected
+powered by CentOS
+intitle:"apache tomcat/" "Apache Shows many examples of Server Apache
+Tomcat examples" Tomcat
+inurl:composer.json codeigniter -
+Shows RDServer product information
+site:github.com
+"RDServer Product information" |
+Shows RDServer Product information
+inurl:"/rdagent.jsp"
+intitle:"apache tomcat/" + "Find
+additional important configuration Apache Tomcat web server detected
+information in:"
+intitle:"Apache2 Debian Default
+Default Apache2 HTML page
+Page: It works"
+inurl:rvsindex.php &
+Sites running rvsitebuilder CM
+/rvsindex.php?/user/login
+Finds this little script:
+(https://github.com/joshdick/miniProxy)
+intitle:"miniProxy" And provides free proxies to be used for
+browsing or, as it is usable with
+GET parameters, to use with cURL
+intitle:"Axis Happiness Page" Reveals sensitive information including a full
+"Examining webapp configuration" path disclosure in Apache Axis
+"var miner = new CoinHive" Finds sites that run the CoinHive crypto
+intext:document.domain miner
+Page | 34 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+inurl:"server-status" "Server
+Version: Apache/" "Server Built: " Shows URL which has Apache server-status
+"Server uptime:" "Total accesses" file openly accessible
+"CPU Usage:"
+"Application Blocked!" "Google Retrieves pages with a blacklist or behind
+bot" FortiGate firewall
+Laravel package comes with readme.md and
+inurl:readme.md intext:"Laravel" can identify the framework which can be
+further used for exploiting
+inurl:phpmyadmin/themes Identify websites that host PHPMyAdmin by
+intext:"pmahomme" detecting exposed theme files
+intext:"Welcome to CodeIgniter!" Identify CodeIgniter applications
+CodeIgniter comes with a default offline
+readme.rst which most of the installed
+inurl:readme.rst
+applications don't remove and get indexed.
+intext:"CodeIgniter"
+This can identify the framework and exploit
+it
+intitle:"Index of" "Apache/2.4.7 Find Ubuntu servers and a certain version of
+(Ubuntu) Server" Apache
+intitle:"Index of /" "Proudly
+Finds Surftown HTTP servers
+Served by Surftown at"
+inurl:/pub/ inurl:_ri_ Finds servers using Oracle Responsys
+Returns Web Services Description Language
+ext:svc inurl:wsdl
+that will expose web services
+inurl:/php/info.php Php version and information page
+intitle:"HFS" "Server Uptime"
+Finds HttpFileServer with open access
+"Server time"
+inurl:phpsysinfo/index.php?disp=dy Shows lot of information about servers
+namic behind the webpages
+Provides Apache Server Status, Server
+intitle:"Apache Status" | Version, Server Built, Current Time, Restart
+intext:"Apache Server Status" Time, Parent Server Generation, Server
+uptime
+intext:Apache/2.2.29 (Unix)
+mod_ssl/2.2.29 | intitle:"Index of Finds Server Name and Port
+/"
+inurl:"/web-console/"
+Finds Boss Application Server Info
+intitle:"Administration Console"
+Page | 35 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+filetype:asmx
+Returns web service
+inurl:(_vti_bin|api|webservice)
+intitle:"BadBlue: the file-sharing
+Badblue file sharing web server detection
+web server anyone can use"
+Provide useful statistics and diagnostic
+intext:"Target Multicast Group"
+information about a given multicast group's
+"beacon"
+connectivity characteristics
+intitle:"Apache Status" "Apache
+New Apache server-status dork
+Server Status for"
+inurl:wl.exe inurl:?SS1= List server apparently keeps track of many
+intext:"Operating system:" -edu - clients, not just Domains and hardware, but
+gov -mil
+Operating systems as well
+inurl:nnls_brand.html OR Novell Nterprise Linux Services detection
+inurl:nnls_nav.html dork
+(intitle:"502 Proxy
+Error")|(intitle:"503 Proxy
+Error") "The proxy server could Enables one web server to provide content
+not handle the request" -topic - from another transparently
+mail -4suite -list -
+site:geocrawler.co
+This is the default page for the WebSTAR
+intitle:"Welcome To Your WebSTAR
+(Macintosh) web server (Headers say -->
+Home Page"
+Server: WebSTAR NetCloak)
+intitle:"Document title goes here"
+intitle:"used by web search tools" Finds IBM Http Server (AS/400)
+" example of a simple Home Page"
+Webserver detection: The Advanced
+intitle:"Welcome to the Advanced Extranet Server project aims to create an
+Extranet Server, ADVX!" extensible open source web server based on
+Apache
+intitle:"Welcome to Windows Small Another way to find Small Business Server
+Business Server 2003" 2003
+Uses the webserver's info page which
+intitle:"IPC@CHIP Infopage"
+reveals interesting information
+intitle:"Test Page for the Apache
+HTTP Server on Fedora Core" Finds Apache 2.0 on Fedore Core Test page
+intext:"Fedora Core Test Page"
+Finds RaidenHTTPD
+Powered.by.RaidenHTTPD
+(http://www.raidenhttpd.com/en) is a full
+intitle:index.of
+featured web server software for Windows
+Page | 36 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+(inurl:81-cobalt | inurl:cgi-
+Finds Cobal RaQ internal pages
+bin/.cobalt)
+Resin provides a fast-standalone web server
+intitle:"Resin Default Home Page" and locates those servers based on the title
+of the default page
+The default installation of Xitami web server
+intitle:"Welcome To Xitami" -
+contains test script which provides a lot of
+site:xitami.com
+information about the server
+intitle:"Welcome to Your New Home
+Finds default Apache page on Debian installs
+Page!" "by the Debian release"
+"About Mac OS Personal Web Mac OS Personal Web Sharing allows Mac
+Sharing" OS users to share Folders over the Web
+"Switch to table format" Finds index page of OReilly Website
+inurl:table|plain Professional
+intitle:"Object not found!" Detects apache web server (2.0.X/SuSE) with
+intext:"Apache/2.0.* (Linux/SuSE)" its error page
+intitle:"Lotus Domino Go Domino Go Webserver is a scalable high-
+Webserver:" "Tuning your performance Web server that runs on a
+webserver" -site:ibm.com
+broad range of platforms
+intitle:"Directory Listing, Index Small HTTP server software for private
+of /*/" homepage hosting or big uploads
+intitle:"Object not found" netware Show NetWare apache webservers as the
+"apache 1.." result
+Indicates Solaris machines and second the
+intitle:AnswerBook2 inurl:ab2/
+web service is vulnerable to a format string
+(inurl:8888 | inurl:8889)
+attack
+intext:"404 Object Not Found"
+Finds IIS 5.0 error pages = IIS 5.0 Server
+Microsoft-IIS/5.0
+Produces instant and dynamic usage reports
+"powered by" "shoutstats" hourly
+in HTML format, for viewing in a standard
+daily
+browser
+Finds the administrator page. It can be used
+intitle:"Shoutcast Administrator"
+to detect unlisted Shoutcast servers
+"Novell, Inc" WEBACCESS Username
+Password "Version *.*" Copyright - Find Novell Grouwise Webaccess servers
+inurl:help -guides|guide
+"AnWeb/1.42h" intitle:index.of Find Version of a web server
+"CERN httpd 3.0B (VAX VMS)" Find Version of a web server
+Page | 37 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+"JRun Web Server" intitle:index.of Find Version of a web server
+"MaXX/3.1" intitle:index.of Find Version of a web server
+"Microsoft-IIS/* server at"
+Find Version of a web server
+intitle:index.of
+"Microsoft-IIS/4.0"
+Find Version of a web server
+intitle:index.of
+intitle:"Page rev */*/*"
+Find Red Hat UNIX Administration Pages
+inurl:"admin
+Generic way of grabbing those CGI-spewed
+HTTP_USER_AGENT=Googlebot
+environmental var lists
+Gives access to Web server's content, CGI
+allinurl:".nsconfig" -sample -
+scripts, and configuration files are controlled
+howto -tutorial
+by entries in an access file
+Return a listing of servers running Lotus
+Domino. These servers have descriptive
+inurl:domcfg.nsf
+error messages that can obtain path and OS
+information
+Shows sites that have the 300-error code
+and also reveal a server tag at the bottom of
+intitle:"300 multiple choices"
+the page that an attacker could use to
+profile a system
+intitle:Snap.Server inurl:Func= Reveals the existence of a SNAP server
+Default web page for Apache 1.2.6 - 1.3.9.
+used to get information to determine the
+intitle:"Test Page for Apache"
+version of the webserver, or to search
+Google for vulnerable targets
+allintitle:Netscape FastTrack Finds default installations of Netscape
+Server Home Page Fasttrack Server
+Default web page for Apache 1.2.6 - 1.3.9.
+intitle:"Test Page for Apache" "It where this information can be used to
+Worked!" determine the version of the webserver and
+vulnerable targets
+"seeing this instead" Find default web page for Apache 1.3.11 -
+intitle:"test page for apache" 1.3.26
+intitle:"Test Page for Apache" "It Find default web page for Apache 1.2.6 -
+Worked!" "on this web" 1.3.9
+Page | 38 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Google Dorks Cheat Sheet
+inurl:tech-support inurl:show Find Cisco products with an open web
+Cisco interface
+intitle:"Apache HTTP Server" Obtain a set of online documentation when
+intitle:"documentation" Apache web server is installed
+Page | 39 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

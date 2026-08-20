@@ -1,0 +1,347 @@
+Certified Penetration Testing Professional Exam 412-80
+Snort Rules Cheat Sheet
+Certified Penetration Testing Professional
+Snort Rules Cheat Sheet
+Snort
+Source: https://www.snort.org
+Snort is an open-source network intrusion detection system, that can perform real-time traffic
+analysis and packet logging on IP networks. Snort's rule engine enables custom rules to meet the
+needs of the network. Snort rules help in differentiating between normal internet activities and
+malicious activities.
+Structure of a Snort Rule
+Rule Header Rule options
+Basic structure of Snort rules
+Action Protocol Address Port Direction Address Port
+Structure of Snort rule header
+1. Rule Header
+2. Rule Options
+3. Command Line Options
+4. Sniffer Mode
+5. Packet Logger Mode
+6. NIDS Mode
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Snort Rules Cheat Sheet
+1. Rule Header
+Rule Actions
+Action Description
+Pass Tells Snort to ignore the packet
+Log To log a packet
+To create an alert and then to activate another
+Alert
+rule for checking more conditions
+Block the current packet and all the subsequent
+block
+packets in this flow
+drop Drop the current packet
+react Send response to client and terminate session
+Terminate session with TCP reset or ICMP
+reject
+unreachable
+Enables overwriting packet contents based on a
+rewrite
+'replace' option in the rules
+Protocols
+Rule Description
+alert icmp any any -> any any
+Shows on which type of packet the rule will be
+(msg: "Ping with TTL=100"; \
+applied
+ttl: 100;)
+The Direction Operator
+log !<Target Ip1>/24 any <> <> symbol shows that the rule will be applied to
+<Target Ip2>/24 23 packets traveling on either direction.
+-> shows that address and port numbers on the
+alert tcp any any -> <Target
+left-hand side of the direction field are the
+Ip>/24 any (flags: A; \ ack:
+sources of the packet while those on the right-
+0; msg: "TCP ping detected";)
+hand side are the destination
+Port Numbers
+Port ranges
+alert udp any 1024:2048 -> any Use a range of ports instead of only one port in
+any (msg: “UDP ports”;) the port field
+Negation symbol
+log udp any !53 -> any any log Using the negation symbol (!) with port
+udp numbers to exclude a port or a range of ports
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Snort Rules Cheat Sheet
+Addresses
+alert tcp any any -> <Target Two address parts in a Snort rule are used to
+Ip>/32 80 (msg: "TTL=100"; \ check the source and the destination of the
+ttl: 100;)
+packet
+Address exclusion
+alert icmp ![<Ip range>] any -> Snort provides a mechanism to exclude
+any any \ (msg: "Ping with addresses using the negation symbol an
+TTL=100"; ttl: 100;)
+exclamation point.
+Address lists
+alert icmp ![ <Ip range> /24,
+<Ip range>/24] any -> any \
+Specifies a list of addresses in a Snort rule
+any (msg: "Ping with TTL=100";
+ttl: 100;)
+2. Rule Options
+Option Description
+ACK keyword
+alert tcp any any -> <IP range>
+any (flags: A; \ Alerts when you receive a TCP packet with the
+ack: 0; msg: "TCP ping ACK flag set and it contains a value of 0
+detected";)
+classtype Keyword
+alert udp any any -> <IP range>
+6838 (msg:"DoS"; \ content: Escalate high-risk alerts such as DoS attempts
+"server"; classtype:DoS;)
+content Keyword Find the signatures in the packet
+alert tcp <IP range> any ->
+<IP range> any \ (content: Find the signatures in the packet
+"GET"; msg: "GET matched";)
+offset Keyword
+alert tcp <IP range> any -> any
+Starts searching for the word “HTTP” after the
+any \ (content: "HTTP"; offset:
+specified number of bytes from the start of the
+<no of bytes>; msg: "HTTP
+data
+matched";)
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Snort Rules Cheat Sheet
+depth Keyword
+alert tcp <IP range>any -> any
+any (content: \ "HTTP"; offset: Search the word “HTTP” between the specified
+<no of bytes>; depth: <no of range of the data part of the TCP packet
+chars>; msg: "HTTP matched";)
+content-list Keyword
+alert ip any any -> <IP range>
+any (content-list: \ Search the given strings in the data portion of all
+"yourtext"; msg: "Text packets matching the rule criteria
+matched";)
+dsize Keyword
+alert ip any any -> <IP range>
+any (dsize: > 6000; \ Alerts if the data size of an IP packet is larger
+msg: "Large size IP packet than 6000 bytes
+detected";)
+flags Keyword
+alert tcp any any -> <IP range>
+Alerts any scan attempt using SYN-FIN TCP
+any (flags: SF; \ msg: “SYNC-
+packets
+FIN packet detected”;)
+fragbits Keyword
+alert icmp any any -> <IP
+range> any (fragbits: D; \ Alerts if the DF bit is set in an ICMP packet
+msg: "Don’t Fragment bit set";)
+icmp_id Keyword
+alert icmp any any -> any any
+Verifies if the ICMP ID field in the ICMP header
+icmp_id: 100; \
+is equal to 100
+msg: "ICMP ID=100";)
+icmp_seq Keyword
+alert icmp any any -> any any
+(icmp_seq: 100; \ Alerts if it finds a sequence number of 100
+msg: "ICMP Sequence=100";)
+itype Keyword
+alert icmp any any -> any any
+itype: 4; \
+Alerts if it detects a source quench message
+msg: "ICMP Source Quench
+Message received";)
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Snort Rules Cheat Sheet
+icode Keyword
+alert icmp any any -> any any
+itype: 5; \ Alerts if host redirect ICMP packets are received
+icode: 1; msg: "ICMP ID=100";)
+ipopts Keyword
+alert ip any any -> any any
+(ipopts: lsrr; \ Detects and alerts Loose Source Routing
+msg: "Loose source routing attempts
+attempt";)
+ip_proto Keyword
+alert ip any any -> any any
+(ip_proto: ipip; \
+Alerts if IPIP protocol is used by data packets
+msg: "IP-IP tunneling
+detected";)
+logto Keyword
+alert icmp any any -> any any Records all ICMP packets having TTL value equal
+(logto:<filename>; ttl: 100;) to 100 to the specified file
+priority Keyword
+alert ip any any -> any any
+(ipopts: lsrr; \
+Assigns a priority to a rule
+msg: "Loose source routing
+attempt"; priority: 10;)
+react Keyword
+alert tcp <IP range> any -> any
+80 (msg: "Outgoing \ Terminate a session to block some sites or
+HTTP connection"; react: services
+block;)
+reference Keyword
+alert udp $EXTERNAL_NET any ->
+$HOME_NET 1900 \
+(msg:"MISC UPNP malformed
+advertisement"; \ Alert shows a reference to find more
+content:"NOTIFY * "; nocase; information about this alert. Adds a reference to
+classtype:misc-attack; \ information present on other systems available
+reference:cve,CAN-2001-0876; on the Internet
+reference:cve, \
+CAN-2001-0877; sid:1384;
+rev:2;)
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Snort Rules Cheat Sheet
+resp Keyword
+Sends a TCP Reset packet to the sender if an
+alert tcp any any -> <IP range>
+attempt is made to connect to TCP port 8080 on
+8080 (resp: rst_snd;)
+the local network
+rpc Keyword
+alert ip any any ->
+192.168.1.0/24 any (rpc:
+10000,*,3; \ Detects and alerts RPC based requests
+msg: "RPC request to local
+network";)
+sameip Keyword
+alert ip any any -> <IP range>
+Alerts if source and destination IP addresses are
+any (msg: "Same IP"; \
+same
+sameip;)
+session Keyword
+log tcp any any -> <IP range>
+Rule logs all printable data from POP3 sessions
+110 (session: printable;)
+tag Keyword
+alert tcp <IP range> 23 -> any
+any \
+Records 100 packets on the session after it is
+(content: "facebook"; msg:
+detected
+"Detected facebook"; \
+tag: session, 100, packets;)
+3. Command Line Options
+Syntax: snort [options]
+Options Description
+Generates an alert using one of the specified
+-A alert-mode
+alert-modes: fast, full, none, and unlock
+-b Logs packets in tcpdump format (i.e., libpcap)
+Scrambles the networks specified in the -h (or
+-B address-conversion-mask
+HOME_NET) setting
+Allows you to specify which configuration file
+-c config-file
+you want to use
+Prints the character data found in the packet
+-C
+payload
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Snort Rules Cheat Sheet
+Displays the application layer data when in
+-d
+verbose or packet logging mode
+-D Turns Snort in daemon mode
+-e Displays or logs the link-layer packet headers
+Reads Berkeley Packet Filters (BPF) from a bpf
+-F bpf-file
+file
+Changes the default group ID or GID under which
+-g group
+Snort runs after initialization
+Sets the "home network" to a specific address in
+-h home-net
+CIDR format
+-i interface Specifies which interface Snort should listen on
+In alerts, displays the interface on which each
+-I
+packet arrived
+Controls which packet checksums Snort
+-k checksum-mode
+computes and verifies
+-l logging-directory Specifies the logging directory
+-L binary-log-file Sets the filename of the binary log file
+Sets the file mode creation mask to the
+-m umask
+designated umask variable
+Processes the given number of packets and then
+-n packet-count
+exits
+-N Turns off packet logging
+Changes the order in which the rules are applied
+-o
+to packets
+Replaces the IP addresses printed to the screen
+-O
+or log file with "xxx.xxx.xxx.xxx"
+-p Turns off promiscuous mode sniffing
+Sets the maximum packet capture length to a
+-P snap-length
+certain size
+Tells Snort to run quietly. Does not display
+-q
+banner and initialization information
+-r tcpdump-file Processes a tcpdump-formatted file
+-s Sends alert messages to a syslog server
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Snort Rules Cheat Sheet
+Sets the variable name <variable> to the value
+-S variable=value
+<value>
+Changes Snort's root directory to chroot after
+-t chroot
+initialization
+-T Starts Snort in self-test mode.
+Changes the default user ID or UID under which
+-u user
+Snort runs after initialization
+Forces the timestamp in all logs to be in UTC
+-U
+format
+-v Prints all packets to the console
+-V Displays the Snort version number and then exits
+-X Displays raw packet data starting at the link layer
+-y Includes the year in all alerts and log files
+-z Enables the stream4 preprocessor
+-? Lists all switches and options and then exits
+4. Sniffer Mode
+Sniff packets and send to standard output as a dump file
+Options Description
+-v (verbose) Display output on the screen
+-e Display link-layer headers
+-d Display packet data payload
+-x Display full packet with headers in HEX format
+5. Packet Logger Mode
+Input output to a log file
+Options Description
+-r Use to read back the log file content using snort
+–l (directory name) Log to a directory as a tcpdump file format
+–k (ASCII) Display output as ASCII format
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Snort Rules Cheat Sheet
+6. NIDS Mode
+Use the specified file as config file and apply rules to process captured
+packets
+Options Description
+–c Define configuration file path
+–T Use to test the configuration file including rules
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

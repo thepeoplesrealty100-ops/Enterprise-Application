@@ -1,0 +1,179 @@
+Certified Penetration Testing Professional Exam 412-80
+WPScan Cheat Sheet
+Certified Penetration Testing Professional
+WPScan Cheat Sheet
+WPScan
+Source: https://github.com
+WPScan is a powerful tool used by attackers to identify vulnerabilities in WordPress websites. It
+automates the process of discovering security issues, outdated components, and potential entry
+points that can be exploited.
+Syntax
+wpscan --url <URL> --enumerate p
+Options
+The URL of the blog to scan. Allowed Protocols: http, https. Default
+--url URL Protocol if none provided: http. This option is mandatory unless update
+or help or hh or version is/are supplied.
+-h, --help Display the simple help and exit.
+--hh Display the full help and exit.
+--version Display the version and exit.
+-v, --verbose Verbose mode.
+--[no-]banner Whether or not to display the banner. Default: true.
+-o, --output FILE Output to FILE.
+-f, --format Output results in the format supplied. Available choices: cli-no-color,
+FORMAT json, cli, cli-no-colour.
+--detection-mode
+Default: mixed. Available choices: mixed, passive, aggressive.
+MODE
+--user-agent, --ua
+Specify a custom user-agent.
+VALUE
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+WPScan Cheat Sheet
+--random-user-
+Use a random user-agent for each scan.
+agent, --rua
+--http-auth
+HTTP authentication credentials.
+login:password
+-t, --max-threads
+The max threads to use. Default: 5.
+VALUE
+--throttle Milliseconds to wait before doing another web request. If used, the max
+MilliSeconds threads will be set to 1.
+--request-timeout
+The request timeout in seconds. Default: 60.
+SECONDS
+--connect-timeout
+The connection timeout in seconds. Default: 30.
+SECONDS
+--disable-tls- Disables SSL/TLS certificate verification, and downgrade to TLS1.0+
+checks (requires cURL 7.66 for the latter).
+--proxy
+Supported protocols depend on the cURL installed.
+protocol://IP:port
+--proxy-auth
+Proxy authentication credentials.
+login:password
+--cookie-string Cookie string to use in requests, format: cookie1=value1[;
+COOKIE cookie2=value2].
+--cookie-jar FILE-
+File to read and write cookies. Default: /tmp/wpscan/cookie_jar.txt.
+PATH
+--force Do not check if the target is running WordPress or returns a 403.
+--[no-]update Whether or not to update the Database.
+The WPScan API Token to display vulnerability data, available at
+--api-token TOKEN
+https://wpscan.com/profile.
+--wp-content-dir The wp-content directory if custom or not detected, such as "wp-
+DIR content".
+--wp-plugins-dir The plugins directory if custom or not detected, such as "wp-
+DIR content/plugins".
+Enumeration Process. Available Choices: vp Vulnerable plugins, ap All
+plugins, p Popular plugins, vt Vulnerable themes, at All themes, t Popular
+themes, tt Timthumbs, cb Config backups, dbe Db exports, u User IDs
+-e, --enumerate
+range (e.g. u1-5), m Media IDs range (e.g. m1-15). Separator to use
+[OPTS]
+between the values: ','. Default: All Plugins, Config Backups. Value if no
+argument supplied: vp, vt, tt, cb, dbe, u, m. Incompatible choices (only
+one of each group/s can be used): - vp, ap, p - vt, at, t
+--exclude-content- Exclude all responses matching the Regexp (case insensitive) during parts
+based of the enumeration. Both the headers and body are checked. Regexp
+REGEXP_OR_STRING delimiters are not required.
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+WPScan Cheat Sheet
+--plugins- Use the supplied mode to enumerate Plugins. Default: passive. Available
+detection MODE choices: mixed, passive, aggressive.
+--plugins-version- Use the supplied mode to check plugins' versions. Default: mixed.
+detection MODE Available choices: mixed, passive, aggressive.
+--exclude-
+Exclude usernames matching the Regexp/string (case insensitive).
+usernames
+Regexp delimiters are not required.
+REGEXP_OR_STRING
+-P, --passwords List of passwords to use during the password attack. If no --username/s
+FILE-PATH option supplied, user enumeration will be run.
+-U, --usernames List of usernames to use during the password attack. Examples: 'a1',
+LIST 'a1,a2,a3', '/tmp/a.txt'.
+--multicall-max- Maximum number of passwords to send by request with XMLRPC
+passwords MAX_PWD multicall. Default: 500.
+Force the supplied attack to be used rather than automatically
+--password-attack
+determining one. Multicall will only work against WP < 4.4. Available
+ATTACK
+choices: wp-login, xmlrpc, xmlrpc-multicall.
+--login-uri URI The URI of the login page if different from /wp-login.php.
+Alias for --random-user-agent --detection-mode passive --plugins-
+--stealthy
+version-detection passive.
+Example Commands
+Command Description
+Performs a basic scan of the specified WordPress
+wpscan --url http://example.com
+site.
+wpscan --url http://example.com - Enumerates all installed plugins on the specified
+-enumerate p site and checks for known vulnerabilities.
+wpscan --url http://example.com - Enumerates all installed themes on the specified
+-enumerate t site and checks for known vulnerabilities.
+wpscan --url http://example.com -
+Enumerates all users on the specified site.
+-enumerate u
+wpscan --url http://example.com - Performs a brute-force attack using the specified
+-passwords /path/to/passwords.txt password list.
+wpscan --url http://example.com - Uses the WPScan API to get the latest vulnerability
+-api-token YOUR_API_TOKEN data.
+wpscan --url http://example.com - Uses a random user-agent for the scan to avoid
+-random-user-agent detection.
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+WPScan Cheat Sheet
+wpscan --update Updates WPScan to the latest version.
+wpscan --url http://example.com -
+Uses a proxy server for the scan.
+-proxy http://127.0.0.1:8080
+wpscan --url http://example.com -
+Uses a custom user-agent for the scan.
+-user-agent "CustomUserAgent"
+wpscan --url http://example.com -
+Uses 10 threads for the scan.
+-max-threads 10
+wpscan --url http://example.com -
+-output results.json --format Outputs the scan results to a file in JSON format.
+json
+wpscan --url http://example.com -
+Uses aggressive detection mode for the scan.
+-detection-mode aggressive
+wpscan --url http://example.com - Enumerates all plugins, not just the vulnerable
+-enumerate ap ones.
+wpscan --url http://example.com - Enumerates all themes, not just the vulnerable
+-enumerate at ones.
+wpscan --url http://example.com -
+Sets the request timeout to 120 seconds.
+-request-timeout 120
+wpscan --url http://example.com -
+Sets the connection timeout to 60 seconds.
+-connect-timeout 60
+wpscan --url http://example.com -
+Disables SSL/TLS certificate verification.
+-disable-tls-checks
+wpscan --url http://example.com -
+-cookie-string "cookie1=value1; Uses a specified cookie string in requests.
+cookie2=value2"
+wpscan --url http://example.com - Excludes specific usernames from the
+-exclude-usernames admin,editor enumeration.
+wpscan --url http://example.com - Sets the maximum number of passwords to send
+-multicall-max-passwords 1000 by request with XMLRPC multicall to 1000.
+wpscan --url http://example.com - Forces the use of wp-login for the password
+-password-attack wp-login attack.
+wpscan --url http://example.com -
+Specifies a custom login URI for the scan.
+-login-uri /custom-login.php
+wpscan --url http://example.com - Uses stealthy mode (random user-agent, passive
+-stealthy detection, passive plugin version detection).
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

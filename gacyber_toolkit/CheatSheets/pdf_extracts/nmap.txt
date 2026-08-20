@@ -1,0 +1,732 @@
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+Certified Penetration Testing Professional
+Nmap Cheat Sheet
+Nmap
+Source: https://nmap.org
+Nmap is a security scanner for network exploration and hacking. It allows you to discover hosts
+and services on a computer network, thus creating a "map" of the network. It sends specially
+crafted packets to the target host and then analyzes the responses to accomplish its goal. Either
+a network administrator or an attacker can use this tool for their specific needs.
+Syntax
+nmap [Scan Type...] [Options] {Target specification}
+1. Nmap Options
+2. Nmap Port Scan types
+3. Nmap Commands
+1. Nmap Options
+Option (Switch/ Syntax) Description
+Target Specification
+-iL <inputfilename> Input from list of hosts/networks
+Choose random targets/ Scan random hosts
+-iR <num hosts>
+nmap -iR [number]
+--exclude
+Exclude single or multiple hosts/networks
+<host1[,host2][,host3],...>
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+--excludefile <exclude_file> Exclude list from file
+Host Discovery
+List Scan - simply lists targets
+-sL
+nmap <Target IP>-3 -sL
+Ping Scan - disable port scan for discovering host
+-sn
+nmap <Target IP>/24 -sn
+Treat all hosts as online -- skip host discovery
+-Pn
+nmap <Target IP>-5 -Pn
+TCP SYN/ACK, UDP or SCTP INIT discovery to
+-PS/PA/PU/PY[portlist]
+given ports
+ICMP echo, timestamp, and netmask request
+-PE/PP/PM
+discovery probes
+-PP Use ICMP timestamp request
+-PO[protocol list] IP Protocol Ping
+Never do DNS resolution/Always resolve
+[default: sometimes]
+-n/-R
+nmap –n <Target IP>
+nmap –R <Target IP>
+Specify custom DNS servers
+--dns-servers <serv1[,serv2],...> nmap –dns-servers server1 server2
+<Target IP>
+Use OS's DNS resolver
+--system-dns
+nmap –system-dns <Target IP>
+Trace hop path to each host
+--traceroute
+nmap –traceroute <Target IP>
+ARP discovery on local network
+-PR
+nmap <Target IP>-1/24 -PR
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+Scan Techniques
+-sS/sT/sA/sW/sM TCP SYN/Connect()/ACK/Window/Maimon scans
+UDP Scan
+nmap -sU -v <Target IP>
+-sU
+UDP port scan
+nmap <Target IP> -sU
+-sN/sF/sX TCP Null, FIN, and Xmas scans
+TCP ACK scan
+–scanflags=value –sA nmap –scanflags=value –sA <Target
+IP>
+TCP scan flags
+–scanflags
+nmap –-scanflags <Target IP>
+Ping scan
+-Sp
+nmap -Sp <Target IP>
+--scanflags <flags> Customize TCP scan flags
+Idle zombie scan
+-sI <zombie host[:probeport]>
+nmap –sI zombie <Target IP>
+SCTP INIT scan
+nmap -sY -v <Target IP>
+-sY/sZ
+SCTP COOKIE-ECHO scan
+nmap -sZ -v <Target IP>
+IP protocol scan
+-sO
+nmap –sO <Target IP>
+-b <FTP relay host> FTP bounce scan
+Send raw ethernet packets
+–send-eth
+nmap –send-eth <Target IP>
+Send IP packets
+–send-ip
+nmap –send-ip <Target IP>
+Port Specification and Scan Order
+Only scan specified range ports
+-p <port ranges> nmap -p 1-100 <Target IP>
+e.g. -p80,443 or -p1–65535
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+Port scans all 1-65535 ports
+-p-
+nmap <Target IP> -p-
+Port scan from specified protocols
+-p <protocol>
+nmap -smtp,https <Target IP>
+Fast mode - Scan less ports than the default scan
+-F (scan 100 most common ports)
+nmap <Target IP> -F
+-r Scan ports consecutively – do not randomize
+Randomize target host order
+–randomize-hosts
+nmap –randomize-hosts <Target IP>
+-p<port1>,<port2>,... Port list
+-p<port1>-<port2> Port range
+Scan port using name
+-P "*"
+nmap -p "*" ftp <Target IP>
+-pU:53,U:110,T20-445 Mix TCP and UDP
+--top-ports <number> Scan <number> most common ports
+--port-ratio <ratio> Scan ports more common than <ratio>
+Leaving off initial port in range makes Nmap scan
+start at port 1
+nmap <Target IP> -p-65535
+-p-65535
+Leaving off initial port in range makes the scan
+start at port 1
+nmap -p-65535 <Target IP>
+Leaving off end port in range makes Nmap scan
+through port 65535
+-p0-
+nmap <Target IP> -p0-
+nmap -p0- <Target IP>
+Service/Version Detection
+Probe open ports to determine service/version
+-sV info
+nmap <Target IP> -sV
+--version-intensity <level> Set from 0 (light) to 9 (try all probes)
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+--version-light Limit to most likely probes (intensity 2)
+--version-all Try every single probe (intensity 9)
+Show detailed version scan activity (for
+--version-trace
+debugging)
+Script Scan
+--script=<ScriptName>|
+Run individual or group of scripts
+<ScriptCategory>|<ScriptDir>...
+<Lua scripts> is a comma separated list of
+--script=<Lua scripts>
+directories, script-files or script-categories
+--script-args=<n1=v1,[n2=v2,...]> Provide arguments to scripts
+--script-args-file=filename provide NSE script args in a file
+--script-trace Show all data sent and received
+Update the script database.
+--script-updatedb
+nmap –script-updatedb
+--script-help “Lua scripts” = Show help about scripts
+OS Detection
+Enable OS detection/ OS Discovery using Nmap
+and Unicornscan/ Remote OS Detection using
+-O
+TCP/IP stack fingerprinting
+nmap -O <Target IP>
+--osscan-limit Limit OS detection to promising targets
+--osscan-guess Guess OS more aggressively
+Set the maximum number x of OS
+--max-os-tries
+detection tries against a target
+Timing and Performance
+-T<0-5> Set timing template (higher is faster)
+Set the packet TTL
+–ttl [time]
+nmap –ttl [time] <Target IP>
+--min-hostgroup/max-hostgroup <size> Parallel host scan group sizes
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+--min-parallelism/max-parallelism
+Probe parallelization
+<numprobes>
+--min-rtt-timeout/max-rtt-
+Specifies probe round trip time
+timeout/initial-rtt-timeout <time>
+--max-retries <tries> Caps number of port scan probe retransmissions
+--host-timeout <time> Give up on target after this long
+--scan-delay/--max-scan-delay <time> Adjust delay between probes
+Send packets no slower than <number> per
+--min-rate <number>
+second
+Send packets no faster than <number> per
+--max-rate <number>
+second
+Defeat reset rate limits
+–defeat-rst-ratelimit nmap –defeat-rst-ratelimit <Target
+IP>
+Firewall/IDS Evasion and Spoofing
+-f; --mtu <val> Fragment packets (optionally w/given MTU)
+-D <decoy1,decoy2[,ME],...> Cloak a scan with decoys
+-S <IP_Address> Spoof source address
+Use specified interface
+-e <iface>
+nmap -e [interface] <Target IP>
+-g/--source-port <portnum> Use given port number
+Append random data to send packets
+--data-length <num>
+nmap –data-length [size] <Target IP>
+--ip-options <options> Send packets with specified IP options
+--ttl <val> Set IP time-to-live field
+Spoof your MAC address
+--spoof-mac <mac
+nmap –spoof-mac [MAC|0|vendor]
+address/prefix/vendor name>
+<Target IP>
+Send packets with a bogus TCP/UDP/SCTP
+--badsum
+checksum
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+--proxies url1,[url2],... Relay connections through HTTP/SOCKS4 proxies
+OUTPUT
+Output scan in normal, XML, s|<rIpt kIddi3, and
+-oN/-oX/-oS/-oG <file> Grepable format, respectively, to the given
+filename
+-oA <basename> Output in the three major formats at once
+Increase verbosity level (use -vv or more for
+-v greater effect)
+nmap -v <Target IP>
+Increase debugging level (use -dd or more for
+-d greater effect)
+nmap -d <Target IPs>
+--reason Display the reason a port is in a particular state
+Only show open (or possibly open) ports
+--open
+nmap –open <Target IP>
+Show all packets sent and received
+--packet-trace
+nmap –packet-trace <Target IP>
+Print host interfaces and routes (for debugging)
+--iflist
+nmap –iflist
+Log errors/warnings to the normal-format output
+--log-errors
+file
+Append to rather than clobber specified output
+--append-output
+files
+--resume <filename> Resume an aborted scan
+--noninteractive Disable runtime interactions via keyboard
+--stylesheet <path/URL> XSL stylesheet to transform XML output to HTML
+Reference stylesheet from Nmap.Org for more
+--webxml
+portable XML
+Prevent associating of XSL stylesheet w/XML
+--no-stylesheet
+output
+Periodically display statistics
+–stats-every [time]
+nmap –stats-every [time] <Target IP>
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+Miscellaneous Options
+Nmap help screen
+-h
+nmap -h
+IPv6 Scanning by using -6 option in Zenmap
+nmap -6 scanme.nmap.org
+Enable IPv6 scanning
+-6
+nmap -6 2607:f0d0:1002:51::4
+OS discovery using IPv6 fingerprinting method
+nmap -6 -O <Target IP>
+Enables OS detection, version detection, script
+scanning, and traceroute, also known as
+-A
+Aggressive scan
+nmap -A <Target IP>
+-n Disable reverse IP address lookups
+--datadir <dirname> Specify custom Nmap data file location
+--send-eth/--send-ip Send using raw ethernet frames or IP packets
+--privileged Assume that the user is fully privileged
+Display Nmap version
+-V
+nmap -V
+--unprivileged Assume the user lacks raw socket privileges
+2. Nmap Port Scan types
+Command Description
+Connect Scan (Default without root privileges)/
+nmap -sT <Target IP>
+Scan using TCP connect
+nmap -sS <Target IP> Scan using TCP SYN scan (default)
+nmap -Su <Target IP> UDP Scan
+nmap -sA <Target IP> ACK Scan
+nmap -sM <Target IP> Maimon Scan
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+nmap -sL <Target IP> No Scan, list targets only
+nmap -sL -v <Target IP> List scan
+nmap -Pn <Target IP> Disable host discovery, port scanning
+nmap -PSx <Target IP> SYN Discovery on port x, port 80 by default
+nmap -PUx <Target IP> UDP discovery on port x, port 40125 by default
+nmap -PAx <Target IP> ACK discovery on port x, port 80 by default
+nmap -PR <Target IP>/24 ARP discovery on local network
+nmap -n <Target IP> Never do DNS resolution
+nmap -p x <Target IP> Scan for port x
+nmap -p 21-50 <Target IP> Port Range
+nmap -p U:53,T:21-25,80 Scan multiple TCP and UDP ports
+nmap -p- <Target IP> Scan all ports
+nmap -p http,ftp <Target IP> Port scan from service name
+nmap -F <Target IP> Fast port scan (100 ports)
+nmap -f <Target IP> Scan fragmented IP packets
+nmap --mtu x <Target IP> Set own offset size x
+nmap --top-ports x <Target IP> Scan the top x ports
+nmap -sV--version-intensity 5
+Aggressive service discovery
+<Target IP>
+nmap -sV -–version-intensity 0
+Light banner grabbing
+<Target IP>
+Enable light mode, lower possibility of
+nmap -sV--version-light <Target IP>
+correctness
+Enable intensity level 9. Higher possibility of
+nmap -sV--version-all <Target IP>
+correctness
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+nmap -O--osscan-limit <Target IP> Limit OS detection to promising targets
+nmap -O--osscan-guess <Target IP> Guess OS detection results
+Set maximum number of OS detection tries
+nmap -O --max-os-tries x <Target IP>
+against a target
+nmap -sU -p 123,161,162 <Target IP> Scan UDP ports
+nmap -Pn -F <Target IP> Scan selected ports - ignore discovery
+nmap -Pn -sT --scan-delay 1s --max-
+parallelism 1 -p <Port List> <Target Identify open ports and services
+IP>
+nmap -Pn -sT -p 46824 <Target IP> Identify HMI systems
+nmap -Pn -sT -p 102 --script s7-info
+Scan Siemens SIMATIC S7 PLCs
+<Target IP>
+nmap -Pn -sT -p 502 --script modbus-
+Scan Modbus Devices
+discover <Target IP>
+nmap -sU -p 500 <Target IP> Check the status of isakmp over port 500
+nmap -Pn -sU -p 47808 --script
+ScanBACnet Devices
+bacnet-info <Target IP>
+nmap -Pn -sU -p 44818 --script enip-
+Scan Ethernet/IP Devices
+info <Target IP>
+nmap -Pn -sT -p 1911,4911 --script
+Scan Niagara Fox Devices
+fox-info <Target IP>
+nmap -Pn -sT -p 20547 --script
+Scan ProConOS Devices
+proconos-info <Target IP>
+nmap -Pn -sT -p 9600 --script omron-
+Scan Omron PLC Devices
+info <Target IP>
+nmap -Pn -sU -p 9600 --script omron-
+Scan Omron PLC Devices
+info <Target IP>
+nmap -Pn -sT -p 1962 --script
+Scan PCWorx Devices
+pcworx-info <Target IP>
+Page | 10 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+3. Nmap Commands
+Command Description
+nmap -p 1-65535 -T4 -A -v <Target
+Perform intense scan on all TCP ports
+IP>
+Run Nmap to identify IoT devices using insecure
+nmap -p ports <Target IP>
+HTTP ports for transmitting data
+nmap -T4 -A -v -Pn <Target IP> Perform Intense scan with no ping
+nmap -T4-A-v-PE-PS-PA Ports URL Footprint Web Infrastructure: Service Discovery
+nmap -sn <Target IP> Perform ping scan
+nmap -sn <Target IP/Subnet> Disable port scanning, host discovery only
+nmap -sn -PR <Target IP> ARP Ping Scan
+nmap -sn -PU <Target IP> UDP Ping Scan
+nmap -sn -PE <Target IP> ICMP ECHO Ping Scan
+nmap -sn -PE <IP range> ICMP ECHO Ping Sweep
+nmap –sn –PP <Target IP> ICMP Timestamp Ping Scan
+nmap –sn –PM <Target IP> ICMP Address Mask Ping Scan
+nmap –sn –PS <Target IP> TCP SYN Ping Scan
+nmap –sn –PA <Target IP> TCP ACK Ping Scan
+nmap –sn –PO <Target IP> IP Protocol Ping Scan
+nmap -St -v <Target IP> TCP Connect/ Full Open Scan
+namp -sS -v <Target IP> Stealth Scan (Half-open Scan)
+nmap -sX -v <Target IP> Xmas Scan
+nmap -sM -v <Target IP> TCP Maimon Scan
+nmap -sA -v <Target IP> ACK Flag Probe Scan
+Page | 11 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+nmap –badsum <Target IP> Sending Bad Checksums
+nmap --script smb-os-discovery.nse
+OS Discovery using Nmap Script Engine
+<Target IP>
+nmap -sV -T4 -O -F –version-light
+Perform quick scan plus
+<Target IP>
+nmap -sV -T4 -O -F –version-light Wi-Fi vulnerability scanning on wireless
+scanme.nmap.org <Target URL> networks
+nmap -sV –O –p <Target IP>
+nmap -sV --script http-enum <Target
+IP>
+nmap target IP address -p 80 -- NSE scripts to enumerate information about the
+script = http-frontpage-login target website/ web servers
+nmap --script http-passwd --script-
+args http-passwd.root =/ <Target
+IP>
+nmap -sV --script http-enum <Target Analyze Web Applications: Identify exposed
+domain> Files and Directories of the target webserver
+nmap -iL list-of-ips.txt Scan targets from a text file
+nmap --script=sniffer-detect [Target
+Command to detect NIC in promiscuous mode
+IP Address/Range of IP addresses]
+Create Custom Packets by Appending Custom
+nmap <Target IP> --data Oxdeadbeef
+Binary Data
+nmap <Target IP> --data-string Create Custom Packets by Appending Custom
+“ph34r my |33t skills” String
+Create Custom Packets by Appending Random
+nmap <Target IP> --data-string 5
+Data
+Perform a check on the status of ISAKMP over
+nmap –sU –p 500 <Target IP>
+port 500
+nmap -sR <Target IP/network> Identify the RPC service running on the network
+nmap --script hostmap <host> Discover virtual domains with hostmap
+nmap --script http-trace -p80 Detect a vulnerable server that uses the TRACE
+localhost method
+nmap --script http-google-email
+Harvest email accounts with http-google-email
+<host>
+nmap -p80 --script http-userdir -
+Enumerate users with http-userdir-enum
+enum localhost
+Page | 12 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+nmap -p80 --script http-trace <host> Detect HTTP TRACE
+nmap -p80 --script http-waf-detect -
+-script-args=”http-wafdetect.
+uri=/testphp.vulnweb.com/artists.php Check if web server is protected by WAF/IPS
+,http-wafdetect.
+detectBodyChanges” www.modsecurity.org
+nmap --script http-enum -p80 <host> Enumerate common web applications
+nmap -p80 --script http-robots.txt
+Obtain robots.txt
+<host>
+nmap -p80 --script http-test.txt
+Obtain test.txt
+<host>
+nmap --script=asn-query,whois,ip-
+geolocation-maxmind <Target IP/ IP address Information
+Subnet>
+nmap --script=http-title <Target IP/
+Gather page titles from HTTP services
+Subnet>
+nmap --script=http-headers <Target
+Get HTTP headers of web services
+IP/ Subnet>
+nmap --script=http-enum <Target IP/
+Find web apps from known paths
+Subnet>
+nmap -n -Pn -sSU -pT:0-65535,U:0- Perform complete scan of the IoT device that
+65535 -v -A -oX <Name><Target IP> checks for both TCP and UDP services and ports
+Packet Fragmentation/ SYN/FIN scan using
+nmap -sS -T4 -A -f -v <Target IP>
+Nmap
+Source Port Manipulation/ Use given source
+nmap -g 80 <Target IP>
+port number
+nmap –sU –A –PN –n –pU:19,53,123,161
+–script=ntp-monlist,dns-
+Scan for UDP DDOS reflectors
+recursion,snmp-sysdescr <Target IP/
+network>
+nmap -6 -n -Pn -sSU -pT:0-65535,U:0-
+Identify the IPv6 capabilities of a device
+65535 -v -A -oX <Name><Target IP>
+nmap -T4 -A -v <Target IP> Perform intense scan
+Identify vulnerable services on service port by
+nmap -T4 -A <Target IP/Subnet>
+attackers by using RPC Enumeration
+nmap -p 23 <Target Domain> Telnet Enumeration
+Page | 13 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+Enumerate information from remote Microsoft
+nmap -p 23 --script telnet-ntlm-info
+Telnet services with NTLM authentication
+<Target IP>
+enabled
+nmap -p 23 –script telnet-brute.nse
+Perform brute-force attack against telnet server
+–script-args
+Enumerate SMB service running on the target IP
+nmap -p 445 -A <Target IP>
+address/ SMB Enumeration
+nmap -p 21 <Target Domain> FTP Enumeration
+Enumerate TFTP service running on the target
+nmap -p 69 <Target Domain>
+domain
+nmap -p 179 <Target IP> BGP Enumeration
+nmap -sS -sU -T4 -A -v <Target IP> Perform intense scan and scanning for UDP
+nmap -sV -v -p 139,445 <Target Detect all exposed Netbios servers on the
+IP/Subnet> subnet
+Nmap’s nbstat NSE script allow attackers to
+nmap -sV -v --script nbstat.nse
+retrieve target’s NetBIOS names and MAC
+<Target IP>
+addresses
+nmap -sU --script nbstat.nse -p 137
+Find target Netbios name
+<Target IP address>
+nmap --script-args=unsafe=1 --script
+Check if Netbios servers are vulnerable to
+smb-check-vulns.nse -p 445 <Target
+MS08-067
+IP address>
+nmap -sV --version-intensity 0
+Lighter banner grabbing detection
+<Target IP>
+nmap -sV --version-intensity 5
+More aggressive Service Detection
+<Target IP>
+Attempts to determine the version of service
+nmap -sV <Target IP> running/ Standard service detection/ Service
+Version Discovery in Zenmap
+nmap --script-help=ssl-heartbleed Get help for a script
+nmap --script dns-zonetransfer.nse -
+-script-args dns- Attempts to pull a zone file (AXFR) from a DNS
+zonetransfer.domain=<domain> -p53 server
+<hosts>
+nmap --script http-robots.txt Harvests robots.txt files from discovered web
+<hosts> servers
+Page | 14 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+nmap --script smb-brute.nse -p445 Attempts to determine valid username and
+<hosts> password combinations via automated guessing
+nmap --script smb-psexec.nse –
+Attempts to run a series of programs on the
+script-args=smbuser=<username>,
+target machine, using credentials provided as
+smbpass=<password>[,config=<config>]
+scriptargs
+-p445 <hosts>
+nmap -sV -p 443 --script=ssl-
+Detect Heartbleed SSL Vulnerability
+heartbleed <Target IP/Subnet>
+nmap <Target IP>-50 -sL --dns-server Query the Internal DNS for hosts, list targets
+<Target IP> only
+nmap -iR 10 -sn -traceroute Traceroute to random targets, no port scan
+Arp discovery only on local network, no port
+nmap <Target IP>-1/24 -PR -sn -vv
+scan
+nmap -iR 10 -PS22-
+Discovery only on ports x, no port scan
+25,80,113,1050,35000 -v -sn
+Ping scans the network, listing machines that
+nmap -sP <Target IP/Subnet>
+respond to ping
+Prints verbose output, runs stealth syn scan, T4
+nmap -v -sS -A -T4 <Target IP> timing, OS and version detection, traceroute
+and scripts against target services
+Prints verbose output, runs stealth syn scan, T5
+nmap -v -sV -O -sS -T5 <Target IP>
+timing, OS and version detection
+nmap -iL ip-addresses.txt Scans a list of IP addresses
+nmap — script-args=unsafe=1 — script
+Check if Netbios servers are vulnerable to
+smb-check-vulns.nse -p 445 <Target
+MS08–067
+IP>
+nmap –Pn –p- -sI zombie target Attack
+FTP Bounce Scan
+<username>:<password>@<server>:<port>.
+nmap –b ftp rely host
+<Server> is the name or IP address of a
+vulnerable FTP server
+nmap -T0 <Target IP> Paranoid (0) Intrusion Detection System evasion
+nmap -T1 <Target IP> Sneaky (1) Intrusion Detection System evasion
+Polite (2) slows down the scan to use less
+nmap -T2 <Target IP> bandwidth and use less target machine
+resources
+Page | 15 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+nmap -T3 <Target IP> Normal (3) default speed
+Aggressive (4) speeds scan; assumes you are on
+nmap -T4 <Target IP>
+a reasonably fast and reliable network
+Insane (5) speeds scan; assumes you are on
+nmap -T5 <Target IP>
+extraordinarily fast network
+nmap --script=ftp <Target IP> Scan with a single script
+nmap --script=http* <Target IP> Scan with a wildcard script
+nmap --script=banner,http <Target
+Scan with two scripts
+IP>
+nmap --script "not intrusive"
+Scan default, but remove intrusive scripts
+<Target IP>
+nmap -Pn --script=http-sitemap-
+HTTP site map generator
+generator xyz.com
+nmap -n -Pn -p 80 --open -sV -vvv --
+Fast search for random web servers
+script banner,http-title -iR 1000
+Brute forces DNS hostnames guessing
+nmap -Pn --script=dns-brute xyz.com
+subdomain
+nmap -n -Pn -vv -O -sV --script smb-
+enum*,smb-ls,smb-mbenum,smb-os-
+Safe SMB scripts to run
+discovery,smb-s*,smb-vuln*,smbv2* -
+vv <Target IP>
+nmap --script whois*<Target Domain> Whois query
+nmap -p80 --script http-unsafe-
+Detect cross site scripting vulnerabilities
+output-escaping <Target Website>
+nmap -p80 --script http-sql-
+Check for SQL injections
+injection <Target Website>
+nmap --data-length x <Target IP> Appends random data to sent packets
+nmap -oN file.file --append-output
+Append a scan to a previous scan file
+<Target IP>
+nmap --iflist Shows the host interface and routes
+nmap -6 2607:f0d2:5664:51::5 Enable IPV6 scanning
+nmap -T0 -b Uses the username “username”, the password
+username:password@ftpserver.tld:21 “password”, the FTP server “ftpserver.tld” and
+victim.tld port 21 on said server to scan victim.tld.
+Page | 16 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+nmap -sU -sT -p U:[ports],T:[ports]
+Scan ports by protocol
+<Target IP>
+nmap -sV –version-trace <Target IP> Troubleshooting version scans
+nmap –script [script.nse] <Target
+Execute individual scripts
+IP>
+nmap –script [expression] <Target
+Execute multiple scripts
+IP>
+nmap –script [category] <Target IP> Execute scripts by category
+nmap –script [category1,category2,
+Execute multiple scripts categories
+etc]
+nmap –script [script] –script-trace
+Troubleshoot scripts
+<Target IP>
+$ docker -H <docker host> run --
+Use Nmap to scan the host’s internal network
+network=host --rm marsmensch/nmap -
+to identify running services
+ox <IP Range>
+ndiff [scan1.xml] [scan2.xml] Comparison using Ndiff
+ndiff -v [scan1.xml] [scan2.xml] Ndiff verbose mode
+ndiff –xml [scan1.xm] [scan2.xml] XML output mode
+Port Selection
+Command Description
+nmap <Target IP> Scan single IP
+nmap <Target IP> <Target IP> Scan specific IPs
+nmap <Target IP range> Scan a range of IPs
+nmap <Target Website> Scan a host
+nmap <Target Domain> Scan a domain
+nmap <Target IP/Subnet> Scan using CIDR notation
+nmap -iL file.txt Scan targets using given file
+Exclude listed host/ specified IP s exclude from
+nmap --exclude <Target IP>
+scan
+nmap -iR 50 Scan 50 random hosts
+Page | 17 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nmap Cheat Sheet
+NSE Scripts
+nmap -sC <Target IP> Scan with default NSE scripts.
+nmap --script-default <Target IP> Scan with default NSE scripts.
+nmap --script snmp-sysdescr --
+NSE script with arguments
+script-args snmpcommunity=admin
+<Target IP>
+nmap -script-args-file=filename Provide NSE script args in a file
+nmap -sV -sC <Target IP> Scan using default safe scripts
+nmap -sV --script=smb* <Target IP> Scan with a set of scripts
+nmap -sV -p 443 –script=ssl-
+Scan using a specific NSE script
+heartbleed.nse <Target IP>
+Page | 18 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

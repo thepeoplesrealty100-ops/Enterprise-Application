@@ -1,0 +1,109 @@
+Certified Penetration Testing Professional Exam 412-80
+DumpsterDiver Cheat Sheet
+Certified Penetration Testing Professional
+DumpsterDiver Cheat Sheet
+DumpsterDiver
+Source: https://github.com
+DumpsterDiver is a tool using which we can find keys or passwords, by analyzing large volumes
+of different file types.
+1. DumpsterDiver Syntax
+2. DumpsterDiver Commands
+1. DumpsterDiver Syntax
+Syntax
+DumpsterDiver.py [-h] -p LOCAL_PATH [-r] [-a] [-s] [-l [0,3]]
+[-o OUTFILE] [--min-key MIN_KEY] [--max-key MAX_KEY]
+[--entropy ENTROPY] [--min-pass MIN_PASS]
+[--max-pass MAX_PASS]
+[--pass-complex {1,2,3,4,5,6,7,8,9}]
+[--grep-words GREP_WORDS [GREP_WORDS …]]
+[--exclude-files EXCLUDE_FILES [EXCLUDE_FILES …]]
+[--bad-expressions BAD_EXPRESSIONS [BAD_EXPRESSIONS …]]
+Options
+-p LOCAL_PATH Path to the folder containing files to be analyzed
+-r
+or Files which do not contain any secret will be removed
+--remove
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+DumpsterDiver Cheat Sheet
+-a
+All files will be additionally analyzed using rules specified
+or
+in ‘rules.yaml’ file
+--advance
+-s
+All files will be additionally analyzed in search of
+or
+hardcoded passwords
+--secret
+-o OUTFILE Output file in JSON format
+--min-key MIN_KEY Specifies the minimum key length to be analyzed
+--max-key MAX_KEY Specifies the maximum key length to be analyzed
+--entropy ENTROPY Specifies the edge of high entropy
+--grep-words GREP_WORDS
+Specifies the grep words to look for
+[GREP_WORDS …]
+--min-pass MIN_PASS Specifies the minimum password length to be analyzed
+--max-pass MAX_PASS Specifies the maximum password length to be analyzed
+--pass-complex
+Specifies the edge of password complexity between 1 to 9
+{1,2,3,4,5,6,7,8,9}
+Specifies file names or extensions which shouldn’t be
+--exclude-files
+analyzed
+--bad-expressions Specifies bad expressions
+[-h]
+or Show this help message and exit
+--help
+2. DumpsterDiver Commands
+Commands Description
+python3 DumpsterDiver.py -p
+[PATH_TO_FOLDER] –min-pass 10 –max-pass 15 To find complex passwords
+–pass-complex 8
+docker run -v /path/to/my/files:/files –rm
+Using docker
+rzepsky/dumpsterdiver -p /files
+docker run -v
+/path/to/my/config/config.yaml:/config.yaml
+To override one of the
+/path/to/my/config/rules.yaml:/rules.yaml -
+configuration files
+v /path/to/my/files:/files –rm
+rzepsky/dumpsterdiver -p /files
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+DumpsterDiver Cheat Sheet
+python3 entropy.py Count an entropy of a character
+f2441e3810794d37a34dd7f8f6995df4 in a single word
+python3 DumpsterDiver.py -p ./test/ --grep- Looking for any occurrence of
+words *aws_access_key_id* aws_access_key_id or
+*aws_secret_access_key* -a
+aws_secret_access_key
+To find common access keys, any
+python3 DUmpsterDiver.py -p
+complex, hardcoded password,
+./source_folder/ -a -s –grep-words *Target
+or any mail address in the target
+Wesite
+website
+python3 DumpsterDiver.py -p
+Searching for any key
+./source_folder/ --level 3
+python3 DumpsterDiver.py -p
+Searching for AWS secret access
+[PATH_TO_FOLDER] --min-key 40 --max-key 40
+key
+--entropy 4.3
+python3 DumpsterDiver.py -p
+[PATH_TO_FOLDER] --min-key 66 --max-key 66 Searching for Azure shared key
+--entropy 5.1
+python3 DumpsterDiver.py -p
+[PATH_TO_FOLDER] --min-key 76 --max-key 76 Searching for SSH private key
+--entropy 5.1
+python3 DumpsterDiver.py -p
+[PATH_TO_FOLDER] --min-pass 10 --max-pass Find complex passwords
+15 --pass-complex 8
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

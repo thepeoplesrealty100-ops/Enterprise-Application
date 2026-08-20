@@ -1,0 +1,444 @@
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+Certified Penetration Testing Professional
+Hashcat Cheat Sheet
+Hashcat
+Source: https://hashcat.net
+Hashcat is the advanced password recovery utility and it can generate combinations of brute-
+force attack possibilities.
+Syntax
+hashcat [options]... hash|hashfile|hccapxfile
+[dictionary|mask|directory]...
+1. Hashcat Options
+2. Hashcat-utils
+3. Maskprocessor
+4. Statsprocessor
+5. Kwprocessor
+1. Hashcat Options
+Options Description
+-m
+or Hash-type
+--hash-type
+-a
+or Attack-mode
+--attack-mode
+-V Print version
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+or
+--version
+-h
+or Print help
+--help
+--quiet Suppress output
+--hex-charset Assume charset is given in hex
+--hex-salt Assume salt is given in hex
+--hex-wordlist Assume words in wordlist are given in hex
+--force Ignore warnings
+--deprecated-check-disable Enable deprecated plugins
+--status Enable automatic update of the status screen
+--status-json Enable JSON format for status output
+--status-timer Sets seconds between status screen updates to X
+--stdin-timeout-abort Abort if there is no input from stdin for X seconds
+--machine-readable Display the status view in a machine-readable format
+--keep-guessing Keep guessing the hash after it has been cracked
+--self-test-disable Disable self-test functionality on startup
+--loopback Add new plains to induct directory
+--markov-hcstat2 Specify hcstat2 file to use
+--markov-disable Disables markov-chains, emulates classic brute-force
+--markov-classic Enables classic markov-chains
+--markov-inverse Enables inverse markov-chains
+-t
+Threshold X when to stop accepting new markov-
+or
+chains
+--markov-threshold
+--runtime Abort session after X seconds of runtime
+--session Define specific session name
+--restore Restore session from --session
+--restore-disable Disable restored file
+--restore-file-path Specific path to restore file
+-o Define outfile for recovered hash
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+or
+--outfile
+--outfile-format Define outfile-format X for recovered hash
+--outfile-autohex-disable Disable the use of $HEX[] in output plains
+--outfile-check-timer Sets seconds between outfile checks to X
+--wordlist-autohex-disable Disable the conversion of $HEX[] from the wordlist
+-p
+or Separator char for hashlists and outfile
+--separator
+--stdout Do not crack a hash, instead print candidates only
+--show Compare hashlist with potfile; show cracked hashes
+Compare hashlist with potfile; show uncracked
+--left
+hashes
+--username Enable ignoring of usernames in hashfile
+--remove Enable removal of hashes once they are cracked
+--remove-timer Update input hash file each X seconds
+--potfile-disable Do not write potfile
+--potfile-path Specific path to potfile
+--encoding-from Force internal wordlist encoding from X
+--encoding-to Force internal wordlist encoding to X
+--debug-mode Defines the debug mode
+--debug-file Output file for debugging rules
+--induction-dir Specify the induction directory to use for loopback
+--logfile-disable Disable the logfile
+--hccapx-message-pair Load only message pairs from hccapx matching X
+--nonce-error-corrections The BF size range to replace AP's nonce last byte
+Keyboard layout mapping table for special hash-
+--keyboard-layout-mapping
+modes
+--truecrypt-keyfiles Keyfiles to use, separated with commas
+--veracrypt-keyfiles Keyfiles to use, separated with commas
+--veracrypt-pim-start VeraCrypt personal iterations multiplier start
+--veracrypt-pim-stop VeraCrypt personal iterations multiplier stop
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+-b
+or Run benchmark of selected hash-modes
+--benchmark
+--benchmark-all Run benchmark of all hash-modes
+--speed-only Return expected speed of the attack, then quit
+--progress-only Return ideal progress step size and time to process
+-c
+or Sets size in MB to cache from the word file to X
+--segment-size
+--bitmap-min Sets minimum bits allowed for bitmaps to X
+--bitmap-max Sets maximum bits allowed for bitmaps to X
+--cpu-affinity Locks to CPU devices, separated with commas
+--example-hashes Show an example hash for each hash-mode
+--hook-threads Sets number of threads for a hook
+-I
+or Show system/environment/backend API info
+--backend-info
+-d
+or Backend devices to use, separated with commas
+--backend-devices
+-D
+or OpenCL device-types to use, separated with commas
+--opencl-device-types
+-O
+or Enable optimized kernels (limits password length)
+--optimized-kernel-enable
+-w, --workload-profile Enable a specific workload profile, see pool below
+-n
+or Manual workload tuning, set outerloop step size to X
+--kernel-accel
+-u
+or Manual workload tuning, set innerloop step size to X
+--kernel-loops
+-T
+Manual workload tuning, set thread count to X
+or
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+–-kernel-threads
+--spin-damp Use CPU for device synchronization, in percent
+--hwmon-disable Disable temperature and fanspeed reads and triggers
+--hwmon-temp-abort Abort if temperature reaches X degrees Celsius
+--scrypt-tmto Manually override TMTO value for scrypt to X
+-s
+or Skip X words from the start
+--skip
+-l
+or Limit X words from the start + skipped words
+--limit
+--keyspace Show keyspace base:mod values and quit
+-j
+pr Single rule applied to each word from left wordlist
+--rule-left
+-k
+or Single rule applied to each word from right wordlist
+--rule-right
+-r
+or Multiple rules applied to each word from wordlists
+--rules-file
+-g
+or Generate X random rules
+--generate-rules
+--generate-rules-func-min Force min X functions per rule
+--generate-rules-func-max Force max X functions per rule
+--generate-rules-seed Force RNG seed set to X
+-1
+or User-defined charset 1
+--custom-charset1
+-2
+or User-defined charset 2
+--custom-charset2
+-3
+or User-defined charset 3
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+--custom-charset3
+-4
+or User-defined charset 4
+--custom-charset4
+-i
+or Enable mask increment mode
+-- --increment
+--increment-min Start mask incrementing at X
+--increment-max Stop mask incrementing at X
+-S
+or Enable slower (but advanced) candidate generators
+--slow-candidates
+--brain-server Enable brain server
+-z
+or Enable brain client, activates -S
+--brain-client
+--brain-client-features Define brain client features, see below
+--brain-host Brain server host (IP or domain)
+--brain-port Brain server port
+--brain-password Brain server authentication password
+--brain-session Overrides automatically calculated brain session
+--brain-session-whitelist Allow given sessions only, separated with commas
+2. Hashcat-utils
+Utilities Description
+cap2hccapx
+Syntax: ./cap2hccapx.bin
+Specifies a network name (ESSID) to filter out
+input.pcap output.hccapx
+unwanted networks
+[filter by essid] [additional
+network essid:bssid]
+cleanup-rules
+Strips rules from STDIN that are not compatible
+Syntax: ./cleanup-rules.bin
+with required platform
+mode
+combinator
+Each word from file2 is appended to each word
+Syntax: ./combinator.bin file1
+from file1 which is then printed to STDOUT
+file2
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+Accepts three files as input, that produces the
+combinator3
+output combining all three lists
+Produces all unique combinations from a
+combipow
+shortlist of inputs
+cutb It will cut the specific prefix or suffix length off
+Syntax: ./cutb.bin offset the existing words in a list and pass it to
+[length] < infile > outfile STDOUT
+Each word going into STDIN is parsed and split
+expander
+into all its single chars then sent to STDOUT
+gate
+Each wordlist going into STDIN is parsed split
+Syntax: ./gate.bin mod offset <
+into equal sections and passed to STDOUT
+infile > outfile
+generate-rules
+Stand-alone utility to generate random rules
+Syntax: ./generate-rules.bin
+number [seed]
+hcstatgen
+Generates .hcstat files for use with older
+Syntax: ./hcstatgen.bin
+hashcats
+out.hcstat < infile
+hcstat2gen
+Generates custom Markov statistics for use with
+Syntax: ./hcstat2gen.bin
+hashcat's --markov-hcstat parameter
+outfile < dictionary
+keyspace
+Syntax: ./keyspace.bin Calculates keyspace in a hashcat-aware manner
+[options] mask
+len Each word going into STDIN is parsed for its
+Syntax: ./len.bin min max < length and passed to STDOUT if it matches a
+infile > outfile specified word-length range
+mli2
+Syntax: ./mli2.bin infile Merges two lists
+mergefile
+morph
+Generates insertion rules for the most frequent
+Syntax: ./morph.bin dictionary
+chains of characters
+depth width pos_min pos_max
+Each word going into STDIN is parsed and run
+./permute_exist.bin word <
+through “The Countdown QuickPerm
+infile > outfile
+Algorithm”
+Made as dictionary optimizer for Permutation
+prepare
+attack
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+Each word going into STDIN is parsed and
+req-include passed to STDOUT if it matches a specified
+password group criterion
+req-exclude Excludes words that match specific criteria
+rli
+Compares a single file against another file
+Syntax: rli infile outfile
+removing all duplicates
+removefiles...
+splitlen
+It is designed to be a dictionary optimizer for
+Syntax: ./splitlen.bin outdir <
+the now deprecated oclHashcat
+infile
+strip-bsn Strips all \0 bytes from stdin
+strip-bsr Strips all \r bytes from stdin
+tmesis Take wordlist and produce insertion rules
+tmesis-dynamic
+Syntax: ./tmesis-dynamic.pl Take 2 wordlists and produces new one, using a
+substring wordlist1.txt user-defined substring as a “key”
+wordlist2.txt
+3. Maskprocessor
+Syntax
+./mp64.bin [options]... mask
+Options
+-V
+or Print version
+--version
+-h
+or Print help
+--help
+-I
+Enable increment mode. 1st NUM=start, 2nd
+or
+NUM=stop
+--increment=NUM:NUM
+--combinations Calculate number of combinations
+--hex-charset Assume charset is given in hex
+-q Maximum number of multiple sequential characters
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+or
+--seq-max=NUM
+-r
+or Maximum number of occurrences of a character
+--occurrence-max=NUM
+-s
+or Start at specific position
+--start-at=WORD
+-l
+or Stop at specific position
+--stop-at=WORD
+-o
+or Output-file
+--output-file=FILE
+4. Statsprocessor
+Syntax
+./sp64.bin [options]... hcstat-file [filter-mask]
+Options
+-V
+or Print version
+--version
+-h
+or Print help
+--help
+--pw-min=NUM Start incrementing at NUM
+--markov-disable Emulates maskprocessor output
+--markov-classic No per-position tables
+Filter out chars after NUM chars added set to 0 to
+--threshold=NUM
+disable
+--combinations Calculate number of combinations
+--hex-charset Assume charset is given in hex
+-s
+Skip number of words (for restore)
+or
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+--skip=NUM
+-l
+or limit number of words (for distributed)
+--limit=NUM
+-o
+or Output-file
+--output-file=FILE
+5. Kwprocessor
+Syntax
+./kwp [options]... basechars-file keymap-file routes-file
+Options
+-V
+or Print version
+--version
+-h
+or Print help
+--help
+-o
+or Output file
+--output-file
+-b
+Include characters reachable without holding
+or
+shift or altgr
+--keyboard-basic
+-s
+or Include characters reachable by holding shift
+--keyboard-shift
+-a
+or Include characters reachable by holding altgr
+--keyboard-altgr
+-z
+or Shortcut to enable all --keyboard-* modifier
+--keyboard-all
+-1
+or Include routes heading diagonal south-west
+--keywalk-south-west
+Page | 10 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Hashcat Cheat Sheet
+-2
+or Include routes heading straight south
+--keywalk-south
+-3
+or Include routes heading diagonal south-east
+--keywalk-south-east
+-4
+or Include routes heading straight west
+--keywalk-west
+-5
+or Include routes repeating character
+--keywalk-repeat
+-6
+or Include routes heading straight east
+--keywalk-east
+-7
+or Include routes heading diagonal north-west
+--keywalk-north-west
+-8
+or Include routes heading straight north
+--keywalk-north
+-9
+or Include routes heading diagonal north-east
+--keywalk-north-east
+-0
+or Shortcut to enable all --keywalk-* directions
+--keywalk-all
+-n
+or Minimum allowed distance between keys
+--keywalk-distance-min
+-x
+or Maximum allowed distance between keys
+--keywalk-distance-max
+Page | 11 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

@@ -1,0 +1,132 @@
+Certified Penetration Testing Professional Exam 412-80
+Svmap Cheat Sheet
+Certified Penetration Testing Professional
+Svmap Cheat Sheet
+Svmap
+Source: https://github.com
+Svmap tool is designed to identify sip devices and PBX servers on a network. Svmap sends UDP
+packets containing SIP requests to specified IP addresses and lists those that respond with valid
+SIP replies. Svmap contains a list of methods which can be used to specify the scanning method,
+such as INVITE, REGISTER, etc.
+1. Svmap Options
+2. Svmap Methods
+3. Svmap Commands
+4. Svmap Commands to Specify Range of IP Address
+1. Svmap Options
+Syntax
+svmap [options] host1 host2 hostrange
+Options
+--version Displays program version number and exit
+-h, --help Display help message and exit
+-v, --verbose To increase verbosity
+-q, --quiet Quiet mode
+-s NAME, --save=NAME Save the session
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Svmap Cheat Sheet
+--resume=NAME Resume a previous scan
+--randomscan Scan random IP addresses
+Scan IPs which were found in a previous scan.
+-i scan1, --input=scan1
+Pass the session name as the argument
+Specify the destination port or port ranges of
+-p PORT, --port=PORT
+the SIP device
+-P PORT, --localport=PORT Specify the source port for our packets
+Specify the IP address to use as an external IP
+-x IP, --externalip=IP
+address
+-b BINDINGIP --
+Binds to the specified IP address
+bindingip=BINDINGIP
+-t SELECTTIME, --
+Timeout for the select() function
+timeout=SELECTTIME
+To enable compact mode. Makes packets
+-c, --enablecompact
+smaller but possibly less compatible
+Specify the request method - by default this
+-m METHOD, --method=METHOD
+is OPTIONS.
+-d, --debug To print the received SIP messages
+-R, --reportback Send the author an exception traceback
+Randomize scanning instead of scanning
+--randomize
+consecutive IP addresses
+Scan the SRV records for SIP on the
+--srv
+destination domain name
+--fromname=FROMNAME Specify a name for the from header
+--fingerprint, --fp To enable fingerprinting
+--first=FIRST Send the first given number of messages only
+-e EXTENSION, -- Specify an extension - by default this is not
+extension=EXTENSION set
+Scan a group of IP addresses found in a last
+-I scan1, --inputtext=scan1
+scan
+-A, --autogetip Obtains the current IP address automatically
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Svmap Cheat Sheet
+2. Svmap Methods
+Method Description
+INVITE Use to invite a client to a session
+Confirmation of client receiving the final
+ACK
+response to INVITE request
+BYE Terminates the session
+CANCEL Deletes any pending request
+This method lists the capabilities of the
+OPTIONS
+server(options)
+The listed address is registered in the To
+REGISTER
+header field with SIP server by this method
+PRACK Provides provisional acknowledgement
+This method subscribes for an Event of
+SUBSCRIBE
+notification from the notifier
+This method will notify the subscriber about
+NOTIFY
+new event
+This method is used to publish an event to
+PUBLISH
+the server.
+INFO Sends mid-session information
+REFER Used for asking recipient to issue SIP request
+MESSAGE Used for sending instant message using SIP
+UPDATE Used to modify the state of the session
+3. Svmap Commands
+Command Description
+./svmap <IP address/Subnet mask>
+Scan a subnet with verbose mode
+-v
+./svmap <IP address/Subnet mask> Scan a subnet running compact mode on port
+-p1024-2080 -c range 1024-2080
+./svmap -s scan1 <IP Scan a subnet and save the results to a
+address/Subnet mask> session named "scan1"
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Svmap Cheat Sheet
+Scan a list of previously scanned hosts and
+./svmap -i scan1 -m INVITE
+make use of the INVITE method
+4. Svmap Commands to Specify Range of IP Address
+Command Description
+./svmap <IP address/Subnet mask> Using CIDR notation
+./svmap <target name> Name instead of an IP address
+./svmap <target name/Subnet mask> Using CIDR notation with the name
+./svmap <target ip1>-<target ip2> Using "-"
+./svmap <target ip>-20 Using shorter method
+./svmap 1.1.*.* Using wildcard
+./svmap <target ip>-20 1.1.2.*
+Combines the above methods
+<target website>/24
+./svmap --randomscan Randomly scans the internet ranges
+./svmap --randomize <target Randomly scans the internet ranges using
+website>/24 name of the website
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

