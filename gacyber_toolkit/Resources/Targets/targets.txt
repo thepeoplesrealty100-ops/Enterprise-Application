@@ -1,0 +1,12 @@
+# Authorized-engagement target list.
+# Populate this per engagement with only the hosts/domains covered by
+# a signed Rules of Engagement -- this file is a human-readable mirror
+# of what should also be registered in the `scopes` table via
+# /api/scope/add so the authorization gate can enforce it in real time.
+#
+# Format: one target per line (domain, URL, IP, or CIDR).
+# Example placeholders below -- replace with your real, in-scope targets.
+#
+# https://example.com
+# 192.168.1.0/24
+# 10.10.10.50

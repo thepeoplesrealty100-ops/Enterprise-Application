@@ -1,0 +1,26 @@
+# Example Shodan search-query syntax for authorized OSINT/recon.
+# Shodan's query syntax and filters are publicly documented at
+# https://www.shodan.io/search/filters -- these are illustrative
+# examples of that public syntax, not targeting any specific system.
+# Always scope Shodan lookups to assets you are authorized to assess.
+
+port:80 country:"US" "Server: Microsoft-IIS"
+port:443 title:"Login"
+"Authentication: Basic" port:80
+port:3389 os:"Windows"
+port:22 "OpenSSH"
+port:21 "220" "FTP"
+port:502 "Modbus"
+port:102 "Siemens, SIMATIC"
+port:20000 "dnp3"
+port:1883 "MQTT"
+port:9200 "elasticsearch"
+port:27017 "MongoDB"
+port:6379 "redis_version"
+port:5432 "PostgreSQL"
+port:3306 "MySQL"
+http.title:"Dashboard" port:8080
+ssl:"Let's Encrypt" port:443
+product:"nginx" port:80
+"default password"
+"index of /" title:"Index of"

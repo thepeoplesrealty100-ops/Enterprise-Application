@@ -1,0 +1,42 @@
+# Nmap — Quick Reference
+# Source: CPENT cheat sheet (Nmap)
+
+## Discovery
+nmap -sn 192.168.1.0/24               # Ping sweep (no port scan)
+nmap -PE -PP -PM 192.168.1.1          # ICMP Echo/Timestamp/Netmask probes
+nmap -PS22,80,443 192.168.1.1         # TCP SYN ping
+nmap -PU53 192.168.1.1                # UDP ping
+
+## Port scanning
+nmap -sS 192.168.1.1                  # SYN (stealth) scan
+nmap -sT 192.168.1.1                  # TCP connect scan
+nmap -sU 192.168.1.1                  # UDP scan
+nmap -sA 192.168.1.1                  # ACK scan (firewall mapping)
+nmap -p 1-65535 192.168.1.1           # All ports
+nmap -p 22,80,443,3389,8080 ...       # Specific ports
+nmap --open 192.168.1.0/24            # Open ports only
+
+## Service + OS detection
+nmap -sV 192.168.1.1                  # Version detection
+nmap -O 192.168.1.1                   # OS detection
+nmap -A 192.168.1.1                   # Aggressive (OS+version+scripts+traceroute)
+
+## Evasion
+nmap -D RND:10 192.168.1.1            # Decoy scan
+nmap -f 192.168.1.1                   # Fragment packets
+nmap --data-length 25 ...             # Append random data
+nmap -T0 192.168.1.1                  # Paranoid timing (slowest, stealthiest)
+nmap -T4 192.168.1.1                  # Aggressive timing (fastest practical)
+nmap --source-port 53 ...             # Spoof source port (DNS bypass)
+
+## NSE scripts
+nmap --script vuln 192.168.1.1        # All vuln scripts
+nmap --script smb-vuln-ms17-010 ...   # EternalBlue check
+nmap --script http-enum ...           # Web directory enumeration
+nmap --script ftp-anon ...            # Anonymous FTP check
+nmap --script ssh-brute --script-args userdb=users.txt,passdb=pass.txt ...
+
+## Output
+nmap -oA output/scan 192.168.1.1     # All formats (xml/nmap/gnmap)
+nmap -oX output/scan.xml ...         # XML only
+ndiff scan1.xml scan2.xml            # Compare two scans
