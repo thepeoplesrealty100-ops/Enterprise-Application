@@ -1,0 +1,9 @@
+# Saved HTTP request templates for manual replay/fuzzing during an
+# authorized web-application assessment (Burp/ffuf "request file" style).
+# Populate per engagement -- format follows raw HTTP request syntax:
+#
+# GET /path HTTP/1.1
+# Host: target.example.com
+# User-Agent: Mozilla/5.0
+#
+# (blank line, then body for POST/PUT requests)

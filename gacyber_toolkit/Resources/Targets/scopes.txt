@@ -1,0 +1,21 @@
+# Human-readable Rules-of-Engagement summary per engagement.
+# The authoritative, enforced record lives in the `scopes` table
+# (see backend/database.py + backend/tools/authorization.py) --
+# this file is a quick-reference copy for operators, not a substitute
+# for the signed RoE document itself.
+#
+# Per engagement, record:
+#   - Client name
+#   - Signed RoE / SOW reference (file path or doc ID)
+#   - In-scope IP ranges / domains (must match targets.txt)
+#   - Explicitly excluded assets
+#   - Authorized testing window (start_date / end_date, matches `scopes` table)
+#   - Emergency contact for the client
+#
+# Example (replace with real engagement data):
+# Client: Example Corp
+# RoE: Resources/Requests/example-corp-roe-2026.pdf
+# In scope: https://example.com, 192.168.1.0/24
+# Excluded: payment processing subnet 192.168.1.100/32
+# Window: 2026-01-01 to 2026-01-14
+# Contact: security@example.com

