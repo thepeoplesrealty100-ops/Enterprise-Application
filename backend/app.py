@@ -28,6 +28,9 @@ from security_agents.recon_agent import ReconAgent
 from security_agents.enum_agent import EnumAgent
 from security_agents.web_agent import WebAgent
 from security_agents.report_agent import ReportAgent
+from security_agents.vm_orchestrator import VMOrchestrator
+from security_agents.compliance_axiom import ComplianceAxiom
+from security_agents.edr_mdr import EdrMdrEngine
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -67,6 +70,9 @@ recon = ReconAgent(db, config)
 enum_agent = EnumAgent(db, config)
 web_agent = WebAgent(db, config)
 report_agent = ReportAgent(db, orchestrator)
+vm_orchestrator = VMOrchestrator(db)
+compliance_axiom = ComplianceAxiom(db)
+edr_mdr = EdrMdrEngine(db)
 
 
 # ============================================================================
@@ -246,6 +252,108 @@ async def get_mitre_tactics():
 @app.get("/api/mitre/techniques")
 async def get_mitre_techniques(tactic: str):
     return orchestrator.get_techniques(tactic)
+
+
+# ============================================================================
+# VM ORCHESTRATOR (local lab/sandbox containers only -- see module docstring)
+# ============================================================================
+
+@app.get("/api/vm/images")
+async def vm_list_images():
+    return vm_orchestrator.list_images()
+
+
+@app.post("/api/vm/sandboxes")
+async def vm_create_sandbox(payload: dict):
+    result = vm_orchestrator.create_sandbox(
+        name=payload.get("name", "unnamed"),
+        image_key=payload.get("image_key", "ubuntu-lab"),
+        operator_id=payload.get("operator_id", "system"),
+    )
+    if result.get("status") == "error":
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.get("/api/vm/sandboxes")
+async def vm_list_sandboxes():
+    return {"sandboxes": vm_orchestrator.list_sandboxes()}
+
+
+@app.post("/api/vm/sandboxes/{container_name}/exec")
+async def vm_exec_sandbox(container_name: str, payload: dict):
+    result = vm_orchestrator.exec_in_sandbox(
+        container_name, payload.get("command", ""), payload.get("operator_id", "system")
+    )
+    if result.get("status") == "error":
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.delete("/api/vm/sandboxes/{container_name}")
+async def vm_destroy_sandbox(container_name: str, operator_id: str = "system"):
+    result = vm_orchestrator.destroy_sandbox(container_name, operator_id)
+    if result.get("status") == "error":
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+# ============================================================================
+# QUANTUM COMPLIANCE AXIOM
+# ============================================================================
+
+@app.get("/api/compliance/axiom/frameworks")
+async def compliance_frameworks():
+    return compliance_axiom.available_frameworks()
+
+
+@app.post("/api/compliance/axiom/report")
+async def compliance_generate_report(payload: dict):
+    result = compliance_axiom.generate_report(
+        framework=payload.get("framework", "NIST_CSF"),
+        findings=payload.get("findings", []),
+        scope_id=payload.get("scope_id"),
+        operator_id=payload.get("operator_id", "system"),
+    )
+    if result.get("status") == "error":
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+# ============================================================================
+# ADVANCED EDR / MDR: PLAYBOOK LIBRARY
+# ============================================================================
+
+@app.post("/api/edr/playbooks/seed")
+async def edr_seed_playbooks(operator_id: str = "system"):
+    return edr_mdr.seed_default_playbooks(operator_id)
+
+
+@app.get("/api/edr/playbooks")
+async def edr_list_playbooks():
+    return {"playbooks": edr_mdr.list_playbooks()}
+
+
+@app.post("/api/edr/playbooks/{playbook_key}/execute")
+async def edr_execute_playbook(playbook_key: str, payload: dict):
+    result = edr_mdr.start_execution(
+        playbook_key, payload.get("context", ""), payload.get("operator_id", "system")
+    )
+    if result.get("status") == "error":
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.post("/api/edr/executions/{execution_id}/steps/{step_index}")
+async def edr_complete_step(execution_id: int, step_index: int, payload: dict):
+    return edr_mdr.complete_step(
+        execution_id, step_index, payload.get("notes", ""), payload.get("operator_id", "system")
+    )
+
+
+@app.post("/api/edr/executions/{execution_id}/finish")
+async def edr_finish_execution(execution_id: int, operator_id: str = "system"):
+    return edr_mdr.finish_execution(execution_id, operator_id)
 
 
 if __name__ == "__main__":

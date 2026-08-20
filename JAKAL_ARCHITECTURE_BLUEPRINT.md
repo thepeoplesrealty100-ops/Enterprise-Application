@@ -1121,3 +1121,38 @@ Expand `Resources/requirements.txt` and `backend/requirements.txt` with the new 
 ---
 
 **Next Steps**: Begin Phase 1 implementation. Create the exact GACyber Tool Kit folder tree, populate the wordlist/target/dork/cheatsheet files, implement `authorization.py`, expand the DuckDB schema, and wire the new agents and endpoints. Reference this architecture for all backend and frontend development. All activity remains strictly within defined scope, written authorization, and active insurance coverage.
+
+---
+
+## Addendum: Micro-Module Extension (VM Orchestrator, Quantum Compliance Axiom, Advanced EDR/MDR)
+
+Status honesty note, on purpose: this addendum reports what actually runs and passes tests as of this change, not a percentage-complete claim. Earlier drafts of this project (see git history / the `master` branch) included several "100% complete" / "Session N Delivered" status documents whose claims didn't match what the code actually did when run -- e.g. the dependency list didn't install, and the authorization gate crashed on every real call. That pattern is called out here so it isn't repeated: every claim below was verified by actually running the endpoint, not inferred from the code looking plausible.
+
+### What was added
+
+**VM Orchestrator** (`backend/security_agents/vm_orchestrator.py`, routes under `/api/vm/`) -- provisions and manages *local* Docker sandbox containers (Ubuntu/Kali/Python base images only) on the daemon this backend runs on: create, list, `exec` a command inside, destroy. This is infrastructure the operator owns end to end -- a disposable lab box to run tool wrappers against or detonate a sample in. It is explicitly **not** a remote-session/C2 capability: it has no concept of a target host it doesn't itself own, containers run unprivileged with resource limits, and `exec`/`destroy` refuse to act on any container not labeled as JAKAL-managed. If the Docker daemon isn't reachable, every endpoint reports that clearly instead of silently failing.
+
+**Quantum Compliance Axiom** (`backend/security_agents/compliance_axiom.py`, routes under `/api/compliance/axiom/`) -- maps engagement findings and governance state (active scope, active insurance) onto the public top-level categories of SOC 2, HIPAA Security Rule, NIST CSF, and GDPR, and persists the result so other modules (reporting, EDR/MDR) can pull the latest snapshot. It produces a coverage/gap summary for a human reviewer -- it does not certify compliance, and says so in its own output (`report["disclaimer"]`).
+
+**Advanced EDR/MDR base** (`backend/security_agents/edr_mdr.py`, routes under `/api/edr/`) -- a playbook library (six playbooks seeded from publicly-taught incident-response categories: suspicious login, phishing quarantine, ransomware containment, data exfiltration, privileged-account compromise, anomalous process execution) plus execution tracking (start a playbook against a real or simulated incident, mark steps complete with notes, finish and audit-log the run). Scope note, stated plainly: a real EDR *agent* means kernel-level telemetry hooks (Windows minifilters/ETW, macOS Endpoint Security Framework, Linux eBPF) shipped to every monitored endpoint -- a large, OS-specific systems-programming project this module does not attempt to be. This is the operational layer a real agent's alerts would feed into.
+
+### Explicitly declined during this extension
+
+Two capabilities requested alongside the above were not built, on request-content grounds rather than engineering-difficulty grounds:
+
+- A generative "phishing payload" / social-engineering content generator (draft phishing emails via an LLM for campaign simulations). Even scoped to "training use only" with placeholder links, the output is deceptive content designed to impersonate a trusted sender -- not something built into this platform. Teams that need authorized phishing-simulation campaigns should look at a purpose-built platform such as GoPhish, which is designed around consent/reporting workflows; JAKAL's compliance/reporting modules can track metrics from such a campaign without generating the lure content itself.
+- A "VM Orchestrator" variant granting real remote command-terminal access to hosts the operator doesn't own. Architecturally that is a command-and-control capability regardless of pentest framing. The VM Orchestrator actually built above is scoped to sandboxes the operator provisions and owns locally.
+
+### Bugs fixed while wiring this in
+
+These were pre-existing, found by actually running the app rather than reading it:
+
+1. `backend/requirements.txt` pinned `qiskit-aer==0.14.0`, a version that was never published to PyPI -- `pip install` failed outright. Fixed to `0.14.2`.
+2. `quantum_engine.py` imports `qiskit_ibm_runtime`, which was missing from `requirements.txt` entirely -- the quantum module silently reported itself unavailable even with `qiskit` installed. Added.
+3. `backend/Tools/` (capital T) vs. `from tools.authorization import ...` (lowercase) -- worked by accident on case-insensitive filesystems (Windows/macOS), `ModuleNotFoundError` everywhere else (Linux, Docker, CI). Renamed the directory to `backend/tools/`.
+4. `backend/tools/__init__.py` imported `is_authorized`, a name that doesn't exist in `authorization.py` (only `check_authorization_and_scope` and `AuthorizationError` do) -- import-time crash. Fixed the import list.
+5. `config.py` calls `from dotenv import load_dotenv` but `python-dotenv` wasn't in `requirements.txt`. Added, along with `pytz` (required by DuckDB's timezone-aware timestamp handling) and `docker` (for the VM Orchestrator).
+6. The mandatory authorization/scope gate -- the check every network-facing agent call is supposed to pass through -- crashed with a DuckDB binder error on every real invocation, because `scopes.start_date`/`end_date` and `insurance_policies.expiry` were declared `TIMESTAMP` while every call site compares them against Python's timezone-aware `datetime.now(timezone.utc)`. DuckDB refuses to compare `TIMESTAMP` to `TIMESTAMP WITH TIME ZONE` without an explicit cast. Fixed by declaring all timestamp columns `TIMESTAMPTZ`, matching how the code already calls them.
+7. `backend/.env` (with placeholder values, not real secrets) was committed directly to a public repo with no `.gitignore`. Renamed to `backend/.env.example`, added a repo-root `.gitignore` that excludes `.env`.
+
+All of the above, plus the three new modules, were verified end-to-end with `fastapi.testclient.TestClient` before being committed: schema initializes, scope/insurance registration and validation round-trip correctly, all three new modules' endpoints return real (not mocked) data backed by DuckDB.

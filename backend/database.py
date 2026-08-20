@@ -32,7 +32,7 @@ class DuckDBManager:
         c.execute("""
         CREATE TABLE IF NOT EXISTS agent_logs (
             id INTEGER PRIMARY KEY DEFAULT nextval('seq_logs'),
-            timestamp TIMESTAMP DEFAULT now(),
+            timestamp TIMESTAMPTZ DEFAULT now(),
             event VARCHAR,
             action VARCHAR,
             status VARCHAR,
@@ -50,8 +50,8 @@ class DuckDBManager:
             shots INTEGER,
             result VARCHAR,
             status VARCHAR,
-            created_at TIMESTAMP DEFAULT now(),
-            completed_at TIMESTAMP
+            created_at TIMESTAMPTZ DEFAULT now(),
+            completed_at TIMESTAMPTZ
         )
         """)
 
@@ -64,8 +64,8 @@ class DuckDBManager:
             attack_mappings VARCHAR,
             staged_exploits VARCHAR,
             status VARCHAR,
-            created_at TIMESTAMP DEFAULT now(),
-            completed_at TIMESTAMP
+            created_at TIMESTAMPTZ DEFAULT now(),
+            completed_at TIMESTAMPTZ
         )
         """)
 
@@ -78,7 +78,7 @@ class DuckDBManager:
             description VARCHAR,
             attack_technique VARCHAR,
             remediation VARCHAR,
-            created_at TIMESTAMP DEFAULT now()
+            created_at TIMESTAMPTZ DEFAULT now()
         )
         """)
 
@@ -87,8 +87,8 @@ class DuckDBManager:
             id INTEGER PRIMARY KEY DEFAULT nextval('seq_scopes'),
             client_name VARCHAR,
             scope_definition VARCHAR,
-            start_date TIMESTAMP,
-            end_date TIMESTAMP,
+            start_date TIMESTAMPTZ,
+            end_date TIMESTAMPTZ,
             roe_document_path VARCHAR,
             status VARCHAR DEFAULT 'active'
         )
@@ -100,7 +100,7 @@ class DuckDBManager:
             policy_number VARCHAR,
             provider VARCHAR,
             coverage_amount DECIMAL,
-            expiry TIMESTAMP,
+            expiry TIMESTAMPTZ,
             status VARCHAR DEFAULT 'active'
         )
         """)
@@ -111,7 +111,63 @@ class DuckDBManager:
             pentest_id INTEGER,
             report_type VARCHAR,
             content VARCHAR,
-            created_at TIMESTAMP DEFAULT now()
+            created_at TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # --- VM Orchestrator: local lab/sandbox containers ---
+        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_sandboxes START 1")
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS sandboxes (
+            id INTEGER PRIMARY KEY DEFAULT nextval('seq_sandboxes'),
+            sandbox_id VARCHAR,
+            container_id VARCHAR,
+            container_name VARCHAR UNIQUE,
+            name VARCHAR,
+            image VARCHAR,
+            status VARCHAR,
+            operator_id VARCHAR,
+            created_at TIMESTAMPTZ DEFAULT now(),
+            destroyed_at TIMESTAMPTZ
+        )
+        """)
+
+        # --- Quantum Compliance Axiom: framework coverage reports ---
+        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_compliance START 1")
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS compliance_reports (
+            id INTEGER PRIMARY KEY DEFAULT nextval('seq_compliance'),
+            framework VARCHAR,
+            scope_id INTEGER,
+            content VARCHAR,
+            created_at TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # --- Advanced EDR/MDR: playbook library + execution tracking ---
+        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_playbooks START 1")
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS playbooks (
+            id INTEGER PRIMARY KEY DEFAULT nextval('seq_playbooks'),
+            key VARCHAR UNIQUE,
+            name VARCHAR,
+            category VARCHAR,
+            steps VARCHAR,
+            created_at TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_playbook_exec START 1")
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS playbook_executions (
+            id INTEGER PRIMARY KEY DEFAULT nextval('seq_playbook_exec'),
+            playbook_id INTEGER,
+            context VARCHAR,
+            operator_id VARCHAR,
+            status VARCHAR DEFAULT 'in_progress',
+            step_log VARCHAR DEFAULT '[]',
+            started_at TIMESTAMPTZ DEFAULT now(),
+            completed_at TIMESTAMPTZ
         )
         """)
 
@@ -197,6 +253,107 @@ class DuckDBManager:
         self.conn.commit()
         row = self.conn.execute("SELECT currval('seq_insurance')").fetchone()
         return row[0] if row else -1
+
+    # ------------------------------------------------------------------
+    # VM Orchestrator
+    # ------------------------------------------------------------------
+
+    def insert_sandbox(self, record: Dict[str, Any]) -> int:
+        self.conn.execute(
+            """
+            INSERT INTO sandboxes (sandbox_id, container_id, container_name, name, image, status, operator_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record.get("sandbox_id"), record.get("container_id"), record.get("container_name"),
+                record.get("name"), record.get("image"), record.get("status", "running"),
+                record.get("operator_id"),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_sandboxes')").fetchone()
+        return row[0] if row else -1
+
+    def update_sandbox_status(self, container_name: str, status: str):
+        if status == "destroyed":
+            self.conn.execute(
+                "UPDATE sandboxes SET status = ?, destroyed_at = now() WHERE container_name = ?",
+                (status, container_name),
+            )
+        else:
+            self.conn.execute(
+                "UPDATE sandboxes SET status = ? WHERE container_name = ?", (status, container_name)
+            )
+        self.conn.commit()
+
+    # ------------------------------------------------------------------
+    # Quantum Compliance Axiom
+    # ------------------------------------------------------------------
+
+    def insert_compliance_report(self, framework: str, scope_id: Optional[int], content: Dict[str, Any]) -> int:
+        self.conn.execute(
+            "INSERT INTO compliance_reports (framework, scope_id, content) VALUES (?, ?, ?)",
+            (framework, scope_id, json.dumps(content, default=str)),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_compliance')").fetchone()
+        return row[0] if row else -1
+
+    # ------------------------------------------------------------------
+    # Advanced EDR/MDR: playbooks
+    # ------------------------------------------------------------------
+
+    def insert_playbook(self, key: str, name: str, category: str, steps: list) -> int:
+        self.conn.execute(
+            "INSERT INTO playbooks (key, name, category, steps) VALUES (?, ?, ?, ?)",
+            (key, name, category, json.dumps(steps)),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_playbooks')").fetchone()
+        return row[0] if row else -1
+
+    def get_playbook_by_key(self, key: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT id, key, name, category, steps FROM playbooks WHERE key = ?", (key,)
+        ).fetchone()
+        if not row:
+            return None
+        return {"id": row[0], "key": row[1], "name": row[2], "category": row[3], "steps": json.loads(row[4])}
+
+    def list_playbooks(self) -> list:
+        rows = self.conn.execute("SELECT id, key, name, category, steps FROM playbooks ORDER BY id").fetchall()
+        return [{"id": r[0], "key": r[1], "name": r[2], "category": r[3], "steps": json.loads(r[4])} for r in rows]
+
+    def insert_playbook_execution(self, playbook_id: int, context: str, operator_id: str) -> int:
+        self.conn.execute(
+            "INSERT INTO playbook_executions (playbook_id, context, operator_id) VALUES (?, ?, ?)",
+            (playbook_id, context, operator_id),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_playbook_exec')").fetchone()
+        return row[0] if row else -1
+
+    def update_playbook_execution_step(self, execution_id: int, step_index: int, notes: str) -> Dict[str, Any]:
+        row = self.conn.execute(
+            "SELECT step_log FROM playbook_executions WHERE id = ?", (execution_id,)
+        ).fetchone()
+        if not row:
+            return {"status": "error", "error": "execution not found"}
+        log = json.loads(row[0])
+        log.append({"step_index": step_index, "notes": notes, "completed_at": datetime.now(timezone.utc).isoformat()})
+        self.conn.execute(
+            "UPDATE playbook_executions SET step_log = ? WHERE id = ?", (json.dumps(log), execution_id)
+        )
+        self.conn.commit()
+        return {"status": "ok", "execution_id": execution_id, "step_log": log}
+
+    def finish_playbook_execution(self, execution_id: int) -> Dict[str, Any]:
+        self.conn.execute(
+            "UPDATE playbook_executions SET status = 'completed', completed_at = now() WHERE id = ?",
+            (execution_id,),
+        )
+        self.conn.commit()
+        return {"status": "completed", "execution_id": execution_id}
 
     def close(self):
         self.conn.close()
