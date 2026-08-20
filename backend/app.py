@@ -16,7 +16,10 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
+import asyncio
+import json as _json
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -241,8 +244,55 @@ async def get_agent_logs(limit: int = 50, offset: int = 0):
 
 
 # ============================================================================
+# TELEMETRY SSE  (consumed by integration.js startTelemetryStream)
+# ============================================================================
+
+@app.get("/api/telemetry/stream")
+async def telemetry_stream():
+    """Server-Sent Events — streams recent agent logs then live updates every 3s."""
+    async def event_generator():
+        last_id = None
+        rows = db.query(
+            "SELECT id, timestamp, event, action, status FROM agent_logs "
+            "ORDER BY timestamp DESC LIMIT 50"
+        )
+        for row in reversed(rows):
+            payload = _json.dumps({
+                "message": "[{}] {} - {} ({})".format(
+                    row["timestamp"], row["event"], row["action"], row["status"]),
+                "timestamp": row["timestamp"],
+                "level_color": "text-emerald-400" if row["status"] == "success" else "text-red-400",
+            })
+            yield "data: {}\n\n".format(payload)
+            last_id = row["id"]
+        while True:
+            await asyncio.sleep(3)
+            if last_id:
+                new_rows = db.query(
+                    "SELECT id, timestamp, event, action, status FROM agent_logs "
+                    "WHERE id > ? ORDER BY timestamp ASC LIMIT 20", (last_id,))
+            else:
+                new_rows = db.query(
+                    "SELECT id, timestamp, event, action, status FROM agent_logs "
+                    "ORDER BY timestamp ASC LIMIT 20")
+            for row in new_rows:
+                payload = _json.dumps({
+                    "message": "[{}] {} - {} ({})".format(
+                        row["timestamp"], row["event"], row["action"], row["status"]),
+                    "timestamp": row["timestamp"],
+                    "level_color": "text-emerald-400" if row["status"] == "success" else "text-red-400",
+                })
+                yield "data: {}\n\n".format(payload)
+                last_id = row["id"]
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+# ============================================================================
 # MITRE
 # ============================================================================
+
 
 @app.get("/api/mitre/tactics")
 async def get_mitre_tactics():

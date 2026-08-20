@@ -3658,5 +3658,14 @@
         }
 
     </script>
+
+    <!-- JAKAL backend integration: live telemetry SSE + button wiring.
+         Skipped on GitHub Pages (static demo) - only runs against a live backend. -->
+    <script type="module">
+        import { startIntegration } from './integration.js';
+        if (window.location.hostname !== 'thepeoplesrealty100-ops.github.io') {
+            window.addEventListener('load', () => startIntegration());
+        }
+    </script>
 </body>
 </html>

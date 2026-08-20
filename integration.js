@@ -11,7 +11,7 @@ export const BACKEND_BASE = (() => {
 // 1) Agent action POST
 export async function triggerAgentAction(action, target) {
   try {
-    const res = await fetch(`${BACKEND_BASE}/api/v1/agents/action`, {
+    const res = await fetch(`${BACKEND_BASE}/api/pentest/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, target })
@@ -33,7 +33,7 @@ export async function triggerAgentAction(action, target) {
 // 2) Quantum simulation trigger
 export async function runQuantumSimulation(algorithm = 'bell_state', shots = 1024) {
   try {
-    const res = await fetch(`${BACKEND_BASE}/api/v1/quantum/simulate`, {
+    const res = await fetch(`${BACKEND_BASE}/api/quantum/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ algorithm, shots })
@@ -62,7 +62,7 @@ export function startTelemetryStream() {
 
   let retryDelay = 1000;
   function connect() {
-    const url = `${BACKEND_BASE}/api/v1/telemetry/stream`;
+    const url = `${BACKEND_BASE}/api/telemetry/stream`;
     const es = new EventSource(url);
     window.__telemetryEventSource = es;
 
