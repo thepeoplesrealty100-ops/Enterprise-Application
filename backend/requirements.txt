@@ -1,8 +1,12 @@
 fastapi==0.110.0
 uvicorn==0.28.0
 duckdb==0.10.0
+pytz==2024.1
 pydantic==2.6.4
 requests==2.31.0
+python-dotenv==1.0.1
 qiskit==1.0.2
-qiskit-aer==0.14.0
+qiskit-aer==0.14.2
+qiskit-ibm-runtime==0.20.0
 google-generativeai==0.4.1
+docker==7.0.0
