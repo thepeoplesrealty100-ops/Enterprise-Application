@@ -126,6 +126,9 @@ $EnvPath = "backend\.env"
 if (Test-Path $EnvPath) {
     Write-Host "⚠️  backend\.env already exists (skipping)" -ForegroundColor DarkYellow
 } else {
+    # If $env:CLAUDE_API_KEY is already set, it's picked up automatically.
+    # Otherwise a placeholder is written for you to edit — never a real key.
+    $ClaudeKeyValue = if ($env:CLAUDE_API_KEY) { $env:CLAUDE_API_KEY } else { "sk-ant-your-api-key-here" }
     $envContent = @"
 # JAKAL Backend Configuration
 # Update CLAUDE_API_KEY with your Anthropic API key from https://console.anthropic.com
@@ -137,7 +140,7 @@ ENVIRONMENT=development
 
 # Claude LLM (REQUIRED - add your API key)
 LLM_ENGINE=claude
-CLAUDE_API_KEY=sk-ant-your-api-key-here
+CLAUDE_API_KEY=$ClaudeKeyValue
 CLAUDE_MODEL=claude-3-5-sonnet-20241022
 
 # Ollama (local fallback - optional)

@@ -102,7 +102,11 @@ echo "[7/8] Configuring backend environment..."
 if [ -f "backend/.env" ]; then
     echo "⚠️  backend/.env already exists (skipping)"
 else
-    cat > backend/.env << 'ENVEOF'
+    # If CLAUDE_API_KEY is already set in your shell environment, it's picked
+    # up automatically. Otherwise a placeholder is written for you to edit —
+    # never a real key. See https://console.anthropic.com/account/keys.
+    CLAUDE_KEY_VALUE="${CLAUDE_API_KEY:-sk-ant-your-api-key-here}"
+    cat > backend/.env << ENVEOF
 # JAKAL Backend Configuration
 # Update CLAUDE_API_KEY with your Anthropic API key from https://console.anthropic.com
 
@@ -113,7 +117,7 @@ ENVIRONMENT=development
 
 # Claude LLM (REQUIRED - add your API key)
 LLM_ENGINE=claude
-CLAUDE_API_KEY=sk-ant-your-api-key-here
+CLAUDE_API_KEY=${CLAUDE_KEY_VALUE}
 CLAUDE_MODEL=claude-3-5-sonnet-20241022
 
 # Ollama (local fallback - optional)
