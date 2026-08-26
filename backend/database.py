@@ -1,7 +1,7 @@
 """
 JAKAL Database Layer - DuckDB (local, embedded, zero-cost)
 
-Schema version: 2.3
+Schema version: 2.4
   v1.0 - agent_logs, quantum_jobs, pentest_runs, findings, scopes,
           insurance_policies, assessment_reports
   v2.0 - sandboxes, compliance_reports, playbooks, playbook_executions
@@ -14,6 +14,18 @@ Schema version: 2.3
           phase1_database.py design before that branch was retired --
           real column ideas kept, weak points (substring scope matching,
           no PQC signing) fixed against the v2.1+ authorization/PQC layer.
+  v2.4 - ai_safety_events, agentic_remediation_tasks, global_fleet_matrix,
+          global_security_settings, quantum_orbital_comms.
+          These back four new API surfaces requested directly by the
+          operator: Horizon (AI-safety/compliance event stream), Agentic
+          Canvas (patch-deployment tasks), Resonance/Global Dashboard
+          (fleet posture + org-wide security config), and Q'AIP (LLM/
+          quantum inference-chain ledger + a rate-limiting "Energy Core").
+          None of these bypass the existing gates: Canvas patch deploys
+          route through the same approval_requests table as every other
+          high-risk action (v2.3), and global_security_settings mirrors
+          -- rather than duplicates -- the real operators/encryption_keys/
+          pqc_audit_log tables instead of inventing a second source of truth.
 """
 
 import json
@@ -48,6 +60,8 @@ class DuckDBManager:
             # v2.3 sequences
             "seq_operators", "seq_attack_map", "seq_compliance_chk",
             "seq_rfp", "seq_approval",
+            # v2.4 tables all key off app-generated VARCHAR UUIDs (event_id,
+            # task_id, machine_id, config_id, comm_id) — no sequences needed.
         ]:
             c.execute(f"CREATE SEQUENCE IF NOT EXISTS {seq} START 1")
 
@@ -467,8 +481,81 @@ class DuckDBManager:
         )
         """)
 
+        # ── v2.4 Tables — Horizon / Agentic Canvas / Resonance / Q'AIP ─────
+        # DDL as specified by the operator's v2.4 directive, DuckDB-adapted
+        # (TIMESTAMP -> TIMESTAMPTZ for consistency with every other table
+        # in this schema; everything else is as given).
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS ai_safety_events (
+            event_id                 VARCHAR PRIMARY KEY,
+            client_id                VARCHAR,
+            soc_compliance_tier      VARCHAR,           -- e.g. SOC2 Type II, HIPAA
+            protection_layer         VARCHAR,
+            alert_severity           INTEGER,
+            regulatory_schema_status VARCHAR DEFAULT 'Syncing',  -- Syncing | Resolved | Attention Required
+            event_timestamp          TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # Every deploy-patch action lands here AND as an approval_requests
+        # row (v2.3) — operator_approval_status here mirrors that row's
+        # status rather than being a second, independent approval path.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS agentic_remediation_tasks (
+            task_id                  VARCHAR PRIMARY KEY,
+            target_machine_ip        VARCHAR,
+            patch_id                 VARCHAR,
+            autonomous_action_taken  VARCHAR,
+            deployment_progress      INTEGER DEFAULT 0,   -- 0..100
+            remediation_status       VARCHAR DEFAULT 'queued',
+            operator_approval_status VARCHAR DEFAULT 'pending',  -- mirrors approval_requests.status
+            approval_request_id      VARCHAR,             -- FK -> approval_requests.request_id
+            created_at                TIMESTAMPTZ DEFAULT now(),
+            updated_at                TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS global_fleet_matrix (
+            machine_id                VARCHAR PRIMARY KEY,
+            network_segment            VARCHAR,
+            predictive_threat_score    DOUBLE,
+            resonance_load_metric      DOUBLE,           -- Q'AIP computational load, 0.0-1.0
+            last_diagnostic_timestamp  TIMESTAMPTZ DEFAULT now(),
+            is_quarantined              BOOLEAN DEFAULT false
+        )
+        """)
+
+        # Deliberately a single-row "current config" table, mirroring live
+        # values from operators/encryption_keys/pqc_audit_log rather than
+        # being an independently-editable second source of truth for
+        # security posture -- see resonance_settings_snapshot() below.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS global_security_settings (
+            config_id              VARCHAR PRIMARY KEY,
+            rbac_policy_hash        VARCHAR,
+            api_encryption_standard VARCHAR DEFAULT 'ML-DSA-65 + AES-256-GCM',
+            key_management_status   VARCHAR,
+            trade_secret_isolation  BOOLEAN DEFAULT true,
+            recorded_at             TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS quantum_orbital_comms (
+            comm_id                 VARCHAR PRIMARY KEY,
+            event_type              VARCHAR,             -- llm_inference | quantum_job | aip_prioritization
+            computational_agent_id  VARCHAR,
+            inference_chain_hash    VARCHAR,
+            quantum_entropy_seed    VARCHAR,
+            execution_latency_ms    INTEGER,
+            recorded_at             TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
         self.conn.commit()
-        logger.info("Schema v2.3 initialized at %s", self.db_path)
+        logger.info("Schema v2.4 initialized at %s", self.db_path)
 
     # ======================================================================
     # Generic helpers
@@ -1574,6 +1661,272 @@ class DuckDBManager:
         }
 
     # ======================================================================
+    # v2.4 — Horizon (AI Safety events)
+    # ======================================================================
+
+    def insert_ai_safety_event(self, record: Dict[str, Any]) -> str:
+        """Required: event_id. Optional: client_id, soc_compliance_tier,
+        protection_layer, alert_severity, regulatory_schema_status."""
+        self.conn.execute(
+            """
+            INSERT INTO ai_safety_events
+                (event_id, client_id, soc_compliance_tier, protection_layer,
+                 alert_severity, regulatory_schema_status)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (record["event_id"], record.get("client_id"), record.get("soc_compliance_tier"),
+             record.get("protection_layer"), record.get("alert_severity", 0),
+             record.get("regulatory_schema_status", "Syncing")),
+        )
+        self.conn.commit()
+        return record["event_id"]
+
+    def list_ai_safety_events(self, client_id: Optional[str] = None, limit: int = 200) -> List[Dict[str, Any]]:
+        if client_id:
+            rows = self.conn.execute(
+                "SELECT * FROM ai_safety_events WHERE client_id = ? ORDER BY event_timestamp DESC LIMIT ?",
+                (client_id, limit),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM ai_safety_events ORDER BY event_timestamp DESC LIMIT ?", (limit,)
+            ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def horizon_regulatory_summary(self) -> Dict[str, Any]:
+        """Executive rollup: alert-severity distribution + compliance-status gaps."""
+        by_severity = self.conn.execute(
+            "SELECT alert_severity, COUNT(*) FROM ai_safety_events GROUP BY alert_severity ORDER BY 1 DESC"
+        ).fetchall()
+        by_status = self.conn.execute(
+            "SELECT regulatory_schema_status, COUNT(*) FROM ai_safety_events GROUP BY regulatory_schema_status"
+        ).fetchall()
+        by_tier = self.conn.execute(
+            "SELECT soc_compliance_tier, COUNT(*) FROM ai_safety_events "
+            "WHERE regulatory_schema_status = 'Attention Required' GROUP BY soc_compliance_tier"
+        ).fetchall()
+        total = self.conn.execute("SELECT COUNT(*) FROM ai_safety_events").fetchone()[0]
+        return {
+            "total_events": total,
+            "by_severity": {str(r[0]): r[1] for r in by_severity},
+            "by_regulatory_status": {r[0]: r[1] for r in by_status},
+            "compliance_gaps_by_tier": {r[0] or "unspecified": r[1] for r in by_tier},
+        }
+
+    # ======================================================================
+    # v2.4 — Agentic Canvas (patch deployment tasks)
+    # ======================================================================
+
+    def create_remediation_task(self, record: Dict[str, Any]) -> str:
+        """Required: task_id. Optional: target_machine_ip, patch_id,
+        autonomous_action_taken, approval_request_id."""
+        self.conn.execute(
+            """
+            INSERT INTO agentic_remediation_tasks
+                (task_id, target_machine_ip, patch_id, autonomous_action_taken,
+                 deployment_progress, remediation_status, operator_approval_status,
+                 approval_request_id)
+            VALUES (?, ?, ?, ?, 0, 'queued', 'pending', ?)
+            """,
+            (record["task_id"], record.get("target_machine_ip"), record.get("patch_id"),
+             record.get("autonomous_action_taken"), record.get("approval_request_id")),
+        )
+        self.conn.commit()
+        return record["task_id"]
+
+    def sync_remediation_task_approval(self, task_id: str) -> Optional[Dict[str, Any]]:
+        """Pull the linked approval_requests row's current status into this
+        task's operator_approval_status — call before advancing progress."""
+        task = self.get_remediation_task(task_id)
+        if not task or not task.get("approval_request_id"):
+            return task
+        approval = self.get_approval_request(task["approval_request_id"])
+        if approval:
+            self.conn.execute(
+                "UPDATE agentic_remediation_tasks SET operator_approval_status = ?, updated_at = now() WHERE task_id = ?",
+                (approval["status"], task_id),
+            )
+            self.conn.commit()
+            task = self.get_remediation_task(task_id)
+        return task
+
+    def advance_remediation_task(self, task_id: str, progress: int, status: Optional[str] = None) -> Dict[str, Any]:
+        """Advance deployment_progress. Refuses to move past 0 unless the
+        linked approval is 'approved' — mirrors the same not-unless-approved
+        rule as ExploitAgent.execute_staged_payload()."""
+        task = self.sync_remediation_task_approval(task_id)
+        if not task:
+            return {"status": "error", "message": "task not found"}
+        if progress > 0 and task.get("operator_approval_status") != "approved":
+            return {"status": "blocked", "message": "patch not approved by a human operator", "task_id": task_id}
+        self.conn.execute(
+            "UPDATE agentic_remediation_tasks SET deployment_progress = ?, remediation_status = ?, updated_at = now() WHERE task_id = ?",
+            (progress, status or ("completed" if progress >= 100 else "in_progress"), task_id),
+        )
+        self.conn.commit()
+        return self.get_remediation_task(task_id)
+
+    def get_remediation_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM agentic_remediation_tasks WHERE task_id = ?", (task_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    def list_remediation_tasks(self, status: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        if status:
+            rows = self.conn.execute(
+                "SELECT * FROM agentic_remediation_tasks WHERE remediation_status = ? ORDER BY created_at DESC LIMIT ?",
+                (status, limit),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM agentic_remediation_tasks ORDER BY created_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    # ======================================================================
+    # v2.4 — Resonance / Global Dashboard
+    # ======================================================================
+
+    def upsert_fleet_host(self, record: Dict[str, Any]) -> str:
+        existing = self.conn.execute(
+            "SELECT machine_id FROM global_fleet_matrix WHERE machine_id = ?", (record["machine_id"],)
+        ).fetchone()
+        if existing:
+            self.conn.execute(
+                """
+                UPDATE global_fleet_matrix
+                SET network_segment = ?, predictive_threat_score = ?, resonance_load_metric = ?,
+                    last_diagnostic_timestamp = now(), is_quarantined = ?
+                WHERE machine_id = ?
+                """,
+                (record.get("network_segment"), record.get("predictive_threat_score", 0.0),
+                 record.get("resonance_load_metric", 0.0), record.get("is_quarantined", False),
+                 record["machine_id"]),
+            )
+        else:
+            self.conn.execute(
+                """
+                INSERT INTO global_fleet_matrix
+                    (machine_id, network_segment, predictive_threat_score, resonance_load_metric, is_quarantined)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (record["machine_id"], record.get("network_segment"),
+                 record.get("predictive_threat_score", 0.0), record.get("resonance_load_metric", 0.0),
+                 record.get("is_quarantined", False)),
+            )
+        self.conn.commit()
+        return record["machine_id"]
+
+    def list_fleet_matrix(self, quarantined_only: bool = False) -> List[Dict[str, Any]]:
+        clause = "WHERE is_quarantined = true" if quarantined_only else ""
+        rows = self.conn.execute(
+            f"SELECT * FROM global_fleet_matrix {clause} ORDER BY predictive_threat_score DESC"
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def resonance_settings_snapshot(self, config_id: str) -> Dict[str, Any]:
+        """
+        Records a global_security_settings row DERIVED from the real,
+        already-authoritative tables (operators for RBAC, encryption_keys +
+        pqc_audit_log for key management / crypto standard) rather than
+        letting this table drift into being an independent, editable copy
+        of the truth. This is intentionally the only write path in — no
+        separate "set_security_settings" that could disagree with reality.
+        """
+        import hashlib
+        roles = self.conn.execute(
+            "SELECT operator_id, role FROM operators WHERE active = true ORDER BY operator_id"
+        ).fetchall()
+        rbac_hash = hashlib.sha3_256(json.dumps(roles, default=str).encode()).hexdigest()[:32]
+        active_keys = self.conn.execute(
+            "SELECT COUNT(*) FROM encryption_keys WHERE status = 'active'"
+        ).fetchone()[0]
+        pqc_entries = self.conn.execute("SELECT COUNT(*) FROM pqc_audit_log").fetchone()[0]
+        key_status = f"{active_keys} active key(s), {pqc_entries} PQC audit entries"
+
+        self.conn.execute(
+            """
+            INSERT INTO global_security_settings
+                (config_id, rbac_policy_hash, api_encryption_standard, key_management_status, trade_secret_isolation)
+            VALUES (?, ?, 'ML-DSA-65 + AES-256-GCM', ?, true)
+            """,
+            (config_id, rbac_hash, key_status),
+        )
+        self.conn.commit()
+        return self.get_security_settings(config_id)
+
+    def get_security_settings(self, config_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM global_security_settings WHERE config_id = ?", (config_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    def latest_security_settings(self) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM global_security_settings ORDER BY recorded_at DESC LIMIT 1"
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    # ======================================================================
+    # v2.4 — Q'AIP Logic & Quantum Orchestration
+    # ======================================================================
+
+    def log_orbital_comm(self, record: Dict[str, Any]) -> str:
+        """Required: comm_id, event_type. Optional: computational_agent_id,
+        inference_chain_hash, quantum_entropy_seed, execution_latency_ms."""
+        self.conn.execute(
+            """
+            INSERT INTO quantum_orbital_comms
+                (comm_id, event_type, computational_agent_id, inference_chain_hash,
+                 quantum_entropy_seed, execution_latency_ms)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (record["comm_id"], record["event_type"], record.get("computational_agent_id"),
+             record.get("inference_chain_hash"), record.get("quantum_entropy_seed"),
+             record.get("execution_latency_ms")),
+        )
+        self.conn.commit()
+        return record["comm_id"]
+
+    def list_orbital_comms(self, event_type: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        if event_type:
+            rows = self.conn.execute(
+                "SELECT * FROM quantum_orbital_comms WHERE event_type = ? ORDER BY recorded_at DESC LIMIT ?",
+                (event_type, limit),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM quantum_orbital_comms ORDER BY recorded_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def orbital_comms_stats(self) -> Dict[str, Any]:
+        total = self.conn.execute("SELECT COUNT(*) FROM quantum_orbital_comms").fetchone()[0]
+        avg_latency = self.conn.execute("SELECT AVG(execution_latency_ms) FROM quantum_orbital_comms").fetchone()[0]
+        by_type = self.conn.execute(
+            "SELECT event_type, COUNT(*) FROM quantum_orbital_comms GROUP BY event_type"
+        ).fetchall()
+        return {
+            "total": total,
+            "avg_latency_ms": round(avg_latency, 2) if avg_latency is not None else None,
+            "by_event_type": {r[0]: r[1] for r in by_type},
+        }
+
+    # ======================================================================
     # Utility
     # ======================================================================
 
@@ -1588,6 +1941,8 @@ class DuckDBManager:
             "fabric_modules", "fabric_events", "zt_posture_assessments",
             "operators", "attack_mappings", "compliance_checkpoints",
             "rfp_responses", "approval_requests",
+            "ai_safety_events", "agentic_remediation_tasks", "global_fleet_matrix",
+            "global_security_settings", "quantum_orbital_comms",
         ]
         stats = {}
         for t in tables:

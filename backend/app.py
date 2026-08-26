@@ -42,6 +42,7 @@ from routers import (
     crypto_router, payloads_router,
     aip_router, fabric_router,
     wireless_router, approval_router,
+    horizon_router, canvas_router, resonance_router, qaip_router,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -49,13 +50,15 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="JAKAL Backend",
-    version="2.3",
+    version="2.4",
     description=(
         "JAKAL Enterprise Cybersecurity Platform — "
         "Post-Quantum Cryptography, Quantum Computing, AIP ontology-driven "
         "payload intelligence (cheatsheet-interwoven), Unified Security Fabric "
         "(Zero Trust 7-pillar), Threat Hunting, EDR/MDR, Compliance, VM Orchestration, "
-        "Wireless (802.11) Assessment, and a Human Approval Gate for high-risk payloads."
+        "Wireless (802.11) Assessment, a Human Approval Gate for high-risk payloads, "
+        "Horizon AI-safety/regulatory events, Agentic Canvas patch deployment, "
+        "Resonance fleet posture, and Q'AIP quantum/LLM inference orchestration."
     ),
 )
 
@@ -80,6 +83,10 @@ app.include_router(aip_router,      prefix="/api")   # v2.2 AIP ontology payload
 app.include_router(fabric_router,   prefix="/api")   # v2.2 Unified Security Fabric (7 capabilities)
 app.include_router(wireless_router, prefix="/api")   # v2.3 passive Wi-Fi survey
 app.include_router(approval_router, prefix="/api")   # v2.3 Human Approval Gate
+app.include_router(horizon_router,   prefix="/api")   # v2.4 Horizon AI Safety Fabric
+app.include_router(canvas_router,    prefix="/api")   # v2.4 Agentic Canvas
+app.include_router(resonance_router, prefix="/api")   # v2.4 Resonance / Global Dashboard
+app.include_router(qaip_router,      prefix="/api")   # v2.4 Q'AIP Energy Core + orbital comms
 
 
 class _Config:

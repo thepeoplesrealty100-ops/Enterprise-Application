@@ -268,16 +268,46 @@ class AIPPayloadGenerator:
             "command. Use only the provided indices.\n\nCATALOG:\n"
             + json.dumps(catalog, indent=2)[:6000]
         )
+        # v2.4 Q'AIP: throttle through the Energy Core before spending an
+        # LLM call, and log the inference chain to quantum_orbital_comms
+        # for the /api/qaip observability endpoints.
+        import hashlib
+        import time
+        import uuid as _uuid
+        try:
+            from llm_energy_core import ENERGY_CORE
+        except Exception:
+            ENERGY_CORE = None
+
+        if ENERGY_CORE is not None and not ENERGY_CORE.allow():
+            return {"error": "energy core throttled this request (rate limit protection) — retry shortly",
+                    "bounded": True}
+
+        start = time.monotonic()
         try:
             raw = self.llm(prompt)
             parsed = json.loads(raw) if isinstance(raw, str) else raw
             # Validate indices are within the catalog (bound enforcement)
             valid_idx = {c["idx"] for c in catalog}
             ranking = [i for i in parsed.get("ranking", []) if i in valid_idx]
-            return {"ranking": ranking, "rationale": parsed.get("rationale", ""),
-                    "bounded": True}
+            result = {"ranking": ranking, "rationale": parsed.get("rationale", ""),
+                      "bounded": True}
         except Exception as e:
-            return {"error": str(e), "bounded": True}
+            result = {"error": str(e), "bounded": True}
+        finally:
+            if self.db:
+                try:
+                    self.db.log_orbital_comm({
+                        "comm_id": str(_uuid.uuid4()),
+                        "event_type": "aip_prioritization",
+                        "computational_agent_id": "aip-llm-prioritizer",
+                        "inference_chain_hash": hashlib.sha3_256(prompt.encode()).hexdigest()[:32],
+                        "quantum_entropy_seed": None,
+                        "execution_latency_ms": int((time.monotonic() - start) * 1000),
+                    })
+                except Exception as log_err:
+                    logger.warning("Failed to log orbital comm: %s", log_err)
+        return result
 
     # ------------------------------------------------------------------
     # Full engagement (all phases)

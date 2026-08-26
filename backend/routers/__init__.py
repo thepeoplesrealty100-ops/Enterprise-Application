@@ -14,6 +14,11 @@ v2.2 routers:
 v2.3 routers:
   wireless_router — /api/wireless/* (passive Wi-Fi survey; active payloads via /aip/generate)
   approval_router — /api/approval/* (Human Approval Gate — stage/approve/deny/execute)
+v2.4 routers:
+  horizon_router   — /api/horizon/*   (AI-safety event stream + regulatory-compliance rollup)
+  canvas_router     — /api/canvas/*    (Agentic Canvas — patch deploys gated by the Approval Gate)
+  resonance_router  — /api/resonance/* (fleet posture + derived org-wide security settings)
+  qaip_router       — /api/qaip/*      (Energy Core throttle + quantum/LLM inference ledger)
 """
 
 from .pentest import router as pentest_router
@@ -25,6 +30,10 @@ from .aip import router as aip_router
 from .fabric import router as fabric_router
 from .wireless import router as wireless_router
 from .approval import router as approval_router
+from .horizon import router as horizon_router
+from .canvas import router as canvas_router
+from .resonance import router as resonance_router
+from .qaip import router as qaip_router
 
 __all__ = [
     "pentest_router",
@@ -36,4 +45,8 @@ __all__ = [
     "fabric_router",
     "wireless_router",
     "approval_router",
+    "horizon_router",
+    "canvas_router",
+    "resonance_router",
+    "qaip_router",
 ]
