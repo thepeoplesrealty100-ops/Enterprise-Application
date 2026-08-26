@@ -4,6 +4,11 @@ JAKAL Authorization Gate
 Mandatory scope / legal / insurance check that every network-facing
 tool wrapper and agent must call before touching a target.
 
+v2.1 upgrade: Every authorization decision (grant AND deny) is now
+PQC-signed with ML-DSA-65 via PQCAuditManager and persisted to the
+pqc_audit_log table — creating an immutable, cryptographically-verified
+authorization trail.
+
 FIX (vs. earlier draft in the architecture doc):
 The original scope check used `target in str(scope_row)`, a plain
 substring match. That is exploitable: a scope of "example.com" would
@@ -22,6 +27,68 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# ── PQC audit manager (lazy-initialised; optional) ─────────────────────────
+_pqc_manager = None
+
+def _get_pqc():
+    global _pqc_manager
+    if _pqc_manager is None:
+        try:
+            from crypto.pqc_manager import PQCAuditManager
+            _pqc_manager = PQCAuditManager()
+        except Exception as e:
+            logger.warning("PQCAuditManager unavailable in authorization gate: %s", e)
+    return _pqc_manager
+
+
+def _pqc_sign_authorization(
+    action: str,
+    target: str,
+    operator_id: str,
+    decision: str,
+    reason: str,
+    db=None,
+) -> Optional[str]:
+    """
+    PQC-sign an authorization decision and persist to pqc_audit_log.
+    Returns entry_id or None if PQC unavailable.
+    """
+    pqc = _get_pqc()
+    if not pqc:
+        return None
+    try:
+        payload = {
+            "action": action,
+            "target": target,
+            "operator_id": operator_id,
+            "decision": decision,
+            "reason": reason,
+        }
+        signed = pqc.sign_agent_action(
+            agent_id="authorization-gate",
+            action_payload=payload,
+            operator_id=operator_id,
+        )
+        if db:
+            import json
+            db.insert_pqc_audit_entry({
+                "entry_id":     signed["entry_id"],
+                "agent_id":     "authorization-gate",
+                "operator_id":  operator_id,
+                "action_type":  f"authorization_{decision.lower()}",
+                "action_detail": json.dumps(payload),
+                "payload_hash": signed["payload_hash"],
+                "pqc_signature":signed["pqc_signature"],
+                "algorithm":    signed["algorithm"],
+                "public_key":   signed["public_key"],
+            })
+        return signed["entry_id"]
+    except Exception as e:
+        logger.warning("PQC signing of authorization decision failed: %s", e)
+        return None
+
+
+# ══════════════════════════════════════════════════════════════════════════
 
 class AuthorizationError(PermissionError):
     """Raised when a target/action is not authorized. Caught by API layer -> HTTP 403."""
@@ -90,6 +157,9 @@ def check_authorization_and_scope(
     Real-time legal, scope, and insurance validation.
     Raises AuthorizationError (blocks execution) if any check fails.
 
+    Every decision (grant AND deny) is PQC-signed with ML-DSA-65 and
+    persisted to pqc_audit_log for immutable audit trail.
+
     `db` should be a DuckDBManager instance (see database.py). Passed in
     rather than imported at module scope to avoid circular imports and
     to make this function easy to unit test with a fake db.
@@ -113,7 +183,6 @@ def check_authorization_and_scope(
 
     in_scope = False
     for row in scope_rows:
-        # row layout matches the SELECT above
         _, _, scope_definition, *_ = row
         for entry in str(scope_definition).split(","):
             entry = entry.strip()
@@ -128,29 +197,52 @@ def check_authorization_and_scope(
     has_insurance = len(insurance_rows) > 0
 
     if not in_scope or not has_insurance:
-        reason = []
+        reason_parts = []
         if not in_scope:
-            reason.append("target outside authorized scope")
+            reason_parts.append("target outside authorized scope")
         if not has_insurance:
-            reason.append("no active insurance policy on file")
-        reason_str = "; ".join(reason)
+            reason_parts.append("no active insurance policy on file")
+        reason_str = "; ".join(reason_parts)
+
+        # PQC-sign the denial
+        pqc_entry_id = _pqc_sign_authorization(
+            action=action, target=target, operator_id=operator_id,
+            decision="DENIED", reason=reason_str, db=db,
+        )
 
         db.insert_log({
             "event": "AUTHORIZATION_DENIED",
             "action": action,
             "status": "blocked",
             "operator_id": operator_id,
-            "details": {"target": target, "reason": reason_str},
+            "details": {
+                "target": target,
+                "reason": reason_str,
+                "pqc_entry_id": pqc_entry_id,
+            },
         })
         raise AuthorizationError(
             f"Authorization denied for target '{target}': {reason_str}."
         )
+
+    # PQC-sign the grant
+    pqc_entry_id = _pqc_sign_authorization(
+        action=action, target=target, operator_id=operator_id,
+        decision="GRANTED", reason="scope and insurance validated", db=db,
+    )
 
     db.insert_log({
         "event": "AUTHORIZATION_GRANTED",
         "action": action,
         "status": "approved",
         "operator_id": operator_id,
-        "details": {"target": target},
+        "details": {
+            "target": target,
+            "pqc_entry_id": pqc_entry_id,
+        },
     })
-    return {"authorized": True, "timestamp": now.isoformat()}
+    return {
+        "authorized": True,
+        "timestamp": now.isoformat(),
+        "pqc_entry_id": pqc_entry_id,
+    }

@@ -1,11 +1,18 @@
 """
 JAKAL Database Layer - DuckDB (local, embedded, zero-cost)
+
+Schema version: 2.1
+  v1.0 - agent_logs, quantum_jobs, pentest_runs, findings, scopes,
+          insurance_policies, assessment_reports
+  v2.0 - sandboxes, compliance_reports, playbooks, playbook_executions
+  v2.1 - pqc_audit_log, encryption_keys, payload_executions,
+          network_map, vuln_db, threat_intel
 """
 
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import duckdb
 
@@ -21,162 +28,337 @@ class DuckDBManager:
     def initialize_schema(self):
         c = self.conn
 
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_logs START 1")
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_jobs START 1")
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_pentest START 1")
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_findings START 1")
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_scopes START 1")
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_insurance START 1")
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_reports START 1")
+        # ── Sequences ─────────────────────────────────────────────────────
+        for seq in [
+            "seq_logs", "seq_jobs", "seq_pentest", "seq_findings",
+            "seq_scopes", "seq_insurance", "seq_reports", "seq_sandboxes",
+            "seq_compliance", "seq_playbooks", "seq_playbook_exec",
+            # v2.1 sequences
+            "seq_pqc_audit", "seq_enc_keys", "seq_payload_exec",
+            "seq_network_map", "seq_vuln_db", "seq_threat_intel",
+            # v2.2 Unified Security Fabric sequences
+            "seq_fabric_mod", "seq_fabric_evt", "seq_posture",
+        ]:
+            c.execute(f"CREATE SEQUENCE IF NOT EXISTS {seq} START 1")
+
+        # ── v1.0 Tables ───────────────────────────────────────────────────
 
         c.execute("""
         CREATE TABLE IF NOT EXISTS agent_logs (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_logs'),
-            timestamp TIMESTAMPTZ DEFAULT now(),
-            event VARCHAR,
-            action VARCHAR,
-            status VARCHAR,
+            id          INTEGER PRIMARY KEY DEFAULT nextval('seq_logs'),
+            timestamp   TIMESTAMPTZ DEFAULT now(),
+            event       VARCHAR,
+            action      VARCHAR,
+            status      VARCHAR,
             operator_id VARCHAR,
-            details VARCHAR
+            details     VARCHAR
         )
         """)
 
         c.execute("""
         CREATE TABLE IF NOT EXISTS quantum_jobs (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_jobs'),
-            job_id VARCHAR UNIQUE,
-            circuit_name VARCHAR,
-            backend VARCHAR,
-            shots INTEGER,
-            result VARCHAR,
-            status VARCHAR,
-            created_at TIMESTAMPTZ DEFAULT now(),
-            completed_at TIMESTAMPTZ
+            id            INTEGER PRIMARY KEY DEFAULT nextval('seq_jobs'),
+            job_id        VARCHAR UNIQUE,
+            circuit_name  VARCHAR,
+            backend       VARCHAR,
+            shots         INTEGER,
+            result        VARCHAR,
+            status        VARCHAR,
+            created_at    TIMESTAMPTZ DEFAULT now(),
+            completed_at  TIMESTAMPTZ
         )
         """)
 
         c.execute("""
         CREATE TABLE IF NOT EXISTS pentest_runs (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_pentest'),
-            target VARCHAR,
-            scan_type VARCHAR,
-            recon_results VARCHAR,
+            id              INTEGER PRIMARY KEY DEFAULT nextval('seq_pentest'),
+            target          VARCHAR,
+            scan_type       VARCHAR,
+            recon_results   VARCHAR,
             attack_mappings VARCHAR,
             staged_exploits VARCHAR,
-            status VARCHAR,
-            created_at TIMESTAMPTZ DEFAULT now(),
-            completed_at TIMESTAMPTZ
+            status          VARCHAR,
+            created_at      TIMESTAMPTZ DEFAULT now(),
+            completed_at    TIMESTAMPTZ
         )
         """)
 
         c.execute("""
         CREATE TABLE IF NOT EXISTS findings (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_findings'),
-            pentest_id INTEGER,
-            severity VARCHAR,
-            title VARCHAR,
-            description VARCHAR,
+            id               INTEGER PRIMARY KEY DEFAULT nextval('seq_findings'),
+            pentest_id       INTEGER,
+            severity         VARCHAR,
+            title            VARCHAR,
+            description      VARCHAR,
             attack_technique VARCHAR,
-            remediation VARCHAR,
-            created_at TIMESTAMPTZ DEFAULT now()
+            remediation      VARCHAR,
+            created_at       TIMESTAMPTZ DEFAULT now()
         )
         """)
 
         c.execute("""
         CREATE TABLE IF NOT EXISTS scopes (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_scopes'),
-            client_name VARCHAR,
-            scope_definition VARCHAR,
-            start_date TIMESTAMPTZ,
-            end_date TIMESTAMPTZ,
+            id                INTEGER PRIMARY KEY DEFAULT nextval('seq_scopes'),
+            client_name       VARCHAR,
+            scope_definition  VARCHAR,
+            start_date        TIMESTAMPTZ,
+            end_date          TIMESTAMPTZ,
             roe_document_path VARCHAR,
-            status VARCHAR DEFAULT 'active'
+            status            VARCHAR DEFAULT 'active'
         )
         """)
 
         c.execute("""
         CREATE TABLE IF NOT EXISTS insurance_policies (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_insurance'),
-            policy_number VARCHAR,
-            provider VARCHAR,
+            id              INTEGER PRIMARY KEY DEFAULT nextval('seq_insurance'),
+            policy_number   VARCHAR,
+            provider        VARCHAR,
             coverage_amount DECIMAL,
-            expiry TIMESTAMPTZ,
-            status VARCHAR DEFAULT 'active'
+            expiry          TIMESTAMPTZ,
+            status          VARCHAR DEFAULT 'active'
         )
         """)
 
         c.execute("""
         CREATE TABLE IF NOT EXISTS assessment_reports (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_reports'),
-            pentest_id INTEGER,
+            id          INTEGER PRIMARY KEY DEFAULT nextval('seq_reports'),
+            pentest_id  INTEGER,
             report_type VARCHAR,
-            content VARCHAR,
-            created_at TIMESTAMPTZ DEFAULT now()
+            content     VARCHAR,
+            created_at  TIMESTAMPTZ DEFAULT now()
         )
         """)
 
-        # --- VM Orchestrator: local lab/sandbox containers ---
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_sandboxes START 1")
+        # ── v2.0 Tables ───────────────────────────────────────────────────
+
         c.execute("""
         CREATE TABLE IF NOT EXISTS sandboxes (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_sandboxes'),
-            sandbox_id VARCHAR,
-            container_id VARCHAR,
+            id             INTEGER PRIMARY KEY DEFAULT nextval('seq_sandboxes'),
+            sandbox_id     VARCHAR,
+            container_id   VARCHAR,
             container_name VARCHAR UNIQUE,
-            name VARCHAR,
-            image VARCHAR,
-            status VARCHAR,
-            operator_id VARCHAR,
-            created_at TIMESTAMPTZ DEFAULT now(),
-            destroyed_at TIMESTAMPTZ
+            name           VARCHAR,
+            image          VARCHAR,
+            status         VARCHAR,
+            operator_id    VARCHAR,
+            created_at     TIMESTAMPTZ DEFAULT now(),
+            destroyed_at   TIMESTAMPTZ
         )
         """)
 
-        # --- Quantum Compliance Axiom: framework coverage reports ---
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_compliance START 1")
         c.execute("""
         CREATE TABLE IF NOT EXISTS compliance_reports (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_compliance'),
-            framework VARCHAR,
-            scope_id INTEGER,
-            content VARCHAR,
+            id         INTEGER PRIMARY KEY DEFAULT nextval('seq_compliance'),
+            framework  VARCHAR,
+            scope_id   INTEGER,
+            content    VARCHAR,
             created_at TIMESTAMPTZ DEFAULT now()
         )
         """)
 
-        # --- Advanced EDR/MDR: playbook library + execution tracking ---
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_playbooks START 1")
         c.execute("""
         CREATE TABLE IF NOT EXISTS playbooks (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_playbooks'),
-            key VARCHAR UNIQUE,
-            name VARCHAR,
-            category VARCHAR,
-            steps VARCHAR,
+            id         INTEGER PRIMARY KEY DEFAULT nextval('seq_playbooks'),
+            key        VARCHAR UNIQUE,
+            name       VARCHAR,
+            category   VARCHAR,
+            steps      VARCHAR,
             created_at TIMESTAMPTZ DEFAULT now()
         )
         """)
 
-        c.execute("CREATE SEQUENCE IF NOT EXISTS seq_playbook_exec START 1")
         c.execute("""
         CREATE TABLE IF NOT EXISTS playbook_executions (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_playbook_exec'),
-            playbook_id INTEGER,
-            context VARCHAR,
-            operator_id VARCHAR,
-            status VARCHAR DEFAULT 'in_progress',
-            step_log VARCHAR DEFAULT '[]',
-            started_at TIMESTAMPTZ DEFAULT now(),
+            id           INTEGER PRIMARY KEY DEFAULT nextval('seq_playbook_exec'),
+            playbook_id  INTEGER,
+            context      VARCHAR,
+            operator_id  VARCHAR,
+            status       VARCHAR DEFAULT 'in_progress',
+            step_log     VARCHAR DEFAULT '[]',
+            started_at   TIMESTAMPTZ DEFAULT now(),
             completed_at TIMESTAMPTZ
         )
         """)
 
-        self.conn.commit()
-        logger.info("Schema initialized at %s", self.db_path)
+        # ── v2.1 Tables ───────────────────────────────────────────────────
 
-    # ------------------------------------------------------------------
+        # PQC-signed immutable audit log
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS pqc_audit_log (
+            id            INTEGER PRIMARY KEY DEFAULT nextval('seq_pqc_audit'),
+            entry_id      VARCHAR UNIQUE NOT NULL,   -- UUID per entry
+            timestamp     TIMESTAMPTZ DEFAULT now(),
+            agent_id      VARCHAR NOT NULL,
+            operator_id   VARCHAR NOT NULL,
+            action_type   VARCHAR NOT NULL,          -- e.g. authorization, pentest, crypto_op
+            action_detail VARCHAR NOT NULL,          -- JSON blob of action payload
+            payload_hash  VARCHAR NOT NULL,          -- SHA3-256 hex of action_detail
+            pqc_signature VARCHAR NOT NULL,          -- ML-DSA-65 signature hex
+            algorithm     VARCHAR NOT NULL,          -- 'ML-DSA-65' | 'Ed25519'
+            public_key    VARCHAR NOT NULL,          -- signer public key hex
+            chain_index   INTEGER DEFAULT 0,        -- position in audit chain
+            prev_hash     VARCHAR                    -- SHA3-256 of previous entry signature (chain link)
+        )
+        """)
+
+        # Encryption key metadata (never store raw private keys)
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS encryption_keys (
+            id            INTEGER PRIMARY KEY DEFAULT nextval('seq_enc_keys'),
+            key_id        VARCHAR UNIQUE NOT NULL,   -- UUID
+            created_at    TIMESTAMPTZ DEFAULT now(),
+            algorithm     VARCHAR NOT NULL,          -- AES-256-GCM | ChaCha20-Poly1305 | RSA-4096-OAEP
+            key_purpose   VARCHAR NOT NULL,          -- session | report | backup | kek
+            operator_id   VARCHAR NOT NULL,
+            status        VARCHAR DEFAULT 'active',  -- active | rotated | revoked
+            rotated_at    TIMESTAMPTZ,
+            revoked_at    TIMESTAMPTZ,
+            public_key_pem VARCHAR,                  -- RSA public key PEM (asymmetric only)
+            key_wrapping_algo VARCHAR,               -- algorithm used to wrap the session key
+            wrapped_key   VARCHAR,                   -- symmetric key wrapped with RSA-OAEP (hex)
+            salt_hex      VARCHAR,                   -- KDF salt if PBKDF2-derived
+            metadata      VARCHAR DEFAULT '{}'       -- JSON extra metadata
+        )
+        """)
+
+        # Payload execution tracking
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS payload_executions (
+            id            INTEGER PRIMARY KEY DEFAULT nextval('seq_payload_exec'),
+            execution_id  VARCHAR UNIQUE NOT NULL,
+            pentest_id    INTEGER,
+            target        VARCHAR NOT NULL,
+            phase         VARCHAR NOT NULL,          -- recon_passive | recon_active | enumeration | …
+            command       VARCHAR NOT NULL,          -- actual command run
+            technique_id  VARCHAR,                  -- MITRE T-number e.g. T1595
+            tool          VARCHAR,                  -- nmap | nuclei | etc.
+            risk_level    VARCHAR,                  -- LOW | MEDIUM | HIGH
+            operator_id   VARCHAR NOT NULL,
+            authorized    BOOLEAN DEFAULT false,     -- passed authorization gate?
+            stdout        VARCHAR,
+            stderr        VARCHAR,
+            exit_code     INTEGER,
+            started_at    TIMESTAMPTZ DEFAULT now(),
+            completed_at  TIMESTAMPTZ,
+            pqc_signed    BOOLEAN DEFAULT false,     -- was result PQC-signed?
+            pqc_entry_id  VARCHAR                   -- FK to pqc_audit_log.entry_id
+        )
+        """)
+
+        # Network mapping / asset inventory
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS network_map (
+            id            INTEGER PRIMARY KEY DEFAULT nextval('seq_network_map'),
+            discovered_at TIMESTAMPTZ DEFAULT now(),
+            pentest_id    INTEGER,
+            ip_address    VARCHAR NOT NULL,
+            hostname      VARCHAR,
+            mac_address   VARCHAR,
+            os_fingerprint VARCHAR,
+            open_ports    VARCHAR DEFAULT '[]',      -- JSON array of {port, proto, service, version}
+            tags          VARCHAR DEFAULT '[]',      -- JSON array of tags e.g. ["web","db"]
+            risk_score    DECIMAL DEFAULT 0.0,
+            last_seen     TIMESTAMPTZ DEFAULT now(),
+            notes         VARCHAR
+        )
+        """)
+
+        # Vulnerability database entries (local CVE / custom findings library)
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS vuln_db (
+            id              INTEGER PRIMARY KEY DEFAULT nextval('seq_vuln_db'),
+            vuln_id         VARCHAR UNIQUE NOT NULL, -- CVE-YYYY-NNNNN or JAKAL-custom-id
+            title           VARCHAR NOT NULL,
+            description     VARCHAR NOT NULL,
+            severity        VARCHAR NOT NULL,        -- CRITICAL | HIGH | MEDIUM | LOW | INFO
+            cvss_score      DECIMAL,
+            cvss_vector     VARCHAR,
+            cwe_id          VARCHAR,                -- CWE-XXX
+            mitre_technique VARCHAR,                -- T-number
+            affected_products VARCHAR DEFAULT '[]', -- JSON array
+            patch_available BOOLEAN DEFAULT false,
+            patch_reference VARCHAR,
+            exploit_available BOOLEAN DEFAULT false,
+            exploit_reference VARCHAR,
+            created_at      TIMESTAMPTZ DEFAULT now(),
+            updated_at      TIMESTAMPTZ DEFAULT now(),
+            source          VARCHAR DEFAULT 'manual' -- manual | nvd | cisa_kev | custom
+        )
+        """)
+
+        # Threat intelligence — IOCs, TTPs, threat actors
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS threat_intel (
+            id           INTEGER PRIMARY KEY DEFAULT nextval('seq_threat_intel'),
+            ingested_at  TIMESTAMPTZ DEFAULT now(),
+            feed_source  VARCHAR NOT NULL,           -- e.g. MISP | STIX | manual | CISA_KEV
+            intel_type   VARCHAR NOT NULL,           -- IOC | TTP | actor | campaign | malware
+            indicator    VARCHAR NOT NULL,           -- IP, domain, hash, technique ID, actor name
+            indicator_type VARCHAR,                  -- ip | domain | hash_sha256 | url | email | technique
+            confidence   INTEGER DEFAULT 50,         -- 0-100
+            severity     VARCHAR DEFAULT 'MEDIUM',
+            tlp          VARCHAR DEFAULT 'WHITE',    -- TLP:WHITE | GREEN | AMBER | RED
+            tags         VARCHAR DEFAULT '[]',       -- JSON array
+            first_seen   TIMESTAMPTZ,
+            last_seen    TIMESTAMPTZ,
+            expiry       TIMESTAMPTZ,
+            context      VARCHAR DEFAULT '{}',       -- JSON — actor, campaign, malware family, etc.
+            active       BOOLEAN DEFAULT true
+        )
+        """)
+
+        # ── v2.2 Tables — Unified Security Fabric ─────────────────────────
+
+        # One row per Fabric capability (MDR, Zero Trust, SASE, PAM, DNS, Email, DLP)
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS fabric_modules (
+            id          INTEGER PRIMARY KEY DEFAULT nextval('seq_fabric_mod'),
+            module_key  VARCHAR UNIQUE NOT NULL,    -- mdr | zero_trust | sase | pam | dns_filter | email_security | dlp
+            label       VARCHAR NOT NULL,
+            pillar      VARCHAR NOT NULL,           -- NSA/CISA Zero Trust pillar
+            icon        VARCHAR,
+            description  VARCHAR,
+            maturity    VARCHAR DEFAULT 'Initial',  -- Traditional | Initial | Advanced | Optimal
+            status      VARCHAR DEFAULT 'active',   -- active | degraded | disabled
+            controls    VARCHAR DEFAULT '[]',       -- JSON array of control strings
+            metrics     VARCHAR DEFAULT '{}',       -- JSON metrics blob
+            updated_at  TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # Fabric event stream (unified across all capabilities)
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS fabric_events (
+            id          INTEGER PRIMARY KEY DEFAULT nextval('seq_fabric_evt'),
+            event_id    VARCHAR UNIQUE NOT NULL,
+            timestamp   TIMESTAMPTZ DEFAULT now(),
+            module_key  VARCHAR NOT NULL,
+            event_type  VARCHAR NOT NULL,           -- maturity_change | status_change | detection | policy | alert
+            detail      VARCHAR,
+            severity    VARCHAR DEFAULT 'info',     -- info | low | medium | high | critical
+            operator_id VARCHAR
+        )
+        """)
+
+        # Zero Trust posture snapshots (trend analysis)
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS zt_posture_assessments (
+            id            INTEGER PRIMARY KEY DEFAULT nextval('seq_posture'),
+            assessment_id VARCHAR UNIQUE NOT NULL,
+            assessed_at   TIMESTAMPTZ DEFAULT now(),
+            overall_score DECIMAL,
+            overall_level VARCHAR,                  -- Traditional | Initial | Advanced | Optimal
+            by_pillar     VARCHAR DEFAULT '{}',     -- JSON per-pillar breakdown
+            operator_id   VARCHAR
+        )
+        """)
+
+        self.conn.commit()
+        logger.info("Schema v2.2 initialized at %s", self.db_path)
+
+    # ======================================================================
     # Generic helpers
-    # ------------------------------------------------------------------
+    # ======================================================================
 
     def insert_log(self, log_data: Dict[str, Any]):
         self.conn.execute(
@@ -225,10 +407,6 @@ class DuckDBManager:
         end_date: datetime,
         roe_document_path: Optional[str] = None,
     ) -> int:
-        """
-        scope_definition: comma-separated CIDRs and/or domain suffixes,
-        e.g. "203.0.113.0/24, client-staging.example.com"
-        """
         self.conn.execute(
             """
             INSERT INTO scopes (client_name, scope_definition, start_date, end_date, roe_document_path)
@@ -254,19 +432,21 @@ class DuckDBManager:
         row = self.conn.execute("SELECT currval('seq_insurance')").fetchone()
         return row[0] if row else -1
 
-    # ------------------------------------------------------------------
-    # VM Orchestrator
-    # ------------------------------------------------------------------
+    # ======================================================================
+    # VM Orchestrator / Sandboxes
+    # ======================================================================
 
     def insert_sandbox(self, record: Dict[str, Any]) -> int:
         self.conn.execute(
             """
-            INSERT INTO sandboxes (sandbox_id, container_id, container_name, name, image, status, operator_id)
+            INSERT INTO sandboxes
+                (sandbox_id, container_id, container_name, name, image, status, operator_id)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                record.get("sandbox_id"), record.get("container_id"), record.get("container_name"),
-                record.get("name"), record.get("image"), record.get("status", "running"),
+                record.get("sandbox_id"), record.get("container_id"),
+                record.get("container_name"), record.get("name"),
+                record.get("image"), record.get("status", "running"),
                 record.get("operator_id"),
             ),
         )
@@ -286,11 +466,13 @@ class DuckDBManager:
             )
         self.conn.commit()
 
-    # ------------------------------------------------------------------
-    # Quantum Compliance Axiom
-    # ------------------------------------------------------------------
+    # ======================================================================
+    # Compliance Reports
+    # ======================================================================
 
-    def insert_compliance_report(self, framework: str, scope_id: Optional[int], content: Dict[str, Any]) -> int:
+    def insert_compliance_report(
+        self, framework: str, scope_id: Optional[int], content: Dict[str, Any]
+    ) -> int:
         self.conn.execute(
             "INSERT INTO compliance_reports (framework, scope_id, content) VALUES (?, ?, ?)",
             (framework, scope_id, json.dumps(content, default=str)),
@@ -299,9 +481,9 @@ class DuckDBManager:
         row = self.conn.execute("SELECT currval('seq_compliance')").fetchone()
         return row[0] if row else -1
 
-    # ------------------------------------------------------------------
-    # Advanced EDR/MDR: playbooks
-    # ------------------------------------------------------------------
+    # ======================================================================
+    # Playbooks (EDR/MDR)
+    # ======================================================================
 
     def insert_playbook(self, key: str, name: str, category: str, steps: list) -> int:
         self.conn.execute(
@@ -318,11 +500,19 @@ class DuckDBManager:
         ).fetchone()
         if not row:
             return None
-        return {"id": row[0], "key": row[1], "name": row[2], "category": row[3], "steps": json.loads(row[4])}
+        return {
+            "id": row[0], "key": row[1], "name": row[2],
+            "category": row[3], "steps": json.loads(row[4]),
+        }
 
     def list_playbooks(self) -> list:
-        rows = self.conn.execute("SELECT id, key, name, category, steps FROM playbooks ORDER BY id").fetchall()
-        return [{"id": r[0], "key": r[1], "name": r[2], "category": r[3], "steps": json.loads(r[4])} for r in rows]
+        rows = self.conn.execute(
+            "SELECT id, key, name, category, steps FROM playbooks ORDER BY id"
+        ).fetchall()
+        return [
+            {"id": r[0], "key": r[1], "name": r[2], "category": r[3], "steps": json.loads(r[4])}
+            for r in rows
+        ]
 
     def insert_playbook_execution(self, playbook_id: int, context: str, operator_id: str) -> int:
         self.conn.execute(
@@ -333,16 +523,23 @@ class DuckDBManager:
         row = self.conn.execute("SELECT currval('seq_playbook_exec')").fetchone()
         return row[0] if row else -1
 
-    def update_playbook_execution_step(self, execution_id: int, step_index: int, notes: str) -> Dict[str, Any]:
+    def update_playbook_execution_step(
+        self, execution_id: int, step_index: int, notes: str
+    ) -> Dict[str, Any]:
         row = self.conn.execute(
             "SELECT step_log FROM playbook_executions WHERE id = ?", (execution_id,)
         ).fetchone()
         if not row:
             return {"status": "error", "error": "execution not found"}
         log = json.loads(row[0])
-        log.append({"step_index": step_index, "notes": notes, "completed_at": datetime.now(timezone.utc).isoformat()})
+        log.append({
+            "step_index": step_index,
+            "notes": notes,
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+        })
         self.conn.execute(
-            "UPDATE playbook_executions SET step_log = ? WHERE id = ?", (json.dumps(log), execution_id)
+            "UPDATE playbook_executions SET step_log = ? WHERE id = ?",
+            (json.dumps(log), execution_id),
         )
         self.conn.commit()
         return {"status": "ok", "execution_id": execution_id, "step_log": log}
@@ -354,6 +551,630 @@ class DuckDBManager:
         )
         self.conn.commit()
         return {"status": "completed", "execution_id": execution_id}
+
+    # ======================================================================
+    # v2.1 — PQC Audit Log
+    # ======================================================================
+
+    def insert_pqc_audit_entry(self, entry: Dict[str, Any]) -> int:
+        """
+        Insert a PQC-signed audit entry.
+
+        Required keys:
+          entry_id, agent_id, operator_id, action_type, action_detail (str JSON),
+          payload_hash, pqc_signature, algorithm, public_key
+        Optional:
+          chain_index (int), prev_hash (str)
+        """
+        self.conn.execute(
+            """
+            INSERT INTO pqc_audit_log
+                (entry_id, agent_id, operator_id, action_type, action_detail,
+                 payload_hash, pqc_signature, algorithm, public_key,
+                 chain_index, prev_hash)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                entry["entry_id"],
+                entry["agent_id"],
+                entry["operator_id"],
+                entry["action_type"],
+                entry["action_detail"] if isinstance(entry["action_detail"], str)
+                    else json.dumps(entry["action_detail"], default=str),
+                entry["payload_hash"],
+                entry["pqc_signature"],
+                entry["algorithm"],
+                entry["public_key"],
+                entry.get("chain_index", 0),
+                entry.get("prev_hash"),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_pqc_audit')").fetchone()
+        return row[0] if row else -1
+
+    def get_pqc_audit_entry(self, entry_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM pqc_audit_log WHERE entry_id = ?", (entry_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    def list_pqc_audit_entries(
+        self,
+        operator_id: Optional[str] = None,
+        action_type: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        where, params = [], []
+        if operator_id:
+            where.append("operator_id = ?")
+            params.append(operator_id)
+        if action_type:
+            where.append("action_type = ?")
+            params.append(action_type)
+        clause = ("WHERE " + " AND ".join(where)) if where else ""
+        params.append(limit)
+        rows = self.conn.execute(
+            f"SELECT * FROM pqc_audit_log {clause} ORDER BY id DESC LIMIT ?", params
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def count_pqc_entries(self) -> int:
+        row = self.conn.execute("SELECT COUNT(*) FROM pqc_audit_log").fetchone()
+        return row[0] if row else 0
+
+    # ======================================================================
+    # v2.1 — Encryption Key Registry
+    # ======================================================================
+
+    def register_encryption_key(self, record: Dict[str, Any]) -> int:
+        """
+        Store key metadata — NEVER the raw private/symmetric key bytes.
+
+        Required: key_id, algorithm, key_purpose, operator_id
+        Optional: public_key_pem, key_wrapping_algo, wrapped_key, salt_hex, metadata
+        """
+        self.conn.execute(
+            """
+            INSERT INTO encryption_keys
+                (key_id, algorithm, key_purpose, operator_id,
+                 public_key_pem, key_wrapping_algo, wrapped_key, salt_hex, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record["key_id"],
+                record["algorithm"],
+                record["key_purpose"],
+                record["operator_id"],
+                record.get("public_key_pem"),
+                record.get("key_wrapping_algo"),
+                record.get("wrapped_key"),
+                record.get("salt_hex"),
+                json.dumps(record.get("metadata", {})),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_enc_keys')").fetchone()
+        return row[0] if row else -1
+
+    def rotate_encryption_key(self, key_id: str) -> bool:
+        result = self.conn.execute(
+            "UPDATE encryption_keys SET status = 'rotated', rotated_at = now() WHERE key_id = ?",
+            (key_id,),
+        )
+        self.conn.commit()
+        return (result.rowcount or 0) > 0
+
+    def revoke_encryption_key(self, key_id: str) -> bool:
+        result = self.conn.execute(
+            "UPDATE encryption_keys SET status = 'revoked', revoked_at = now() WHERE key_id = ?",
+            (key_id,),
+        )
+        self.conn.commit()
+        return (result.rowcount or 0) > 0
+
+    def list_encryption_keys(
+        self, operator_id: Optional[str] = None, status: str = "active"
+    ) -> List[Dict[str, Any]]:
+        where, params = ["status = ?"], [status]
+        if operator_id:
+            where.append("operator_id = ?")
+            params.append(operator_id)
+        rows = self.conn.execute(
+            f"SELECT key_id, algorithm, key_purpose, operator_id, status, "
+            f"created_at, rotated_at, revoked_at, metadata "
+            f"FROM encryption_keys WHERE {' AND '.join(where)} ORDER BY id DESC",
+            params,
+        ).fetchall()
+        cols = ["key_id", "algorithm", "key_purpose", "operator_id", "status",
+                "created_at", "rotated_at", "revoked_at", "metadata"]
+        return [dict(zip(cols, r)) for r in rows]
+
+    # ======================================================================
+    # v2.1 — Payload Execution Tracking
+    # ======================================================================
+
+    def log_payload_execution(self, record: Dict[str, Any]) -> int:
+        """
+        Log a payload/command execution for audit and reporting.
+
+        Required: execution_id, target, phase, command, operator_id
+        Optional: pentest_id, technique_id, tool, risk_level, authorized,
+                  stdout, stderr, exit_code, pqc_signed, pqc_entry_id
+        """
+        self.conn.execute(
+            """
+            INSERT INTO payload_executions
+                (execution_id, pentest_id, target, phase, command,
+                 technique_id, tool, risk_level, operator_id, authorized,
+                 stdout, stderr, exit_code, pqc_signed, pqc_entry_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record["execution_id"],
+                record.get("pentest_id"),
+                record["target"],
+                record["phase"],
+                record["command"],
+                record.get("technique_id"),
+                record.get("tool"),
+                record.get("risk_level", "MEDIUM"),
+                record["operator_id"],
+                record.get("authorized", False),
+                record.get("stdout"),
+                record.get("stderr"),
+                record.get("exit_code"),
+                record.get("pqc_signed", False),
+                record.get("pqc_entry_id"),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_payload_exec')").fetchone()
+        return row[0] if row else -1
+
+    def complete_payload_execution(
+        self,
+        execution_id: str,
+        stdout: str = "",
+        stderr: str = "",
+        exit_code: int = 0,
+        pqc_entry_id: Optional[str] = None,
+    ):
+        self.conn.execute(
+            """
+            UPDATE payload_executions
+            SET stdout = ?, stderr = ?, exit_code = ?, completed_at = now(),
+                pqc_signed = ?, pqc_entry_id = ?
+            WHERE execution_id = ?
+            """,
+            (stdout, stderr, exit_code,
+             pqc_entry_id is not None, pqc_entry_id, execution_id),
+        )
+        self.conn.commit()
+
+    def list_payload_executions(
+        self,
+        pentest_id: Optional[int] = None,
+        phase: Optional[str] = None,
+        limit: int = 200,
+    ) -> List[Dict[str, Any]]:
+        where, params = [], []
+        if pentest_id:
+            where.append("pentest_id = ?")
+            params.append(pentest_id)
+        if phase:
+            where.append("phase = ?")
+            params.append(phase)
+        clause = ("WHERE " + " AND ".join(where)) if where else ""
+        params.append(limit)
+        rows = self.conn.execute(
+            f"SELECT * FROM payload_executions {clause} ORDER BY id DESC LIMIT ?", params
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    # ======================================================================
+    # v2.1 — Network Map / Asset Inventory
+    # ======================================================================
+
+    def upsert_network_host(self, record: Dict[str, Any]) -> int:
+        """
+        Insert or update a discovered host in the network map.
+        Uses ip_address as the natural key per pentest.
+        """
+        existing = self.conn.execute(
+            "SELECT id FROM network_map WHERE ip_address = ? AND pentest_id IS NOT DISTINCT FROM ?",
+            (record["ip_address"], record.get("pentest_id")),
+        ).fetchone()
+
+        if existing:
+            self.conn.execute(
+                """
+                UPDATE network_map
+                SET hostname = COALESCE(?, hostname),
+                    mac_address = COALESCE(?, mac_address),
+                    os_fingerprint = COALESCE(?, os_fingerprint),
+                    open_ports = ?,
+                    tags = ?,
+                    risk_score = ?,
+                    last_seen = now(),
+                    notes = COALESCE(?, notes)
+                WHERE id = ?
+                """,
+                (
+                    record.get("hostname"),
+                    record.get("mac_address"),
+                    record.get("os_fingerprint"),
+                    json.dumps(record.get("open_ports", [])),
+                    json.dumps(record.get("tags", [])),
+                    record.get("risk_score", 0.0),
+                    record.get("notes"),
+                    existing[0],
+                ),
+            )
+            self.conn.commit()
+            return existing[0]
+
+        self.conn.execute(
+            """
+            INSERT INTO network_map
+                (pentest_id, ip_address, hostname, mac_address, os_fingerprint,
+                 open_ports, tags, risk_score, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record.get("pentest_id"),
+                record["ip_address"],
+                record.get("hostname"),
+                record.get("mac_address"),
+                record.get("os_fingerprint"),
+                json.dumps(record.get("open_ports", [])),
+                json.dumps(record.get("tags", [])),
+                record.get("risk_score", 0.0),
+                record.get("notes"),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_network_map')").fetchone()
+        return row[0] if row else -1
+
+    def get_network_map(self, pentest_id: Optional[int] = None) -> List[Dict[str, Any]]:
+        if pentest_id:
+            rows = self.conn.execute(
+                "SELECT * FROM network_map WHERE pentest_id = ? ORDER BY id", (pentest_id,)
+            ).fetchall()
+        else:
+            rows = self.conn.execute("SELECT * FROM network_map ORDER BY id").fetchall()
+        cols = [d[0] for d in self.conn.description]
+        result = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            d["open_ports"] = json.loads(d.get("open_ports") or "[]")
+            d["tags"] = json.loads(d.get("tags") or "[]")
+            result.append(d)
+        return result
+
+    # ======================================================================
+    # v2.1 — Vulnerability Database
+    # ======================================================================
+
+    def upsert_vuln(self, record: Dict[str, Any]) -> int:
+        """Insert or update a vulnerability entry. vuln_id is the natural key."""
+        existing = self.conn.execute(
+            "SELECT id FROM vuln_db WHERE vuln_id = ?", (record["vuln_id"],)
+        ).fetchone()
+
+        if existing:
+            self.conn.execute(
+                """
+                UPDATE vuln_db
+                SET title = ?, description = ?, severity = ?, cvss_score = ?,
+                    cvss_vector = ?, cwe_id = ?, mitre_technique = ?,
+                    affected_products = ?, patch_available = ?, patch_reference = ?,
+                    exploit_available = ?, exploit_reference = ?, updated_at = now(), source = ?
+                WHERE vuln_id = ?
+                """,
+                (
+                    record["title"], record["description"], record["severity"],
+                    record.get("cvss_score"), record.get("cvss_vector"),
+                    record.get("cwe_id"), record.get("mitre_technique"),
+                    json.dumps(record.get("affected_products", [])),
+                    record.get("patch_available", False), record.get("patch_reference"),
+                    record.get("exploit_available", False), record.get("exploit_reference"),
+                    record.get("source", "manual"),
+                    record["vuln_id"],
+                ),
+            )
+            self.conn.commit()
+            return existing[0]
+
+        self.conn.execute(
+            """
+            INSERT INTO vuln_db
+                (vuln_id, title, description, severity, cvss_score, cvss_vector,
+                 cwe_id, mitre_technique, affected_products, patch_available,
+                 patch_reference, exploit_available, exploit_reference, source)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record["vuln_id"], record["title"], record["description"],
+                record["severity"], record.get("cvss_score"), record.get("cvss_vector"),
+                record.get("cwe_id"), record.get("mitre_technique"),
+                json.dumps(record.get("affected_products", [])),
+                record.get("patch_available", False), record.get("patch_reference"),
+                record.get("exploit_available", False), record.get("exploit_reference"),
+                record.get("source", "manual"),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_vuln_db')").fetchone()
+        return row[0] if row else -1
+
+    def search_vulns(
+        self,
+        severity: Optional[str] = None,
+        mitre_technique: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        where, params = [], []
+        if severity:
+            where.append("severity = ?")
+            params.append(severity.upper())
+        if mitre_technique:
+            where.append("mitre_technique = ?")
+            params.append(mitre_technique)
+        clause = ("WHERE " + " AND ".join(where)) if where else ""
+        params.append(limit)
+        rows = self.conn.execute(
+            f"SELECT * FROM vuln_db {clause} ORDER BY cvss_score DESC NULLS LAST LIMIT ?",
+            params,
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        result = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            d["affected_products"] = json.loads(d.get("affected_products") or "[]")
+            result.append(d)
+        return result
+
+    # ======================================================================
+    # v2.1 — Threat Intelligence
+    # ======================================================================
+
+    def ingest_threat_intel(self, record: Dict[str, Any]) -> int:
+        """
+        Ingest a threat intelligence indicator/entry.
+
+        Required: feed_source, intel_type, indicator
+        Optional: indicator_type, confidence, severity, tlp, tags,
+                  first_seen, last_seen, expiry, context
+        """
+        self.conn.execute(
+            """
+            INSERT INTO threat_intel
+                (feed_source, intel_type, indicator, indicator_type,
+                 confidence, severity, tlp, tags, first_seen, last_seen,
+                 expiry, context, active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record["feed_source"],
+                record["intel_type"],
+                record["indicator"],
+                record.get("indicator_type"),
+                record.get("confidence", 50),
+                record.get("severity", "MEDIUM"),
+                record.get("tlp", "WHITE"),
+                json.dumps(record.get("tags", [])),
+                record.get("first_seen"),
+                record.get("last_seen"),
+                record.get("expiry"),
+                json.dumps(record.get("context", {})),
+                record.get("active", True),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_threat_intel')").fetchone()
+        return row[0] if row else -1
+
+    def search_threat_intel(
+        self,
+        indicator: Optional[str] = None,
+        intel_type: Optional[str] = None,
+        active_only: bool = True,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        where, params = [], []
+        if active_only:
+            where.append("active = true")
+        if indicator:
+            where.append("indicator ILIKE ?")
+            params.append(f"%{indicator}%")
+        if intel_type:
+            where.append("intel_type = ?")
+            params.append(intel_type)
+        clause = ("WHERE " + " AND ".join(where)) if where else ""
+        params.append(limit)
+        rows = self.conn.execute(
+            f"SELECT * FROM threat_intel {clause} ORDER BY confidence DESC LIMIT ?", params
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        result = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            d["tags"] = json.loads(d.get("tags") or "[]")
+            d["context"] = json.loads(d.get("context") or "{}")
+            result.append(d)
+        return result
+
+    def expire_threat_intel(self) -> int:
+        """Mark expired indicators as inactive. Call periodically."""
+        result = self.conn.execute(
+            "UPDATE threat_intel SET active = false WHERE expiry < now() AND active = true"
+        )
+        self.conn.commit()
+        return result.rowcount or 0
+
+    def threat_intel_stats(self) -> Dict[str, Any]:
+        total = self.conn.execute("SELECT COUNT(*) FROM threat_intel").fetchone()[0]
+        active = self.conn.execute("SELECT COUNT(*) FROM threat_intel WHERE active = true").fetchone()[0]
+        by_type = self.conn.execute(
+            "SELECT intel_type, COUNT(*) FROM threat_intel GROUP BY intel_type ORDER BY 2 DESC"
+        ).fetchall()
+        by_severity = self.conn.execute(
+            "SELECT severity, COUNT(*) FROM threat_intel WHERE active = true "
+            "GROUP BY severity ORDER BY 2 DESC"
+        ).fetchall()
+        return {
+            "total": total,
+            "active": active,
+            "by_type": {r[0]: r[1] for r in by_type},
+            "by_severity": {r[0]: r[1] for r in by_severity},
+        }
+
+    # ======================================================================
+    # v2.2 — Unified Security Fabric
+    # ======================================================================
+
+    def upsert_fabric_module(self, record: Dict[str, Any]) -> int:
+        """Insert or update a Fabric capability row. module_key is the natural key."""
+        existing = self.conn.execute(
+            "SELECT id FROM fabric_modules WHERE module_key = ?", (record["module_key"],)
+        ).fetchone()
+        controls = json.dumps(record.get("controls", []))
+        metrics = json.dumps(record.get("metrics", {}))
+        if existing:
+            self.conn.execute(
+                """
+                UPDATE fabric_modules
+                SET label = ?, pillar = ?, icon = ?, description = ?, maturity = ?,
+                    status = ?, controls = ?, metrics = ?, updated_at = now()
+                WHERE module_key = ?
+                """,
+                (record["label"], record["pillar"], record.get("icon"),
+                 record.get("description"), record.get("maturity", "Initial"),
+                 record.get("status", "active"), controls, metrics, record["module_key"]),
+            )
+            self.conn.commit()
+            return existing[0]
+        self.conn.execute(
+            """
+            INSERT INTO fabric_modules
+                (module_key, label, pillar, icon, description, maturity, status, controls, metrics)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (record["module_key"], record["label"], record["pillar"], record.get("icon"),
+             record.get("description"), record.get("maturity", "Initial"),
+             record.get("status", "active"), controls, metrics),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_fabric_mod')").fetchone()
+        return row[0] if row else -1
+
+    def get_fabric_module(self, module_key: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT module_key, label, pillar, icon, description, maturity, status, "
+            "controls, metrics, updated_at FROM fabric_modules WHERE module_key = ?",
+            (module_key,),
+        ).fetchone()
+        if not row:
+            return None
+        return {
+            "module_key": row[0], "label": row[1], "pillar": row[2], "icon": row[3],
+            "description": row[4], "maturity": row[5], "status": row[6],
+            "controls": json.loads(row[7] or "[]"), "metrics": json.loads(row[8] or "{}"),
+            "updated_at": row[9],
+        }
+
+    def list_fabric_modules(self) -> List[Dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT module_key FROM fabric_modules ORDER BY id"
+        ).fetchall()
+        return [self.get_fabric_module(r[0]) for r in rows]
+
+    def insert_fabric_event(self, evt: Dict[str, Any]) -> int:
+        self.conn.execute(
+            """
+            INSERT INTO fabric_events (event_id, module_key, event_type, detail, severity, operator_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (evt["event_id"], evt["module_key"], evt["event_type"], evt.get("detail"),
+             evt.get("severity", "info"), evt.get("operator_id")),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_fabric_evt')").fetchone()
+        return row[0] if row else -1
+
+    def list_fabric_events(self, module_key: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        if module_key:
+            rows = self.conn.execute(
+                "SELECT event_id, timestamp, module_key, event_type, detail, severity, operator_id "
+                "FROM fabric_events WHERE module_key = ? ORDER BY id DESC LIMIT ?",
+                (module_key, limit),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT event_id, timestamp, module_key, event_type, detail, severity, operator_id "
+                "FROM fabric_events ORDER BY id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        cols = ["event_id", "timestamp", "module_key", "event_type", "detail", "severity", "operator_id"]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def insert_posture_assessment(self, record: Dict[str, Any]) -> int:
+        self.conn.execute(
+            """
+            INSERT INTO zt_posture_assessments
+                (assessment_id, overall_score, overall_level, by_pillar, operator_id)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (record["assessment_id"], record["overall_score"], record["overall_level"],
+             json.dumps(record.get("by_pillar", {})), record.get("operator_id")),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_posture')").fetchone()
+        return row[0] if row else -1
+
+    def list_posture_assessments(self, limit: int = 30) -> List[Dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT assessment_id, assessed_at, overall_score, overall_level, by_pillar, operator_id "
+            "FROM zt_posture_assessments ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        out = []
+        for r in rows:
+            out.append({
+                "assessment_id": r[0], "assessed_at": r[1], "overall_score": r[2],
+                "overall_level": r[3], "by_pillar": json.loads(r[4] or "{}"), "operator_id": r[5],
+            })
+        return out
+
+    # ======================================================================
+    # Utility
+    # ======================================================================
+
+    def table_stats(self) -> Dict[str, int]:
+        """Return row counts for all tables — useful for health checks."""
+        tables = [
+            "agent_logs", "quantum_jobs", "pentest_runs", "findings",
+            "scopes", "insurance_policies", "assessment_reports",
+            "sandboxes", "compliance_reports", "playbooks", "playbook_executions",
+            "pqc_audit_log", "encryption_keys", "payload_executions",
+            "network_map", "vuln_db", "threat_intel",
+            "fabric_modules", "fabric_events", "zt_posture_assessments",
+        ]
+        stats = {}
+        for t in tables:
+            try:
+                row = self.conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()
+                stats[t] = row[0] if row else 0
+            except Exception:
+                stats[t] = -1
+        return stats
 
     def close(self):
         self.conn.close()

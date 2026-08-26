@@ -97,3 +97,11 @@ env/
 
 jakal-data/
 jakal-logs/
+
+# ----- Secrets & agent state (never commit — added v2.2) -----
+# OpenHands / AI agent local runtime state can contain live credentials.
+ai_agent_layer/openhands-state/
+**/secrets.json
+*.pem
+*.key
+!*.pub

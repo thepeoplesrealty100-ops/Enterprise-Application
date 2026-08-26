@@ -1,12 +1,35 @@
+# ── Web framework ────────────────────────────────────────────────────────────
 fastapi==0.110.0
 uvicorn==0.28.0
+python-dotenv==1.0.1
+requests==2.31.0
+
+# ── Data layer ───────────────────────────────────────────────────────────────
 duckdb==0.10.0
 pytz==2024.1
 pydantic==2.6.4
-requests==2.31.0
-python-dotenv==1.0.1
+
+# ── Post-Quantum Cryptography (PQC) ─────────────────────────────────────────
+# dilithium-py: pure-Python ML-DSA-65 / Dilithium3 (NIST FIPS 204 equivalent)
+# Works on any platform without OpenSSL 3.3+ requirement
+dilithium-py>=3.0.0
+
+# ── Symmetric + asymmetric encryption ────────────────────────────────────────
+# AES-256-GCM, ChaCha20-Poly1305, RSA-4096-OAEP, PBKDF2, HKDF
+cryptography>=44.0.0
+
+# ── Quantum computing ────────────────────────────────────────────────────────
 qiskit==1.0.2
 qiskit-aer==0.14.2
 qiskit-ibm-runtime==0.20.0
+
+# ── AI / LLM (Anthropic Claude) ──────────────────────────────────────────────
 anthropic==0.25.0
+
+# ── Container / VM orchestration ─────────────────────────────────────────────
 docker==7.0.0
+
+# ── Testing ──────────────────────────────────────────────────────────────────
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+httpx>=0.27.0          # async test client for FastAPI

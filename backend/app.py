@@ -34,11 +34,29 @@ from security_agents.report_agent import ReportAgent
 from security_agents.vm_orchestrator import VMOrchestrator
 from security_agents.compliance_axiom import ComplianceAxiom
 from security_agents.edr_mdr import EdrMdrEngine
+from middleware import TimingAndSecurityMiddleware
+from routers import (
+    pentest_router, quantum_router, reports_router,
+    crypto_router, payloads_router,
+    aip_router, fabric_router,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="JAKAL Backend", version="1.2")
+app = FastAPI(
+    title="JAKAL Backend",
+    version="2.2",
+    description=(
+        "JAKAL Enterprise Cybersecurity Platform — "
+        "Post-Quantum Cryptography, Quantum Computing, AIP ontology-driven "
+        "payload intelligence (cheatsheet-interwoven), Unified Security Fabric "
+        "(Zero Trust 7-pillar), Threat Hunting, EDR/MDR, Compliance, and VM Orchestration."
+    ),
+)
+
+# Security + timing headers on every response
+app.add_middleware(TimingAndSecurityMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -47,6 +65,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Modular routers (v2.0 + v2.1) ─────────────────────────────────────────
+app.include_router(pentest_router,  prefix="/api")
+app.include_router(quantum_router,  prefix="/api")
+app.include_router(reports_router,  prefix="/api")
+app.include_router(crypto_router,   prefix="/api")   # v2.1 PQC + encryption
+app.include_router(payloads_router, prefix="/api")   # v2.1 payload gen + playbooks + threat intel
+app.include_router(aip_router,      prefix="/api")   # v2.2 AIP ontology payload gen (cheatsheet interweave)
+app.include_router(fabric_router,   prefix="/api")   # v2.2 Unified Security Fabric (7 capabilities)
 
 
 class _Config:
@@ -89,6 +116,17 @@ async def health_check():
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "database": "duckdb",
         "llm_engine": config.LLM_ENGINE,
+    }
+
+
+@app.get("/api/health")
+async def api_health_check():
+    """Aliased health endpoint under /api prefix for router-consistent access."""
+    return {
+        "status": "healthy",
+        "service": "backend",
+        "version": "2.2",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 

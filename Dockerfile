@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
-COPY requirements.txt .
+COPY backend/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY backend/ ./backend/
-COPY GACyber_Tool_Kit/ ./GACyber_Tool_Kit/
+COPY gacyber_toolkit/ ./gacyber_toolkit/
 
 # Create necessary directories
 RUN mkdir -p data logs backups

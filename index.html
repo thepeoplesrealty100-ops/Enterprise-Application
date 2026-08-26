@@ -663,13 +663,7 @@
             { key: 'admin_cognitive_load_monitor', icon: 'user-cog', label: 'Resonance Load Monitor', category: 'Command & Control' },
             { key: 'admin_investigation_canvas', icon: 'git-branch-plus', label: 'Ontology Meta-Platform', category: 'Command & Control' },
             { key: 'admin_diagnostics', icon: 'heart-pulse', label: 'System Diagnostics', category: 'Command & Control' },
-            { key: 'admin_mdr', icon: 'shield-check', label: 'Managed Detection & Response', category: 'Unified Security Fabric' },
-            { key: 'admin_zero_trust', icon: 'lock', label: 'Zero Trust Enforcement', category: 'Unified Security Fabric' },
-            { key: 'admin_sase', icon: 'globe-lock', label: 'SASE Network Tunnel', category: 'Unified Security Fabric' },
-            { key: 'admin_pam', icon: 'key-round', label: 'Privileged Access Mgmt', category: 'Unified Security Fabric' },
-            { key: 'admin_dns_filter', icon: 'shield-off', label: 'DNS Web Filtering', category: 'Unified Security Fabric' },
-            { key: 'admin_email_filter', icon: 'mail-x', label: 'Email Security Gateway', category: 'Unified Security Fabric' },
-            { key: 'admin_dlp', icon: 'database-zap', label: 'Data Loss Prevention', category: 'Unified Security Fabric' },
+            { key: 'admin_fabric', icon: 'shield-check', label: 'Unified Security Fabric', category: 'Unified Security Fabric' },
             { key: 'admin_compliance', icon: 'landmark', label: 'Compliance & Risk Posture', category: 'Risk & Compliance' },
             { key: 'admin_dark_web', icon: 'scan-search', label: 'Dark Web Monitoring', category: 'Risk & Compliance' },
             { key: 'admin_security_training', icon: 'graduation-cap', label: 'Awareness Training', category: 'Human Layer Security' },
@@ -704,6 +698,9 @@
             admin_cognitive_load_monitor: { title: "Resonance Load Monitor", html: () => renderCognitiveLoadMonitor() },
             admin_investigation_canvas: { title: "Ontology Meta-Platform", html: () => renderInvestigationCanvas() },
             admin_diagnostics: { title: "System Diagnostics & Health Check", html: () => renderSystemDiagnostics() },
+            // Unified Security Fabric — all seven capabilities consolidated into one module.
+            admin_fabric: { title: "Unified Security Fabric", html: () => renderUnifiedSecurityFabric() },
+            // Legacy per-capability pages retained for deep-links; no longer in the nav.
             admin_mdr: { title: "Managed Detection & Response", html: () => renderMDR() },
             admin_zero_trust: { title: "Zero Trust Enforcement", html: () => renderZeroTrust() },
             admin_sase: { title: "SASE Network Tunnel", html: () => renderSASE() },
@@ -1611,6 +1608,115 @@
                 }, 1500);
             };
             runCheck();
+        }
+
+        // ===================================================================
+        // UNIFIED SECURITY FABRIC — all seven capabilities in one module.
+        // Maps to the NSA/CISA Zero Trust 7-pillar maturity model. Pulls live
+        // state from the JAKAL backend (/api/fabric/status) when reachable, and
+        // falls back to embedded defaults so the consolidated view always renders.
+        // ===================================================================
+
+        const FABRIC_FALLBACK = {
+            fabric: "Unified Security Fabric",
+            capability_count: 7,
+            posture: {
+                overall_score: 67.9, overall_level: "Advanced",
+                scale: ["Traditional","Initial","Advanced","Optimal"],
+                by_pillar: {
+                    "Visibility & Analytics": { score: 75, level: "Advanced", capabilities: 1 },
+                    "User / Device": { score: 75, level: "Advanced", capabilities: 2 },
+                    "Network & Environment": { score: 62.5, level: "Initial", capabilities: 2 },
+                    "Application & Workload": { score: 75, level: "Advanced", capabilities: 1 },
+                    "Data": { score: 50, level: "Initial", capabilities: 1 }
+                }
+            },
+            capabilities: [
+                { module_key:"mdr", label:"Managed Detection & Response", pillar:"Visibility & Analytics", icon:"shield-check", maturity:"Advanced", status:"active", description:"24/7 detection & response across endpoint, network, and cloud telemetry.", controls:["Continuous endpoint telemetry (EDR)","Network detection & response (NDR)","SIEM correlation + UEBA","24/7 SOC triage & escalation","MITRE ATT&CK detection coverage mapping"], metrics:{mttd_minutes:8,mttr_minutes:42,coverage_pct:87} },
+                { module_key:"zero_trust", label:"Zero Trust Enforcement", pillar:"User / Device", icon:"lock", maturity:"Advanced", status:"active", description:"Every access request authenticated, authorized, and continuously validated.", controls:["Phishing-resistant MFA (FIDO2/WebAuthn)","Device health attestation before access","Per-request policy decision point (PDP/PEP)","Continuous session risk scoring","Least-privilege default-deny policy"], metrics:{policies_enforced:214,deny_rate_pct:3.4,mfa_coverage_pct:96} },
+                { module_key:"sase", label:"SASE Network Tunnel", pillar:"Network & Environment", icon:"globe-lock", maturity:"Initial", status:"active", description:"Identity-aware, encrypted tunnels for all users (Secure Access Service Edge).", controls:["Identity-aware software-defined perimeter","Microsegmentation of east-west traffic","TLS 1.3 / encrypted transport everywhere","Inline CASB for sanctioned SaaS","PQC-ready tunnel key exchange (ML-KEM roadmap)"], metrics:{active_tunnels:128,segments:34,encrypted_pct:100} },
+                { module_key:"pam", label:"Privileged Access Management", pillar:"User / Device", icon:"key-round", maturity:"Advanced", status:"active", description:"Just-in-time, fully-audited access to critical systems; no standing privilege.", controls:["Just-in-time (JIT) privilege elevation","Credential vaulting + automatic rotation","Session recording & keystroke audit","Approval workflow for tier-0 assets","Zero standing privilege (ZSP) target"], metrics:{vaulted_accounts:340,jit_grants_24h:27,standing_admins:4} },
+                { module_key:"dns_filter", label:"DNS Web Filtering", pillar:"Network & Environment", icon:"shield-off", maturity:"Advanced", status:"active", description:"Protective DNS blocking malware, C2, and phishing domains at resolution time.", controls:["Protective DNS (PDNS) with threat-intel feeds","Newly-registered-domain (NRD) blocking","DNS-over-HTTPS/TLS enforcement","Category-based web filtering","DGA / tunneling detection"], metrics:{queries_24h:1840000,blocked_24h:12400,feeds:9} },
+                { module_key:"email_security", label:"Email Security Gateway", pillar:"Application & Workload", icon:"mail-x", maturity:"Advanced", status:"active", description:"Inbound/outbound mail defense: phishing, malware, BEC, and impersonation.", controls:["SPF / DKIM / DMARC enforcement","Attachment detonation sandbox","URL rewriting + time-of-click analysis","Impersonation / BEC detection","Outbound content inspection"], metrics:{messages_24h:96000,quarantined_24h:2100,dmarc_pct:100} },
+                { module_key:"dlp", label:"Data Loss Prevention", pillar:"Data", icon:"database-zap", maturity:"Initial", status:"active", description:"Classify, monitor, and protect sensitive data across endpoint, network, and cloud.", controls:["Automated data classification & labeling","Egress inspection (endpoint / network / cloud)","Encryption enforcement for labeled data","Insider-risk policy triggers","Tokenization of regulated fields (PII/PCI)"], metrics:{classified_stores:58,incidents_24h:14,encrypted_at_rest_pct:92} }
+            ]
+        };
+
+        function fabricMaturityColor(level) {
+            return ({ Optimal:'green-400', Advanced:'primary-color', Initial:'yellow-400', Traditional:'red-500' })[level] || 'gray-400';
+        }
+
+        function renderFabricCapabilityCard(cap) {
+            const color = fabricMaturityColor(cap.maturity);
+            const statusDot = cap.status === 'active' ? 'green-400' : (cap.status === 'degraded' ? 'yellow-400' : 'red-500');
+            const controls = (cap.controls || []).map(c => `<li class="flex items-start gap-2 text-xs text-gray-300"><span class="text-${color} mt-0.5">▸</span><span>${c}</span></li>`).join('');
+            const metrics = Object.entries(cap.metrics || {}).map(([k,v]) =>
+                `<div class="bg-gray-900/60 rounded-lg px-3 py-2"><div class="text-sm font-bold text-white">${typeof v==='number'? v.toLocaleString():v}</div><div class="text-[10px] uppercase tracking-wide text-gray-500">${k.replace(/_/g,' ')}</div></div>`).join('');
+            return `
+             <div class="card p-4 rounded-xl border border-border-color flex flex-col">
+                 <div class="flex items-center justify-between mb-1">
+                     <div class="flex items-center gap-2">
+                         <i data-lucide="${cap.icon}" class="w-5 h-5 text-${color}"></i>
+                         <h4 class="font-bold text-white text-sm">${cap.label}</h4>
+                     </div>
+                     <span class="flex items-center gap-1 text-[10px] uppercase text-gray-400"><span class="w-2 h-2 rounded-full bg-${statusDot}"></span>${cap.status}</span>
+                 </div>
+                 <div class="flex items-center gap-2 mb-2">
+                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-300 border border-border-color">${cap.pillar}</span>
+                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-${color}/20 text-${color} border border-${color}/40 font-bold">${cap.maturity}</span>
+                 </div>
+                 <p class="text-xs text-gray-400 mb-3">${cap.description}</p>
+                 <ul class="space-y-1 mb-3 flex-1">${controls}</ul>
+                 <div class="grid grid-cols-3 gap-2">${metrics}</div>
+             </div>`;
+        }
+
+        function renderFabricFromData(data) {
+            const p = data.posture || {};
+            const pillars = Object.entries(p.by_pillar || {}).map(([name, v]) => {
+                const color = fabricMaturityColor(v.level);
+                return `<div class="flex items-center justify-between py-1.5 border-b border-border-color/50">
+                    <span class="text-xs text-gray-300">${name}</span>
+                    <span class="flex items-center gap-2"><span class="text-xs font-bold text-${color}">${v.score}</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-${color}/20 text-${color}">${v.level}</span></span></div>`;
+            }).join('');
+            const overallColor = fabricMaturityColor(p.overall_level);
+            const cards = (data.capabilities || []).map(renderFabricCapabilityCard).join('');
+            return `
+             <div class="mb-4 p-3 rounded-lg bg-gray-900/40 border border-border-color text-xs text-gray-400">
+                 <i data-lucide="info" class="inline w-3.5 h-3.5 mr-1"></i>
+                 One consolidated control plane for all seven security capabilities, scored on the
+                 <span class="text-white font-semibold">NSA / CISA Zero Trust Maturity Model</span>
+                 (Traditional → Initial → Advanced → Optimal).
+             </div>
+             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                 <div class="card p-5 rounded-xl border border-${overallColor}/40 flex flex-col items-center justify-center text-center">
+                     <div class="text-xs uppercase tracking-wide text-gray-400 mb-1">Zero Trust Posture</div>
+                     <div class="text-5xl font-black text-${overallColor}">${p.overall_score ?? '—'}</div>
+                     <div class="text-sm font-bold text-${overallColor} mt-1">${p.overall_level ?? ''}</div>
+                     <div class="text-[10px] text-gray-500 mt-2">${data.capability_count || 7} capabilities · continuous posture</div>
+                 </div>
+                 <div class="lg:col-span-2 card p-5 rounded-xl border border-border-color">
+                     <h3 class="text-sm font-bold text-primary-color mb-2">Maturity by Zero Trust Pillar</h3>
+                     ${pillars}
+                 </div>
+             </div>
+             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${cards}</div>`;
+        }
+
+        function renderUnifiedSecurityFabric() {
+            // Render fallback immediately, then upgrade with live backend data if available.
+            setTimeout(async () => {
+                try {
+                    const r = await fetch('/api/fabric/status', { cache: 'no-store' });
+                    if (r.ok) {
+                        const data = await r.json();
+                        const host = document.getElementById('unified-fabric-host');
+                        if (host) { host.innerHTML = renderFabricFromData(data); if (window.lucide) lucide.createIcons(); }
+                    }
+                } catch (e) { /* backend offline — keep fallback */ }
+            }, 50);
+            return `<div id="unified-fabric-host">${renderFabricFromData(FABRIC_FALLBACK)}</div>`;
         }
 
         function renderMDR() {
