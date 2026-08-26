@@ -4,9 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -23,85 +20,63 @@ wheels/
 .installed.cfg
 *.egg
 
-# Testing
+# Virtual envs
+env/
+venv/
+.venv/
+ENV/
+
+# Testing / coverage
 .pytest_cache/
 .tox/
 .coverage
 htmlcov/
 .hypothesis/
+.mypy_cache/
 
-# IDEs
+# IDEs / OS
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
-# Environment
+# Secrets & env (keep examples)
 .env
 .env.local
 .env.*.local
-
-# Database
-*.db
-*.duckdb
-*.sqlite
-*.sqlite3
-
-# Logs
-logs/
-*.log
-
-# Cache
-memory/
-session.db*
-url_cache/
-
-# Docker
-.dockerignore
-
-# Git
-.git/
-.gitignore
-
-# OS
-Thumbs.db
-.DS_Store
-
-# ----- JAKAL Docker additions -----
-.env
 .env.*
 !.env.example
-
-*.duckdb
-*.duckdb.wal
-/data/
-/logs/
-backend/logs/
-
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-env/
-.pytest_cache/
-.mypy_cache/
-.coverage
-
-.vscode/
-.idea/
-*.swp
-.DS_Store
-
-jakal-data/
-jakal-logs/
-
-# ----- Secrets & agent state (never commit — added v2.2) -----
-# OpenHands / AI agent local runtime state can contain live credentials.
-ai_agent_layer/openhands-state/
 **/secrets.json
 *.pem
 *.key
 !*.pub
+
+# Databases & runtime data
+*.db
+*.duckdb
+*.duckdb.wal
+*.sqlite
+*.sqlite3
+/data/
+jakal-data/
+
+# Logs
+logs/
+*.log
+backend/logs/
+jakal-logs/
+
+# Cache / session
+memory/
+session.db*
+url_cache/
+
+# Local clutter (Windows Docker / backups)
+DockerDesktopWSL/
+backups/
+
+# AI agent local state (may contain credentials)
+ai_agent_layer/openhands-state/
