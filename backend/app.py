@@ -43,6 +43,7 @@ from routers import (
     aip_router, fabric_router,
     wireless_router, approval_router,
     horizon_router, canvas_router, resonance_router, qaip_router,
+    ares_router,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -50,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="JAKAL Backend",
-    version="2.4",
+    version="2.5",
     description=(
         "JAKAL Enterprise Cybersecurity Platform — "
         "Post-Quantum Cryptography, Quantum Computing, AIP ontology-driven "
@@ -58,7 +59,8 @@ app = FastAPI(
         "(Zero Trust 7-pillar), Threat Hunting, EDR/MDR, Compliance, VM Orchestration, "
         "Wireless (802.11) Assessment, a Human Approval Gate for high-risk payloads, "
         "Horizon AI-safety/regulatory events, Agentic Canvas patch deployment, "
-        "Resonance fleet posture, and Q'AIP quantum/LLM inference orchestration."
+        "Resonance fleet posture, Q'AIP quantum/LLM inference orchestration, and "
+        "Ares — the unified control plane tying Horizon/Resonance/Fabric together."
     ),
 )
 
@@ -87,6 +89,7 @@ app.include_router(horizon_router,   prefix="/api")   # v2.4 Horizon AI Safety F
 app.include_router(canvas_router,    prefix="/api")   # v2.4 Agentic Canvas
 app.include_router(resonance_router, prefix="/api")   # v2.4 Resonance / Global Dashboard
 app.include_router(qaip_router,      prefix="/api")   # v2.4 Q'AIP Energy Core + orbital comms
+app.include_router(ares_router,      prefix="/api")   # v2.5 Ares Unified Control Plane
 
 
 class _Config:

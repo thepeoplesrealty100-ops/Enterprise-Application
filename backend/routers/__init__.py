@@ -19,6 +19,9 @@ v2.4 routers:
   canvas_router     — /api/canvas/*    (Agentic Canvas — patch deploys gated by the Approval Gate)
   resonance_router  — /api/resonance/* (fleet posture + derived org-wide security settings)
   qaip_router       — /api/qaip/*      (Energy Core throttle + quantum/LLM inference ledger)
+v2.5 routers:
+  ares_router       — /api/ares/*      (Ares Unified Control Plane — cross-pillar
+                                         event bus + Horizon/Resonance/Fabric rollup)
 """
 
 from .pentest import router as pentest_router
@@ -34,6 +37,7 @@ from .horizon import router as horizon_router
 from .canvas import router as canvas_router
 from .resonance import router as resonance_router
 from .qaip import router as qaip_router
+from .ares import router as ares_router
 
 __all__ = [
     "pentest_router",
@@ -49,4 +53,5 @@ __all__ = [
     "canvas_router",
     "resonance_router",
     "qaip_router",
+    "ares_router",
 ]

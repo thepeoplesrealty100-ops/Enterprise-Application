@@ -26,6 +26,14 @@ Schema version: 2.4
           high-risk action (v2.3), and global_security_settings mirrors
           -- rather than duplicates -- the real operators/encryption_keys/
           pqc_audit_log tables instead of inventing a second source of truth.
+  v2.5 - unified_security_events, horizon_trust_fabric ("Ares Unified
+          Control Plane"): a cross-pillar telemetry bus that Horizon,
+          Resonance/Q'AIP, and recon/dark-web intake all write into, plus
+          a derived executive rollup (compliance %, active agents, threats
+          blocked, Shadow AI / SOC2 / adversarial-defense / DLP health).
+          approval_requests (v2.3) gains one nullable origin_module column
+          rather than a second, parallel `agentic_approval_queue` table --
+          see the CREATE TABLE comment below for why.
 """
 
 import json
@@ -36,6 +44,15 @@ from typing import Any, Dict, List, Optional
 import duckdb
 
 logger = logging.getLogger(__name__)
+
+# Agents actually wired in app.py as *Agent instances (ReconAgent, EnumAgent,
+# WebAgent, ReportAgent, WirelessAgent, ExploitAgent) -- kept as a plain
+# constant here rather than a DB table, since it only changes when app.py's
+# instantiation block changes; a table would just be a second place that
+# same number could drift out of sync. Used by horizon_trust_fabric_snapshot().
+WIRED_SECURITY_AGENTS = (
+    "ReconAgent", "EnumAgent", "WebAgent", "ReportAgent", "WirelessAgent", "ExploitAgent",
+)
 
 
 class DuckDBManager:
@@ -554,8 +571,62 @@ class DuckDBManager:
         )
         """)
 
+        # ── v2.5 Tables — Ares Unified Control Plane ───────────────────────
+        # Cross-pillar telemetry bus + a derived Horizon "trust fabric"
+        # snapshot, per the operator's Ares architecture directive. Two
+        # deliberate deviations from the directive's literal DDL, both
+        # flagged here for review:
+        #   1. horizon_trust_fabric is a DERIVED snapshot (one write path,
+        #      horizon_trust_fabric_snapshot() below) instead of a freely
+        #      writable table -- same reasoning as global_security_settings
+        #      in v2.4: a status table anyone can write into can silently
+        #      drift from what's actually true.
+        #   2. No `agentic_approval_queue` table. approval_requests (v2.3)
+        #      already IS that queue -- Agentic Canvas, ExploitAgent, and
+        #      now Ares recon-intel ingestion all stage into it. A second,
+        #      parallel queue would recreate exactly the two-sources-of-
+        #      truth problem the v2.3 Human Approval Gate exists to avoid.
+        #      A request's origin (origin_module) is recorded inside the
+        #      existing payload_detail JSON column rather than as a new
+        #      approval_requests column -- deliberately NOT an ALTER TABLE
+        #      ADD COLUMN. Testing this change hit a reproducible DuckDB
+        #      WAL-replay crash ("GetDefaultDatabase with no default
+        #      database set") on the *next* process to open a persistent
+        #      .duckdb file after an ALTER TABLE ADD COLUMN had run against
+        #      it -- confirmed by isolating the statement, not a fluke.
+        #      approval_requests already has production rows in deployed
+        #      installs, so no DDL migration touches that table here.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS unified_security_events (
+            event_id             VARCHAR PRIMARY KEY,
+            source_module        VARCHAR NOT NULL,      -- HORIZON | RESONANCE_QAIP | GOD_S_EYE_RECON | DARK_WEB | ...
+            threat_category      VARCHAR,                -- SHADOW_AI | SOC2_VIOLATION | EXPOSED_SERVICE | DLP_MATCH | ...
+            severity_score       DOUBLE DEFAULT 0.0,      -- 0.0-1.0, from threat_scoring.score_recon_finding()
+            raw_payload          VARCHAR DEFAULT '{}',    -- JSON — the full inbound finding
+            approval_request_id  VARCHAR,                 -- set once severity crosses the HITL threshold
+            timestamp             TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS horizon_trust_fabric (
+            fabric_id                  VARCHAR PRIMARY KEY,
+            operator_id                VARCHAR,
+            compliance_coverage_pct    DOUBLE,
+            active_agent_count         INTEGER,
+            threats_blocked_count      INTEGER,
+            shadow_ai_status           VARCHAR,
+            soc2_compliance_status     VARCHAR,
+            adversarial_defense_status VARCHAR,
+            dlp_status                 VARCHAR,
+            fabric_status               VARCHAR,          -- SECURE | DEGRADED | UNINITIALIZED, from fabric_modules
+            last_schema_sync           TIMESTAMPTZ,
+            recorded_at                 TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
         self.conn.commit()
-        logger.info("Schema v2.4 initialized at %s", self.db_path)
+        logger.info("Schema v2.5 initialized at %s", self.db_path)
 
     # ======================================================================
     # Generic helpers
@@ -863,20 +934,27 @@ class DuckDBManager:
         return row[0] if row else -1
 
     def rotate_encryption_key(self, key_id: str) -> bool:
+        # DuckDB's Python API reports rowcount == -1 for every UPDATE in
+        # this version regardless of how many rows matched (verified while
+        # building v2.5 -- see the CREATE TABLE / v2.5 comment block for
+        # the fuller writeup), so "did this actually match a row" has to be
+        # read off RETURNING instead of result.rowcount.
         result = self.conn.execute(
-            "UPDATE encryption_keys SET status = 'rotated', rotated_at = now() WHERE key_id = ?",
+            "UPDATE encryption_keys SET status = 'rotated', rotated_at = now() WHERE key_id = ? RETURNING key_id",
             (key_id,),
         )
+        matched = bool(result.fetchall())
         self.conn.commit()
-        return (result.rowcount or 0) > 0
+        return matched
 
     def revoke_encryption_key(self, key_id: str) -> bool:
         result = self.conn.execute(
-            "UPDATE encryption_keys SET status = 'revoked', revoked_at = now() WHERE key_id = ?",
+            "UPDATE encryption_keys SET status = 'revoked', revoked_at = now() WHERE key_id = ? RETURNING key_id",
             (key_id,),
         )
+        matched = bool(result.fetchall())
         self.conn.commit()
-        return (result.rowcount or 0) > 0
+        return matched
 
     def list_encryption_keys(
         self, operator_id: Optional[str] = None, status: str = "active"
@@ -1215,10 +1293,11 @@ class DuckDBManager:
     def expire_threat_intel(self) -> int:
         """Mark expired indicators as inactive. Call periodically."""
         result = self.conn.execute(
-            "UPDATE threat_intel SET active = false WHERE expiry < now() AND active = true"
+            "UPDATE threat_intel SET active = false WHERE expiry < now() AND active = true RETURNING id"
         )
+        expired_count = len(result.fetchall())
         self.conn.commit()
-        return result.rowcount or 0
+        return expired_count
 
     def threat_intel_stats(self) -> Dict[str, Any]:
         total = self.conn.execute("SELECT COUNT(*) FROM threat_intel").fetchone()[0]
@@ -1575,8 +1654,18 @@ class DuckDBManager:
         """
         Required: request_id, requested_by, action_type
         Optional: target, phase, technique_id, risk_level, summary,
-                  payload_detail (dict/JSON), pqc_entry_id, expires_at
+                  payload_detail (dict/JSON), pqc_entry_id, expires_at,
+                  origin_module (v2.5 — which Ares pillar raised this, e.g.
+                  'GOD_S_EYE_RECON', 'HORIZON', 'agentic_canvas'; folded into
+                  payload_detail JSON rather than a dedicated column -- see
+                  the v2.5 CREATE TABLE comment above for why: an ALTER
+                  TABLE ADD COLUMN here hit a reproducible DuckDB WAL-replay
+                  crash on this table, which already has production rows)
         """
+        payload_detail = dict(record.get("payload_detail", {}) or {})
+        if record.get("origin_module") is not None:
+            payload_detail["origin_module"] = record["origin_module"]
+
         self.conn.execute(
             """
             INSERT INTO approval_requests
@@ -1588,7 +1677,7 @@ class DuckDBManager:
                 record["request_id"], record["requested_by"], record["action_type"],
                 record.get("target"), record.get("phase"), record.get("technique_id"),
                 record.get("risk_level", "MEDIUM"), record.get("summary"),
-                json.dumps(record.get("payload_detail", {}), default=str),
+                json.dumps(payload_detail, default=str),
                 record.get("pqc_entry_id"), record.get("expires_at"),
             ),
         )
@@ -1605,11 +1694,13 @@ class DuckDBManager:
             UPDATE approval_requests
             SET status = ?, decided_by = ?, decided_at = now(), decision_reason = ?
             WHERE request_id = ? AND status = 'pending'
+            RETURNING request_id
             """,
             (decision, decided_by, reason, request_id),
         )
+        matched = bool(result.fetchall())
         self.conn.commit()
-        return (result.rowcount or 0) > 0
+        return matched
 
     def get_approval_request(self, request_id: str) -> Optional[Dict[str, Any]]:
         row = self.conn.execute(
@@ -1643,10 +1734,12 @@ class DuckDBManager:
     def expire_stale_approval_requests(self) -> int:
         result = self.conn.execute(
             "UPDATE approval_requests SET status = 'expired' "
-            "WHERE status = 'pending' AND expires_at IS NOT NULL AND expires_at < now()"
+            "WHERE status = 'pending' AND expires_at IS NOT NULL AND expires_at < now() "
+            "RETURNING request_id"
         )
+        expired_count = len(result.fetchall())
         self.conn.commit()
-        return result.rowcount or 0
+        return expired_count
 
     def approval_gate_stats(self) -> Dict[str, Any]:
         by_status = self.conn.execute(
@@ -1927,6 +2020,154 @@ class DuckDBManager:
         }
 
     # ======================================================================
+    # v2.5 — Ares Unified Control Plane
+    # ======================================================================
+
+    def insert_unified_security_event(self, record: Dict[str, Any]) -> str:
+        """Required: event_id, source_module. Optional: threat_category,
+        severity_score, raw_payload (dict), approval_request_id."""
+        self.conn.execute(
+            """
+            INSERT INTO unified_security_events
+                (event_id, source_module, threat_category, severity_score,
+                 raw_payload, approval_request_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (record["event_id"], record["source_module"], record.get("threat_category"),
+             record.get("severity_score", 0.0),
+             json.dumps(record.get("raw_payload", {}), default=str),
+             record.get("approval_request_id")),
+        )
+        self.conn.commit()
+        return record["event_id"]
+
+    def link_unified_event_approval(self, event_id: str, approval_request_id: str) -> bool:
+        result = self.conn.execute(
+            "UPDATE unified_security_events SET approval_request_id = ? "
+            "WHERE event_id = ? RETURNING event_id",
+            (approval_request_id, event_id),
+        )
+        matched = bool(result.fetchall())
+        self.conn.commit()
+        return matched
+
+    def list_unified_security_events(
+        self, source_module: Optional[str] = None, threat_category: Optional[str] = None,
+        limit: int = 200,
+    ) -> List[Dict[str, Any]]:
+        clauses, params = [], []
+        if source_module:
+            clauses.append("source_module = ?"); params.append(source_module)
+        if threat_category:
+            clauses.append("threat_category = ?"); params.append(threat_category)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        rows = self.conn.execute(
+            f"SELECT * FROM unified_security_events {where} ORDER BY timestamp DESC LIMIT ?",
+            (*params, limit),
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        out = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            d["raw_payload"] = json.loads(d.get("raw_payload") or "{}")
+            out.append(d)
+        return out
+
+    def unified_security_events_stats(self) -> Dict[str, Any]:
+        total = self.conn.execute("SELECT COUNT(*) FROM unified_security_events").fetchone()[0]
+        avg_sev = self.conn.execute("SELECT AVG(severity_score) FROM unified_security_events").fetchone()[0]
+        by_source = self.conn.execute(
+            "SELECT source_module, COUNT(*) FROM unified_security_events GROUP BY source_module"
+        ).fetchall()
+        by_category = self.conn.execute(
+            "SELECT threat_category, COUNT(*) FROM unified_security_events "
+            "WHERE threat_category IS NOT NULL GROUP BY threat_category"
+        ).fetchall()
+        blocked = self.conn.execute(
+            "SELECT COUNT(*) FROM unified_security_events WHERE severity_score >= 0.5"
+        ).fetchone()[0]
+        return {
+            "total": total,
+            "avg_severity": round(avg_sev, 4) if avg_sev is not None else None,
+            "by_source_module": {r[0]: r[1] for r in by_source},
+            "by_threat_category": {r[0]: r[1] for r in by_category},
+            "threats_blocked_count": blocked,
+        }
+
+    def horizon_trust_fabric_snapshot(self, fabric_id: str, operator_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Records a horizon_trust_fabric row DERIVED from real tables --
+        ai_safety_events (via horizon_regulatory_summary), unified_security_events,
+        and fabric_modules -- rather than an independently-settable status
+        blob. Same "one write path in" pattern as resonance_settings_snapshot().
+        """
+        reg = self.horizon_regulatory_summary()
+        total_events = reg["total_events"]
+        attention = reg["by_regulatory_status"].get("Attention Required", 0)
+        compliance_pct = 100.0 if total_events == 0 else round(
+            100.0 * (total_events - attention) / total_events, 1
+        )
+
+        uni_stats = self.unified_security_events_stats()
+        by_cat = uni_stats["by_threat_category"]
+
+        def _status(count: int, clear: str = "CLEAR", flagged: str = "ATTENTION_REQUIRED") -> str:
+            return flagged if count else clear
+
+        shadow_ai_status = _status(by_cat.get("SHADOW_AI", 0), flagged="DETECTED")
+        soc2_status = _status(attention, clear="COMPLIANT")
+        dlp_status = _status(by_cat.get("DLP_MATCH", 0), flagged="MATCHES_DETECTED")
+        # "Open" = high-severity and not yet routed through the approval
+        # gate -- once it's staged for human review it's no longer an
+        # unaddressed adversarial threat, it's a pending decision.
+        critical_open = self.conn.execute(
+            "SELECT COUNT(*) FROM unified_security_events "
+            "WHERE severity_score >= 0.8 AND approval_request_id IS NULL"
+        ).fetchone()[0]
+        adversarial_status = _status(critical_open, clear="NOMINAL", flagged="ACTIVE_THREATS_DETECTED")
+
+        modules = self.list_fabric_modules()
+        if not modules:
+            fabric_status = "UNINITIALIZED"
+        elif all(m["status"] == "active" for m in modules):
+            fabric_status = "SECURE"
+        else:
+            fabric_status = "DEGRADED"
+
+        self.conn.execute(
+            """
+            INSERT INTO horizon_trust_fabric
+                (fabric_id, operator_id, compliance_coverage_pct, active_agent_count,
+                 threats_blocked_count, shadow_ai_status, soc2_compliance_status,
+                 adversarial_defense_status, dlp_status, fabric_status, last_schema_sync)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
+            """,
+            (fabric_id, operator_id, compliance_pct, len(WIRED_SECURITY_AGENTS),
+             uni_stats["threats_blocked_count"], shadow_ai_status, soc2_status,
+             adversarial_status, dlp_status, fabric_status),
+        )
+        self.conn.commit()
+        return self.get_horizon_trust_fabric(fabric_id)
+
+    def get_horizon_trust_fabric(self, fabric_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM horizon_trust_fabric WHERE fabric_id = ?", (fabric_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    def latest_horizon_trust_fabric(self) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM horizon_trust_fabric ORDER BY recorded_at DESC LIMIT 1"
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    # ======================================================================
     # Utility
     # ======================================================================
 
@@ -1943,6 +2184,7 @@ class DuckDBManager:
             "rfp_responses", "approval_requests",
             "ai_safety_events", "agentic_remediation_tasks", "global_fleet_matrix",
             "global_security_settings", "quantum_orbital_comms",
+            "unified_security_events", "horizon_trust_fabric",
         ]
         stats = {}
         for t in tables:
