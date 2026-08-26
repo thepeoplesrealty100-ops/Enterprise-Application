@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jakal-core"
+version = "3.0.0"
+description = "Async persistence and service layer for the JAKAL Enterprise security platform (hybrid PQC, RBAC approval gate, Zero-Trust posture)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "The People's Realty" }]
+keywords = ["security", "post-quantum", "ml-dsa", "zero-trust", "fastapi", "sqlalchemy"]
+
+dependencies = [
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.19",
+    "asyncpg>=0.29",
+    "alembic>=1.13",
+    "pydantic-settings>=2.0",
+    "pyjwt>=2.8",
+    "dilithium-py>=1.3,<2.0",
+    "cryptography>=44.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0", "pytest-asyncio>=0.23"]
+dev = ["ruff>=0.5", "mypy>=1.10"]
+
+[tool.setuptools.packages.find]
+include = ["jakal_core*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# `str, Enum` is an intentional, widely-used pattern here (stable .value
+# semantics for the SQLAlchemy Enum columns); we do not want StrEnum's
+# different str() behaviour.
+ignore = ["UP042"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests carry long parametrize data lines and intentionally-broad `raises`.
+"tests/**" = ["E501", "B017", "B007"]
+"alembic/**" = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+disallow_untyped_defs = false

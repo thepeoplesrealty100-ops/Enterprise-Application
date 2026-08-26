@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Test / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local databases (never commit runtime data)
+*.db
+*.duckdb
+*.sqlite
+*.sqlite3
+jakal_v3.db
+jakal_migrate_check.db
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
