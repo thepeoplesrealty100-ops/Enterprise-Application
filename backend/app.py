@@ -34,11 +34,14 @@ from security_agents.report_agent import ReportAgent
 from security_agents.vm_orchestrator import VMOrchestrator
 from security_agents.compliance_axiom import ComplianceAxiom
 from security_agents.edr_mdr import EdrMdrEngine
+from security_agents.wireless_agent import WirelessAgent
+from security_agents.exploit_agent import ExploitAgent
 from middleware import TimingAndSecurityMiddleware
 from routers import (
     pentest_router, quantum_router, reports_router,
     crypto_router, payloads_router,
     aip_router, fabric_router,
+    wireless_router, approval_router,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -46,12 +49,13 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="JAKAL Backend",
-    version="2.2",
+    version="2.3",
     description=(
         "JAKAL Enterprise Cybersecurity Platform — "
         "Post-Quantum Cryptography, Quantum Computing, AIP ontology-driven "
         "payload intelligence (cheatsheet-interwoven), Unified Security Fabric "
-        "(Zero Trust 7-pillar), Threat Hunting, EDR/MDR, Compliance, and VM Orchestration."
+        "(Zero Trust 7-pillar), Threat Hunting, EDR/MDR, Compliance, VM Orchestration, "
+        "Wireless (802.11) Assessment, and a Human Approval Gate for high-risk payloads."
     ),
 )
 
@@ -74,6 +78,8 @@ app.include_router(crypto_router,   prefix="/api")   # v2.1 PQC + encryption
 app.include_router(payloads_router, prefix="/api")   # v2.1 payload gen + playbooks + threat intel
 app.include_router(aip_router,      prefix="/api")   # v2.2 AIP ontology payload gen (cheatsheet interweave)
 app.include_router(fabric_router,   prefix="/api")   # v2.2 Unified Security Fabric (7 capabilities)
+app.include_router(wireless_router, prefix="/api")   # v2.3 passive Wi-Fi survey
+app.include_router(approval_router, prefix="/api")   # v2.3 Human Approval Gate
 
 
 class _Config:
@@ -103,6 +109,8 @@ report_agent = ReportAgent(db, orchestrator)
 vm_orchestrator = VMOrchestrator(db)
 compliance_axiom = ComplianceAxiom(db)
 edr_mdr = EdrMdrEngine(db)
+wireless_agent = WirelessAgent(db, config)      # v2.3 — 802.11 passive assessment
+exploit_agent = ExploitAgent(db, config)        # v2.3 — Human Approval Gate backend
 
 
 # ============================================================================

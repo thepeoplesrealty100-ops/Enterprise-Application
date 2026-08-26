@@ -57,8 +57,19 @@ class AIPPayloadGenerator:
         self.db = db
         self.llm = llm
         self._pqc = pqc
+        self._approval_gate = None
         self.base = PayloadGenerator()
         self.ontology = CheatsheetOntology()
+
+    def _get_approval_gate(self):
+        """Lazy human-approval-gate handle (v2.3) — mirrors _get_pqc()."""
+        if self._approval_gate is None:
+            try:
+                from security_agents.exploit_agent import ExploitAgent
+                self._approval_gate = ExploitAgent(db_manager=self.db)
+            except Exception as e:
+                logger.warning("Approval gate unavailable for AIP generator: %s", e)
+        return self._approval_gate
 
     # ------------------------------------------------------------------
     # Signing helper
@@ -197,6 +208,40 @@ class AIPPayloadGenerator:
 
         # 6. Sign + audit
         self._sign_and_log(plan, operator_id)
+
+        # 7. Human oversight (v2.3): a plan containing any HIGH/CRITICAL-risk
+        # payload is auto-staged into the Human Approval Gate as 'pending'.
+        # This does not block generate() from returning the plan — the plan
+        # was already "for operator review before execution" by design
+        # (see module docstring) — it means the operator sees an explicit
+        # approval_request_id they must clear via /api/approval/<id>/approve
+        # before that plan is treated as authorized-to-run anywhere the
+        # approval gate is checked, instead of relying on the operator to
+        # remember to review it themselves.
+        high_risk = [p for p in plan["mitre_payloads"] if p.get("risk") in ("HIGH", "CRITICAL")]
+        plan["requires_human_approval"] = bool(high_risk)
+        plan["approval_request_id"] = None
+        if high_risk and self.db:
+            gate = self._get_approval_gate()
+            if gate:
+                try:
+                    request_id = plan["plan_id"]
+                    self.db.create_approval_request({
+                        "request_id": request_id,
+                        "requested_by": operator_id,
+                        "action_type": "aip_payload_plan",
+                        "target": target,
+                        "phase": phase,
+                        "technique_id": ",".join(sorted({p.get("technique_id", "") for p in high_risk if p.get("technique_id")})),
+                        "risk_level": "CRITICAL" if any(p.get("risk") == "CRITICAL" for p in high_risk) else "HIGH",
+                        "summary": f"{len(high_risk)} HIGH+ risk payload(s) in {phase} plan for {target}",
+                        "payload_detail": {"high_risk_payloads": high_risk},
+                        "pqc_entry_id": plan.get("pqc_entry_id"),
+                    })
+                    plan["approval_request_id"] = request_id
+                except Exception as e:
+                    logger.warning("Failed to auto-stage approval request for plan %s: %s", plan["plan_id"], e)
+
         return plan
 
     def _llm_prioritize(self, plan: Dict[str, Any]) -> Dict[str, Any]:
@@ -248,7 +293,7 @@ class AIPPayloadGenerator:
         """Generate ontology-bounded plans across all (or given) phases."""
         phases = phases or [
             "recon_passive", "recon_active", "enumeration", "web_application",
-            "vulnerability_analysis", "post_exploitation_assessment",
+            "wireless", "vulnerability_analysis", "post_exploitation_assessment",
             "encryption_analysis",
         ]
         # Authorize once up front (each generate() re-checks defensively)

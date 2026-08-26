@@ -175,10 +175,19 @@ class PQCAuditManager:
             "public_key":   self._signer.public_key_hex,
         }
 
-        # Persist to DuckDB if a db handle is wired in
+        # Persist to DuckDB if a db handle is wired in. insert_pqc_audit_entry()
+        # expects action_type/action_detail (not the bare "action" key this
+        # method builds above for its return value), so adapt before storing —
+        # this keeps sign_agent_action() usable standalone (db=... at
+        # construction, no caller-side manual insert) instead of silently
+        # no-op'ing on a KeyError every time.
         if self.db:
             try:
-                self.db.insert_pqc_audit_log(entry)
+                self.db.insert_pqc_audit_entry({
+                    **entry,
+                    "action_type": action_payload.get("action_type", "agent_action"),
+                    "action_detail": json.dumps(action_payload, sort_keys=True, default=str),
+                })
             except Exception as exc:
                 logger.warning("Failed to persist PQC audit log: %s", exc)
 

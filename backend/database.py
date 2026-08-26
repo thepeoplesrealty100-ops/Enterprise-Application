@@ -1,12 +1,19 @@
 """
 JAKAL Database Layer - DuckDB (local, embedded, zero-cost)
 
-Schema version: 2.1
+Schema version: 2.3
   v1.0 - agent_logs, quantum_jobs, pentest_runs, findings, scopes,
           insurance_policies, assessment_reports
   v2.0 - sandboxes, compliance_reports, playbooks, playbook_executions
   v2.1 - pqc_audit_log, encryption_keys, payload_executions,
           network_map, vuln_db, threat_intel
+  v2.2 - fabric_modules, fabric_events, zt_posture_assessments
+  v2.3 - operators, attack_mappings, compliance_checkpoints, rfp_responses,
+          approval_requests (human-in-the-loop oversight gate)
+          Salvaged/hardened from the abandoned `master` branch's
+          phase1_database.py design before that branch was retired --
+          real column ideas kept, weak points (substring scope matching,
+          no PQC signing) fixed against the v2.1+ authorization/PQC layer.
 """
 
 import json
@@ -38,6 +45,9 @@ class DuckDBManager:
             "seq_network_map", "seq_vuln_db", "seq_threat_intel",
             # v2.2 Unified Security Fabric sequences
             "seq_fabric_mod", "seq_fabric_evt", "seq_posture",
+            # v2.3 sequences
+            "seq_operators", "seq_attack_map", "seq_compliance_chk",
+            "seq_rfp", "seq_approval",
         ]:
             c.execute(f"CREATE SEQUENCE IF NOT EXISTS {seq} START 1")
 
@@ -353,8 +363,112 @@ class DuckDBManager:
         )
         """)
 
+        # ── v2.3 Tables — real-demo readiness ─────────────────────────────
+        # Salvaged from the retired `master` branch's phase1_database.py
+        # design, hardened to fit the v2.1+ authorization/PQC layer (that
+        # draft had its own ad-hoc scope-substring check and no signing --
+        # here these tables are populated/consumed through the existing
+        # check_authorization_and_scope() + PQCAuditManager path instead).
+
+        # Operators — the people/service-accounts allowed to drive JAKAL.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS operators (
+            id           INTEGER PRIMARY KEY DEFAULT nextval('seq_operators'),
+            operator_id  VARCHAR UNIQUE NOT NULL,
+            email        VARCHAR UNIQUE,
+            display_name VARCHAR,
+            role         VARCHAR DEFAULT 'operator',   -- operator | lead | admin | approver
+            active       BOOLEAN DEFAULT true,
+            last_login   TIMESTAMPTZ,
+            created_at   TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # MITRE ATT&CK mappings — links a finding to the technique(s) it
+        # demonstrates. Kept separate from `findings` (v1.0) so one finding
+        # can map to multiple techniques/sub-techniques without denormalizing
+        # findings itself.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS attack_mappings (
+            id               INTEGER PRIMARY KEY DEFAULT nextval('seq_attack_map'),
+            pentest_id       INTEGER,
+            finding_id       INTEGER,
+            tactic           VARCHAR NOT NULL,          -- e.g. Credential Access
+            technique_id     VARCHAR NOT NULL,          -- e.g. T1110
+            technique_name   VARCHAR NOT NULL,
+            sub_technique_id VARCHAR,                   -- e.g. T1110.002
+            confidence       DECIMAL DEFAULT 0.8,
+            mapped_at        TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # Compliance checkpoints — one immutable row per authorization
+        # decision, hash-chained to the previous row so the sequence itself
+        # is tamper-evident (separate from, and coarser-grained than, the
+        # full PQC-signed pqc_audit_log -- this is the fast "did engagement
+        # X stay in-bounds the whole time" report source).
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS compliance_checkpoints (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_compliance_chk'),
+            timestamp           TIMESTAMPTZ DEFAULT now(),
+            action_type         VARCHAR NOT NULL,
+            operator_id         VARCHAR NOT NULL,
+            target              VARCHAR,
+            authorization_result VARCHAR,               -- granted | denied
+            scope_status        VARCHAR,
+            insurance_status    VARCHAR,
+            allowed_to_proceed  BOOLEAN,
+            pqc_entry_id        VARCHAR,                 -- FK to pqc_audit_log.entry_id
+            hash_chain          VARCHAR,                 -- sha3-256(prev hash_chain + this row)
+            prev_hash           VARCHAR
+        )
+        """)
+
+        # RFP responses — client-facing proposal boilerplate, useful for a
+        # sales/demo showcase of the platform's own methodology.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS rfp_responses (
+            id                   INTEGER PRIMARY KEY DEFAULT nextval('seq_rfp'),
+            client_name          VARCHAR NOT NULL,
+            methodology          VARCHAR,
+            tools_list           VARCHAR DEFAULT '[]',   -- JSON array
+            timeline             VARCHAR,
+            pricing              VARCHAR,
+            insurance_statement  VARCHAR,
+            sample_report_path   VARCHAR,
+            created_at           TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # Human Approval Gate — every HIGH/CRITICAL-risk staged payload
+        # (from AIPPayloadGenerator or ExploitAgent) lands here as 'pending'
+        # before it may be marked executable. This table is the persistence
+        # layer behind security_agents/exploit_agent.py's approval flow and
+        # AIPPayloadGenerator's auto-staging of high-risk plans.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS approval_requests (
+            id              INTEGER PRIMARY KEY DEFAULT nextval('seq_approval'),
+            request_id      VARCHAR UNIQUE NOT NULL,
+            requested_at    TIMESTAMPTZ DEFAULT now(),
+            requested_by    VARCHAR NOT NULL,           -- operator_id or agent id
+            action_type     VARCHAR NOT NULL,           -- e.g. payload_execution, exploit_staging
+            target          VARCHAR,
+            phase           VARCHAR,
+            technique_id    VARCHAR,
+            risk_level      VARCHAR DEFAULT 'MEDIUM',   -- LOW | MEDIUM | HIGH | CRITICAL
+            summary         VARCHAR,                    -- human-readable description of what's being requested
+            payload_detail  VARCHAR DEFAULT '{}',       -- JSON — the staged command(s)/payload
+            status          VARCHAR DEFAULT 'pending',  -- pending | approved | denied | expired
+            decided_by      VARCHAR,
+            decided_at      TIMESTAMPTZ,
+            decision_reason VARCHAR,
+            pqc_entry_id    VARCHAR,                    -- FK to pqc_audit_log.entry_id (staging signature)
+            expires_at      TIMESTAMPTZ
+        )
+        """)
+
         self.conn.commit()
-        logger.info("Schema v2.2 initialized at %s", self.db_path)
+        logger.info("Schema v2.3 initialized at %s", self.db_path)
 
     # ======================================================================
     # Generic helpers
@@ -1154,6 +1268,312 @@ class DuckDBManager:
         return out
 
     # ======================================================================
+    # v2.3 — Operators
+    # ======================================================================
+
+    def upsert_operator(self, record: Dict[str, Any]) -> int:
+        """Insert or update an operator. operator_id is the natural key."""
+        existing = self.conn.execute(
+            "SELECT id FROM operators WHERE operator_id = ?", (record["operator_id"],)
+        ).fetchone()
+        if existing:
+            self.conn.execute(
+                """
+                UPDATE operators
+                SET email = COALESCE(?, email), display_name = COALESCE(?, display_name),
+                    role = ?, active = ?
+                WHERE operator_id = ?
+                """,
+                (record.get("email"), record.get("display_name"),
+                 record.get("role", "operator"), record.get("active", True),
+                 record["operator_id"]),
+            )
+            self.conn.commit()
+            return existing[0]
+        self.conn.execute(
+            """
+            INSERT INTO operators (operator_id, email, display_name, role, active)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (record["operator_id"], record.get("email"), record.get("display_name"),
+             record.get("role", "operator"), record.get("active", True)),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_operators')").fetchone()
+        return row[0] if row else -1
+
+    def get_operator(self, operator_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT operator_id, email, display_name, role, active, last_login, created_at "
+            "FROM operators WHERE operator_id = ?", (operator_id,),
+        ).fetchone()
+        if not row:
+            return None
+        cols = ["operator_id", "email", "display_name", "role", "active", "last_login", "created_at"]
+        return dict(zip(cols, row))
+
+    def list_operators(self, active_only: bool = True) -> List[Dict[str, Any]]:
+        clause = "WHERE active = true" if active_only else ""
+        rows = self.conn.execute(
+            f"SELECT operator_id, email, display_name, role, active, last_login, created_at "
+            f"FROM operators {clause} ORDER BY id"
+        ).fetchall()
+        cols = ["operator_id", "email", "display_name", "role", "active", "last_login", "created_at"]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def touch_operator_login(self, operator_id: str):
+        self.conn.execute(
+            "UPDATE operators SET last_login = now() WHERE operator_id = ?", (operator_id,)
+        )
+        self.conn.commit()
+
+    # ======================================================================
+    # v2.3 — MITRE ATT&CK Mappings
+    # ======================================================================
+
+    def insert_attack_mapping(self, record: Dict[str, Any]) -> int:
+        self.conn.execute(
+            """
+            INSERT INTO attack_mappings
+                (pentest_id, finding_id, tactic, technique_id, technique_name,
+                 sub_technique_id, confidence)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record.get("pentest_id"), record.get("finding_id"),
+                record["tactic"], record["technique_id"], record["technique_name"],
+                record.get("sub_technique_id"), record.get("confidence", 0.8),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_attack_map')").fetchone()
+        return row[0] if row else -1
+
+    def list_attack_mappings(self, pentest_id: Optional[int] = None) -> List[Dict[str, Any]]:
+        if pentest_id:
+            rows = self.conn.execute(
+                "SELECT * FROM attack_mappings WHERE pentest_id = ? ORDER BY id", (pentest_id,)
+            ).fetchall()
+        else:
+            rows = self.conn.execute("SELECT * FROM attack_mappings ORDER BY id DESC LIMIT 500").fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def attack_coverage_summary(self) -> Dict[str, Any]:
+        """Distinct tactics/techniques demonstrated — a MITRE ATT&CK Navigator-style rollup."""
+        by_tactic = self.conn.execute(
+            "SELECT tactic, COUNT(DISTINCT technique_id) FROM attack_mappings GROUP BY tactic ORDER BY 2 DESC"
+        ).fetchall()
+        total_techniques = self.conn.execute(
+            "SELECT COUNT(DISTINCT technique_id) FROM attack_mappings"
+        ).fetchone()
+        return {
+            "distinct_techniques": total_techniques[0] if total_techniques else 0,
+            "by_tactic": {r[0]: r[1] for r in by_tactic},
+        }
+
+    # ======================================================================
+    # v2.3 — Compliance Checkpoints (hash-chained)
+    # ======================================================================
+
+    def insert_compliance_checkpoint(self, record: Dict[str, Any]) -> int:
+        """
+        Append a hash-chained compliance checkpoint. Each row's hash_chain is
+        sha3-256(prev_hash + canonical row content), so any row tampered with
+        after the fact breaks the chain for every row after it — the same
+        tamper-evidence idea as pqc_audit_log's chain_index/prev_hash, at a
+        coarser "was this action in-bounds" grain.
+        """
+        import hashlib
+        prev = self.conn.execute(
+            "SELECT hash_chain FROM compliance_checkpoints ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        prev_hash = prev[0] if prev else "genesis"
+        row_content = json.dumps({
+            "action_type": record["action_type"], "operator_id": record["operator_id"],
+            "target": record.get("target"), "authorization_result": record.get("authorization_result"),
+            "prev_hash": prev_hash,
+        }, sort_keys=True, default=str)
+        hash_chain = hashlib.sha3_256((prev_hash + row_content).encode()).hexdigest()
+
+        self.conn.execute(
+            """
+            INSERT INTO compliance_checkpoints
+                (action_type, operator_id, target, authorization_result, scope_status,
+                 insurance_status, allowed_to_proceed, pqc_entry_id, hash_chain, prev_hash)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record["action_type"], record["operator_id"], record.get("target"),
+                record.get("authorization_result"), record.get("scope_status"),
+                record.get("insurance_status"), record.get("allowed_to_proceed"),
+                record.get("pqc_entry_id"), hash_chain, prev_hash,
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_compliance_chk')").fetchone()
+        return row[0] if row else -1
+
+    def verify_compliance_chain(self) -> Dict[str, Any]:
+        """Recompute the hash chain end-to-end and report the first break, if any."""
+        import hashlib
+        rows = self.conn.execute(
+            "SELECT id, action_type, operator_id, target, authorization_result, "
+            "hash_chain, prev_hash FROM compliance_checkpoints ORDER BY id"
+        ).fetchall()
+        expected_prev = "genesis"
+        for r in rows:
+            row_id, action_type, operator_id, target, auth_result, hash_chain, prev_hash = r
+            if prev_hash != expected_prev:
+                return {"valid": False, "broken_at_id": row_id, "reason": "prev_hash mismatch"}
+            row_content = json.dumps({
+                "action_type": action_type, "operator_id": operator_id, "target": target,
+                "authorization_result": auth_result, "prev_hash": expected_prev,
+            }, sort_keys=True, default=str)
+            recomputed = hashlib.sha3_256((expected_prev + row_content).encode()).hexdigest()
+            if recomputed != hash_chain:
+                return {"valid": False, "broken_at_id": row_id, "reason": "hash mismatch"}
+            expected_prev = hash_chain
+        return {"valid": True, "checkpoints_verified": len(rows)}
+
+    def list_compliance_checkpoints(self, limit: int = 200) -> List[Dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT * FROM compliance_checkpoints ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    # ======================================================================
+    # v2.3 — RFP Responses
+    # ======================================================================
+
+    def insert_rfp_response(self, record: Dict[str, Any]) -> int:
+        self.conn.execute(
+            """
+            INSERT INTO rfp_responses
+                (client_name, methodology, tools_list, timeline, pricing,
+                 insurance_statement, sample_report_path)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record["client_name"], record.get("methodology"),
+                json.dumps(record.get("tools_list", [])), record.get("timeline"),
+                record.get("pricing"), record.get("insurance_statement"),
+                record.get("sample_report_path"),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_rfp')").fetchone()
+        return row[0] if row else -1
+
+    def list_rfp_responses(self) -> List[Dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT id, client_name, methodology, tools_list, timeline, pricing, "
+            "insurance_statement, sample_report_path, created_at FROM rfp_responses ORDER BY id DESC"
+        ).fetchall()
+        cols = ["id", "client_name", "methodology", "tools_list", "timeline", "pricing",
+                "insurance_statement", "sample_report_path", "created_at"]
+        out = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            d["tools_list"] = json.loads(d.get("tools_list") or "[]")
+            out.append(d)
+        return out
+
+    # ======================================================================
+    # v2.3 — Human Approval Gate
+    # ======================================================================
+
+    def create_approval_request(self, record: Dict[str, Any]) -> int:
+        """
+        Required: request_id, requested_by, action_type
+        Optional: target, phase, technique_id, risk_level, summary,
+                  payload_detail (dict/JSON), pqc_entry_id, expires_at
+        """
+        self.conn.execute(
+            """
+            INSERT INTO approval_requests
+                (request_id, requested_by, action_type, target, phase, technique_id,
+                 risk_level, summary, payload_detail, pqc_entry_id, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record["request_id"], record["requested_by"], record["action_type"],
+                record.get("target"), record.get("phase"), record.get("technique_id"),
+                record.get("risk_level", "MEDIUM"), record.get("summary"),
+                json.dumps(record.get("payload_detail", {}), default=str),
+                record.get("pqc_entry_id"), record.get("expires_at"),
+            ),
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT currval('seq_approval')").fetchone()
+        return row[0] if row else -1
+
+    def decide_approval_request(
+        self, request_id: str, decision: str, decided_by: str, reason: str = "",
+    ) -> bool:
+        """decision must be 'approved' or 'denied'."""
+        result = self.conn.execute(
+            """
+            UPDATE approval_requests
+            SET status = ?, decided_by = ?, decided_at = now(), decision_reason = ?
+            WHERE request_id = ? AND status = 'pending'
+            """,
+            (decision, decided_by, reason, request_id),
+        )
+        self.conn.commit()
+        return (result.rowcount or 0) > 0
+
+    def get_approval_request(self, request_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM approval_requests WHERE request_id = ?", (request_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        d = dict(zip(cols, row))
+        d["payload_detail"] = json.loads(d.get("payload_detail") or "{}")
+        return d
+
+    def list_approval_requests(self, status: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        if status:
+            rows = self.conn.execute(
+                "SELECT * FROM approval_requests WHERE status = ? ORDER BY id DESC LIMIT ?",
+                (status, limit),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM approval_requests ORDER BY id DESC LIMIT ?", (limit,)
+            ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        out = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            d["payload_detail"] = json.loads(d.get("payload_detail") or "{}")
+            out.append(d)
+        return out
+
+    def expire_stale_approval_requests(self) -> int:
+        result = self.conn.execute(
+            "UPDATE approval_requests SET status = 'expired' "
+            "WHERE status = 'pending' AND expires_at IS NOT NULL AND expires_at < now()"
+        )
+        self.conn.commit()
+        return result.rowcount or 0
+
+    def approval_gate_stats(self) -> Dict[str, Any]:
+        by_status = self.conn.execute(
+            "SELECT status, COUNT(*) FROM approval_requests GROUP BY status"
+        ).fetchall()
+        by_risk_pending = self.conn.execute(
+            "SELECT risk_level, COUNT(*) FROM approval_requests WHERE status = 'pending' GROUP BY risk_level"
+        ).fetchall()
+        return {
+            "by_status": {r[0]: r[1] for r in by_status},
+            "pending_by_risk": {r[0]: r[1] for r in by_risk_pending},
+        }
+
+    # ======================================================================
     # Utility
     # ======================================================================
 
@@ -1166,6 +1586,8 @@ class DuckDBManager:
             "pqc_audit_log", "encryption_keys", "payload_executions",
             "network_map", "vuln_db", "threat_intel",
             "fabric_modules", "fabric_events", "zt_posture_assessments",
+            "operators", "attack_mappings", "compliance_checkpoints",
+            "rfp_responses", "approval_requests",
         ]
         stats = {}
         for t in tables:

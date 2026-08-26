@@ -11,6 +11,9 @@ v2.1 routers:
 v2.2 routers:
   aip_router      — /api/aip/* (ontology-driven payload gen interwoven with cheatsheets)
   fabric_router   — /api/fabric/* (Unified Security Fabric — 7 capabilities in one module)
+v2.3 routers:
+  wireless_router — /api/wireless/* (passive Wi-Fi survey; active payloads via /aip/generate)
+  approval_router — /api/approval/* (Human Approval Gate — stage/approve/deny/execute)
 """
 
 from .pentest import router as pentest_router
@@ -20,6 +23,8 @@ from .crypto import router as crypto_router
 from .payloads import router as payloads_router
 from .aip import router as aip_router
 from .fabric import router as fabric_router
+from .wireless import router as wireless_router
+from .approval import router as approval_router
 
 __all__ = [
     "pentest_router",
@@ -29,4 +34,6 @@ __all__ = [
     "payloads_router",
     "aip_router",
     "fabric_router",
+    "wireless_router",
+    "approval_router",
 ]
