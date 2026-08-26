@@ -44,6 +44,39 @@ _CHACHA_NONCE   = 12   # 96-bit
 _PBKDF2_ITER    = 600_000  # OWASP 2024 minimum for PBKDF2-SHA256
 _RSA_KEY_BITS   = 4096
 
+# ---------------------------------------------------------------------------
+# Key persistence — KEK/DEK envelope wrapping (v2.5)
+# ---------------------------------------------------------------------------
+# Found while wiring up JAKAL v2.5: EncryptionManager generated a fresh AES
+# and ChaCha key in memory on every process start and NEVER persisted them
+# anywhere -- so every report encrypted with encrypt_report() became
+# permanently unreadable the moment the process restarted. Separately,
+# database.py's encryption_keys table (register/rotate/revoke/list) had no
+# callers anywhere in the app -- a second, disconnected, always-empty key
+# inventory that GET/POST /crypto/keys operated on for nothing.
+#
+# The fix: session keys (DEKs) ARE now persisted to encryption_keys, but
+# never in the clear -- each one is wrapped with a Key-Encryption-Key (KEK)
+# derived via HKDF (derive_session_key(), below, already existed and had no
+# callers either) from a JAKAL_MASTER_KEY secret that lives only in the
+# environment, never in the database. This is the standard KEK/DEK envelope
+# pattern: compromising the DuckDB file alone doesn't recover any key
+# material without also having the master secret.
+#
+# The encryption_keys table's own column comment says wrapped_key holds a
+# key "wrapped with RSA-OAEP" -- this deliberately does NOT do that, even
+# though RSAKeyWrapper already exists below. RSA-wrapping only moves the
+# problem: EncryptionManager's RSA keypair is *also* generated fresh every
+# process start, so wrapping a DEK with it doesn't survive a restart either
+# unless the RSA private key itself is made durable -- which reintroduces
+# exactly the same "where does the root secret live" question one level up,
+# with more moving parts (PEM handling, no expiry story) for no extra
+# safety over a single symmetric KEK from the environment. If a real KMS
+# (AWS KMS, HashiCorp Vault, etc.) is available in a given deployment, that
+# is the correct place to hold the root secret instead of an env var --
+# swapping _resolve_kek()'s source is the intended extension point.
+_MASTER_KEY_ENV = "JAKAL_MASTER_KEY"
+
 
 # ---------------------------------------------------------------------------
 # Key management dataclass
@@ -246,6 +279,47 @@ def derive_session_key(master_secret: bytes, info: bytes = b"jakal-session") -> 
     )
 
 
+def _resolve_kek() -> Tuple[bytes, bool]:
+    """
+    Returns (kek_bytes, from_persistent_source). When JAKAL_MASTER_KEY is
+    set in the environment, the KEK is deterministically derived from it
+    (HKDF-SHA256), so it's the same key across restarts -- persisted DEKs
+    stay unwrappable. When it isn't set, a random master is generated for
+    this process only: the app still works, but anything persisted this
+    run becomes unrecoverable the moment the process exits. Callers should
+    warn loudly in that case rather than fail startup -- same "insecure but
+    functional default, please configure for production" pattern already
+    used for CLAUDE_API_KEY elsewhere in this app.
+    """
+    raw = os.environ.get(_MASTER_KEY_ENV, "")
+    if raw:
+        master, persistent = raw.encode("utf-8"), True
+    else:
+        master, persistent = os.urandom(32), False
+    kek = derive_session_key(master, info=b"jakal-kek-v1").key_bytes
+    return kek, persistent
+
+
+def _wrap_key_bytes(kek: bytes, raw: bytes) -> str:
+    """AES-256-GCM-encrypt raw DEK bytes under the KEK. Returns a JSON
+    string (nonce + ciphertext, base64) safe to store in a VARCHAR column."""
+    nonce = os.urandom(_AES_GCM_NONCE)
+    ct = AESGCM(kek).encrypt(nonce, raw, None)
+    return json.dumps({
+        "nonce_b64": base64.b64encode(nonce).decode(),
+        "ct_b64": base64.b64encode(ct).decode(),
+    })
+
+
+def _unwrap_key_bytes(kek: bytes, wrapped_json: str) -> bytes:
+    """Inverse of _wrap_key_bytes(). Raises on tamper or a KEK mismatch
+    (e.g. JAKAL_MASTER_KEY changed since this key was wrapped)."""
+    obj = json.loads(wrapped_json)
+    nonce = base64.b64decode(obj["nonce_b64"])
+    ct = base64.b64decode(obj["ct_b64"])
+    return AESGCM(kek).decrypt(nonce, ct, None)
+
+
 # ---------------------------------------------------------------------------
 # High-level EncryptionManager facade
 # ---------------------------------------------------------------------------
@@ -256,19 +330,78 @@ class EncryptionManager:
 
     Holds a session AES key, a ChaCha key, and an RSA wrapper.
     Designed to be a singleton per FastAPI app instance.
+
+    v2.5: when constructed with a `db` (as routers/crypto.py now does),
+    session keys are persisted -- KEK-wrapped, never in the clear -- to
+    encryption_keys, and rehydrated from there on the next startup instead
+    of being regenerated from scratch every time. Without a db (e.g. the
+    standalone `EncryptionManager()` usage in tests/test_20x_validation.py)
+    it behaves exactly as before: fresh in-memory-only keys each run.
     """
 
-    def __init__(self, db=None):
+    def __init__(self, db=None, operator_id: str = "system"):
         self.db = db
-        self._aes_key    = AESGCMEncryptor.generate_key()
-        self._chacha_key = ChaChaEncryptor.generate_key()
-        self._rsa        = RSAKeyWrapper()
-        self._key_store: Dict[str, EncryptionKey] = {
-            self._aes_key.key_id:    self._aes_key,
-            self._chacha_key.key_id: self._chacha_key,
-        }
-        logger.info("EncryptionManager initialised | AES key=%s | ChaCha key=%s",
-                    self._aes_key.key_id[:8], self._chacha_key.key_id[:8])
+        self.operator_id = operator_id
+        self._kek, self._kek_persistent = _resolve_kek()
+        if not self._kek_persistent:
+            logger.warning(
+                "%s not set -- using an ephemeral master key for this process. "
+                "Session keys will still be recorded in encryption_keys, but "
+                "they will NOT be recoverable after a restart (the key wrapping "
+                "them is gone). Set %s in backend/.env for production use.",
+                _MASTER_KEY_ENV, _MASTER_KEY_ENV,
+            )
+
+        self._key_store: Dict[str, EncryptionKey] = {}
+        self._rsa = RSAKeyWrapper()
+
+        self._aes_key    = self._load_or_create_key("AES-256-GCM")
+        self._chacha_key = self._load_or_create_key("ChaCha20-Poly1305")
+
+        logger.info("EncryptionManager initialised | AES key=%s | ChaCha key=%s | persistence=%s",
+                    self._aes_key.key_id[:8], self._chacha_key.key_id[:8],
+                    "db-backed" if self.db else "in-memory-only")
+
+    # ------------------------------------------------------------------
+    # Key persistence (v2.5)
+    # ------------------------------------------------------------------
+
+    def _load_or_create_key(self, algorithm: str) -> EncryptionKey:
+        """Rehydrate the most recently active key of this algorithm from
+        encryption_keys (unwrapping with the KEK), or generate + persist a
+        fresh one if none exists or none can be unwrapped."""
+        if self.db:
+            try:
+                for row in self.db.list_encryption_key_material(status="active"):
+                    if row["algorithm"] != algorithm or not row.get("wrapped_key"):
+                        continue
+                    try:
+                        raw = _unwrap_key_bytes(self._kek, row["wrapped_key"])
+                    except Exception:
+                        continue  # wrong/rotated KEK -- unrecoverable, try the next row
+                    key = EncryptionKey(key_id=row["key_id"], algorithm=algorithm, key_bytes=raw)
+                    self._key_store[key.key_id] = key
+                    return key
+            except Exception as e:
+                logger.warning("Could not rehydrate %s key from encryption_keys: %s", algorithm, e)
+
+        new_key = (ChaChaEncryptor if algorithm == "ChaCha20-Poly1305" else AESGCMEncryptor).generate_key()
+        self._key_store[new_key.key_id] = new_key
+        self._persist_key(new_key)
+        return new_key
+
+    def _persist_key(self, key: EncryptionKey) -> None:
+        if not self.db:
+            return
+        try:
+            self.db.register_encryption_key({
+                "key_id": key.key_id, "algorithm": key.algorithm,
+                "key_purpose": "session", "operator_id": self.operator_id,
+                "key_wrapping_algo": "AES-256-GCM-KEK(HKDF)",
+                "wrapped_key": _wrap_key_bytes(self._kek, key.key_bytes),
+            })
+        except Exception as e:
+            logger.warning("Could not persist encryption key %s: %s", key.key_id, e)
 
     # ------------------------------------------------------------------
     # Session encryption  (use these for most operations)
@@ -328,19 +461,72 @@ class EncryptionManager:
         return self._rsa.export_public_key_pem()
 
     def list_keys(self) -> list:
+        """
+        Prefers the persisted, authoritative inventory (encryption_keys,
+        every lifecycle state) when a db is wired -- this is what makes
+        GET /crypto/keys finally show real data instead of always being
+        empty. Falls back to the in-memory store's metadata when there's
+        no db (standalone usage) or the query fails.
+        """
+        if self.db:
+            try:
+                return self.db.list_encryption_keys(status=None)
+            except Exception as e:
+                logger.warning("Falling back to in-memory key list: %s", e)
         return [k.to_dict() for k in self._key_store.values()]
 
     def generate_new_session_key(self, algorithm: str = "AES-256-GCM") -> Dict[str, Any]:
-        """Rotate the session key on demand."""
+        """
+        Rotate the session key on demand. The old key stays in the
+        in-memory store (and, if persisted, its DB row moves to 'rotated'
+        rather than being deleted) so anything already encrypted under it
+        stays decryptable -- only NEW encrypt() calls use the new key.
+        """
         if algorithm == "ChaCha20-Poly1305":
-            new_key = ChaChaEncryptor.generate_key()
+            old_key, new_key = self._chacha_key, ChaChaEncryptor.generate_key()
             self._chacha_key = new_key
         else:
-            new_key = AESGCMEncryptor.generate_key()
+            old_key, new_key = self._aes_key, AESGCMEncryptor.generate_key()
             self._aes_key = new_key
         self._key_store[new_key.key_id] = new_key
+        self._persist_key(new_key)
+        if self.db:
+            try:
+                self.db.rotate_encryption_key(old_key.key_id)
+            except Exception as e:
+                logger.warning("Could not mark old key %s as rotated: %s", old_key.key_id, e)
         logger.info("Session key rotated | new key_id=%s", new_key.key_id)
         return new_key.to_dict()
+
+    def revoke_session_key(self, key_id: str) -> bool:
+        """
+        Revoke a key -- unlike rotation, this makes it permanently unusable:
+        removed from the in-memory store so decrypt() can no longer find it
+        (anything still encrypted under it becomes unreadable -- that's the
+        point, for a suspected-compromised key rather than routine
+        rotation), and marked 'revoked' in the DB. If the revoked key was
+        currently active, a replacement is generated immediately so
+        encrypt() keeps working.
+        """
+        existed_in_memory = self._key_store.pop(key_id, None) is not None
+
+        if key_id == getattr(self._aes_key, "key_id", None):
+            self._aes_key = AESGCMEncryptor.generate_key()
+            self._key_store[self._aes_key.key_id] = self._aes_key
+            self._persist_key(self._aes_key)
+        if key_id == getattr(self._chacha_key, "key_id", None):
+            self._chacha_key = ChaChaEncryptor.generate_key()
+            self._key_store[self._chacha_key.key_id] = self._chacha_key
+            self._persist_key(self._chacha_key)
+
+        existed_in_db = False
+        if self.db:
+            try:
+                existed_in_db = self.db.revoke_encryption_key(key_id)
+            except Exception as e:
+                logger.warning("Could not mark key %s as revoked: %s", key_id, e)
+
+        return existed_in_memory or existed_in_db
 
     def status(self) -> Dict[str, Any]:
         return {
@@ -350,4 +536,7 @@ class EncryptionManager:
             "rsa_key_bits":   _RSA_KEY_BITS,
             "pbkdf2_iter":    _PBKDF2_ITER,
             "algorithms_available": ["AES-256-GCM", "ChaCha20-Poly1305", f"RSA-{_RSA_KEY_BITS}-OAEP"],
+            "key_persistence": "db-backed" if self.db else "in-memory-only",
+            "kek_source": ("JAKAL_MASTER_KEY env var" if self._kek_persistent
+                            else "ephemeral (set JAKAL_MASTER_KEY for durability across restarts)"),
         }

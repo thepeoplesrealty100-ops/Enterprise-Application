@@ -106,6 +106,18 @@ else
     # up automatically. Otherwise a placeholder is written for you to edit —
     # never a real key. See https://console.anthropic.com/account/keys.
     CLAUDE_KEY_VALUE="${CLAUDE_API_KEY:-sk-ant-your-api-key-here}"
+    # v2.5: JAKAL_MASTER_KEY wraps persisted encryption session keys (see
+    # crypto/encryption_manager.py). Unlike the Claude key this isn't a
+    # credential you have to obtain — it's safe (and correct) to generate
+    # a random one locally right now, once, so it stays stable across
+    # restarts instead of leaving encrypted data unrecoverable.
+    if [ -n "${JAKAL_MASTER_KEY:-}" ]; then
+        MASTER_KEY_VALUE="${JAKAL_MASTER_KEY}"
+    elif command -v openssl >/dev/null 2>&1; then
+        MASTER_KEY_VALUE="$(openssl rand -hex 32)"
+    else
+        MASTER_KEY_VALUE="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+    fi
     cat > backend/.env << ENVEOF
 # JAKAL Backend Configuration
 # Update CLAUDE_API_KEY with your Anthropic API key from https://console.anthropic.com
@@ -119,6 +131,9 @@ ENVIRONMENT=development
 LLM_ENGINE=claude
 CLAUDE_API_KEY=${CLAUDE_KEY_VALUE}
 CLAUDE_MODEL=claude-3-5-sonnet-20241022
+
+# Encryption key wrapping (auto-generated locally — do not share/commit)
+JAKAL_MASTER_KEY=${MASTER_KEY_VALUE}
 
 # Ollama (local fallback - optional)
 OLLAMA_BASE_URL=http://localhost:11434

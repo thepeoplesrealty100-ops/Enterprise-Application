@@ -47,6 +47,11 @@ class Config:
     ENABLE_HUMAN_IN_LOOP = os.getenv('ENABLE_HUMAN_IN_LOOP', 'True').lower() == 'true'
     MAX_CONCURRENT_AGENTS = int(os.getenv('MAX_CONCURRENT_AGENTS', '5'))
     EXPLOITATION_TIMEOUT = int(os.getenv('EXPLOITATION_TIMEOUT', '600'))
+    # v2.5: root secret for encryption_manager.py's KEK — wraps persisted
+    # session keys in encryption_keys. Unset means keys are still generated
+    # and persisted, but wrapped under a per-process random key instead, so
+    # they're unrecoverable after a restart. See that module's docstring.
+    JAKAL_MASTER_KEY = os.getenv('JAKAL_MASTER_KEY', '')
     
     # CORS
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:8080').split(',')

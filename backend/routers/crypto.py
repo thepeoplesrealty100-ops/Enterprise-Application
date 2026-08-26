@@ -28,20 +28,23 @@ from pydantic import BaseModel
 
 # ── Local imports (relative; app runs from inside backend/) ────────────────
 try:
-    from crypto.pqc_manager import PQCAuditManager
-    from crypto.encryption_manager import EncryptionManager
-    _pqc = PQCAuditManager()
-    _enc = EncryptionManager()
-    CRYPTO_OK = True
-except Exception as _e:
-    CRYPTO_OK = False
-    _CRYPTO_ERR = str(_e)
-
-try:
     from database import DuckDBManager
     _db: Optional[DuckDBManager] = DuckDBManager()
 except Exception:
     _db = None
+
+try:
+    from crypto.pqc_manager import PQCAuditManager
+    from crypto.encryption_manager import EncryptionManager
+    _pqc = PQCAuditManager()
+    # v2.5: pass _db so session keys are persisted (KEK-wrapped) instead of
+    # being regenerated from scratch — and lost — every process restart.
+    # See crypto/encryption_manager.py's module docstring for the design.
+    _enc = EncryptionManager(db=_db)
+    CRYPTO_OK = True
+except Exception as _e:
+    CRYPTO_OK = False
+    _CRYPTO_ERR = str(_e)
 
 # ── Schemas ────────────────────────────────────────────────────────────────
 
@@ -241,7 +244,22 @@ def list_keys(
 
 @router.post("/keys/rotate")
 def rotate_key(req: KeyActionRequest):
-    """Mark a key as rotated by key_id."""
+    """
+    Rotate a key by key_id.
+
+    v2.5: if key_id is EncryptionManager's currently active AES or ChaCha
+    session key, this generates a real replacement key (used for all new
+    encrypt() calls going forward) and marks the old one 'rotated' — not
+    just a DB status flip on a row nothing actually reads. For a
+    historical (already-rotated/unknown-to-the-session) key_id, it falls
+    back to the plain DB bookkeeping flip, same as before.
+    """
+    _require_crypto()
+    if req.key_id in (_enc._aes_key.key_id, _enc._chacha_key.key_id):
+        algorithm = "ChaCha20-Poly1305" if req.key_id == _enc._chacha_key.key_id else "AES-256-GCM"
+        new_key = _enc.generate_new_session_key(algorithm=algorithm)
+        return {"status": "rotated", "key_id": req.key_id, "new_key": new_key}
+
     if not _db:
         raise HTTPException(status_code=503, detail="Database not available")
     ok = _db.rotate_encryption_key(req.key_id)
@@ -252,10 +270,14 @@ def rotate_key(req: KeyActionRequest):
 
 @router.post("/keys/revoke")
 def revoke_key(req: KeyActionRequest):
-    """Immediately revoke a key by key_id."""
-    if not _db:
-        raise HTTPException(status_code=503, detail="Database not available")
-    ok = _db.revoke_encryption_key(req.key_id)
+    """
+    Immediately revoke a key by key_id — removed from active use in both
+    the in-memory session store and the DB (v2.5: EncryptionManager.
+    revoke_session_key() keeps both in sync; see its docstring for why
+    this is deliberately more destructive than rotation).
+    """
+    _require_crypto()
+    ok = _enc.revoke_session_key(req.key_id)
     if not ok:
         raise HTTPException(status_code=404, detail=f"Key {req.key_id} not found")
     return {"status": "revoked", "key_id": req.key_id}

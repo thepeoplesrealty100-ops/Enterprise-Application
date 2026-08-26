@@ -34,6 +34,11 @@ Schema version: 2.4
           approval_requests (v2.3) gains one nullable origin_module column
           rather than a second, parallel `agentic_approval_queue` table --
           see the CREATE TABLE comment below for why.
+          Also: encryption_keys (v2.1 table, previously never written to by
+          any live code path) is now actually populated -- see
+          crypto/encryption_manager.py's KEK-wrapped key persistence, and
+          list_encryption_keys()'s new status=None ("all lifecycle states")
+          option below.
 """
 
 import json
@@ -957,20 +962,43 @@ class DuckDBManager:
         return matched
 
     def list_encryption_keys(
-        self, operator_id: Optional[str] = None, status: str = "active"
+        self, operator_id: Optional[str] = None, status: Optional[str] = "active"
     ) -> List[Dict[str, Any]]:
-        where, params = ["status = ?"], [status]
+        """status=None lists every lifecycle state (active/rotated/revoked);
+        the default of 'active' preserves the original behavior."""
+        where, params = [], []
+        if status is not None:
+            where.append("status = ?"); params.append(status)
         if operator_id:
             where.append("operator_id = ?")
             params.append(operator_id)
+        clause = f"WHERE {' AND '.join(where)}" if where else ""
         rows = self.conn.execute(
             f"SELECT key_id, algorithm, key_purpose, operator_id, status, "
             f"created_at, rotated_at, revoked_at, metadata "
-            f"FROM encryption_keys WHERE {' AND '.join(where)} ORDER BY id DESC",
+            f"FROM encryption_keys {clause} ORDER BY id DESC",
             params,
         ).fetchall()
         cols = ["key_id", "algorithm", "key_purpose", "operator_id", "status",
                 "created_at", "rotated_at", "revoked_at", "metadata"]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def list_encryption_key_material(self, status: str = "active") -> List[Dict[str, Any]]:
+        """
+        Like list_encryption_keys(), but ALSO includes wrapped_key/
+        key_wrapping_algo -- the KEK-wrapped (never raw) key bytes. This is
+        for EncryptionManager's own startup rehydration only; never expose
+        it over the public API the way list_encryption_keys() is exposed
+        via GET /crypto/keys.
+        """
+        rows = self.conn.execute(
+            "SELECT key_id, algorithm, key_purpose, operator_id, status, "
+            "key_wrapping_algo, wrapped_key, salt_hex, metadata "
+            "FROM encryption_keys WHERE status = ? ORDER BY id DESC",
+            (status,),
+        ).fetchall()
+        cols = ["key_id", "algorithm", "key_purpose", "operator_id", "status",
+                "key_wrapping_algo", "wrapped_key", "salt_hex", "metadata"]
         return [dict(zip(cols, r)) for r in rows]
 
     # ======================================================================
