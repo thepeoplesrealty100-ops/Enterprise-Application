@@ -2,32 +2,36 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies for security tools
-RUN apt-get update && apt-get install -y \
-    nmap nikto dnsmasq curl wget git \
-    postgresql-client openssh-client \
-    build-essential libssl-dev libffi-dev \
+# System deps. Note: `nikto` is not in Debian trixie apt — omit it.
+# nmap is available; nuclei/gobuster can be added later via official binaries if needed.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nmap \
+    curl \
+    wget \
+    git \
+    ca-certificates \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY backend/requirements.txt .
+# Python deps
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Application code
+COPY backend/ /app/backend/
+COPY gacyber_toolkit/ /app/gacyber_toolkit/
 
-# Copy application code
-COPY backend/ ./backend/
-COPY gacyber_toolkit/ ./gacyber_toolkit/
+RUN mkdir -p /app/data /app/logs /app/backups
 
-# Create necessary directories
-RUN mkdir -p data logs backups
+WORKDIR /app/backend
+ENV PYTHONPATH=/app/backend
+ENV DUCKDB_PATH=/app/data/jakal.duckdb
 
-# Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run application
-CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

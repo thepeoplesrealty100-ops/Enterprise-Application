@@ -1,4 +1,3 @@
-
 services:
   jakal-backend:
     build:
@@ -8,19 +7,18 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=production
-      - LOG_LEVEL=INFO
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - API_HOST=0.0.0.0
       - API_PORT=8000
-      - DATABASE_URL=data/jakal.duckdb
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - DUCKDB_PATH=/app/data/jakal.duckdb
+      - LLM_ENGINE=${LLM_ENGINE:-ollama}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
       - IBM_QUANTUM_TOKEN=${IBM_QUANTUM_TOKEN:-}
-      - SUPABASE_URL=${SUPABASE_URL:-}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
-      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-}
-      - FIREBASE_API_KEY=${FIREBASE_API_KEY:-}
-      - ALLOWED_ORIGINS=http://localhost:3000,https://jakal.vercel.app,https://thepeoplesrealty100-ops.github.io
-      - ENABLE_LOCAL_LLM=false
-      - ENABLE_QUANTUM_SIMULATION=true
+      - JAKAL_MASTER_KEY=${JAKAL_MASTER_KEY:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8080}
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -29,6 +27,8 @@ services:
     networks:
       - jakal_network
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     logging:
       driver: "json-file"
       options:
@@ -38,8 +38,3 @@ services:
 networks:
   jakal_network:
     driver: bridge
-
-volumes:
-  data:
-  logs:
-  backups:
