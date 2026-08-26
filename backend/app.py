@@ -5,21 +5,19 @@ JAKAL Backend - FastAPI application (v2.5)
 Pure wiring layer: config, middleware, shared agents that are not owned by a
 router, and the modular router mount points.
 
-Pentest pipeline lives in routers/pentest.py  (POST /api/pentest/run).
-Quantum jobs live in routers/quantum.py       (POST /api/quantum/submit, etc.).
-
-Automated pentest stops at reporting — it does not stage or execute exploit
-payloads. High-risk actions go through the Human Approval Gate
-(/api/approval/*). Every network-facing agent re-checks scope/authorization.
+Also serves the operator UI from FRONTEND_DIR at / (same origin as the API).
 """
 
 import logging
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 
 import asyncio
 import json as _json
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -62,13 +60,21 @@ app = FastAPI(
 
 app.add_middleware(TimingAndSecurityMiddleware)
 
-_cors_origins = getattr(config, "CORS_ORIGINS", None) or ["http://localhost:3000"]
+_cors_origins = getattr(config, "CORS_ORIGINS", None) or [
+    "http://localhost:3000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
 if isinstance(_cors_origins, str):
     _cors_origins = [o.strip() for o in _cors_origins.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
+    # Any localhost / 127.0.0.1 port (PowerShell static server, Live Server, etc.)
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -97,6 +103,16 @@ compliance_axiom = ComplianceAxiom(db)
 edr_mdr = EdrMdrEngine(db)
 
 
+def _row_field(row, key: str, index: int):
+    """DuckDB rows may be dict-like or tuples depending on path."""
+    if isinstance(row, dict):
+        return row.get(key)
+    try:
+        return row[index]
+    except Exception:
+        return None
+
+
 # ============================================================================
 # HEALTH
 # ============================================================================
@@ -114,7 +130,6 @@ async def health_check():
 
 @app.get("/api/health")
 async def api_health_check():
-    """Aliased health endpoint under /api prefix for router-consistent access."""
     return {
         "status": "healthy",
         "service": "backend",
@@ -134,7 +149,6 @@ async def llm_health():
 
 @app.post("/api/scope/add")
 async def add_scope(payload: dict):
-    """Register an authorized engagement scope before any target-facing work."""
     scope_id = db.add_scope(
         client_name=payload["client_name"],
         scope_definition=payload["scope_definition"],
@@ -186,30 +200,33 @@ async def get_agent_logs(limit: int = 50, offset: int = 0):
 
 
 # ============================================================================
-# TELEMETRY SSE  (consumed by integration.js startTelemetryStream)
+# TELEMETRY SSE
 # ============================================================================
 
 @app.get("/api/telemetry/stream")
 async def telemetry_stream():
-    """Server-Sent Events — recent agent logs then live updates every 3s."""
     async def event_generator():
         last_id = None
         rows = db.query(
             "SELECT id, timestamp, event, action, status FROM agent_logs "
             "ORDER BY timestamp DESC LIMIT 50"
         )
-        for row in reversed(rows):
+        for row in reversed(rows or []):
+            ts = _row_field(row, "timestamp", 1)
+            event = _row_field(row, "event", 2)
+            action = _row_field(row, "action", 3)
+            status = _row_field(row, "status", 4)
+            rid = _row_field(row, "id", 0)
             payload = _json.dumps({
-                "message": "[{}] {} - {} ({})".format(
-                    row["timestamp"], row["event"], row["action"], row["status"]),
-                "timestamp": row["timestamp"],
-                "level_color": "text-emerald-400" if row["status"] == "success" else "text-red-400",
+                "message": "[{}] {} - {} ({})".format(ts, event, action, status),
+                "timestamp": str(ts),
+                "level_color": "text-emerald-400" if status == "success" else "text-red-400",
             })
             yield "data: {}\n\n".format(payload)
-            last_id = row["id"]
+            last_id = rid
         while True:
             await asyncio.sleep(3)
-            if last_id:
+            if last_id is not None:
                 new_rows = db.query(
                     "SELECT id, timestamp, event, action, status FROM agent_logs "
                     "WHERE id > ? ORDER BY timestamp ASC LIMIT 20", (last_id,))
@@ -217,22 +234,26 @@ async def telemetry_stream():
                 new_rows = db.query(
                     "SELECT id, timestamp, event, action, status FROM agent_logs "
                     "ORDER BY timestamp ASC LIMIT 20")
-            for row in new_rows:
+            for row in new_rows or []:
+                ts = _row_field(row, "timestamp", 1)
+                event = _row_field(row, "event", 2)
+                action = _row_field(row, "action", 3)
+                status = _row_field(row, "status", 4)
+                rid = _row_field(row, "id", 0)
                 payload = _json.dumps({
-                    "message": "[{}] {} - {} ({})".format(
-                        row["timestamp"], row["event"], row["action"], row["status"]),
-                    "timestamp": row["timestamp"],
-                    "level_color": "text-emerald-400" if row["status"] == "success" else "text-red-400",
+                    "message": "[{}] {} - {} ({})".format(ts, event, action, status),
+                    "timestamp": str(ts),
+                    "level_color": "text-emerald-400" if status == "success" else "text-red-400",
                 })
                 yield "data: {}\n\n".format(payload)
-                last_id = row["id"]
+                last_id = rid
     return StreamingResponse(
         event_generator(), media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 # ============================================================================
-# MITRE
+# MITRE / VM / COMPLIANCE / EDR (unchanged contracts)
 # ============================================================================
 
 @app.get("/api/mitre/tactics")
@@ -244,10 +265,6 @@ async def get_mitre_tactics():
 async def get_mitre_techniques(tactic: str):
     return orchestrator.get_techniques(tactic)
 
-
-# ============================================================================
-# VM ORCHESTRATOR (local lab/sandbox containers only)
-# ============================================================================
 
 @app.get("/api/vm/images")
 async def vm_list_images():
@@ -289,10 +306,6 @@ async def vm_destroy_sandbox(container_name: str, operator_id: str = "system"):
     return result
 
 
-# ============================================================================
-# COMPLIANCE AXIOM
-# ============================================================================
-
 @app.get("/api/compliance/axiom/frameworks")
 async def compliance_frameworks():
     return compliance_axiom.available_frameworks()
@@ -310,10 +323,6 @@ async def compliance_generate_report(payload: dict):
         raise HTTPException(status_code=400, detail=result["error"])
     return result
 
-
-# ============================================================================
-# EDR / MDR PLAYBOOK LIBRARY
-# ============================================================================
 
 @app.post("/api/edr/playbooks/seed")
 async def edr_seed_playbooks(operator_id: str = "system"):
@@ -345,6 +354,37 @@ async def edr_complete_step(execution_id: int, step_index: int, payload: dict):
 @app.post("/api/edr/executions/{execution_id}/finish")
 async def edr_finish_execution(execution_id: int, operator_id: str = "system"):
     return edr_mdr.finish_execution(execution_id, operator_id)
+
+
+# ============================================================================
+# FRONTEND (same origin as API — open http://localhost:8000/ )
+# ============================================================================
+
+_FRONTEND = Path(os.getenv(
+    "FRONTEND_DIR",
+    str(Path(__file__).resolve().parent.parent / "frontend"),
+))
+
+
+@app.get("/")
+async def serve_index():
+    index = _FRONTEND / "index.html"
+    if index.is_file():
+        return FileResponse(index, media_type="text/html")
+    return {
+        "service": "JAKAL Backend",
+        "version": app.version,
+        "docs": "/docs",
+        "hint": "UI not bundled; open /docs or set FRONTEND_DIR",
+    }
+
+
+if _FRONTEND.is_dir():
+    # Serves integration.js, gacyber_toolkit/*, etc. Must be registered last.
+    app.mount("/", StaticFiles(directory=str(_FRONTEND), html=True), name="frontend")
+    logger.info("Frontend mounted from %s", _FRONTEND)
+else:
+    logger.warning("FRONTEND_DIR missing at %s — UI will not be served", _FRONTEND)
 
 
 if __name__ == "__main__":

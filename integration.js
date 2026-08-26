@@ -1,59 +1,19 @@
-// integration.js
-// Live Frontend <> JAKAL Backend bridge (v2.5)
-// Opens a status bar, seeds demo scope/insurance, streams telemetry,
-// and wires quantum / fabric / pentest actions to real API endpoints.
+// integration.js — live JAKAL UI ↔ API bridge (v2.5)
+// Prefer same-origin (UI served from :8000). Fall back to 127.0.0.1:8000.
 
 export const BACKEND_BASE = (() => {
-  const h = window.location.hostname;
-  if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:8000';
-  // GitHub Pages / production: set your deployed API here when ready
-  return 'http://localhost:8000';
+  const { hostname, port, protocol, origin } = window.location;
+  const local = hostname === 'localhost' || hostname === '127.0.0.1';
+  // UI served by FastAPI itself
+  if (local && (port === '8000' || port === '')) return '';
+  if (local) return 'http://127.0.0.1:8000';
+  return origin;
 })();
 
 const DEMO_TARGET = 'staging.client.com';
 
 function el(id) {
   return document.getElementById(id);
-}
-
-function ensurePanel() {
-  let bar = el('jakal-live-bar');
-  if (bar) return bar;
-
-  bar = document.createElement('div');
-  bar.id = 'jakal-live-bar';
-  bar.style.cssText = [
-    'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:9999',
-    'display:flex', 'flex-wrap:wrap', 'align-items:center', 'gap:8px',
-    'padding:8px 12px', 'background:#0f172a', 'border-bottom:1px solid #f97316',
-    'font:12px/1.4 Inter,system-ui,sans-serif', 'color:#e5e7eb'
-  ].join(';');
-
-  bar.innerHTML = `
-    <strong style="color:#f97316">JAKAL LIVE</strong>
-    <span id="jakal-conn" style="padding:2px 8px;border-radius:999px;background:#374151">checking…</span>
-    <span id="jakal-meta" style="opacity:.85"></span>
-    <span style="flex:1"></span>
-    <button id="jakal-btn-health" style="${btnStyle()}">Refresh health</button>
-    <button id="jakal-btn-seed" style="${btnStyle()}">Seed scope+insurance</button>
-    <button id="jakal-btn-quantum" style="${btnStyle()}">Run quantum job</button>
-    <button id="jakal-btn-fabric" style="${btnStyle()}">Fabric status</button>
-    <button id="jakal-btn-pentest" style="${btnStyle('#b91c1c')}">Run pentest (${DEMO_TARGET})</button>
-  `;
-
-  document.body.prepend(bar);
-  document.documentElement.style.scrollPaddingTop = '48px';
-  const app = el('app');
-  if (app) app.style.paddingTop = '44px';
-
-  el('jakal-btn-health').onclick = () => refreshHealth();
-  el('jakal-btn-seed').onclick = () => seedAuthorization();
-  el('jakal-btn-quantum').onclick = () => runQuantumSimulation('bell_state', 512);
-  el('jakal-btn-fabric').onclick = () => loadFabric();
-  el('jakal-btn-pentest').onclick = () => runDemoPentest();
-
-  ensureConsole();
-  return bar;
 }
 
 function btnStyle(bg = '#1f2937') {
@@ -88,8 +48,48 @@ export function updateTelemetryConsole(text, colorClass = 'text-gray-300') {
   container.scrollTop = container.scrollHeight;
 }
 
+function ensurePanel() {
+  let bar = el('jakal-live-bar');
+  if (bar) return bar;
+
+  bar = document.createElement('div');
+  bar.id = 'jakal-live-bar';
+  bar.style.cssText = [
+    'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:9999',
+    'display:flex', 'flex-wrap:wrap', 'align-items:center', 'gap:8px',
+    'padding:8px 12px', 'background:#0f172a', 'border-bottom:1px solid #f97316',
+    'font:12px/1.4 Inter,system-ui,sans-serif', 'color:#e5e7eb'
+  ].join(';');
+
+  bar.innerHTML = `
+    <strong style="color:#f97316">JAKAL LIVE</strong>
+    <span id="jakal-conn" style="padding:2px 8px;border-radius:999px;background:#374151">checking…</span>
+    <span id="jakal-meta" style="opacity:.85"></span>
+    <span style="flex:1"></span>
+    <button type="button" id="jakal-btn-health" style="${btnStyle()}">Refresh health</button>
+    <button type="button" id="jakal-btn-seed" style="${btnStyle()}">Seed scope+insurance</button>
+    <button type="button" id="jakal-btn-quantum" style="${btnStyle()}">Run quantum job</button>
+    <button type="button" id="jakal-btn-fabric" style="${btnStyle()}">Fabric status</button>
+    <button type="button" id="jakal-btn-pentest" style="${btnStyle('#b91c1c')}">Run pentest (${DEMO_TARGET})</button>
+  `;
+
+  document.body.prepend(bar);
+  const app = el('app');
+  if (app) app.style.paddingTop = '48px';
+
+  el('jakal-btn-health').onclick = () => refreshHealth();
+  el('jakal-btn-seed').onclick = () => seedAuthorization();
+  el('jakal-btn-quantum').onclick = () => runQuantumSimulation('bell_state', 512);
+  el('jakal-btn-fabric').onclick = () => loadFabric();
+  el('jakal-btn-pentest').onclick = () => runDemoPentest();
+
+  ensureConsole();
+  return bar;
+}
+
 async function api(path, options = {}) {
-  const res = await fetch(`${BACKEND_BASE}${path}`, {
+  const url = `${BACKEND_BASE}${path}`;
+  const res = await fetch(url, {
     ...options,
     headers: {
       Accept: 'application/json',
@@ -155,14 +155,14 @@ export async function seedAuthorization() {
     const ins = await api('/api/insurance/add', {
       method: 'POST',
       body: JSON.stringify({
-        policy_number: 'DEMO-POL-001',
+        policy_number: `DEMO-POL-${Date.now()}`,
         provider: 'Demo Underwriter',
         coverage_amount: 1000000,
         expiry: '2027-12-31T23:59:59',
       }),
     });
     updateTelemetryConsole(`[SEED] policy_id=${ins.policy_id}`, 'text-emerald-400');
-    updateTelemetryConsole(`[SEED] Ready — pentest target ${DEMO_TARGET} should pass auth gate`);
+    updateTelemetryConsole(`[SEED] Ready — pentest target ${DEMO_TARGET}`);
     return { scope, ins };
   } catch (e) {
     updateTelemetryConsole(`[SEED ERROR] ${e.message}`, 'text-red-400');
@@ -175,14 +175,10 @@ export async function runQuantumSimulation(algorithm = 'bell_state', shots = 102
   try {
     const result = await api('/api/quantum/submit', {
       method: 'POST',
-      body: JSON.stringify({
-        circuit: algorithm,
-        shots,
-        backend: 'qiskit_aer',
-      }),
+      body: JSON.stringify({ circuit: algorithm, shots, backend: 'qiskit_aer' }),
     });
     updateTelemetryConsole(`[QUANTUM] job_id=${result.job_id}`, 'text-emerald-400');
-    updateTelemetryConsole(`[QUANTUM] ${JSON.stringify(result.result).slice(0, 400)}…`);
+    updateTelemetryConsole(`[QUANTUM] ${JSON.stringify(result.result).slice(0, 500)}`);
     return result;
   } catch (e) {
     updateTelemetryConsole(`[QUANTUM ERROR] ${e.message}`, 'text-red-400');
@@ -222,13 +218,13 @@ export async function runDemoPentest(target = DEMO_TARGET) {
     });
     updateTelemetryConsole(`[PENTEST] test_id=${data.test_id} status=${data.status}`, 'text-emerald-400');
     if (data.report_markdown) {
-      updateTelemetryConsole(`[PENTEST] report:\n${String(data.report_markdown).slice(0, 600)}`);
+      updateTelemetryConsole(`[PENTEST] ${String(data.report_markdown).slice(0, 800)}`);
     }
     return data;
   } catch (e) {
     updateTelemetryConsole(`[PENTEST ERROR ${e.status || ''}] ${e.message}`, 'text-red-400');
     if (e.status === 403) {
-      updateTelemetryConsole('[HINT] Click "Seed scope+insurance" first, then retry pentest.', 'text-yellow-400');
+      updateTelemetryConsole('[HINT] Click Seed scope+insurance, then retry.', 'text-yellow-400');
     }
     throw e;
   }
@@ -239,28 +235,23 @@ export function startTelemetryStream() {
     try { window.__telemetryEventSource.close(); } catch (_) {}
     window.__telemetryEventSource = null;
   }
-
   let retryDelay = 1000;
   function connect() {
     const url = `${BACKEND_BASE}/api/telemetry/stream`;
     const es = new EventSource(url);
     window.__telemetryEventSource = es;
-
     es.onopen = () => {
       updateTelemetryConsole('[SSE] telemetry connected', 'text-emerald-400');
       retryDelay = 1000;
     };
-
     es.onmessage = (evt) => {
       try {
         const log = JSON.parse(evt.data);
-        const message = log.message || evt.data;
-        updateTelemetryConsole(message, log.level_color || 'text-gray-300');
+        updateTelemetryConsole(log.message || evt.data, log.level_color || 'text-gray-300');
       } catch {
         updateTelemetryConsole(evt.data, 'text-gray-300');
       }
     };
-
     es.onerror = () => {
       try { es.close(); } catch (_) {}
       setTimeout(connect, retryDelay);
@@ -273,8 +264,7 @@ export function startTelemetryStream() {
 export function wireIntegrationButtons() {
   document.querySelectorAll('[data-agent-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const target = btn.dataset.target || DEMO_TARGET;
-      runDemoPentest(target).catch(() => {});
+      runDemoPentest(btn.dataset.target || DEMO_TARGET).catch(() => {});
     });
   });
   document.querySelectorAll('[data-quantum-sim]').forEach((btn) => {
@@ -288,7 +278,8 @@ export function wireIntegrationButtons() {
 
 export async function startIntegration() {
   ensurePanel();
-  updateTelemetryConsole(`Integration → ${BACKEND_BASE}`, 'text-emerald-400');
+  const baseLabel = BACKEND_BASE === '' ? window.location.origin : BACKEND_BASE;
+  updateTelemetryConsole(`Integration → ${baseLabel}`, 'text-emerald-400');
   try {
     await refreshHealth();
     await seedAuthorization().catch(() => {});
@@ -296,16 +287,15 @@ export async function startIntegration() {
     wireIntegrationButtons();
     loadFabric().catch(() => {});
   } catch (e) {
-    updateTelemetryConsole(`[BOOT] Backend not reachable at ${BACKEND_BASE}. Is docker compose up?`, 'text-red-400');
+    updateTelemetryConsole(`[BOOT] Backend not reachable. Is docker compose up on port 8000?`, 'text-red-400');
   }
 }
 
-// Auto-start on local hosts
 if (typeof window !== 'undefined') {
-  const h = window.location.hostname;
-  if (h === 'localhost' || h === '127.0.0.1') {
-    window.addEventListener('load', () => {
-      startIntegration().catch(() => {});
-    });
+  const boot = () => startIntegration().catch(() => {});
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(boot, 50);
+  } else {
+    window.addEventListener('load', boot);
   }
 }
