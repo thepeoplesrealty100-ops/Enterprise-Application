@@ -1,0 +1,1 @@
+fix(crypto): persist encryption session keys via KEK-wrapped DEKs instead of losing them every restart
