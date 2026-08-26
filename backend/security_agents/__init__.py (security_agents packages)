@@ -1,4 +1,0 @@
-# JAKAL security agents package
-from .scan_agent import ScanAgent
-
-__all__ = ["ScanAgent"]
