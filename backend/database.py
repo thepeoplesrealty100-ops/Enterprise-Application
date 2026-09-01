@@ -1417,6 +1417,39 @@ class DuckDBManager:
         cols = [d[0] for d in self.conn.description]
         return dict(zip(cols, row))
 
+    def find_ontological_node_by_attribute(
+        self, object_type: Optional[str], attr_key: str, attr_value: Any,
+    ) -> Optional[Dict[str, Any]]:
+        """v3.0 Phase 5: best-effort lookup for a node whose
+        attributes_json[attr_key] == attr_value, optionally filtered to
+        object_type (None searches every type) -- used both to reuse
+        (rather than duplicate) the "Asset" node for a given target
+        across every payload staged against it, and to find a staged
+        payload's own action node by its payload_id attribute.
+        attributes_json has no index, so this scans; fine for this
+        table's expected size (one node per staged payload/target, not
+        per raw event), same caveat as get_audit_entries_for_payload()."""
+        if object_type:
+            rows = self.conn.execute(
+                "SELECT * FROM ontological_object_nodes WHERE object_type = ? ORDER BY created_at DESC",
+                (object_type,),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM ontological_object_nodes ORDER BY created_at DESC"
+            ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        for r in rows:
+            d = dict(zip(cols, r))
+            try:
+                attrs = json.loads(d.get("attributes_json") or "{}")
+            except Exception:
+                attrs = {}
+            if attrs.get(attr_key) == attr_value:
+                d["attributes"] = attrs
+                return d
+        return None
+
     def query_subgraph(self, root_id: str, max_depth: int = 2) -> Dict[str, Any]:
         """Breadth-first traversal of lattice_edge_telemetry out from
         root_id, up to max_depth hops, returning every node and edge

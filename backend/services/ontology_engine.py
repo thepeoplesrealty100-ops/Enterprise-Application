@@ -60,3 +60,41 @@ class OntologyEngine:
 
     def query_subgraph(self, root_node_id: str, max_depth: int = 2) -> Dict[str, Any]:
         return self.db.query_subgraph(root_node_id, max_depth)
+
+    # ------------------------------------------------------------------
+    # v3.0 Phase 5 -- controlled expansion: give staged payloads and
+    # remediation actions a real position in the graph, so the Approval
+    # Gate can offer a basic attack-path/related-object view instead of
+    # an empty ontology. Shared by ExploitAgent.stage_payloads() and
+    # routers/response.py's containment actions so both feed the same
+    # graph rather than each inventing their own node shape.
+    # ------------------------------------------------------------------
+
+    def find_or_create_target_node(self, target: str, operator_id: str = "system") -> str:
+        """Reuses the existing "Asset" node for `target` if one was
+        already materialized (by an earlier staging against the same
+        target), rather than creating a duplicate node per call."""
+        existing = self.db.find_ontological_node_by_attribute("Asset", "target", target)
+        if existing:
+            return existing["node_id"]
+        return self.create_node("Asset", {"target": target}, operator_id=operator_id)
+
+    def materialize_action_link(
+        self, target: str, action_object_type: str, action_attributes: Dict[str, Any],
+        link_event_type: str = "TARGETS", operator_id: str = "system",
+    ) -> Optional[str]:
+        """Create a node for one staged payload/remediation action and
+        link it to its target's Asset node. Best-effort: returns the new
+        action node's id on success, None on any failure (a materialization
+        failure must never block staging/approval -- this is enrichment,
+        not gating). Returns None immediately if target is falsy."""
+        if not target:
+            return None
+        try:
+            asset_id = self.find_or_create_target_node(target, operator_id=operator_id)
+            action_node_id = self.create_node(action_object_type, action_attributes, operator_id=operator_id)
+            self.link_nodes(action_node_id, asset_id, link_event_type, operator_id=operator_id)
+            return action_node_id
+        except Exception as e:
+            logger.warning("Ontology materialization failed for target '%s': %s", target, e)
+            return None
