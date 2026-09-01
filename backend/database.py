@@ -1625,6 +1625,57 @@ class DuckDBManager:
     def query(self, sql: str, params: tuple = ()):
         return self.conn.execute(sql, params).fetchall()
 
+    def get_execution_log_events(self, payload_id: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Best-effort lookup of EXPLOIT_EXECUTED/EXPLOIT_COMPLETED
+        agent_logs rows for one payload_id (v3.0 Phase 3's status
+        timeline needs to know if/when a payload was actually executed).
+        details is a JSON string column with no index on it, so this
+        scans the recent tail rather than the whole table -- fine for a
+        per-payload lookup, not meant for bulk queries."""
+        rows = self.conn.execute(
+            "SELECT * FROM agent_logs WHERE event IN ('EXPLOIT_EXECUTED', 'EXPLOIT_COMPLETED') "
+            "ORDER BY id DESC LIMIT 2000"
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        out: List[Dict[str, Any]] = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            try:
+                details = json.loads(d.get("details") or "{}")
+            except Exception:
+                details = {}
+            if details.get("payload_id") == payload_id:
+                d["details"] = details
+                out.append(d)
+                if len(out) >= limit:
+                    break
+        return out
+
+    def get_audit_entries_for_payload(self, payload_id: str, limit: int = 20) -> List[Dict[str, Any]]:
+        """Best-effort match: pqc_audit_log entries whose action_detail
+        JSON has this payload_id, newest first -- used to attach PQC
+        entry IDs to a payload's status timeline (v3.0 Phase 3). Same
+        scan-the-tail caveat as get_execution_log_events(): action_detail
+        has no index, so this is for a single payload's context, not bulk
+        audit queries (use list_pqc_audit_entries() for those)."""
+        rows = self.conn.execute(
+            "SELECT * FROM pqc_audit_log ORDER BY id DESC LIMIT 2000"
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        out: List[Dict[str, Any]] = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            try:
+                detail = json.loads(d.get("action_detail") or "{}")
+            except Exception:
+                detail = {}
+            if detail.get("payload_id") == payload_id:
+                d["action_detail_parsed"] = detail
+                out.append(d)
+                if len(out) >= limit:
+                    break
+        return out
+
     def insert_pentest(self, data: Dict[str, Any]) -> int:
         self.conn.execute(
             """

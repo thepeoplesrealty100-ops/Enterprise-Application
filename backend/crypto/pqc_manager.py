@@ -79,6 +79,66 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import InvalidSignature
 
+AUDIT_CONTEXT = b"jakal-enterprise-audit-v2"  # must match PQCAuditManager.AUDIT_CONTEXT
+
+
+def verify_stored_entry(row: Dict[str, Any]) -> bool:
+    """Re-verify a `pqc_audit_log` row's signature using the exact
+    algorithm + public key RECORDED ON THAT ROW at signing time -- not a
+    live PQCAuditManager instance's own key. This matters because keys in
+    this codebase are generated per-instance and not persisted (see this
+    module's docstring): a PQCAuditManager constructed to check an old
+    entry almost certainly has a *different* keypair than whichever
+    instance originally signed it, so verifying against `self._signer`
+    would spuriously fail for any entry not signed in the same
+    request/instance. This function verifies the entry entirely on its
+    own recorded evidence instead, which is what "re-verify the original
+    signature" actually has to mean for a persisted audit trail.
+
+    Expects a dict with (at minimum) action_detail (JSON string),
+    payload_hash, pqc_signature, algorithm, public_key -- i.e. exactly
+    what DuckDBManager.get_pqc_audit_entry()/get_audit_entries_for_payload()
+    return. Returns False (never raises) for a malformed/unsupported row.
+    """
+    try:
+        action_detail = row.get("action_detail") or "{}"
+        action = json.loads(action_detail)
+        # Re-derive canonical bytes the same way sign_agent_action() built
+        # them (json.dumps(..., sort_keys=True)); for the plain string-
+        # valued dicts this codebase signs, a round-tripped
+        # loads(dumps(...)) reproduces byte-identical output.
+        payload_bytes = json.dumps(action, sort_keys=True).encode("utf-8")
+
+        expected_hash = hashlib.sha3_256(payload_bytes).hexdigest()
+        if expected_hash != row.get("payload_hash"):
+            return False  # integrity pre-check failed; don't bother with the PQC verify
+
+        signature_bytes = bytes.fromhex(row["pqc_signature"])
+        public_key_bytes = bytes.fromhex(row["public_key"])
+        algorithm = row.get("algorithm") or ""
+        msg_with_ctx = AUDIT_CONTEXT + b"||" + payload_bytes
+
+        if "Dilithium5" in algorithm or "ML-DSA-87" in algorithm:
+            if not _MLDSA_AVAILABLE:
+                return False
+            return _DILITHIUM_CLASSES["Dilithium5"].verify(public_key_bytes, msg_with_ctx, signature_bytes)
+        if "Dilithium3" in algorithm or "ML-DSA-65" in algorithm:
+            if not _MLDSA_AVAILABLE:
+                return False
+            return _DILITHIUM_CLASSES["Dilithium3"].verify(public_key_bytes, msg_with_ctx, signature_bytes)
+        if "Ed25519" in algorithm:
+            pub = Ed25519PublicKey.from_public_bytes(public_key_bytes)
+            try:
+                pub.verify(signature_bytes, msg_with_ctx)
+                return True
+            except InvalidSignature:
+                return False
+        logger.warning("verify_stored_entry: unrecognized algorithm '%s'", algorithm)
+        return False
+    except Exception as exc:
+        logger.warning("verify_stored_entry failed: %s", exc)
+        return False
+
 
 class _MLDSASigner:
     """
@@ -183,7 +243,7 @@ class PQCAuditManager:
         ok = manager.verify_audit_log(signed)
     """
 
-    AUDIT_CONTEXT = b"jakal-enterprise-audit-v2"
+    AUDIT_CONTEXT = AUDIT_CONTEXT  # module-level constant; single source of truth for verify_stored_entry()
 
     def __init__(self, db=None, profile: Optional[str] = None):
         """
