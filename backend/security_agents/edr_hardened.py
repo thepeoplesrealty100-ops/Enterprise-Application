@@ -153,8 +153,10 @@ class HardenedEnforcementOrchestrator:
                     }
 
                 # Error case — classify for retry decision.
-                detail_str = str(result.get("detail", {}))
-                classification = classify_enforcement_error(500, detail_str)  # Assume error → classify detail
+                detail_dict = result.get("detail", {})
+                http_status = detail_dict.get("http_status", 500)
+                detail_str = str(detail_dict)
+                classification = classify_enforcement_error(http_status, detail_str)
                 if classification == "permanent":
                     return {
                         "status": "error",
@@ -218,4 +220,126 @@ def get_related_targets_for_remediation(target: str, ontology_engine, db=None,
         return related
     except Exception as e:
         logger.warning("Failed to query related targets from ontology: %s", e)
+        return []
+
+
+def score_asset_criticality(node_data: Dict[str, Any]) -> float:
+    """
+    Score asset criticality (0.0-1.0) based on node attributes.
+    Higher scores indicate higher-value targets.
+    """
+    import json
+    score = 0.0
+
+    # Parse attributes_json if present, else try attributes key.
+    attributes = {}
+    if "attributes_json" in node_data and isinstance(node_data["attributes_json"], str):
+        try:
+            attributes = json.loads(node_data["attributes_json"])
+        except (json.JSONDecodeError, ValueError):
+            attributes = {}
+    else:
+        attributes = node_data.get("attributes", {})
+
+    if attributes.get("critical_service"):
+        score += 0.4
+
+    # Target string analysis (heuristic: production hosts score higher)
+    target = attributes.get("target", "")
+    if "prod" in target.lower() or "production" in target.lower():
+        score += 0.2
+    if "db" in target.lower() or "database" in target.lower():
+        score += 0.15
+    if "auth" in target.lower() or "admin" in target.lower():
+        score += 0.15
+
+    # Confidence (higher confidence = higher criticality)
+    # Try confidence_score (database column) first, then confidence (node attribute)
+    confidence = node_data.get("confidence_score", node_data.get("confidence", 0.5))
+    score += confidence * 0.1
+
+    return min(1.0, score)
+
+
+def get_related_targets_with_criticality(target: str, ontology_engine, db=None,
+                                       max_depth: int = 4) -> List[Dict[str, Any]]:
+    """
+    Phase 3 enhancement: query related targets with criticality scoring.
+    Returns list of {target, criticality_score, depth, edge_types} for
+    prioritized multi-target remediation.
+
+    Up to 4 hops deep to model attack chaining and privilege escalation paths.
+    """
+    import json
+    if not ontology_engine:
+        return []
+
+    try:
+        target_node_id = ontology_engine.find_or_create_target_node(target)
+        if not target_node_id:
+            return []
+
+        # Deep subgraph query (up to 4 hops).
+        subgraph = ontology_engine.query_subgraph(target_node_id, max_depth=max_depth)
+
+        # Build a map of node_id → (target_value, depth, connected_edge_types)
+        nodes = subgraph.get("nodes", {})
+        edges = subgraph.get("edges", [])
+
+        # Calculate depth for each node.
+        node_depths = {target_node_id: 0}
+        for node_id in nodes:
+            if node_id not in node_depths:
+                # Simple heuristic: assign depth based on edge traversal.
+                min_depth = max_depth + 1
+                for edge in edges:
+                    if edge["target_node"] == node_id and edge["source_node"] in node_depths:
+                        min_depth = min(min_depth, node_depths[edge["source_node"]] + 1)
+                    if edge["source_node"] == node_id and edge["target_node"] in node_depths:
+                        min_depth = min(min_depth, node_depths[edge["target_node"]] + 1)
+                if min_depth <= max_depth:
+                    node_depths[node_id] = min_depth
+
+        # Extract Asset nodes with criticality scoring.
+        related = []
+        for node_id, node_data in nodes.items():
+            if node_id != target_node_id and node_data.get("object_type") == "Asset":
+                # Parse attributes_json to get actual attributes.
+                attributes = {}
+                if "attributes_json" in node_data and isinstance(node_data["attributes_json"], str):
+                    try:
+                        attributes = json.loads(node_data["attributes_json"])
+                    except (json.JSONDecodeError, ValueError):
+                        attributes = {}
+                else:
+                    attributes = node_data.get("attributes", {})
+
+                # Get target value from attributes.
+                target_val = attributes.get("target")
+                if not target_val:
+                    continue
+
+                # Find edges connected to this node.
+                edge_types = set()
+                for edge in edges:
+                    if edge["source_node"] == node_id or edge["target_node"] == node_id:
+                        edge_types.add(edge.get("event_type", "unknown"))
+
+                # Score criticality.
+                criticality = score_asset_criticality(node_data)
+
+                related.append({
+                    "target": target_val,
+                    "criticality_score": criticality,
+                    "depth": node_depths.get(node_id, max_depth),
+                    "edge_types": list(edge_types),
+                    "node_id": node_id,
+                })
+
+        # Sort by criticality (descending) then depth (ascending).
+        related.sort(key=lambda x: (-x["criticality_score"], x["depth"]))
+
+        return related
+    except Exception as e:
+        logger.warning("Failed to query related targets with criticality: %s", e)
         return []

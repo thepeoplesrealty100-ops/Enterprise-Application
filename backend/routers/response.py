@@ -53,7 +53,10 @@ try:
     from security_agents.vm_orchestrator import get_vm_orchestrator
     from security_agents.edr_connector import enforce_containment
     from security_agents.exploit_agent import ExploitAgent
-    from security_agents.edr_hardened import HardenedEnforcementOrchestrator
+    from security_agents.edr_hardened import (
+        HardenedEnforcementOrchestrator,
+        get_related_targets_with_criticality,
+    )
     from security_agents.compliance_constraints import validate_containment_compliance
     from services.ontology_engine import OntologyEngine
     _db = get_db_manager()
@@ -531,4 +534,36 @@ async def list_related_targets(target: str, max_depth: int = 2):
         }
     except Exception as e:
         logger.exception("Related targets query failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
+
+
+@router.get("/related-targets-v3")
+async def list_related_targets_with_criticality(target: str, max_depth: int = 4):
+    """
+    Phase 3 enhancement: attack-path analysis with asset criticality scoring.
+    Identifies targets related to the given target within max_depth hops,
+    scoring each by criticality (0.0-1.0) to prioritize multi-target remediation.
+
+    Criticality factors: production status, database/auth services, confidence.
+    Supports up to 4 hops to model privilege escalation and lateral movement chains.
+
+    Returns: [{target, criticality_score, depth, edge_types}, ...] sorted by
+    criticality descending, then depth ascending.
+    """
+    _require()
+    if max_depth < 1 or max_depth > 4:
+        raise HTTPException(status_code=422, detail="max_depth must be 1-4 for Phase 3")
+
+    try:
+        related = get_related_targets_with_criticality(target, _ontology, db=_db, max_depth=max_depth)
+        return {
+            "target": target,
+            "max_depth": max_depth,
+            "related_targets": related,
+            "count": len(related),
+            "note": "Sorted by criticality_score (descending). Use for risk-prioritized "
+                    "multi-target containment decisions."
+        }
+    except Exception as e:
+        logger.exception("Phase 3 related targets query failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
