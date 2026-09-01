@@ -413,3 +413,44 @@ def test_qaip_registry_related_node_integrity(db):
         db.register_qaip_inference(
             "grover", {}, pqc_signature="x", related_node_id="nonexistent"
         )
+
+
+# ---------------------------------------------------------------------------
+# Phase 1 -- Maya consumption is a first-class, PQC-signed audit event
+# ---------------------------------------------------------------------------
+
+def test_consume_maya_challenge_writes_signed_audit_entry(db):
+    import json
+    agent = ExploitAgent(db_manager=db)
+    payload_id = str(uuid.uuid4())
+    challenge = agent._maya_vigesimal_challenge(payload_id, "op1", "CRITICAL")
+
+    result = agent.consume_maya_challenge(challenge["session_id"], challenge["challenge_token"], "op1")
+    assert result["status"] == "consumed"
+
+    row = db.conn.execute(
+        "SELECT action_detail FROM pqc_audit_log WHERE action_type = 'maya_challenge_consumed' "
+        "ORDER BY timestamp DESC LIMIT 1"
+    ).fetchone()
+    assert row is not None
+    detail = json.loads(row[0])
+    assert detail["session_id"] == challenge["session_id"]
+    assert detail["payload_id"] == payload_id
+
+
+def test_consume_maya_challenge_does_not_sign_a_failed_attempt(db):
+    agent = ExploitAgent(db_manager=db)
+    payload_id = str(uuid.uuid4())
+    challenge = agent._maya_vigesimal_challenge(payload_id, "op1", "HIGH")
+
+    before = db.conn.execute(
+        "SELECT COUNT(*) FROM pqc_audit_log WHERE action_type = 'maya_challenge_consumed'"
+    ).fetchone()[0]
+
+    bad = agent.consume_maya_challenge(challenge["session_id"], "WRONG", "op1")
+    assert bad["status"] == "error"
+
+    after = db.conn.execute(
+        "SELECT COUNT(*) FROM pqc_audit_log WHERE action_type = 'maya_challenge_consumed'"
+    ).fetchone()[0]
+    assert after == before  # no audit entry written for a failed attempt
