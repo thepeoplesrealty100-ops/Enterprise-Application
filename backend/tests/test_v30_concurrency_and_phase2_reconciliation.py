@@ -205,6 +205,39 @@ def test_concurrent_db_access_does_not_crash(tmp_path):
     assert total == 1500
 
 
+@pytest.mark.asyncio
+async def test_frontend_serves_ui_without_exposing_repo_source(client):
+    """
+    RECONCILIATION FIX: FRONTEND_DIR's default incorrectly pointed at
+    <repo_root>/frontend, one level too deep -- index.html and
+    integration.js actually live at the repo root, so GET / never found
+    index.html (silently falling back to the bare JSON hint) and
+    GET /integration.js 404'd. Fixed by pointing FRONTEND_DIR at the repo
+    root. That introduced a second issue: mounting the ENTIRE repo root as
+    StaticFiles serves the whole backend source tree and .git over HTTP
+    (confirmed live: GET /backend/database.py and GET /.git/config both
+    returned 200 with real file contents) -- fixed by mounting only the
+    js/ subdirectory index.html actually needs, plus one explicit
+    /integration.js route, instead of the whole tree.
+    """
+    root = await client.get("/")
+    assert root.status_code == 200
+    assert "text/html" in root.headers.get("content-type", "")
+
+    integration_js = await client.get("/integration.js")
+    assert integration_js.status_code == 200
+
+    api_client_js = await client.get("/js/api-client.js")
+    assert api_client_js.status_code == 200
+
+    # Must NOT be servable -- these are backend source, git internals, and
+    # docs, none of which index.html references.
+    for sensitive_path in ["/backend/database.py", "/backend/config/__init__.py",
+                            "/.git/config", "/docs/v2.6-global-settings-security-api.md"]:
+        resp = await client.get(sensitive_path)
+        assert resp.status_code == 404, f"{sensitive_path} should not be servable, got {resp.status_code}"
+
+
 def test_locked_connection_description_is_correct_after_chained_and_separate_access(tmp_path):
     """Covers both usage patterns in this codebase: chained
     (execute(...).fetchall()) and separate-statement (execute(...); later

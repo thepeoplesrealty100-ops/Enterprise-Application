@@ -573,10 +573,20 @@ async def llm_health():
 # ============================================================================
 # FRONTEND (same origin as API)
 # ============================================================================
-
+#
+# index.html and integration.js (the real, fully-built operator UI) live at
+# the REPO ROOT, not in a "frontend/" subdirectory -- the default below was
+# pointing one level too deep (<repo_root>/frontend), so GET / never found
+# index.html and silently fell back to the bare JSON hint response instead.
+# Confirmed live: curl / returned 200 application/json, not the UI, and
+# GET /integration.js 404'd. The two Phase-2 UI Bridge JS files
+# (frontend/js/api-client.js, frontend/js/integration-loader.js) were moved
+# to js/api-client.js and js/integration-loader.js accordingly -- that's
+# the path index.html's own <script src="./js/..."> tags already expect,
+# relative to wherever index.html itself is served from.
 _FRONTEND = Path(os.getenv(
     "FRONTEND_DIR",
-    str(Path(__file__).resolve().parent.parent / "frontend"),
+    str(Path(__file__).resolve().parent.parent),
 ))
 
 
@@ -593,6 +603,14 @@ async def serve_index():
     }
 
 
+@app.get("/integration.js")
+async def serve_integration_js():
+    path = _FRONTEND / "integration.js"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="integration.js not found")
+    return FileResponse(path, media_type="application/javascript")
+
+
 # ============================================================================
 # OpenAPI Schema (Phase 5 - Comprehensive Documentation)
 # ============================================================================
@@ -601,14 +619,29 @@ app.openapi_schema = custom_openapi(app)
 
 
 # ============================================================================
-# Mount Frontend (last)
+# Mount Frontend assets (last)
 # ============================================================================
-
-if _FRONTEND.is_dir():
-    app.mount("/", StaticFiles(directory=str(_FRONTEND), html=True), name="frontend")
-    logger.info("Frontend mounted from %s", _FRONTEND)
+#
+# SECURITY FIX: _FRONTEND now correctly points at the repo root (see the
+# comment above), but the previous `app.mount("/", StaticFiles(directory=
+# str(_FRONTEND), ...))` served that ENTIRE directory tree over HTTP as a
+# side effect -- confirmed live: GET /backend/database.py and
+# GET /.git/config both returned 200 with the real file contents. Since
+# _FRONTEND is now the repo root, that would publish the full backend
+# source tree, git history/config, and any local .env a developer happens
+# to have sitting in backend/ (gitignored, but this mount doesn't know
+# that). index.html only references three local assets --
+# ./js/api-client.js, ./js/integration-loader.js, ./integration.js (every
+# other asset it loads is from a CDN) -- so only the specific `js/`
+# subdirectory is mounted, plus the one explicit /integration.js route
+# above; nothing else under the repo root is served.
+_FRONTEND_JS = _FRONTEND / "js"
+if _FRONTEND_JS.is_dir():
+    app.mount("/js", StaticFiles(directory=str(_FRONTEND_JS)), name="frontend-js")
+    logger.info("Frontend JS assets mounted from %s", _FRONTEND_JS)
 else:
-    logger.warning("FRONTEND_DIR missing at %s — UI will not be served", _FRONTEND)
+    logger.warning("Frontend js/ directory missing at %s — js/api-client.js and "
+                    "js/integration-loader.js will not be served", _FRONTEND_JS)
 
 
 # ============================================================================
