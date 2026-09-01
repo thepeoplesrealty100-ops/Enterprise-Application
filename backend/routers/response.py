@@ -52,8 +52,13 @@ try:
     from security_agents.edr_mdr import DEFAULT_PLAYBOOKS
     from security_agents.vm_orchestrator import get_vm_orchestrator
     from security_agents.edr_connector import enforce_containment
+    from security_agents.edr_hardened import HardenedEnforcementOrchestrator
+    from security_agents.compliance_constraints import validate_containment_compliance
+    from services.ontology_engine import OntologyEngine
     _db = get_db_manager()
     _vm = get_vm_orchestrator(_db)
+    _hardened_orchestrator = HardenedEnforcementOrchestrator(db=_db, vm_orchestrator=_vm)
+    _ontology = OntologyEngine(_db)
     RESPONSE_OK = True
     _ERR = None
 except Exception as _e:  # noqa: BLE001
@@ -61,6 +66,8 @@ except Exception as _e:  # noqa: BLE001
     _ERR = str(_e)
     _db = None
     _vm = None
+    _hardened_orchestrator = None
+    _ontology = None
     DEFAULT_PLAYBOOKS = []
 
 from dependencies import get_authenticated_user, require_permission
@@ -373,12 +380,8 @@ async def enforce_action(approval_request_id: str, request: Request,
                           user: dict = Depends(get_authenticated_user)):
     """
     Executes an already-APPROVED isolate_host_staged / quarantine_host_staged
-    decision — never called automatically, never callable before a human
-    has approved at POST /api/approval/{id}/approve. See
-    security_agents/edr_connector.py for what "enforce" actually means:
-    real Docker network isolation for a JAKAL-owned sandbox, or a signed
-    webhook to whatever real EDR/firewall integration this deployment's
-    operator has configured for everything else.
+    decision via hardened orchestrator with retry logic and compliance gating.
+    Never called automatically, never callable before human approval.
     """
     _require()
     approval = _db.get_approval_request(approval_request_id)
@@ -391,8 +394,10 @@ async def enforce_action(approval_request_id: str, request: Request,
 
     target = approval.get("target")
     detail = approval.get("payload_detail") or {}
-    result = enforce_containment(
-        approval["action_type"], target, detail, user["username"], db=_db, vm_orchestrator=_vm,
+
+    # Use hardened orchestrator (retry logic + compliance pre-check).
+    result = _hardened_orchestrator.enforce_with_retry(
+        approval["action_type"], target, detail, user["username"],
     )
 
     new_status = {"enforced": "enforced", "not_configured": "enforcement_not_configured",
@@ -402,3 +407,65 @@ async def enforce_action(approval_request_id: str, request: Request,
            approval_request_id, {"target": target, "result": dict(result)})
 
     return {"approval_request_id": approval_request_id, "target": target, **result}
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Track A — Compliance-aware containment + attack-path remediation
+# ══════════════════════════════════════════════════════════════════════════
+
+@router.get("/compliance/pre-check")
+async def check_compliance(action_type: str, target: str):
+    """
+    Pre-flight compliance check before staging a containment action.
+    Returns violations (if any) and whether an audit exception is required.
+    """
+    _require()
+    if action_type not in ("isolate_host_staged", "quarantine_host_staged"):
+        raise HTTPException(status_code=422, detail="Invalid action_type for compliance check")
+
+    try:
+        posture = _db.conn.execute(
+            "SELECT data FROM global_security_settings WHERE setting_key = 'org_compliance_posture' LIMIT 1"
+        ).fetchone()
+        org_posture = posture[0] if posture else {}
+        result = validate_containment_compliance(action_type, target, org_posture)
+        return {
+            "compliant": result["compliant"],
+            "violations": result["violations"],
+            "requires_audit_exception": result["requires_audit_exception"],
+            "target": target,
+            "action_type": action_type,
+        }
+    except Exception as e:
+        logger.exception("Compliance check failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Compliance check failed: {str(e)}")
+
+
+@router.get("/related-targets")
+async def list_related_targets(target: str, max_depth: int = 2):
+    """
+    Attack-path analysis: identify targets related to the given target
+    via the Ontology Engine graph. Useful for multi-target remediation
+    recommendations when an attacker has lateral-movement paths between
+    hosts.
+
+    Returns a list of related target IPs/hostnames within max_depth graph hops.
+    """
+    _require()
+    if max_depth < 1 or max_depth > 5:
+        raise HTTPException(status_code=422, detail="max_depth must be 1-5")
+
+    try:
+        from security_agents.edr_hardened import get_related_targets_for_remediation
+        related = get_related_targets_for_remediation(target, _ontology, db=_db, max_depth=max_depth)
+        return {
+            "target": target,
+            "max_depth": max_depth,
+            "related_targets": related,
+            "count": len(related),
+            "note": "Use these targets as input for additional quarantine/isolate actions "
+                    "if the attacker has compromised multiple hosts in the same path."
+        }
+    except Exception as e:
+        logger.exception("Related targets query failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
