@@ -885,13 +885,31 @@ class DuckDBManager:
         # resonance_settings_snapshot()'s docstring: computed fresh from
         # operators/encryption_keys/pqc_audit_log, never independently
         # editable, specifically to avoid a second, driftable source of
-        # truth for security posture). resonance_policy is a genuinely
+        # truth for security posture). automation_settings is a genuinely
         # separate concept: a small set of real, independently-meaningful
         # automation knobs -- each one is read by a real enforcement point
         # (routers/response.py, vault.py, cheatsheet.py) rather than being
         # a decorative flag nothing checks.
+        #
+        # RECONCILIATION NOTE (merge of a parallel local build, "Batch 1"):
+        # a separately-run session added its OWN table also named
+        # `resonance_policy` with a materially different shape (a
+        # multi-row, per-policy-object table: policy_name/threat_threshold/
+        # trigger_type/isolation_mode/auto_enforce/webhook_url/enabled,
+        # oriented around named enforcement policies) alongside
+        # `resonance_actions` and `resonance_audit_trail`. That is a
+        # different concept from this single-row-per-knob settings table,
+        # so rather than collide on the name (and silently corrupt either
+        # schema), this table was renamed automation_settings and every
+        # endpoint/test/doc that referenced /resonance/policy now uses
+        # /resonance/automation-settings. Batch 1's resonance_policy /
+        # resonance_actions / resonance_audit_trail tables are kept as-is
+        # below (see their own CREATE TABLE blocks) since they serve a
+        # distinct, complementary purpose: named, reusable enforcement
+        # policy objects vs. this table's small set of global on/off and
+        # threshold knobs.
         c.execute("""
-        CREATE TABLE IF NOT EXISTS resonance_policy (
+        CREATE TABLE IF NOT EXISTS automation_settings (
             policy_key   VARCHAR PRIMARY KEY,
             value        VARCHAR NOT NULL,       -- JSON-encoded (bool/number/string)
             value_type   VARCHAR NOT NULL,        -- bool | number | string
@@ -3060,12 +3078,12 @@ class DuckDBManager:
 
     def seed_policy(self, policy_key: str, value: Any, value_type: str, label: str, description: str) -> None:
         exists = self.conn.execute(
-            "SELECT 1 FROM resonance_policy WHERE policy_key = ?", (policy_key,)
+            "SELECT 1 FROM automation_settings WHERE policy_key = ?", (policy_key,)
         ).fetchone()
         if exists:
             return
         self.conn.execute(
-            "INSERT INTO resonance_policy (policy_key, value, value_type, label, description) "
+            "INSERT INTO automation_settings (policy_key, value, value_type, label, description) "
             "VALUES (?, ?, ?, ?, ?)",
             (policy_key, json.dumps(value), value_type, label, description),
         )
@@ -3073,7 +3091,7 @@ class DuckDBManager:
 
     def get_policy(self, policy_key: str) -> Optional[Dict[str, Any]]:
         row = self.conn.execute(
-            "SELECT * FROM resonance_policy WHERE policy_key = ?", (policy_key,)
+            "SELECT * FROM automation_settings WHERE policy_key = ?", (policy_key,)
         ).fetchone()
         if not row:
             return None
@@ -3087,7 +3105,7 @@ class DuckDBManager:
         return p["value"] if p is not None else default
 
     def list_policy(self) -> List[Dict[str, Any]]:
-        rows = self.conn.execute("SELECT * FROM resonance_policy ORDER BY policy_key").fetchall()
+        rows = self.conn.execute("SELECT * FROM automation_settings ORDER BY policy_key").fetchall()
         cols = [d[0] for d in self.conn.description]
         out = []
         for r in rows:
@@ -3098,7 +3116,7 @@ class DuckDBManager:
 
     def set_policy_value(self, policy_key: str, value: Any, updated_by: str) -> bool:
         exists = self.conn.execute(
-            "SELECT value_type FROM resonance_policy WHERE policy_key = ?", (policy_key,)
+            "SELECT value_type FROM automation_settings WHERE policy_key = ?", (policy_key,)
         ).fetchone()
         if not exists:
             return False
@@ -3108,7 +3126,7 @@ class DuckDBManager:
         if value_type == "number" and not isinstance(value, (int, float)):
             raise ValueError(f"policy '{policy_key}' expects a numeric value")
         self.conn.execute(
-            "UPDATE resonance_policy SET value = ?, updated_by = ?, updated_at = now() WHERE policy_key = ?",
+            "UPDATE automation_settings SET value = ?, updated_by = ?, updated_at = now() WHERE policy_key = ?",
             (json.dumps(value), updated_by, policy_key),
         )
         self.conn.commit()
@@ -3135,7 +3153,7 @@ class DuckDBManager:
             "users", "roles", "permissions", "sessions", "api_keys", "audit_log",
             "trade_secrets_vault", "darkweb_watchlist", "darkweb_findings",
             "training_modules", "training_completions", "phishing_campaigns", "phishing_targets",
-            "remediation_actions", "resonance_policy",
+            "remediation_actions", "automation_settings",
         ]
         stats = {}
         for t in tables:

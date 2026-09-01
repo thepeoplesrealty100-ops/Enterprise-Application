@@ -30,7 +30,7 @@ rather than a full control surface · ⚪ frontend mock only, no backend
 |---|---|---|---|
 | Energy Core Management | `admin_energy_core` | `GET /api/qaip/energy-core/status` | 🟢 (v2.7: throttle gauge widget) |
 | Q'AIP Logic Core Manager | `admin_logic_core` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
-| Resonance Wave Automation | `admin_automation_controls` | `GET/POST /api/resonance/policy/*` (v2.8) | 🟢 (real, write-controlled automation knobs, each read by a real enforcement point — see docs/v2.8-automation-policy-and-enforcement.md) |
+| Resonance Wave Automation | `admin_automation_controls` | `GET/POST /api/resonance/automation-settings/*` (v2.8) | 🟢 (real, write-controlled automation knobs, each read by a real enforcement point — see docs/v2.8-automation-policy-and-enforcement.md) |
 | Ontology & Simulation Hub | `admin_ontology` | `GET /api/cheatsheet/graph` | 🟢 (v2.7: category/phase relationship chip graph) |
 | Model Chains & Inference | `admin_model_chains` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
 | Quantum Orbital & Event Comms | `admin_quantum_nexus` | `GET /api/qaip/orbital-comms` | 🟢 (v2.7: event stream feed) |

@@ -240,7 +240,7 @@ async def stage_script(script_id: str, req: ScriptStageRequest, request: Request
     if script["risk_level"] == "LOW" and _db.get_policy_value("auto_approve_low_risk_actions", False):
         _db.decide_approval_request(
             request_id, "approved", "system:auto-approve-policy",
-            "auto-approved per resonance_policy.auto_approve_low_risk_actions",
+            "auto-approved per automation_settings.auto_approve_low_risk_actions",
         )
         auto_approved = True
 

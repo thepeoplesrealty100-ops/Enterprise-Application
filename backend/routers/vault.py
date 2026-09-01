@@ -199,7 +199,7 @@ async def create_vault_item(req: VaultItemCreate, request: Request,
         raise HTTPException(
             status_code=422,
             detail="trade_secret_isolation_enforced policy is on — allowed_roles cannot be empty. "
-                   "Disable it at POST /api/resonance/policy/trade_secret_isolation_enforced if this "
+                   "Disable it at POST /api/resonance/automation-settings/trade_secret_isolation_enforced if this "
                    "item is genuinely meant to be unscoped.",
         )
     item_id = str(uuid.uuid4())

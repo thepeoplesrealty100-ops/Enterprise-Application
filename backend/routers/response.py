@@ -148,7 +148,7 @@ class TriageRequest(BaseModel):
     target: str = Field(default="")
     operator_id: str = Field(default="system")
     indicators: Dict[str, Any] = Field(default_factory=dict)
-    # None = use the org-wide resonance_policy default (see routers/resonance.py);
+    # None = use the org-wide automation_settings default (see routers/resonance.py);
     # an explicit value here overrides it for just this call.
     auto_stage_threshold: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 

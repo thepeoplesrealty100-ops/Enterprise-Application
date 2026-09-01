@@ -84,7 +84,7 @@ async def _seed_scope(target_cidr: str = "203.0.113.0/24"):
 
 @pytest.mark.asyncio
 async def test_policy_seeded_and_listable(client):
-    response = await client.get("/api/resonance/policy")
+    response = await client.get("/api/resonance/automation-settings")
     assert response.status_code == 200
     keys = {p["policy_key"] for p in response.json()["policy"]}
     assert {"response_auto_stage_threshold", "trade_secret_isolation_enforced",
@@ -95,21 +95,21 @@ async def test_policy_seeded_and_listable(client):
 async def test_policy_write_requires_permission_and_type_checks(client):
     headers = await _root_admin_headers(client)
 
-    anon = await client.post("/api/resonance/policy/sandbox_max_lifetime_hours", json={"value": 12})
+    anon = await client.post("/api/resonance/automation-settings/sandbox_max_lifetime_hours", json={"value": 12})
     assert anon.status_code == 401
 
-    wrong_type = await client.post("/api/resonance/policy/sandbox_max_lifetime_hours",
+    wrong_type = await client.post("/api/resonance/automation-settings/sandbox_max_lifetime_hours",
                                     json={"value": "not-a-number"}, headers=headers)
     assert wrong_type.status_code == 422
 
-    unknown = await client.post("/api/resonance/policy/does-not-exist", json={"value": 1}, headers=headers)
+    unknown = await client.post("/api/resonance/automation-settings/does-not-exist", json={"value": 1}, headers=headers)
     assert unknown.status_code == 404
 
-    ok = await client.post("/api/resonance/policy/sandbox_max_lifetime_hours", json={"value": 6}, headers=headers)
+    ok = await client.post("/api/resonance/automation-settings/sandbox_max_lifetime_hours", json={"value": 6}, headers=headers)
     assert ok.status_code == 200
     assert ok.json()["value"] == 6
 
-    listed = await client.get("/api/resonance/policy")
+    listed = await client.get("/api/resonance/automation-settings")
     row = next(p for p in listed.json()["policy"] if p["policy_key"] == "sandbox_max_lifetime_hours")
     assert row["value"] == 6
     assert row["updated_by"] == _ROOT_USERNAME
@@ -118,12 +118,12 @@ async def test_policy_write_requires_permission_and_type_checks(client):
 @pytest.mark.asyncio
 async def test_stale_sandboxes_uses_policy_threshold(client):
     headers = await _root_admin_headers(client)
-    await client.post("/api/resonance/policy/sandbox_max_lifetime_hours", json={"value": 0}, headers=headers)
-    response = await client.get("/api/resonance/policy/stale-sandboxes")
+    await client.post("/api/resonance/automation-settings/sandbox_max_lifetime_hours", json={"value": 0}, headers=headers)
+    response = await client.get("/api/resonance/automation-settings/stale-sandboxes")
     assert response.status_code == 200
     assert response.json()["max_lifetime_hours"] == 0
     # Restore a sane default so later tests in this module aren't affected.
-    await client.post("/api/resonance/policy/sandbox_max_lifetime_hours", json={"value": 24}, headers=headers)
+    await client.post("/api/resonance/automation-settings/sandbox_max_lifetime_hours", json={"value": 24}, headers=headers)
 
 
 # ---------------------------------------------------------------------------
@@ -133,18 +133,18 @@ async def test_stale_sandboxes_uses_policy_threshold(client):
 @pytest.mark.asyncio
 async def test_trade_secret_isolation_policy_rejects_empty_roles_when_on(client):
     headers = await _root_admin_headers(client)
-    await client.post("/api/resonance/policy/trade_secret_isolation_enforced", json={"value": True}, headers=headers)
+    await client.post("/api/resonance/automation-settings/trade_secret_isolation_enforced", json={"value": True}, headers=headers)
 
     denied = await client.post("/api/vault/items",
                                 json={"title": "Unscoped", "content": "x", "allowed_roles": []}, headers=headers)
     assert denied.status_code == 422
 
-    await client.post("/api/resonance/policy/trade_secret_isolation_enforced", json={"value": False}, headers=headers)
+    await client.post("/api/resonance/automation-settings/trade_secret_isolation_enforced", json={"value": False}, headers=headers)
     allowed = await client.post("/api/vault/items",
                                  json={"title": "Unscoped-ok", "content": "x", "allowed_roles": []}, headers=headers)
     assert allowed.status_code == 200
     # Restore the safer default.
-    await client.post("/api/resonance/policy/trade_secret_isolation_enforced", json={"value": True}, headers=headers)
+    await client.post("/api/resonance/automation-settings/trade_secret_isolation_enforced", json={"value": True}, headers=headers)
 
 
 # ---------------------------------------------------------------------------
@@ -154,7 +154,7 @@ async def test_trade_secret_isolation_policy_rejects_empty_roles_when_on(client)
 @pytest.mark.asyncio
 async def test_triage_uses_policy_threshold_when_not_overridden(client):
     headers = await _root_admin_headers(client)
-    await client.post("/api/resonance/policy/response_auto_stage_threshold", json={"value": 0.3}, headers=headers)
+    await client.post("/api/resonance/automation-settings/response_auto_stage_threshold", json={"value": 0.3}, headers=headers)
 
     # A moderate finding (severity ~0.55, verified via threat_scoring
     # directly) that would NOT auto-stage at the old hardcoded 0.8 default,
@@ -174,7 +174,7 @@ async def test_triage_uses_policy_threshold_when_not_overridden(client):
     assert len(body["recommended_playbooks"]) > 0
     assert body["auto_staged_approval_request_id"] is not None
 
-    await client.post("/api/resonance/policy/response_auto_stage_threshold", json={"value": 0.8}, headers=headers)
+    await client.post("/api/resonance/automation-settings/response_auto_stage_threshold", json={"value": 0.8}, headers=headers)
 
 
 # ---------------------------------------------------------------------------
@@ -185,7 +185,7 @@ async def test_triage_uses_policy_threshold_when_not_overridden(client):
 async def test_auto_approve_low_risk_scripts_when_policy_on(client):
     headers = await _root_admin_headers(client)
     await _seed_scope()
-    await client.post("/api/resonance/policy/auto_approve_low_risk_actions", json={"value": True}, headers=headers)
+    await client.post("/api/resonance/automation-settings/auto_approve_low_risk_actions", json={"value": True}, headers=headers)
 
     listing = await client.get("/api/cheatsheet/scripts?risk_level=LOW")
     script_id = listing.json()["scripts"][0]["id"]
@@ -199,7 +199,7 @@ async def test_auto_approve_low_risk_scripts_when_policy_on(client):
     assert approval.json()["status"] == "approved"
     assert approval.json()["decided_by"] == "system:auto-approve-policy"
 
-    await client.post("/api/resonance/policy/auto_approve_low_risk_actions", json={"value": False}, headers=headers)
+    await client.post("/api/resonance/automation-settings/auto_approve_low_risk_actions", json={"value": False}, headers=headers)
 
     # With the policy off again, staging the SAME risk class must go back
     # to waiting on a human.

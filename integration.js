@@ -807,7 +807,7 @@ async function renderInferenceLedgerWidget(title) {
 
 async function renderAutomationSettingsWidget() {
   const [policyData, snapshot] = await Promise.all([
-    api('/api/resonance/policy').catch((e) => ({ error: e.message, policy: [] })),
+    api('/api/resonance/automation-settings').catch((e) => ({ error: e.message, policy: [] })),
     api('/api/resonance/settings').catch(() => null),
   ]);
 
@@ -861,7 +861,7 @@ function wireAutomationSettingsActions(root) {
       const newValue = b.getAttribute('data-current') !== 'true';
       const msg = root.querySelector('#policy-save-msg');
       try {
-        await api(`/api/resonance/policy/${key}`, { method: 'POST', body: JSON.stringify({ value: newValue }) });
+        await api(`/api/resonance/automation-settings/${key}`, { method: 'POST', body: JSON.stringify({ value: newValue }) });
         if (msg) msg.innerHTML = `<span style="color:#34d399">Saved ${escapeHtml(key)} = ${newValue}.</span>`;
         root.innerHTML = await renderAutomationSettingsWidget();
         wireAutomationSettingsActions(root);
@@ -877,7 +877,7 @@ function wireAutomationSettingsActions(root) {
       const msg = root.querySelector('#policy-save-msg');
       if (Number.isNaN(value)) { if (msg) msg.innerHTML = '<span style="color:#f87171">Not a number.</span>'; return; }
       try {
-        await api(`/api/resonance/policy/${key}`, { method: 'POST', body: JSON.stringify({ value }) });
+        await api(`/api/resonance/automation-settings/${key}`, { method: 'POST', body: JSON.stringify({ value }) });
         if (msg) msg.innerHTML = `<span style="color:#34d399">Saved ${escapeHtml(key)} = ${value}.</span>`;
       } catch (e) { if (msg) msg.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
     };

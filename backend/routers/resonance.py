@@ -18,12 +18,19 @@ Endpoints:
   POST  /resonance/settings/snapshot      — take a fresh snapshot now
 
   v2.8 — Resonance Wave Automation, real write control:
-  GET   /resonance/policy                 — list every automation policy knob
-  POST  /resonance/policy/{key}           — set one (RBAC-gated, audited, PQC-signed)
-  GET   /resonance/policy/stale-sandboxes — sandboxes older than sandbox_max_lifetime_hours
+  GET   /resonance/automation-settings                 — list every automation policy knob
+  POST  /resonance/automation-settings/{key}           — set one (RBAC-gated, audited, PQC-signed)
+  GET   /resonance/automation-settings/stale-sandboxes — sandboxes older than sandbox_max_lifetime_hours
+
+  NOTE: named "automation-settings" (not "policy") and backed by the
+  automation_settings table specifically to avoid colliding with a
+  separate, differently-shaped resonance_policy/"policies" concept
+  introduced on main by a parallel build (see database.py's
+  automation_settings CREATE TABLE comment for the full reconciliation
+  note).
 
   These are deliberately NOT the same thing as /resonance/settings above --
-  see resonance_policy's CREATE TABLE comment in database.py for why
+  see automation_settings's CREATE TABLE comment in database.py for why
   global_security_settings stays a derived, read-only snapshot while this
   is a real, independently-writable set of knobs that live enforcement
   points (response.py, vault.py, cheatsheet.py) actually read.
@@ -64,7 +71,7 @@ _DEFAULT_POLICY = [
      "instead of waiting on a human at POST /api/approval/{id}/approve. MEDIUM/HIGH/CRITICAL "
      "always require a human decision regardless of this setting."),
     ("sandbox_max_lifetime_hours", 24, "number", "Sandbox max lifetime (hours)",
-     "Sandboxes older than this are surfaced by GET /resonance/policy/stale-sandboxes as due "
+     "Sandboxes older than this are surfaced by GET /resonance/automation-settings/stale-sandboxes as due "
      "for review/destruction. Informational only -- nothing auto-destroys a sandbox."),
 ]
 
@@ -83,7 +90,7 @@ def _audit(request: Request, user: dict, action: str, outcome: str, resource_id:
     try:
         _db.insert_audit_entry({
             "actor_user_id": user["user_id"], "actor_label": user["username"],
-            "action": action, "resource_type": "resonance_policy", "resource_id": resource_id,
+            "action": action, "resource_type": "automation_settings", "resource_id": resource_id,
             "outcome": outcome, "ip_address": request.client.host if request.client else None,
             "detail": detail or {},
         })
@@ -147,13 +154,13 @@ def snapshot_settings():
 # v2.8 — Resonance Wave Automation policy (real write control)
 # ══════════════════════════════════════════════════════════════════════════
 
-@router.get("/policy")
+@router.get("/automation-settings")
 async def list_policy():
     _require()
     return {"policy": _db.list_policy()}
 
 
-@router.post("/policy/{policy_key}", dependencies=[require_permission("response:manage")])
+@router.post("/automation-settings/{policy_key}", dependencies=[require_permission("response:manage")])
 async def set_policy(policy_key: str, req: PolicySetRequest, request: Request,
                       user: dict = Depends(get_authenticated_user)):
     _require()
@@ -185,7 +192,7 @@ async def set_policy(policy_key: str, req: PolicySetRequest, request: Request,
     return {"status": "updated", "policy_key": policy_key, "value": req.value}
 
 
-@router.get("/policy/stale-sandboxes")
+@router.get("/automation-settings/stale-sandboxes")
 async def stale_sandboxes():
     _require()
     max_hours = _db.get_policy_value("sandbox_max_lifetime_hours", 24)
