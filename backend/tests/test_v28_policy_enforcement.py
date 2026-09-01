@@ -394,6 +394,17 @@ async def test_enforce_endpoint_end_to_end_via_webhook(client, local_webhook_ser
     too_early = await client.post(f"/api/response/actions/{approval_request_id}/enforce", headers=headers)
     assert too_early.status_code == 403
 
+    # v3.0 Phase 5: isolate-host is HIGH risk -> gets a real Maya-Vigesimal
+    # interlock now, same as an offensive HIGH/CRITICAL payload. Consume it
+    # before approving, same as a real operator would.
+    maya = staged.json()["maya_challenge"]
+    assert maya is not None
+    verify = await client.post("/api/v3/auth/maya/verify", json={
+        "session_id": maya["session_id"], "response_token": maya["challenge_token"],
+        "operator_id": _ROOT_USERNAME,
+    })
+    assert verify.status_code == 200
+
     approve = await client.post(f"/api/approval/{approval_request_id}/approve",
                                  json={"operator_id": _ROOT_USERNAME}, headers=headers)
     assert approve.status_code == 200

@@ -147,6 +147,72 @@ def _target_matches_entry(target: str, entry_value: str) -> bool:
     return domain.endswith("." + entry_value)
 
 
+def get_authorization_status(target: str, db=None) -> dict:
+    """
+    Read-only scope + insurance status for `target` -- the same real
+    CIDR/domain-suffix containment logic check_authorization_and_scope()
+    enforces, but as a pure query: no PQC signature, no pqc_audit_log
+    write, no AuthorizationError raise. This exists so a display/
+    visibility feature (v3.0 Phase 4.2's approval-context enrichment --
+    see ExploitAgent.get_enriched_approval_context()) can show "is this
+    target actually authorized" WITHOUT generating a spurious signed
+    audit entry every time an operator views a payload; only an actual
+    execution attempt through check_authorization_and_scope() should
+    produce an audit-trail decision.
+
+    Fails closed: any exception while determining status is reported as
+    authorized=False with a reason, never silently defaulting to True.
+
+    Returns {"in_scope": bool, "has_insurance": bool, "authorized": bool,
+    "reason": Optional[str]} -- reason is None only when authorized.
+    """
+    if db is None:
+        from database import get_db_manager
+        db = get_db_manager()
+    try:
+        now = datetime.now(timezone.utc)
+
+        scope_rows = db.query(
+            "SELECT id, client_name, scope_definition, start_date, end_date, status "
+            "FROM scopes WHERE status = 'active' AND start_date <= ? AND end_date >= ?",
+            (now, now),
+        )
+        insurance_rows = db.query(
+            "SELECT id FROM insurance_policies WHERE status = 'active' AND expiry > ?",
+            (now,),
+        )
+
+        in_scope = False
+        for row in scope_rows:
+            _, _, scope_definition, *_ = row
+            for entry in str(scope_definition).split(","):
+                entry = entry.strip()
+                if entry and _target_matches_entry(target, entry):
+                    in_scope = True
+                    break
+            if in_scope:
+                break
+
+        has_insurance = len(insurance_rows) > 0
+        authorized = in_scope and has_insurance
+
+        reason = None
+        if not authorized:
+            reason_parts = []
+            if not in_scope:
+                reason_parts.append("target outside authorized scope")
+            if not has_insurance:
+                reason_parts.append("no active insurance policy on file")
+            reason = "; ".join(reason_parts)
+
+        return {"in_scope": in_scope, "has_insurance": has_insurance,
+                "authorized": authorized, "reason": reason}
+    except Exception as e:
+        logger.warning("Authorization status check failed for target '%s': %s", target, e)
+        return {"in_scope": False, "has_insurance": False, "authorized": False,
+                "reason": f"authorization status check failed: {e}"}
+
+
 def check_authorization_and_scope(
     target: str,
     action: str,
@@ -170,39 +236,10 @@ def check_authorization_and_scope(
 
     now = datetime.now(timezone.utc)
 
-    scope_rows = db.query(
-        "SELECT id, client_name, scope_definition, start_date, end_date, status "
-        "FROM scopes WHERE status = 'active' AND start_date <= ? AND end_date >= ?",
-        (now, now),
-    )
+    status = get_authorization_status(target, db=db)
 
-    insurance_rows = db.query(
-        "SELECT id FROM insurance_policies WHERE status = 'active' AND expiry > ?",
-        (now,),
-    )
-
-    in_scope = False
-    for row in scope_rows:
-        _, _, scope_definition, *_ = row
-        for entry in str(scope_definition).split(","):
-            entry = entry.strip()
-            if not entry:
-                continue
-            if _target_matches_entry(target, entry):
-                in_scope = True
-                break
-        if in_scope:
-            break
-
-    has_insurance = len(insurance_rows) > 0
-
-    if not in_scope or not has_insurance:
-        reason_parts = []
-        if not in_scope:
-            reason_parts.append("target outside authorized scope")
-        if not has_insurance:
-            reason_parts.append("no active insurance policy on file")
-        reason_str = "; ".join(reason_parts)
+    if not status["authorized"]:
+        reason_str = status["reason"] or "not authorized"
 
         # PQC-sign the denial
         pqc_entry_id = _pqc_sign_authorization(
