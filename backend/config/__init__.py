@@ -62,6 +62,14 @@ class Config:
     EXPLOITATION_TIMEOUT = int(os.getenv("EXPLOITATION_TIMEOUT", "600"))
     JAKAL_MASTER_KEY = os.getenv("JAKAL_MASTER_KEY", "")
 
+    # PQC crypto-agility (v3.0 Phase 2) — which NIST FIPS 204 ML-DSA
+    # parameter set crypto/pqc_manager.py's PQCAuditManager signs with by
+    # default. "commercial" -> ML-DSA-65 (Dilithium3), the correct default
+    # for general commercial/enterprise use. "cnsa2" -> ML-DSA-87
+    # (Dilithium5), the parameter set CNSA 2.0 requires for National
+    # Security Systems. See docs/crypto-agility.md.
+    PQC_PROFILE = os.getenv("PQC_PROFILE", "commercial")
+
     # CORS — comma-separated list; defaults cover common local UI servers
     CORS_ORIGINS = [
         o.strip()

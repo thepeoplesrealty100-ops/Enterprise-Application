@@ -2,12 +2,29 @@
 backend/crypto/pqc_manager.py
 Post-Quantum Cryptography Manager for JAKAL Enterprise.
 
-Implements NIST FIPS 204 equivalent (ML-DSA-65 / Dilithium3) for
-quantum-resistant digital signatures on every agent action and audit log.
+Implements NIST FIPS 204 (ML-DSA) for quantum-resistant digital signatures
+on every agent action and audit log, crypto-agile across two parameter
+sets selected by the PQC_PROFILE config flag (see docs/crypto-agility.md
+for the full policy):
+
+  - "commercial" (default) -> ML-DSA-65 / Dilithium3. The correct default
+    for general commercial/enterprise use per NIST FIPS 204.
+  - "cnsa2" -> ML-DSA-87 / Dilithium5. The signature parameter set CNSA
+    2.0 (NSA's Commercial National Security Algorithm Suite 2.0) requires
+    for National Security Systems. Selectable today, not just planned,
+    because dilithium-py already exposes Dilithium5 cleanly -- switching
+    profiles is a configuration change + key regeneration, not a rewrite.
+
+Every signature this module produces is ML-DSA under FIPS 204; nothing
+outside this file should assume "65"/Dilithium3/ML-DSA-65 specifically --
+read PQCAuditManager.algorithm (or .status()) instead of hardcoding a
+parameter set.
 
 Architecture:
-  - ML-DSA-65 (Dilithium3) via dilithium-py — pure-Python, no native dep
-  - Ed25519 hybrid backup via pyca/cryptography
+  - ML-DSA (Dilithium3 or Dilithium5, per profile) via dilithium-py —
+    pure-Python, no native dep
+  - Ed25519 hybrid backup via pyca/cryptography (used if dilithium-py is
+    unavailable, regardless of profile)
   - Keys generated per-session and optionally persisted to disk (encrypted)
   - Every signed log entry is stored in the pqc_audit_log DuckDB table
 
@@ -31,15 +48,27 @@ from typing import Any, Dict, Optional, Tuple
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# ML-DSA-65 backend (dilithium-py — NIST FIPS 204 equivalent)
+# ML-DSA backend (dilithium-py — NIST FIPS 204) — crypto-agile parameter sets
 # ---------------------------------------------------------------------------
 
+DEFAULT_PQC_PROFILE = "commercial"
+
+# profile name -> (dilithium-py class name, NIST FIPS 204 label). Adding a
+# future profile means adding one entry here -- nothing else in this
+# module, or the rest of the codebase, hardcodes a parameter set.
+PQC_PARAMETER_SETS: Dict[str, Dict[str, str]] = {
+    "commercial": {"dilithium_cls": "Dilithium3", "label": "ML-DSA-65"},
+    "cnsa2":      {"dilithium_cls": "Dilithium5", "label": "ML-DSA-87"},
+}
+
 try:
-    from dilithium_py.dilithium import Dilithium3 as _Dilithium3
+    from dilithium_py.dilithium import Dilithium3 as _Dilithium3, Dilithium5 as _Dilithium5
     _MLDSA_AVAILABLE = True
-    logger.info("ML-DSA-65 (Dilithium3) backend loaded via dilithium-py")
+    _DILITHIUM_CLASSES = {"Dilithium3": _Dilithium3, "Dilithium5": _Dilithium5}
+    logger.info("ML-DSA backend loaded via dilithium-py (Dilithium3/ML-DSA-65, Dilithium5/ML-DSA-87)")
 except ImportError:
     _MLDSA_AVAILABLE = False
+    _DILITHIUM_CLASSES = {}
     logger.warning("dilithium-py not installed — falling back to Ed25519 signing")
 
 # Ed25519 fallback (still 128-bit quantum-safe for signatures under Grover)
@@ -53,27 +82,43 @@ from cryptography.exceptions import InvalidSignature
 
 class _MLDSASigner:
     """
-    Thin wrapper around Dilithium3 (ML-DSA-65 equivalent).
-    Security level ~AES-192 / 3.3 classical bits against quantum adversaries.
+    Thin wrapper around a dilithium-py class, selected by PQC_PROFILE:
+      - "commercial" (default) -> Dilithium3 (ML-DSA-65, ~AES-192 / 3.3
+        classical-bit-equivalent security against quantum adversaries)
+      - "cnsa2" -> Dilithium5 (ML-DSA-87, CNSA 2.0's required category)
+    An unrecognized profile falls back to "commercial" with a warning
+    rather than failing signing outright.
     """
 
-    def __init__(self):
-        self.pk_bytes, self.sk_bytes = _Dilithium3.keygen()
-        logger.info("ML-DSA-65 keypair generated | pk=%d bytes sk=%d bytes",
-                    len(self.pk_bytes), len(self.sk_bytes))
+    def __init__(self, profile: str = DEFAULT_PQC_PROFILE):
+        if profile not in PQC_PARAMETER_SETS:
+            logger.warning("Unknown PQC_PROFILE '%s' -- falling back to '%s'", profile, DEFAULT_PQC_PROFILE)
+            profile = DEFAULT_PQC_PROFILE
+        params = PQC_PARAMETER_SETS[profile]
+        self._profile = profile
+        self._label = params["label"]
+        self._cls_name = params["dilithium_cls"]
+        self._dilithium = _DILITHIUM_CLASSES[self._cls_name]
+        self.pk_bytes, self.sk_bytes = self._dilithium.keygen()
+        logger.info("%s (%s) keypair generated for profile '%s' | pk=%d bytes sk=%d bytes",
+                    self._label, self._cls_name, self._profile, len(self.pk_bytes), len(self.sk_bytes))
 
     def sign(self, message: bytes, context: bytes = b"") -> bytes:
         # dilithium-py sign takes (sk, message)
         msg_with_ctx = context + b"||" + message if context else message
-        return _Dilithium3.sign(self.sk_bytes, msg_with_ctx)
+        return self._dilithium.sign(self.sk_bytes, msg_with_ctx)
 
     def verify(self, message: bytes, signature: bytes, context: bytes = b"") -> bool:
         msg_with_ctx = context + b"||" + message if context else message
-        return _Dilithium3.verify(self.pk_bytes, msg_with_ctx, signature)
+        return self._dilithium.verify(self.pk_bytes, msg_with_ctx, signature)
 
     @property
     def algorithm(self) -> str:
-        return "ML-DSA-65 (Dilithium3)"
+        return f"{self._label} ({self._cls_name})"
+
+    @property
+    def profile(self) -> str:
+        return self._profile
 
     @property
     def public_key_hex(self) -> str:
@@ -109,6 +154,12 @@ class _Ed25519Signer:
         return "Ed25519 (PQC fallback)"
 
     @property
+    def profile(self) -> str:
+        # dilithium-py unavailable -- no ML-DSA parameter set is in play,
+        # regardless of what PQC_PROFILE requested.
+        return "ed25519-fallback"
+
+    @property
     def public_key_hex(self) -> str:
         return self._public.public_bytes(
             serialization.Encoding.Raw, serialization.PublicFormat.Raw
@@ -134,9 +185,24 @@ class PQCAuditManager:
 
     AUDIT_CONTEXT = b"jakal-enterprise-audit-v2"
 
-    def __init__(self, db=None):
+    def __init__(self, db=None, profile: Optional[str] = None):
+        """
+        profile: which PQC_PARAMETER_SETS entry to sign with -- "commercial"
+        (ML-DSA-65) or "cnsa2" (ML-DSA-87). Defaults to the PQC_PROFILE
+        config flag (backend/config/__init__.py's Config.PQC_PROFILE, itself
+        env-var-driven and "commercial" unless overridden) so every existing
+        call site (PQCAuditManager(), no args) keeps signing with ML-DSA-65
+        exactly as before -- crypto-agility is opt-in per instance, not a
+        behavior change. See docs/crypto-agility.md.
+        """
         self.db = db
-        self._signer = _MLDSASigner() if _MLDSA_AVAILABLE else _Ed25519Signer()
+        if profile is None:
+            try:
+                from config import Config
+                profile = Config.PQC_PROFILE
+            except Exception:
+                profile = DEFAULT_PQC_PROFILE
+        self._signer = _MLDSASigner(profile) if _MLDSA_AVAILABLE else _Ed25519Signer()
         self._log_count = 0
 
     # ------------------------------------------------------------------
@@ -254,14 +320,23 @@ class PQCAuditManager:
         return self._signer.algorithm
 
     @property
+    def profile(self) -> str:
+        """Which PQC_PARAMETER_SETS entry this instance actually signs
+        with -- "commercial", "cnsa2", or "ed25519-fallback" if
+        dilithium-py isn't installed (see docs/crypto-agility.md)."""
+        return self._signer.profile
+
+    @property
     def public_key_hex(self) -> str:
         return self._signer.public_key_hex
 
     def status(self) -> Dict[str, Any]:
         return {
-            "algorithm":       self._signer.algorithm,
-            "pqc_available":   _MLDSA_AVAILABLE,
-            "public_key_size": len(self._signer.public_key_hex) // 2,  # bytes
-            "log_count":       self._log_count,
-            "audit_context":   self.AUDIT_CONTEXT.decode(),
+            "algorithm":         self._signer.algorithm,
+            "profile":           self._signer.profile,
+            "available_profiles": list(PQC_PARAMETER_SETS.keys()),
+            "pqc_available":     _MLDSA_AVAILABLE,
+            "public_key_size":   len(self._signer.public_key_hex) // 2,  # bytes
+            "log_count":         self._log_count,
+            "audit_context":     self.AUDIT_CONTEXT.decode(),
         }
