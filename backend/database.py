@@ -91,6 +91,8 @@ class DuckDBManager:
             "seq_phishing_campaign", "seq_phishing_target",
             # v2.7 sequences
             "seq_remediation",
+            # v2.8 tables key off app-generated VARCHAR policy_key / connector
+            # call IDs -- no sequences needed.
         ]:
             c.execute(f"CREATE SEQUENCE IF NOT EXISTS {seq} START 1")
 
@@ -877,8 +879,31 @@ class DuckDBManager:
         )
         """)
 
+        # ── v2.8 Tables — Resonance Wave Automation policy ──────────────────
+        # Deliberately NOT touching global_security_settings (v2.4) --
+        # that table is a DERIVED snapshot by design (see
+        # resonance_settings_snapshot()'s docstring: computed fresh from
+        # operators/encryption_keys/pqc_audit_log, never independently
+        # editable, specifically to avoid a second, driftable source of
+        # truth for security posture). resonance_policy is a genuinely
+        # separate concept: a small set of real, independently-meaningful
+        # automation knobs -- each one is read by a real enforcement point
+        # (routers/response.py, vault.py, cheatsheet.py) rather than being
+        # a decorative flag nothing checks.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS resonance_policy (
+            policy_key   VARCHAR PRIMARY KEY,
+            value        VARCHAR NOT NULL,       -- JSON-encoded (bool/number/string)
+            value_type   VARCHAR NOT NULL,        -- bool | number | string
+            label        VARCHAR,
+            description  VARCHAR,
+            updated_by   VARCHAR,
+            updated_at   TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
         self.conn.commit()
-        logger.info("Schema v2.6 initialized at %s", self.db_path)
+        logger.info("Schema v2.8 initialized at %s", self.db_path)
 
     # ======================================================================
     # Generic helpers
@@ -2976,6 +3001,33 @@ class DuckDBManager:
         self.conn.commit()
         return True
 
+    def update_remediation_action_status_by_approval(self, approval_request_id: str, status: str) -> bool:
+        """
+        Same as update_remediation_action_status() but keyed by
+        approval_request_id instead of action_id. Needed for the
+        v2.8 enforce endpoint (routers/response.py): the remediation_actions
+        row a staged isolate/quarantine action created has its OWN
+        action_id (see _record_action's `action_id = str(uuid.uuid4())`) --
+        it is NOT the same value as the approval_requests.request_id it's
+        linked to via the approval_request_id column. Calling the
+        action_id-keyed update with an approval_request_id silently
+        matched zero rows -- caught by
+        test_v28_policy_enforcement.py::test_enforce_endpoint_end_to_end_via_webhook,
+        which checked the row's status after a real enforce call and found
+        it still 'staged' despite the connector reporting 'enforced'.
+        """
+        exists = self.conn.execute(
+            "SELECT 1 FROM remediation_actions WHERE approval_request_id = ?", (approval_request_id,)
+        ).fetchone()
+        if not exists:
+            return False
+        self.conn.execute(
+            "UPDATE remediation_actions SET status = ?, resolved_at = now() WHERE approval_request_id = ?",
+            (status, approval_request_id),
+        )
+        self.conn.commit()
+        return True
+
     def list_remediation_actions(self, action_type: Optional[str] = None,
                                   status: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
         query = "SELECT * FROM remediation_actions WHERE 1=1"
@@ -3003,6 +3055,66 @@ class DuckDBManager:
         return {"total": total, "by_type": by_type}
 
     # ======================================================================
+    # v2.8 — Resonance policy (real automation knobs)
+    # ======================================================================
+
+    def seed_policy(self, policy_key: str, value: Any, value_type: str, label: str, description: str) -> None:
+        exists = self.conn.execute(
+            "SELECT 1 FROM resonance_policy WHERE policy_key = ?", (policy_key,)
+        ).fetchone()
+        if exists:
+            return
+        self.conn.execute(
+            "INSERT INTO resonance_policy (policy_key, value, value_type, label, description) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (policy_key, json.dumps(value), value_type, label, description),
+        )
+        self.conn.commit()
+
+    def get_policy(self, policy_key: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM resonance_policy WHERE policy_key = ?", (policy_key,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        d = dict(zip(cols, row))
+        d["value"] = json.loads(d["value"])
+        return d
+
+    def get_policy_value(self, policy_key: str, default: Any = None) -> Any:
+        p = self.get_policy(policy_key)
+        return p["value"] if p is not None else default
+
+    def list_policy(self) -> List[Dict[str, Any]]:
+        rows = self.conn.execute("SELECT * FROM resonance_policy ORDER BY policy_key").fetchall()
+        cols = [d[0] for d in self.conn.description]
+        out = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            d["value"] = json.loads(d["value"])
+            out.append(d)
+        return out
+
+    def set_policy_value(self, policy_key: str, value: Any, updated_by: str) -> bool:
+        exists = self.conn.execute(
+            "SELECT value_type FROM resonance_policy WHERE policy_key = ?", (policy_key,)
+        ).fetchone()
+        if not exists:
+            return False
+        value_type = exists[0]
+        if value_type == "bool" and not isinstance(value, bool):
+            raise ValueError(f"policy '{policy_key}' expects a bool value")
+        if value_type == "number" and not isinstance(value, (int, float)):
+            raise ValueError(f"policy '{policy_key}' expects a numeric value")
+        self.conn.execute(
+            "UPDATE resonance_policy SET value = ?, updated_by = ?, updated_at = now() WHERE policy_key = ?",
+            (json.dumps(value), updated_by, policy_key),
+        )
+        self.conn.commit()
+        return True
+
+    # ======================================================================
     # Utility
     # ======================================================================
 
@@ -3023,7 +3135,7 @@ class DuckDBManager:
             "users", "roles", "permissions", "sessions", "api_keys", "audit_log",
             "trade_secrets_vault", "darkweb_watchlist", "darkweb_findings",
             "training_modules", "training_completions", "phishing_campaigns", "phishing_targets",
-            "remediation_actions",
+            "remediation_actions", "resonance_policy",
         ]
         stats = {}
         for t in tables:

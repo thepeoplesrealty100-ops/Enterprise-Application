@@ -620,11 +620,16 @@ async function renderResponseConsolePanel() {
     api('/api/response/stats').catch(() => ({ total: 0, by_type: {} })),
     api('/api/response/ioc?limit=10').catch(() => ({ indicators: [] })),
   ]);
-  const actionRows = (actions.actions || []).map((a) => `
+  const ENFORCEABLE = new Set(['isolate_host_staged', 'quarantine_host_staged']);
+  const actionRows = (actions.actions || []).map((a) => {
+    const canEnforce = ENFORCEABLE.has(a.action_type) && a.status === 'staged' && a.approval_request_id;
+    return `
     <div style="${cardStyle()};border-left:3px solid ${RISK_COLOR[a.risk_level] || '#6b7280'}">
       <div style="display:flex;justify-content:space-between"><b>${escapeHtml(a.action_type)}</b><span style="opacity:.7">${escapeHtml(a.status)}</span></div>
       <div style="opacity:.75;font-size:11px;margin-top:2px">${escapeHtml(a.target || '—')} · ${escapeHtml(a.d3fend_technique || '')} · ${escapeHtml(a.created_at)}</div>
-    </div>`).join('');
+      ${canEnforce ? `<button type="button" data-rc-enforce="${escapeHtml(a.approval_request_id)}" style="${btnStyle('#b91c1c')};margin-top:6px">Enforce (after approval)</button>` : ''}
+    </div>`;
+  }).join('');
   const iocRows = (iocs.indicators || []).map((i) => `
     <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1f2937;font-size:11px">
       <span>${escapeHtml(i.indicator)}</span><span style="opacity:.6">${escapeHtml(i.indicator_type)} · ${escapeHtml(i.severity)}</span>
@@ -654,6 +659,16 @@ async function renderResponseConsolePanel() {
     </div>
 
     <div style="${cardStyle()}"><b>Active blocklist</b><div style="margin-top:6px">${iocRows || '<p style="opacity:.6;font-size:11px">None blocked yet.</p>'}</div></div>
+
+    <div style="${cardStyle()}">
+      <b>Isolate / quarantine a host</b>
+      <p style="opacity:.6;font-size:10.5px;margin:4px 0 8px">Always staged behind the Human Approval Gate — never auto-executed.
+        Approve at the Approval tab, then click Enforce below once approved.</p>
+      <input id="rc-isolate-target" placeholder="target (must be in an active authorized scope)" style="width:100%;margin-bottom:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+      <input id="rc-isolate-reason" placeholder="reason" style="width:100%;margin-bottom:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+      <button type="button" data-rc-isolate style="${btnStyle('#b91c1c')}">Stage isolation</button>
+      <div id="rc-isolate-result" style="margin-top:6px;font-size:11px"></div>
+    </div>
 
     <h4 style="opacity:.7;font-size:11px;margin:14px 0 6px">RECENT ACTIONS</h4>
     ${actionRows || '<p style="opacity:.6;font-size:11px">No response actions yet.</p>'}
@@ -685,6 +700,32 @@ function wireResponseConsoleActions(root) {
       refreshOpsTab();
     } catch (e) { updateTelemetryConsole(`[RESPONSE ERROR] ${e.message}`, 'text-red-400'); }
   };
+
+  const isolateBtn = root.querySelector('[data-rc-isolate]');
+  if (isolateBtn) isolateBtn.onclick = async () => {
+    const target = root.querySelector('#rc-isolate-target')?.value || '';
+    const reason = root.querySelector('#rc-isolate-reason')?.value || '';
+    const out = root.querySelector('#rc-isolate-result');
+    try {
+      const r = await api('/api/response/isolate-host', { method: 'POST', body: JSON.stringify({ target, reason }) });
+      out.innerHTML = `<span style="color:#34d399">Staged — approval_request_id=${escapeHtml(r.approval_request_id)}. Approve it in the Approval tab, then Enforce from the list below.</span>`;
+      refreshOpsTab();
+    } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+  };
+
+  root.querySelectorAll('[data-rc-enforce]').forEach((b) => {
+    b.onclick = async () => {
+      const approvalRequestId = b.getAttribute('data-rc-enforce');
+      try {
+        const r = await api(`/api/response/actions/${approvalRequestId}/enforce`, { method: 'POST' });
+        updateTelemetryConsole(
+          `[RESPONSE] enforce ${approvalRequestId} -> ${r.status} via ${r.connector}`,
+          r.status === 'enforced' ? 'text-emerald-400' : 'text-yellow-400',
+        );
+        refreshOpsTab();
+      } catch (e) { updateTelemetryConsole(`[ENFORCE ERROR] ${e.message}`, 'text-red-400'); }
+    };
+  });
 }
 
 async function renderScriptLibraryPanel() {
@@ -765,18 +806,82 @@ async function renderInferenceLedgerWidget(title) {
 }
 
 async function renderAutomationSettingsWidget() {
-  let data;
-  try { data = await api('/api/resonance/settings'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
-  const toggles = Object.entries(data).filter(([k, v]) => typeof v === 'boolean');
-  const other = Object.entries(data).filter(([k, v]) => typeof v !== 'boolean');
-  const toggleRows = toggles.map(([k, v]) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1f2937">
-      <span style="font-size:12px">${escapeHtml(k)}</span>
-      <span style="padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;background:${v ? '#065f46' : '#374151'};color:${v ? '#34d399' : '#9ca3af'}">${v ? 'ON' : 'OFF'}</span>
-    </div>`).join('');
-  return `<div style="${cardStyle()}"><b style="color:#f97316">Resonance Wave Automation — org security settings</b>
-    <div style="margin-top:8px">${toggleRows || '<p style="opacity:.6;font-size:11px">No toggle-shaped settings returned.</p>'}</div>
-    <pre style="font-size:10px;margin-top:8px;opacity:.7;white-space:pre-wrap">${escapeHtml(JSON.stringify(Object.fromEntries(other), null, 2).slice(0, 500))}</pre></div>`;
+  const [policyData, snapshot] = await Promise.all([
+    api('/api/resonance/policy').catch((e) => ({ error: e.message, policy: [] })),
+    api('/api/resonance/settings').catch(() => null),
+  ]);
+
+  const policyRows = (policyData.policy || []).map((p) => {
+    const inputId = `policy-input-${p.policy_key}`;
+    let control;
+    if (p.value_type === 'bool') {
+      control = `<button type="button" data-policy-toggle="${escapeHtml(p.policy_key)}" data-current="${p.value}"
+        style="${btnStyle(p.value ? '#065f46' : '#374151')};min-width:56px">${p.value ? 'ON' : 'OFF'}</button>`;
+    } else {
+      control = `<div style="display:flex;gap:6px;align-items:center">
+        <input id="${inputId}" type="number" step="any" value="${escapeHtml(p.value)}"
+          style="width:90px;padding:4px 8px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff;font-size:12px">
+        <button type="button" data-policy-save="${escapeHtml(p.policy_key)}" data-input="${inputId}" style="${btnStyle('#1d4ed8')}">Save</button>
+      </div>`;
+    }
+    return `<div style="padding:10px 0;border-bottom:1px solid #1f2937">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div><b style="font-size:12.5px">${escapeHtml(p.label || p.policy_key)}</b>
+          <div style="opacity:.6;font-size:10.5px;font-family:ui-monospace,monospace">${escapeHtml(p.policy_key)}</div></div>
+        ${control}
+      </div>
+      <div style="opacity:.65;font-size:11px;margin-top:6px;line-height:1.4">${escapeHtml(p.description || '')}</div>
+      ${p.updated_by ? `<div style="opacity:.5;font-size:10px;margin-top:4px">last changed by ${escapeHtml(p.updated_by)} · ${escapeHtml(p.updated_at)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  const rbacHash = snapshot?.rbac_policy_hash ? String(snapshot.rbac_policy_hash).slice(0, 16) + '…' : '—';
+
+  return `<div style="${cardStyle()}">
+      <b style="color:#f97316">Resonance Wave Automation</b>
+      <p style="opacity:.7;font-size:11px;margin:6px 0 0">Real, write-controlled automation knobs — each one is read by a real
+        enforcement point (Detection &amp; Response triage, the Trade Secrets vault, the script catalog), not decorative.
+        Requires the <code style="background:#111827;padding:1px 5px;border-radius:4px">response:manage</code> permission to change.</p>
+      <div id="policy-save-msg" style="margin-top:8px;font-size:11px"></div>
+      <div style="margin-top:4px">${policyRows || '<p style="opacity:.6;font-size:11px">No policy loaded.</p>'}</div>
+    </div>
+    <div style="${cardStyle()}">
+      <b style="opacity:.8;font-size:12px">Derived security-settings snapshot (read-only, by design)</b>
+      <p style="opacity:.6;font-size:10.5px;margin:4px 0 8px">Computed fresh from the real operators/encryption_keys/pqc_audit_log
+        tables — never independently editable, so it can't drift from what's actually enforced.</p>
+      <div style="font-size:11px;opacity:.8">RBAC policy hash: <span style="font-family:ui-monospace,monospace">${escapeHtml(rbacHash)}</span></div>
+      <div style="font-size:11px;opacity:.8;margin-top:2px">${escapeHtml(snapshot?.key_management_status || '—')}</div>
+    </div>`;
+}
+
+function wireAutomationSettingsActions(root) {
+  root.querySelectorAll('[data-policy-toggle]').forEach((b) => {
+    b.onclick = async () => {
+      const key = b.getAttribute('data-policy-toggle');
+      const newValue = b.getAttribute('data-current') !== 'true';
+      const msg = root.querySelector('#policy-save-msg');
+      try {
+        await api(`/api/resonance/policy/${key}`, { method: 'POST', body: JSON.stringify({ value: newValue }) });
+        if (msg) msg.innerHTML = `<span style="color:#34d399">Saved ${escapeHtml(key)} = ${newValue}.</span>`;
+        root.innerHTML = await renderAutomationSettingsWidget();
+        wireAutomationSettingsActions(root);
+      } catch (e) { if (msg) msg.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+    };
+  });
+  root.querySelectorAll('[data-policy-save]').forEach((b) => {
+    b.onclick = async () => {
+      const key = b.getAttribute('data-policy-save');
+      const inputId = b.getAttribute('data-input');
+      const raw = root.querySelector(`#${inputId}`)?.value;
+      const value = Number(raw);
+      const msg = root.querySelector('#policy-save-msg');
+      if (Number.isNaN(value)) { if (msg) msg.innerHTML = '<span style="color:#f87171">Not a number.</span>'; return; }
+      try {
+        await api(`/api/resonance/policy/${key}`, { method: 'POST', body: JSON.stringify({ value }) });
+        if (msg) msg.innerHTML = `<span style="color:#34d399">Saved ${escapeHtml(key)} = ${value}.</span>`;
+      } catch (e) { if (msg) msg.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+    };
+  });
 }
 
 async function renderOntologyGraphWidget() {
@@ -969,6 +1074,7 @@ async function injectPageLive(pageKey) {
       host.innerHTML = await renderInferenceLedgerWidget('Model Chains & Inference — ledger');
     } else if (pageKey === 'admin_automation_controls') {
       host.innerHTML = await renderAutomationSettingsWidget();
+      wireAutomationSettingsActions(host);
     } else if (pageKey === 'admin_ontology') {
       host.innerHTML = await renderOntologyGraphWidget();
     } else if (pageKey === 'admin_investigation_canvas') {

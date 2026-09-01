@@ -50,13 +50,17 @@ try:
     from wrappers.base import sanitize_target
     from threat_scoring import score_recon_finding
     from security_agents.edr_mdr import DEFAULT_PLAYBOOKS
+    from security_agents.vm_orchestrator import get_vm_orchestrator
+    from security_agents.edr_connector import enforce_containment
     _db = get_db_manager()
+    _vm = get_vm_orchestrator(_db)
     RESPONSE_OK = True
     _ERR = None
 except Exception as _e:  # noqa: BLE001
     RESPONSE_OK = False
     _ERR = str(_e)
     _db = None
+    _vm = None
     DEFAULT_PLAYBOOKS = []
 
 from dependencies import get_authenticated_user, require_permission
@@ -144,7 +148,9 @@ class TriageRequest(BaseModel):
     target: str = Field(default="")
     operator_id: str = Field(default="system")
     indicators: Dict[str, Any] = Field(default_factory=dict)
-    auto_stage_threshold: float = Field(default=0.8, ge=0.0, le=1.0)
+    # None = use the org-wide resonance_policy default (see routers/resonance.py);
+    # an explicit value here overrides it for just this call.
+    auto_stage_threshold: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
 
 class IocBlockRequest(BaseModel):
@@ -194,8 +200,12 @@ async def triage(req: TriageRequest, request: Request):
     })
     recommended = _recommend_playbooks(req.threat_category, req.finding_summary)
 
+    threshold = req.auto_stage_threshold
+    if threshold is None:
+        threshold = _db.get_policy_value("response_auto_stage_threshold", 0.8)
+
     staged_request_id = None
-    if severity >= req.auto_stage_threshold and recommended:
+    if severity >= threshold and recommended:
         staged_request_id = str(uuid.uuid4())
         pqc_entry = _pqc_sign("triage_auto_stage", {
             "target": req.target, "severity": severity, "playbook": recommended[0]["key"],
@@ -220,6 +230,7 @@ async def triage(req: TriageRequest, request: Request):
     )
     return {
         "action_id": action_id, "severity": severity, "recommended_playbooks": recommended,
+        "auto_stage_threshold_used": threshold,
         "auto_staged_approval_request_id": staged_request_id,
         "note": ("Severity crossed the auto-stage threshold — a containment approval request was "
                  "created; a human operator must approve it at POST /api/approval/{id}/approve "
@@ -351,3 +362,43 @@ async def list_actions(action_type: Optional[str] = None, status: Optional[str] 
 async def stats():
     _require()
     return _db.remediation_stats()
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# v2.8 — Enforcement (turns an approved staged decision into a real action)
+# ══════════════════════════════════════════════════════════════════════════
+
+@router.post("/actions/{approval_request_id}/enforce", dependencies=[require_permission("response:manage")])
+async def enforce_action(approval_request_id: str, request: Request,
+                          user: dict = Depends(get_authenticated_user)):
+    """
+    Executes an already-APPROVED isolate_host_staged / quarantine_host_staged
+    decision — never called automatically, never callable before a human
+    has approved at POST /api/approval/{id}/approve. See
+    security_agents/edr_connector.py for what "enforce" actually means:
+    real Docker network isolation for a JAKAL-owned sandbox, or a signed
+    webhook to whatever real EDR/firewall integration this deployment's
+    operator has configured for everything else.
+    """
+    _require()
+    approval = _db.get_approval_request(approval_request_id)
+    if not approval:
+        raise HTTPException(status_code=404, detail="Approval request not found")
+    if approval.get("action_type") not in ("isolate_host_staged", "quarantine_host_staged"):
+        raise HTTPException(status_code=422, detail="This approval request is not an enforceable containment action")
+    if approval.get("status") != "approved":
+        raise HTTPException(status_code=403, detail=f"Approval request is '{approval.get('status')}', not 'approved'")
+
+    target = approval.get("target")
+    detail = approval.get("payload_detail") or {}
+    result = enforce_containment(
+        approval["action_type"], target, detail, user["username"], db=_db, vm_orchestrator=_vm,
+    )
+
+    new_status = {"enforced": "enforced", "not_configured": "enforcement_not_configured",
+                  "error": "enforcement_failed"}.get(result["status"], "enforcement_failed")
+    _db.update_remediation_action_status_by_approval(approval_request_id, new_status)
+    _audit(request, user, "enforce_containment", "success" if result["status"] == "enforced" else "denied",
+           approval_request_id, {"target": target, "result": dict(result)})
+
+    return {"approval_request_id": approval_request_id, "target": target, **result}

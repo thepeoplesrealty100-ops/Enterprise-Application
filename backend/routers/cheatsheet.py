@@ -54,9 +54,9 @@ try:
     from database import get_db_manager
     from tools.authorization import check_authorization_and_scope, AuthorizationError
     from wrappers.base import sanitize_target
-    from security_agents.vm_orchestrator import VMOrchestrator
+    from security_agents.vm_orchestrator import get_vm_orchestrator
     _db = get_db_manager()
-    _vm = VMOrchestrator(_db)
+    _vm = get_vm_orchestrator(_db)
     CHEATSHEET_OK = True
     _ERR = None
 except Exception as _e:  # noqa: BLE001
@@ -229,17 +229,40 @@ async def stage_script(script_id: str, req: ScriptStageRequest, request: Request
         },
         "pqc_entry_id": pqc_entry_id, "origin_module": "script_catalog",
     })
+
+    # v2.8: real enforcement of the Resonance Wave Automation policy knob
+    # auto_approve_low_risk_actions -- LOW-risk scripts only, and this is
+    # the ONLY thing it changes: the human-decision step is skipped, not
+    # the authorization gate above (still enforced) or the sandbox-only
+    # execution boundary (run-in-sandbox still requires status='approved'
+    # and a matching content hash either way).
+    auto_approved = False
+    if script["risk_level"] == "LOW" and _db.get_policy_value("auto_approve_low_risk_actions", False):
+        _db.decide_approval_request(
+            request_id, "approved", "system:auto-approve-policy",
+            "auto-approved per resonance_policy.auto_approve_low_risk_actions",
+        )
+        auto_approved = True
+
     _db.insert_remediation_action({
         "action_id": request_id, "action_type": "script_catalog_execution", "target": req.target,
-        "status": "staged", "risk_level": script["risk_level"], "approval_request_id": request_id,
+        "status": "approved" if auto_approved else "staged", "risk_level": script["risk_level"],
+        "approval_request_id": request_id,
         "operator_id": req.operator_id, "d3fend_technique": None,
-        "detail": {"script_id": script_id, "title": script["title"]},
+        "detail": {"script_id": script_id, "title": script["title"], "auto_approved": auto_approved},
     })
     return {
-        "approval_request_id": request_id, "status": "staged", "risk_level": script["risk_level"],
-        "note": "Approve at POST /api/approval/{id}/approve, then POST "
-                "/cheatsheet/scripts/{script_id}/run-in-sandbox with the approval_request_id "
-                "and a sandbox container_name (create one at POST /api/vm/sandboxes first).",
+        "approval_request_id": request_id,
+        "status": "approved" if auto_approved else "staged",
+        "risk_level": script["risk_level"],
+        "note": (
+            "Auto-approved per the auto_approve_low_risk_actions policy — go straight to POST "
+            "/cheatsheet/scripts/{script_id}/run-in-sandbox with this approval_request_id."
+        ) if auto_approved else (
+            "Approve at POST /api/approval/{id}/approve, then POST "
+            "/cheatsheet/scripts/{script_id}/run-in-sandbox with the approval_request_id "
+            "and a sandbox container_name (create one at POST /api/vm/sandboxes first)."
+        ),
     }
 
 

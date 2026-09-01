@@ -30,7 +30,7 @@ rather than a full control surface · ⚪ frontend mock only, no backend
 |---|---|---|---|
 | Energy Core Management | `admin_energy_core` | `GET /api/qaip/energy-core/status` | 🟢 (v2.7: throttle gauge widget) |
 | Q'AIP Logic Core Manager | `admin_logic_core` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
-| Resonance Wave Automation | `admin_automation_controls` | `GET /api/resonance/settings` | 🟡 (v2.7: real on/off toggle-state display; still read-only — no write control to flip a setting from the UI yet) |
+| Resonance Wave Automation | `admin_automation_controls` | `GET/POST /api/resonance/policy/*` (v2.8) | 🟢 (real, write-controlled automation knobs, each read by a real enforcement point — see docs/v2.8-automation-policy-and-enforcement.md) |
 | Ontology & Simulation Hub | `admin_ontology` | `GET /api/cheatsheet/graph` | 🟢 (v2.7: category/phase relationship chip graph) |
 | Model Chains & Inference | `admin_model_chains` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
 | Quantum Orbital & Event Comms | `admin_quantum_nexus` | `GET /api/qaip/orbital-comms` | 🟢 (v2.7: event stream feed) |
@@ -78,11 +78,25 @@ module."
 | 14 IR playbooks (was 6) | `security_agents/edr_mdr.py` | +8 in v2.7: supply chain, cloud account compromise, DDoS, insider threat, IoT/OT, emergency patch, wireless rogue AP, PQC crypto-agility |
 | Script catalog | `payloads/script_catalog.py`, `/api/cheatsheet/scripts/*` | 43 real scripts from `gacyber_toolkit/`, staged + approval-gated + sandbox-only execution |
 
-## Known remaining gap
+## v2.8 — Resonance Wave Automation write control + real containment enforcement
 
-`admin_automation_controls` (Resonance Wave Automation) is the one page
-still marked 🟡: it displays real on/off state for every org-wide security
-setting, but there's no write endpoint yet to flip one from the UI —
-`routers/resonance.py` would need a `POST /resonance/settings` added
-first. Every other module named in the original ops-dashboard request is
-now 🟢.
+Both gaps called out at the end of v2.7 are closed:
+
+- **Resonance Wave Automation** now has real write control via
+  `resonance_policy` (a genuinely new table, deliberately NOT a patch to
+  the derived `global_security_settings` snapshot — see
+  docs/v2.8-automation-policy-and-enforcement.md for why). Each policy
+  knob is read by a real enforcement point: the Detection & Response
+  triage threshold, the Trade Secrets vault's role-isolation requirement,
+  and the script catalog's auto-approval behavior for LOW-risk scripts.
+- **Host isolation/quarantine** now has a real enforcement path:
+  `POST /api/response/actions/{id}/enforce`, callable only after human
+  approval. A JAKAL-owned sandbox container is genuinely isolated via a
+  real Docker network disconnect; an external target is delivered via a
+  signed (HMAC-SHA256, replay-protected) webhook to whichever real
+  EDR/firewall/SOAR integration the operator configures
+  (`EDR_WEBHOOK_URL`) — the same integration shape production tools like
+  Cortex XSOAR and Splunk SOAR already use to bridge to CrowdStrike/
+  SentinelOne.
+
+Every module named in the original ops-dashboard request is now 🟢.

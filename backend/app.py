@@ -26,7 +26,7 @@ from config import get_config
 from database import get_db_manager
 from llm_orchestrator import AgentOrchestrator
 from tools.authorization import AuthorizationError
-from security_agents.vm_orchestrator import VMOrchestrator
+from security_agents.vm_orchestrator import get_vm_orchestrator
 from security_agents.compliance_axiom import ComplianceAxiom
 from security_agents.edr_mdr import EdrMdrEngine
 from middleware import TimingAndSecurityMiddleware
@@ -112,7 +112,7 @@ app.include_router(response_router,  prefix="/api")
 
 db = get_db_manager()
 orchestrator = AgentOrchestrator(config)
-vm_orchestrator = VMOrchestrator(db)
+vm_orchestrator = get_vm_orchestrator(db)
 compliance_axiom = ComplianceAxiom(db)
 edr_mdr = EdrMdrEngine(db)
 

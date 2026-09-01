@@ -95,3 +95,19 @@ test suite from 53/16/6 (pass/fail/error) to 85/0/0:
   Command, Load Monitor, Investigation Canvas).
 
 Full writeup + research citations: `docs/v2.7-detection-response-and-scripts.md`.
+
+## What's new in v2.8 — Automation policy + real containment enforcement
+
+- **Resonance Wave Automation now has real write control** — `resonance_policy`
+  holds knobs (auto-stage severity threshold, vault role-isolation
+  enforcement, script auto-approval, sandbox lifetime) that real
+  enforcement points actually read, RBAC-gated and PQC-signed on every
+  change. Deliberately not a patch to the derived `global_security_settings`
+  snapshot — see the doc below for why.
+- **Host isolation/quarantine now has a real enforcement path** —
+  `POST /api/response/actions/{id}/enforce`: a JAKAL-owned sandbox is
+  genuinely isolated via a real Docker network disconnect; an external
+  target is delivered via a signed HMAC-SHA256 webhook to your own
+  EDR/firewall/SOAR integration (`EDR_WEBHOOK_URL`).
+
+Full writeup + research citations: `docs/v2.8-automation-policy-and-enforcement.md`.

@@ -190,6 +190,18 @@ class VaultItemCreate(BaseModel):
 async def create_vault_item(req: VaultItemCreate, request: Request,
                              user: dict = Depends(get_authenticated_user)):
     _require()
+    # v2.8: real enforcement of the Resonance Wave Automation policy knob
+    # trade_secret_isolation_enforced (routers/resonance.py) -- when on, a
+    # vault item can never be created with an empty allowed_roles list,
+    # closing off the "forgot to scope it, now it's effectively world-
+    # readable to any vault:read holder" mistake.
+    if _db.get_policy_value("trade_secret_isolation_enforced", True) and not req.allowed_roles:
+        raise HTTPException(
+            status_code=422,
+            detail="trade_secret_isolation_enforced policy is on — allowed_roles cannot be empty. "
+                   "Disable it at POST /api/resonance/policy/trade_secret_isolation_enforced if this "
+                   "item is genuinely meant to be unscoped.",
+        )
     item_id = str(uuid.uuid4())
     plaintext = req.content.encode("utf-8")
     envelope = _enc.encrypt(plaintext)
