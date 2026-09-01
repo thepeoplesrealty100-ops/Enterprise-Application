@@ -216,9 +216,14 @@ async def test_frontend_serves_ui_without_exposing_repo_source(client):
     root. That introduced a second issue: mounting the ENTIRE repo root as
     StaticFiles serves the whole backend source tree and .git over HTTP
     (confirmed live: GET /backend/database.py and GET /.git/config both
-    returned 200 with real file contents) -- fixed by mounting only the
-    js/ subdirectory index.html actually needs, plus one explicit
-    /integration.js route, instead of the whole tree.
+    returned 200 with real file contents) -- fixed by serving only the
+    specific local assets index.html actually needs through named,
+    explicit FileResponse routes instead of mounting the whole tree.
+
+    (js/api-client.js was one such asset when this test was written; it
+    and js/integration-loader.js were later found to be dead code -- never
+    instantiated anywhere despite being loaded -- and were deleted along
+    with the /js mount. See index.html and app.py's frontend-mount comment.)
     """
     root = await client.get("/")
     assert root.status_code == 200
@@ -227,8 +232,8 @@ async def test_frontend_serves_ui_without_exposing_repo_source(client):
     integration_js = await client.get("/integration.js")
     assert integration_js.status_code == 200
 
-    api_client_js = await client.get("/js/api-client.js")
-    assert api_client_js.status_code == 200
+    world_land_map = await client.get("/world_land_map.json")
+    assert world_land_map.status_code == 200
 
     # Must NOT be servable -- these are backend source, git internals, and
     # docs, none of which index.html references.

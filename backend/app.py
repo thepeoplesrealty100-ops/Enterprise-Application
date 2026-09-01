@@ -666,18 +666,15 @@ app.openapi_schema = custom_openapi(app)
 # _FRONTEND is now the repo root, that would publish the full backend
 # source tree, git history/config, and any local .env a developer happens
 # to have sitting in backend/ (gitignored, but this mount doesn't know
-# that). index.html only references three local assets --
-# ./js/api-client.js, ./js/integration-loader.js, ./integration.js (every
-# other asset it loads is from a CDN) -- so only the specific `js/`
-# subdirectory is mounted, plus the one explicit /integration.js route
-# above; nothing else under the repo root is served.
-_FRONTEND_JS = _FRONTEND / "js"
-if _FRONTEND_JS.is_dir():
-    app.mount("/js", StaticFiles(directory=str(_FRONTEND_JS)), name="frontend-js")
-    logger.info("Frontend JS assets mounted from %s", _FRONTEND_JS)
-else:
-    logger.warning("Frontend js/ directory missing at %s — js/api-client.js and "
-                    "js/integration-loader.js will not be served", _FRONTEND_JS)
+# that). index.html's local (non-CDN) assets are each served through one
+# explicit, named FileResponse route above (/integration.js,
+# /gacyber_toolkit/cheatsheet_data.json, /world_land_map.json) rather than
+# a directory mount -- nothing under the repo root is served wholesale.
+#
+# (js/api-client.js and js/integration-loader.js used to be mounted here
+# too, but were dead code -- loaded by index.html yet never instantiated,
+# confirmed by grep across the whole frontend -- and were deleted along
+# with the mount.)
 
 # v3.0 Response Console (frontend/ — Vite/React build, see frontend/README.md).
 # Optional: only mounted when a production build exists at frontend/dist, so
