@@ -42,7 +42,7 @@ from routers import (
     wireless_router, approval_router,
     horizon_router, canvas_router, resonance_router, qaip_router,
     ares_router, iam_router, vault_router, awareness_router,
-    darkweb_router, cheatsheet_router,
+    darkweb_router, cheatsheet_router, response_router,
 )
 from dependencies import require_permission
 
@@ -108,6 +108,7 @@ app.include_router(vault_router,     prefix="/api")
 app.include_router(awareness_router, prefix="/api")
 app.include_router(darkweb_router,   prefix="/api")
 app.include_router(cheatsheet_router, prefix="/api")
+app.include_router(response_router,  prefix="/api")
 
 db = get_db_manager()
 orchestrator = AgentOrchestrator(config)

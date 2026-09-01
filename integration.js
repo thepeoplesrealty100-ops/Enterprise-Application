@@ -117,6 +117,8 @@ function ensureOpsDrawer() {
       <button type="button" data-ops-tab="diag" class="ops-tab" style="${btnStyle('#374151')}">Diagnostics</button>
       <button type="button" data-ops-tab="quantum" class="ops-tab" style="${btnStyle('#374151')}">Quantum</button>
       <button type="button" data-ops-tab="fabric" class="ops-tab" style="${btnStyle('#374151')}">Fabric</button>
+      <button type="button" data-ops-tab="response" class="ops-tab" style="${btnStyle('#374151')}">Response</button>
+      <button type="button" data-ops-tab="scripts" class="ops-tab" style="${btnStyle('#374151')}">Scripts</button>
     </div>
     <div id="jakal-ops-body" style="flex:1;overflow:auto;padding:12px"></div>
   `;
@@ -151,7 +153,11 @@ async function refreshOpsTab() {
     else if (tab === 'diag') body.innerHTML = await renderDiagPanel();
     else if (tab === 'quantum') body.innerHTML = await renderQuantumPanel();
     else if (tab === 'fabric') body.innerHTML = await renderFabricPanel();
+    else if (tab === 'response') body.innerHTML = await renderResponseConsolePanel();
+    else if (tab === 'scripts') body.innerHTML = await renderScriptLibraryPanel();
     wireOpsActions(body);
+    wireResponseConsoleActions(body);
+    wireScriptLibraryActions(body);
   } catch (e) {
     body.innerHTML = `<div style="color:#f87171">${escapeHtml(e.message)}</div>`;
   }
@@ -330,12 +336,21 @@ async function renderAuthPanel() {
   if (token) {
     try {
       const me = await api('/api/iam/auth/me');
+      const mfaSection = me.mfa_enabled
+        ? `<div style="${cardStyle()}"><b style="color:#34d399">MFA enabled</b>
+             <button type="button" data-mfa-disable style="${btnStyle('#7f1d1d')};margin-top:8px">Disable MFA</button></div>`
+        : `<div style="${cardStyle()}"><b>MFA not enabled</b>
+             <p style="opacity:.7;font-size:11px;margin:4px 0 8px">Scan the QR with any TOTP authenticator app (Google/Microsoft Authenticator, 1Password, Authy).</p>
+             <button type="button" data-mfa-enroll style="${btnStyle('#7c3aed')}">Start MFA enrollment</button>
+             <div id="mfa-enroll-out" style="margin-top:10px"></div>
+           </div>`;
       return `<div style="${cardStyle()}">
         <b>Signed in as ${escapeHtml(me.username)}</b>
         <div style="opacity:.75;margin-top:4px">Roles: ${(me.roles || []).join(', ') || 'none'}</div>
         <div style="opacity:.75">Permissions: ${(me.permissions || []).join(', ') || 'none'}</div>
         <button type="button" data-iam-logout style="${btnStyle('#7f1d1d')};margin-top:8px">Sign out</button>
-      </div>`;
+      </div>
+      ${mfaSection}`;
     } catch (e) {
       setAuthToken('');
     }
@@ -345,6 +360,7 @@ async function renderAuthPanel() {
     <p style="opacity:.75;font-size:11px;margin:4px 0 8px">First account created on a fresh install becomes root admin automatically.</p>
     <input id="iam-username" placeholder="username" style="width:100%;margin-bottom:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
     <input id="iam-password" type="password" placeholder="password (12+ chars)" style="width:100%;margin-bottom:8px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+    <input id="iam-totp" placeholder="6-digit MFA code (only if you have MFA enabled)" style="width:100%;margin-bottom:8px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
     <input id="iam-email" placeholder="email (only needed to register)" style="width:100%;margin-bottom:8px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
     <div style="display:flex;gap:6px">
       <button type="button" data-iam-login style="${btnStyle('#1d4ed8')};flex:1">Sign in</button>
@@ -362,9 +378,10 @@ function wireAuthPanel(root) {
   if (loginBtn) loginBtn.onclick = async () => {
     const username = root.querySelector('#iam-username')?.value || '';
     const password = root.querySelector('#iam-password')?.value || '';
+    const totp_code = root.querySelector('#iam-totp')?.value || undefined;
     try {
-      const r = await api('/api/iam/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
-      if (r.mfa_required) { msg('MFA required — this UI does not collect a TOTP code yet; use POST /api/iam/auth/login with totp_code via /docs.', false); return; }
+      const r = await api('/api/iam/auth/login', { method: 'POST', body: JSON.stringify({ username, password, totp_code }) });
+      if (r.mfa_required) { msg('This account has MFA enabled — enter the 6-digit code from your authenticator app above, then Sign in again.', false); return; }
       setAuthToken(r.access_token);
       msg('Signed in.', true);
       window.switchSettingsSubTab?.(window.currentSettingsSubTab || 'profile');
@@ -386,6 +403,37 @@ function wireAuthPanel(root) {
     try { await api('/api/iam/auth/logout', { method: 'POST' }); } catch (_) {}
     setAuthToken('');
     window.switchSettingsSubTab?.(window.currentSettingsSubTab || 'profile');
+  };
+
+  const mfaEnrollBtn = root.querySelector('[data-mfa-enroll]');
+  if (mfaEnrollBtn) mfaEnrollBtn.onclick = async () => {
+    const out = root.querySelector('#mfa-enroll-out');
+    try {
+      const r = await api('/api/iam/auth/mfa/enroll', { method: 'POST' });
+      out.innerHTML = `
+        ${r.qr_data_uri ? `<img src="${r.qr_data_uri}" alt="MFA QR code" style="border-radius:8px;background:#fff;padding:8px">` : ''}
+        <div style="margin-top:8px;font-size:11px;opacity:.75">Can't scan? Enter manually: <span style="font-family:ui-monospace,monospace;color:#f97316">${escapeHtml(r.secret)}</span></div>
+        <input id="mfa-confirm-code" placeholder="Enter the 6-digit code from your app" style="width:100%;margin-top:8px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+        <button type="button" data-mfa-confirm style="${btnStyle('#166534')};margin-top:6px">Confirm & enable</button>
+        <div id="mfa-confirm-msg" style="margin-top:6px;font-size:11px"></div>`;
+      const confirmBtn = out.querySelector('[data-mfa-confirm]');
+      confirmBtn.onclick = async () => {
+        const totp_code = out.querySelector('#mfa-confirm-code')?.value || '';
+        const cmsg = out.querySelector('#mfa-confirm-msg');
+        try {
+          await api('/api/iam/auth/mfa/confirm', { method: 'POST', body: JSON.stringify({ totp_code }) });
+          cmsg.innerHTML = '<span style="color:#34d399">MFA enabled.</span>';
+          setTimeout(() => window.switchSettingsSubTab?.(window.currentSettingsSubTab || 'profile'), 800);
+        } catch (e) { cmsg.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+      };
+    } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+  };
+  const mfaDisableBtn = root.querySelector('[data-mfa-disable]');
+  if (mfaDisableBtn) mfaDisableBtn.onclick = async () => {
+    try {
+      await api('/api/iam/auth/mfa/disable', { method: 'POST' });
+      window.switchSettingsSubTab?.(window.currentSettingsSubTab || 'profile');
+    } catch (e) { updateTelemetryConsole(`[MFA ERROR] ${e.message}`, 'text-red-400'); }
   };
 }
 
@@ -462,18 +510,26 @@ async function renderEasRdPanelLive() {
 }
 
 async function renderDarkWebPanelLive() {
-  const [watch, findings] = await Promise.all([
+  const [watch, findings, connector] = await Promise.all([
     api('/api/darkweb/watchlist').catch(() => ({ watchlist: [] })),
     api('/api/darkweb/findings').catch(() => ({ findings: [] })),
+    api('/api/darkweb/connector-status').catch(() => ({ configured: false })),
   ]);
   const wRows = (watch.watchlist || []).map((w) => `<div style="${cardStyle()}">${escapeHtml(w.identifier)} <span style="opacity:.6">(${escapeHtml(w.identifier_type)})</span></div>`).join('');
   const fRows = (findings.findings || []).map((f) => `<div style="${cardStyle()};border-left:3px solid #fbbf24"><b>${escapeHtml(f.breach_name || f.source)}</b> · ${escapeHtml(f.severity)}</div>`).join('');
-  return `<div style="${cardStyle()}"><b>Dark Web Monitoring (live)</b>
-    <div style="opacity:.7;font-size:11px;margin-top:4px">HIBP connector ${watch.watchlist?.length ? '' : '— add an identifier to the watchlist to begin.'}</div>
+  const statusBadge = connector.configured
+    ? `<span style="padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;background:#065f46;color:#34d399">HIBP CONNECTED</span>`
+    : `<span style="padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;background:#7c2d12;color:#fdba74">HIBP NOT CONFIGURED</span>`;
+  return `<div style="${cardStyle()}"><div style="display:flex;justify-content:space-between;align-items:center"><b>Dark Web Monitoring (live)</b>${statusBadge}</div>
+    <div style="opacity:.7;font-size:11px;margin-top:6px">
+      ${connector.configured
+        ? 'Live breach checks are enabled — Run scan will query Have I Been Pwned for every watched email.'
+        : `Set <code style="background:#111827;padding:1px 5px;border-radius:4px">HIBP_API_KEY</code> in backend/.env to enable live breach checks — get a key at <a href="${escapeHtml(connector.setup_url || 'https://haveibeenpwned.com/API/Key')}" target="_blank" rel="noopener" style="color:#f97316">haveibeenpwned.com/API/Key</a>. Watchlist management and manual findings still work without it.`}
+    </div>
     <input id="darkweb-identifier" placeholder="email to watch" style="width:100%;margin:8px 0;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
     <div style="display:flex;gap:6px">
       <button type="button" data-darkweb-add style="${btnStyle('#1d4ed8')};flex:1">Add to watchlist</button>
-      <button type="button" data-darkweb-scan style="${btnStyle('#166534')};flex:1">Run scan</button>
+      <button type="button" data-darkweb-scan style="${btnStyle('#166534')};flex:1" ${connector.configured ? '' : 'title="HIBP_API_KEY not set — scan will report no connector"'}>Run scan</button>
     </div>
   </div>
   <div style="margin-top:8px"><b style="opacity:.7;font-size:11px">WATCHLIST</b>${wRows || '<p style="opacity:.6;font-size:11px">Empty.</p>'}</div>
@@ -550,6 +606,251 @@ function wireNewPanelActions(root) {
       injectPageLive('admin_dark_web');
     } catch (e) { updateTelemetryConsole(`[DARKWEB ERROR] ${e.message}`, 'text-red-400'); }
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// v2.7 — Detection & Response console + Script Library (Live Ops drawer)
+// ─────────────────────────────────────────────────────────────────────────
+
+const RISK_COLOR = { LOW: '#34d399', MEDIUM: '#fbbf24', HIGH: '#f97316', CRITICAL: '#f87171' };
+
+async function renderResponseConsolePanel() {
+  const [actions, stats, iocs] = await Promise.all([
+    api('/api/response/actions?limit=15').catch(() => ({ actions: [] })),
+    api('/api/response/stats').catch(() => ({ total: 0, by_type: {} })),
+    api('/api/response/ioc?limit=10').catch(() => ({ indicators: [] })),
+  ]);
+  const actionRows = (actions.actions || []).map((a) => `
+    <div style="${cardStyle()};border-left:3px solid ${RISK_COLOR[a.risk_level] || '#6b7280'}">
+      <div style="display:flex;justify-content:space-between"><b>${escapeHtml(a.action_type)}</b><span style="opacity:.7">${escapeHtml(a.status)}</span></div>
+      <div style="opacity:.75;font-size:11px;margin-top:2px">${escapeHtml(a.target || '—')} · ${escapeHtml(a.d3fend_technique || '')} · ${escapeHtml(a.created_at)}</div>
+    </div>`).join('');
+  const iocRows = (iocs.indicators || []).map((i) => `
+    <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1f2937;font-size:11px">
+      <span>${escapeHtml(i.indicator)}</span><span style="opacity:.6">${escapeHtml(i.indicator_type)} · ${escapeHtml(i.severity)}</span>
+    </div>`).join('');
+  return `
+    <h3 style="color:#f97316;margin:0 0 8px">Detection &amp; Response</h3>
+    <div style="${cardStyle()}"><b>${stats.total ?? 0}</b> total actions recorded</div>
+
+    <div style="${cardStyle()}">
+      <b>Triage a finding</b>
+      <textarea id="rc-finding" rows="2" placeholder="finding_summary (e.g. 'unauthenticated RCE on staging.client.com')" style="width:100%;margin-top:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff;font:11px monospace"></textarea>
+      <input id="rc-category" placeholder="threat_category (optional)" style="width:100%;margin-top:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+      <input id="rc-target" placeholder="target (optional, for auto-staged containment)" style="width:100%;margin:6px 0;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+      <button type="button" data-rc-triage style="${btnStyle('#7c3aed')}">Run triage</button>
+      <div id="rc-triage-result" style="margin-top:8px;font-size:11px"></div>
+    </div>
+
+    <div style="${cardStyle()}">
+      <b>Block an indicator</b>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <input id="rc-ioc" placeholder="indicator (IP/domain/hash/url)" style="flex:2;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+        <select id="rc-ioc-type" style="flex:1;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+          <option value="ip">ip</option><option value="domain">domain</option><option value="hash_sha256">hash</option><option value="url">url</option><option value="email">email</option>
+        </select>
+      </div>
+      <button type="button" data-rc-block style="${btnStyle('#991b1b')};margin-top:6px">Block indicator</button>
+    </div>
+
+    <div style="${cardStyle()}"><b>Active blocklist</b><div style="margin-top:6px">${iocRows || '<p style="opacity:.6;font-size:11px">None blocked yet.</p>'}</div></div>
+
+    <h4 style="opacity:.7;font-size:11px;margin:14px 0 6px">RECENT ACTIONS</h4>
+    ${actionRows || '<p style="opacity:.6;font-size:11px">No response actions yet.</p>'}
+  `;
+}
+
+function wireResponseConsoleActions(root) {
+  const triageBtn = root.querySelector('[data-rc-triage]');
+  if (triageBtn) triageBtn.onclick = async () => {
+    const finding_summary = root.querySelector('#rc-finding')?.value || '';
+    const threat_category = root.querySelector('#rc-category')?.value || '';
+    const target = root.querySelector('#rc-target')?.value || '';
+    const out = root.querySelector('#rc-triage-result');
+    try {
+      const r = await api('/api/response/triage', { method: 'POST', body: JSON.stringify({ finding_summary, threat_category, target }) });
+      const playbooks = (r.recommended_playbooks || []).map((p) => `${p.name} (${p.key})`).join(', ') || 'none matched';
+      out.innerHTML = `<div style="color:${r.severity >= 0.8 ? '#f87171' : r.severity >= 0.4 ? '#fbbf24' : '#34d399'}">severity=${r.severity}</div>
+        <div style="opacity:.8;margin-top:4px">Recommended: ${escapeHtml(playbooks)}</div>
+        ${r.auto_staged_approval_request_id ? `<div style="color:#f97316;margin-top:4px">Auto-staged approval: ${escapeHtml(r.auto_staged_approval_request_id)}</div>` : ''}`;
+    } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+  };
+  const blockBtn = root.querySelector('[data-rc-block]');
+  if (blockBtn) blockBtn.onclick = async () => {
+    const indicator = root.querySelector('#rc-ioc')?.value || '';
+    const indicator_type = root.querySelector('#rc-ioc-type')?.value || 'ip';
+    try {
+      await api('/api/response/ioc/block', { method: 'POST', body: JSON.stringify({ indicator, indicator_type }) });
+      updateTelemetryConsole(`[RESPONSE] blocked ${indicator}`, 'text-emerald-400');
+      refreshOpsTab();
+    } catch (e) { updateTelemetryConsole(`[RESPONSE ERROR] ${e.message}`, 'text-red-400'); }
+  };
+}
+
+async function renderScriptLibraryPanel() {
+  const [stats, list] = await Promise.all([
+    api('/api/cheatsheet/scripts/stats').catch(() => ({})),
+    api('/api/cheatsheet/scripts').catch(() => ({ scripts: [] })),
+  ]);
+  const rows = (list.scripts || []).slice(0, 30).map((s) => `
+    <div style="${cardStyle()};border-left:3px solid ${RISK_COLOR[s.risk_level] || '#6b7280'}">
+      <div style="display:flex;justify-content:space-between"><b>${escapeHtml(s.title)}</b><span style="opacity:.7">${escapeHtml(s.risk_level)}</span></div>
+      <div style="opacity:.75;font-size:11px;margin-top:2px">${escapeHtml(s.phase_label)} · ${escapeHtml(s.language)} · ${s.line_count} lines</div>
+      <div style="opacity:.6;font-size:11px;margin-top:2px">${escapeHtml(s.description || '')}</div>
+      <button type="button" data-stage-script="${escapeHtml(s.id)}" style="${btnStyle('#1d4ed8')};margin-top:6px">Stage for execution</button>
+    </div>`).join('');
+  return `
+    <h3 style="color:#f97316;margin:0 0 8px">CheatSheet Script Library</h3>
+    <div style="${cardStyle()}">${stats.total_scripts ?? 0} real scripts indexed from gacyber_toolkit/ · ${Object.entries(stats.by_risk || {}).map(([k, v]) => `${k}:${v}`).join(' ')}</div>
+    <div style="${cardStyle()}">
+      <b>Stage target</b> (used for whichever script you click "Stage for execution" on)
+      <input id="sl-target" placeholder="target (must be in an active authorized scope)" style="width:100%;margin-top:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+      <div id="sl-stage-result" style="margin-top:6px;font-size:11px"></div>
+    </div>
+    ${rows}
+  `;
+}
+
+function wireScriptLibraryActions(root) {
+  root.querySelectorAll('[data-stage-script]').forEach((b) => {
+    b.onclick = async () => {
+      const scriptId = b.getAttribute('data-stage-script');
+      const target = root.querySelector('#sl-target')?.value || '';
+      const out = root.querySelector('#sl-stage-result');
+      try {
+        const r = await api(`/api/cheatsheet/scripts/${scriptId}/stage`, { method: 'POST', body: JSON.stringify({ target }) });
+        out.innerHTML = `<span style="color:#34d399">Staged — approval_request_id=${escapeHtml(r.approval_request_id)} (risk=${escapeHtml(r.risk_level)}). Approve it in the Approval tab, then run via /cheatsheet/scripts/${escapeHtml(scriptId)}/run-in-sandbox.</span>`;
+      } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+    };
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// v2.7 — Purpose-built widgets for the pages that were a raw JSON panel
+// ─────────────────────────────────────────────────────────────────────────
+
+function gaugeSvg(pct, color, label) {
+  const p = Math.max(0, Math.min(100, pct));
+  const r = 42, c = 2 * Math.PI * r;
+  return `<svg width="110" height="110" viewBox="0 0 110 110" style="flex-shrink:0">
+    <circle cx="55" cy="55" r="${r}" fill="none" stroke="#1f2937" stroke-width="10"/>
+    <circle cx="55" cy="55" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${c - (p / 100) * c}" transform="rotate(-90 55 55)"/>
+    <text x="55" y="52" text-anchor="middle" fill="#fff" font-size="20" font-weight="700" font-family="ui-monospace,monospace">${Math.round(p)}%</text>
+    <text x="55" y="70" text-anchor="middle" fill="#9ca3af" font-size="9">${escapeHtml(label)}</text>
+  </svg>`;
+}
+
+async function renderEnergyCoreWidget() {
+  let data;
+  try { data = await api('/api/qaip/energy-core/status'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
+  const pct = Math.round((data.utilization_pct ?? data.throttle_pct ?? data.usage_pct ?? 0));
+  return `<div style="${cardStyle()};display:flex;gap:16px;align-items:center">
+      ${gaugeSvg(pct, pct > 85 ? '#f87171' : pct > 60 ? '#fbbf24' : '#34d399', 'THROTTLE')}
+      <div style="flex:1"><b style="color:#f97316">Energy Core</b>
+        <pre style="font-size:11px;margin-top:8px;white-space:pre-wrap">${escapeHtml(JSON.stringify(data, null, 2).slice(0, 900))}</pre>
+      </div>
+    </div>`;
+}
+
+async function renderInferenceLedgerWidget(title) {
+  let data;
+  try { data = await api('/api/qaip/orbital-comms/stats'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
+  const entries = Object.entries(data).filter(([k]) => k !== 'error');
+  const rows = entries.map(([k, v]) => `
+    <tr style="border-bottom:1px solid #1f2937"><td style="padding:6px;opacity:.75">${escapeHtml(k)}</td>
+      <td style="padding:6px;text-align:right;font-family:ui-monospace,monospace">${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : v)}</td></tr>`).join('');
+  return `<div style="${cardStyle()}"><b style="color:#f97316">${escapeHtml(title)}</b>
+    <table style="width:100%;margin-top:8px;font-size:12px"><tbody>${rows || '<tr><td style="padding:6px;opacity:.6">No ledger entries yet.</td></tr>'}</tbody></table></div>`;
+}
+
+async function renderAutomationSettingsWidget() {
+  let data;
+  try { data = await api('/api/resonance/settings'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
+  const toggles = Object.entries(data).filter(([k, v]) => typeof v === 'boolean');
+  const other = Object.entries(data).filter(([k, v]) => typeof v !== 'boolean');
+  const toggleRows = toggles.map(([k, v]) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1f2937">
+      <span style="font-size:12px">${escapeHtml(k)}</span>
+      <span style="padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;background:${v ? '#065f46' : '#374151'};color:${v ? '#34d399' : '#9ca3af'}">${v ? 'ON' : 'OFF'}</span>
+    </div>`).join('');
+  return `<div style="${cardStyle()}"><b style="color:#f97316">Resonance Wave Automation — org security settings</b>
+    <div style="margin-top:8px">${toggleRows || '<p style="opacity:.6;font-size:11px">No toggle-shaped settings returned.</p>'}</div>
+    <pre style="font-size:10px;margin-top:8px;opacity:.7;white-space:pre-wrap">${escapeHtml(JSON.stringify(Object.fromEntries(other), null, 2).slice(0, 500))}</pre></div>`;
+}
+
+async function renderOntologyGraphWidget() {
+  let data;
+  try { data = await api('/api/cheatsheet/graph'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
+  const objects = data.objects || [];
+  const phases = objects.filter((o) => o.type === 'Phase');
+  const cats = objects.filter((o) => o.type === 'Category');
+  const nodes = [...phases, ...cats].slice(0, 24);
+  const cols = 6;
+  const chips = nodes.map((n, i) => {
+    const color = n.type === 'Phase' ? '#7c3aed' : '#0e7490';
+    return `<span style="display:inline-block;margin:3px;padding:4px 10px;border-radius:999px;background:${color}22;border:1px solid ${color};color:${color};font-size:11px">${escapeHtml(n.label || n.id)}</span>`;
+  }).join('');
+  return `<div style="${cardStyle()}"><b style="color:#f97316">Ontology &amp; Simulation Hub</b>
+    <div style="opacity:.7;font-size:11px;margin:6px 0">${phases.length} phases · ${cats.length} categories · ${(data.links || []).length} links</div>
+    <div>${chips}</div></div>`;
+}
+
+async function renderQuantumNexusWidget() {
+  let data;
+  try { data = await api('/api/qaip/orbital-comms'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
+  const events = Array.isArray(data) ? data : (data.events || data.comms || []);
+  const rows = events.slice(0, 12).map((e) => `
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1f2937;font-size:11px">
+      <span>${escapeHtml(e.event_type || e.comm_type || 'event')}</span>
+      <span style="opacity:.6">${escapeHtml(e.timestamp || e.created_at || '')}</span>
+    </div>`).join('');
+  return `<div style="${cardStyle()}"><b style="color:#f97316">Quantum Orbital &amp; Event Comms</b>
+    <div style="margin-top:6px">${rows || '<p style="opacity:.6;font-size:11px">No orbital comms events yet.</p>'}</div></div>`;
+}
+
+async function renderPredictiveCommandWidget() {
+  let data;
+  try { data = await api('/api/ares/global-matrix-summary'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
+  const cards = Object.entries(data).filter(([k, v]) => typeof v !== 'object').map(([k, v]) => `
+    <div style="${cardStyle()}"><div style="opacity:.7;font-size:11px">${escapeHtml(k)}</div>
+      <div style="font-size:20px;font-weight:700;color:#f97316;font-family:ui-monospace,monospace">${escapeHtml(v)}</div></div>`).join('');
+  return `<div><b style="color:#f97316">Predictive Command — Ares rollup</b>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:8px">${cards || '<p style="opacity:.6;font-size:11px">No rollup data yet.</p>'}</div></div>`;
+}
+
+async function renderLoadMonitorWidget() {
+  let data;
+  try { data = await api('/api/resonance/fleet'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
+  const hosts = Array.isArray(data) ? data : (data.hosts || data.fleet || []);
+  const avgLoad = hosts.length
+    ? Math.round(hosts.reduce((s, h) => s + (Number(h.load_pct ?? h.cpu_pct ?? 0)), 0) / hosts.length) : 0;
+  const rows = hosts.slice(0, 10).map((h) => `
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1f2937;font-size:11px">
+      <span>${escapeHtml(h.name || h.host_id || 'host')}</span><span style="opacity:.7">${escapeHtml(h.load_pct ?? h.cpu_pct ?? h.status ?? '')}</span>
+    </div>`).join('');
+  return `<div style="${cardStyle()};display:flex;gap:16px;align-items:center">
+    ${gaugeSvg(avgLoad, avgLoad > 85 ? '#f87171' : avgLoad > 60 ? '#fbbf24' : '#34d399', 'FLEET LOAD')}
+    <div style="flex:1"><b style="color:#f97316">Resonance Load Monitor</b>
+      <div style="margin-top:8px">${rows || '<p style="opacity:.6;font-size:11px">No fleet hosts reported yet.</p>'}</div></div></div>`;
+}
+
+async function renderInvestigationCanvasWidget() {
+  let data;
+  try { data = await api('/api/canvas/tasks'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
+  const tasks = Array.isArray(data) ? data : (data.tasks || []);
+  const byStatus = { pending: [], in_progress: [], completed: [] };
+  tasks.forEach((t) => { (byStatus[t.status] || (byStatus[t.status] = [])).push(t); });
+  const col = (label, items, color) => `<div style="flex:1;min-width:140px">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:${color};margin-bottom:6px">${label} (${items.length})</div>
+    ${items.slice(0, 6).map((t) => `<div style="${cardStyle()};padding:8px 10px;font-size:11px">${escapeHtml(t.title || t.task_id || 'task')}</div>`).join('') || '<div style="opacity:.5;font-size:11px">—</div>'}
+  </div>`;
+  return `<div><b style="color:#f97316">Ontology Meta-Platform — Investigation Canvas</b>
+    <div style="display:flex;gap:12px;margin-top:8px;overflow-x:auto">
+      ${col('Pending', byStatus.pending || [], '#9ca3af')}
+      ${col('In Progress', byStatus.in_progress || [], '#fbbf24')}
+      ${col('Completed', byStatus.completed || [], '#34d399')}
+    </div></div>`;
 }
 
 function wireOpsActions(root) {
@@ -661,19 +962,27 @@ async function injectPageLive(pageKey) {
         host.innerHTML = `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`;
       }
     } else if (pageKey === 'admin_energy_core') {
-      host.innerHTML = await renderSimpleJsonPanel('Energy Core Status', '/api/qaip/energy-core/status');
-    } else if (pageKey === 'admin_logic_core' || pageKey === 'admin_model_chains') {
-      host.innerHTML = await renderSimpleJsonPanel("Q'AIP Inference Ledger", '/api/qaip/orbital-comms/stats');
+      host.innerHTML = await renderEnergyCoreWidget();
+    } else if (pageKey === 'admin_logic_core') {
+      host.innerHTML = await renderInferenceLedgerWidget("Q'AIP Logic Core Manager — inference ledger");
+    } else if (pageKey === 'admin_model_chains') {
+      host.innerHTML = await renderInferenceLedgerWidget('Model Chains & Inference — ledger');
     } else if (pageKey === 'admin_automation_controls') {
-      host.innerHTML = await renderSimpleJsonPanel('Resonance Wave Automation (org security settings)', '/api/resonance/settings');
-    } else if (pageKey === 'admin_ontology' || pageKey === 'admin_investigation_canvas') {
-      host.innerHTML = await renderSimpleJsonPanel('Ontology & Simulation Hub', '/api/aip/ontology');
+      host.innerHTML = await renderAutomationSettingsWidget();
+    } else if (pageKey === 'admin_ontology') {
+      host.innerHTML = await renderOntologyGraphWidget();
+    } else if (pageKey === 'admin_investigation_canvas') {
+      host.innerHTML = await renderInvestigationCanvasWidget();
     } else if (pageKey === 'admin_quantum_nexus') {
-      host.innerHTML = await renderSimpleJsonPanel('Quantum Orbital & Event Comms', '/api/qaip/orbital-comms');
+      host.innerHTML = await renderQuantumNexusWidget();
     } else if (pageKey === 'admin_predictive_command') {
-      host.innerHTML = await renderSimpleJsonPanel('Predictive Command (Ares cross-pillar rollup)', '/api/ares/global-matrix-summary');
+      host.innerHTML = await renderPredictiveCommandWidget();
     } else if (pageKey === 'admin_cognitive_load_monitor') {
-      host.innerHTML = await renderSimpleJsonPanel('Resonance Load Monitor (fleet posture)', '/api/resonance/fleet');
+      host.innerHTML = await renderLoadMonitorWidget();
+    } else if (pageKey === 'admin_cheatsheet_library') {
+      const [ontologyPanel, scriptPanel] = await Promise.all([renderCheatsheetPanelLive(), renderScriptLibraryPanel()]);
+      host.innerHTML = ontologyPanel + scriptPanel;
+      wireScriptLibraryActions(host);
     } else if (pageKey === 'admin_dark_web') {
       host.innerHTML = await renderDarkWebPanelLive();
       wireNewPanelActions(host);
@@ -681,8 +990,6 @@ async function injectPageLive(pageKey) {
       host.innerHTML = await renderAwarenessPanelLive();
     } else if (pageKey === 'admin_phishing_sim') {
       host.innerHTML = await renderPhishingPanelLive();
-    } else if (pageKey === 'admin_cheatsheet_library') {
-      host.innerHTML = await renderCheatsheetPanelLive();
     } else {
       host.remove();
     }

@@ -89,6 +89,8 @@ class DuckDBManager:
             "seq_api_keys", "seq_audit_log", "seq_vault", "seq_darkweb_watch",
             "seq_darkweb_finding", "seq_training_module", "seq_training_completion",
             "seq_phishing_campaign", "seq_phishing_target",
+            # v2.7 sequences
+            "seq_remediation",
         ]:
             c.execute(f"CREATE SEQUENCE IF NOT EXISTS {seq} START 1")
 
@@ -835,6 +837,31 @@ class DuckDBManager:
             status        VARCHAR DEFAULT 'draft',            -- draft | active | completed
             launched_at   TIMESTAMPTZ,
             completed_at  TIMESTAMPTZ
+        )
+        """)
+
+        # ── v2.7 Tables — Detection & Response / Script Catalog ─────────────
+        # Backs routers/response.py: real (auto-executed, reversible,
+        # data-layer) actions like IOC blocking and artifact quarantine, plus
+        # a record of every staged-for-approval action that touches live
+        # infrastructure (host isolation, host quarantine) or runs a
+        # gacyber_toolkit script -- those always go through the existing
+        # approval_requests table (create_approval_request/decide_approval_
+        # request), this table is the response-specific outcome ledger.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS remediation_actions (
+            id                 INTEGER PRIMARY KEY DEFAULT nextval('seq_remediation'),
+            action_id          VARCHAR UNIQUE NOT NULL,
+            action_type        VARCHAR NOT NULL,        -- ioc_block | quarantine_artifact | quarantine_host_staged | isolate_host_staged | script_catalog_execution | triage
+            target             VARCHAR,
+            status             VARCHAR NOT NULL,        -- completed | staged | approved | denied | executed_in_sandbox
+            risk_level         VARCHAR DEFAULT 'LOW',
+            approval_request_id VARCHAR,                -- FK to approval_requests.request_id when staged
+            operator_id        VARCHAR,
+            d3fend_technique   VARCHAR,                  -- e.g. D3-CQ, D3-NI, D3-EI
+            detail             VARCHAR DEFAULT '{}',     -- JSON
+            created_at         TIMESTAMPTZ DEFAULT now(),
+            resolved_at        TIMESTAMPTZ
         )
         """)
 
@@ -2915,6 +2942,67 @@ class DuckDBManager:
         }
 
     # ======================================================================
+    # v2.7 — Detection & Response
+    # ======================================================================
+
+    def insert_remediation_action(self, record: Dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO remediation_actions
+                (action_id, action_type, target, status, risk_level,
+                 approval_request_id, operator_id, d3fend_technique, detail)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record["action_id"], record["action_type"], record.get("target"),
+                record["status"], record.get("risk_level", "LOW"),
+                record.get("approval_request_id"), record.get("operator_id"),
+                record.get("d3fend_technique"), json.dumps(record.get("detail", {}), default=str),
+            ),
+        )
+        self.conn.commit()
+        return record["action_id"]
+
+    def update_remediation_action_status(self, action_id: str, status: str) -> bool:
+        exists = self.conn.execute(
+            "SELECT 1 FROM remediation_actions WHERE action_id = ?", (action_id,)
+        ).fetchone()
+        if not exists:
+            return False
+        self.conn.execute(
+            "UPDATE remediation_actions SET status = ?, resolved_at = now() WHERE action_id = ?",
+            (status, action_id),
+        )
+        self.conn.commit()
+        return True
+
+    def list_remediation_actions(self, action_type: Optional[str] = None,
+                                  status: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        query = "SELECT * FROM remediation_actions WHERE 1=1"
+        params: List[Any] = []
+        if action_type:
+            query += " AND action_type = ?"
+            params.append(action_type)
+        if status:
+            query += " AND status = ?"
+            params.append(status)
+        query += " ORDER BY created_at DESC LIMIT ?"
+        params.append(limit)
+        rows = self.conn.execute(query, tuple(params)).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def remediation_stats(self) -> Dict[str, Any]:
+        rows = self.conn.execute(
+            "SELECT action_type, status, COUNT(*) FROM remediation_actions GROUP BY action_type, status"
+        ).fetchall()
+        by_type: Dict[str, Dict[str, int]] = {}
+        for action_type, status, count in rows:
+            by_type.setdefault(action_type, {})[status] = count
+        total = self.conn.execute("SELECT COUNT(*) FROM remediation_actions").fetchone()[0]
+        return {"total": total, "by_type": by_type}
+
+    # ======================================================================
     # Utility
     # ======================================================================
 
@@ -2935,6 +3023,7 @@ class DuckDBManager:
             "users", "roles", "permissions", "sessions", "api_keys", "audit_log",
             "trade_secrets_vault", "darkweb_watchlist", "darkweb_findings",
             "training_modules", "training_completions", "phishing_campaigns", "phishing_targets",
+            "remediation_actions",
         ]
         stats = {}
         for t in tables:

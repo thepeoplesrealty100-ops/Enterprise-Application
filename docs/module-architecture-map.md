@@ -5,17 +5,17 @@ tabs, mapped to what actually backs it today. Frontend page keys refer to
 `index.html`'s `pages` array; live-wiring refers to `integration.js`'s
 `injectPageLive()` / `injectSettingsLive()`.
 
-Status legend: 🟢 real backend + live-wired frontend · 🟡 real backend,
-frontend still needs deeper wiring than the read-only JSON panel added in
-v2.6 · ⚪ frontend mock only, no backend (pre-v2.6 baseline — most of these
-were closed by this pass; remaining gaps are called out explicitly)
+Status legend: 🟢 real backend + a purpose-built live widget · 🟡 real
+backend, live-wired, but the widget is still a generic read-only display
+rather than a full control surface · ⚪ frontend mock only, no backend
+(pre-v2.6 baseline — closed for every module below as of v2.7)
 
 ## Global Settings & Security tab
 
 | Sub-tab | Backend | Status |
 |---|---|---|
 | Profile | `GET /api/iam/auth/me` | 🟢 |
-| Login Encryption | `POST /api/iam/auth/login`, `/mfa/*` | 🟢 (frontend still shows this alongside the crypto status panel — MFA enrollment has no dedicated QR-code UI yet, just the raw `otpauth://` URI) |
+| Login Encryption | `POST /api/iam/auth/login`, `/mfa/*` | 🟢 (v2.7: real server-rendered QR code for MFA enrollment, not just a raw `otpauth://` string) |
 | API Integration | `/api/iam/api-keys/*` | 🟢 |
 | EAS R&D | `/api/vault/eas-rd/*` (live OSV.dev scan) | 🟢 |
 | Trade Secrets | `/api/vault/items/*` | 🟢 |
@@ -28,25 +28,17 @@ were closed by this pass; remaining gaps are called out explicitly)
 
 | Frontend label | Page key | Backend | Status |
 |---|---|---|---|
-| Energy Core Management | `admin_energy_core` | `GET /api/qaip/energy-core/status` (`backend/llm_energy_core.py`) | 🟡 — live-wired to a raw JSON panel in v2.6; a purpose-built throttle-control UI (vs. read-only JSON) is the remaining work |
-| Q'AIP Logic Core Manager | `admin_logic_core` | `GET /api/qaip/orbital-comms/stats` | 🟡 same as above |
-| Resonance Wave Automation | `admin_automation_controls` | `GET /api/resonance/settings` | 🟡 same as above |
-| Ontology & Simulation Hub | `admin_ontology` | `GET /api/aip/ontology`, `GET /api/cheatsheet/graph` (new) | 🟡 same as above |
-| Model Chains & Inference | `admin_model_chains` | `GET /api/qaip/orbital-comms/stats` (LLM/quantum inference ledger) | 🟡 same as above |
-| Quantum Orbital & Event Comms | `admin_quantum_nexus` | `GET /api/qaip/orbital-comms` | 🟡 same as above |
-| Quantum Computer | `admin_quantum_computer` | `/api/quantum/*` (`quantum_engine.py`, Qiskit Aer) | 🟢 (already live-wired pre-v2.6) |
-| Predictive Command | `admin_predictive_command` | `GET /api/ares/global-matrix-summary` | 🟡 closest real analog is Ares's cross-pillar rollup; a dedicated predictive-scoring model is a real future build, not present today |
-| Resonance Load Monitor | `admin_cognitive_load_monitor` | `GET /api/resonance/fleet` | 🟡 same as Energy Core |
-| Ontology Meta-Platform | `admin_investigation_canvas` | `GET /api/canvas/tasks`, `GET /api/aip/ontology` | 🟡 same as Energy Core |
+| Energy Core Management | `admin_energy_core` | `GET /api/qaip/energy-core/status` | 🟢 (v2.7: throttle gauge widget) |
+| Q'AIP Logic Core Manager | `admin_logic_core` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
+| Resonance Wave Automation | `admin_automation_controls` | `GET /api/resonance/settings` | 🟡 (v2.7: real on/off toggle-state display; still read-only — no write control to flip a setting from the UI yet) |
+| Ontology & Simulation Hub | `admin_ontology` | `GET /api/cheatsheet/graph` | 🟢 (v2.7: category/phase relationship chip graph) |
+| Model Chains & Inference | `admin_model_chains` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
+| Quantum Orbital & Event Comms | `admin_quantum_nexus` | `GET /api/qaip/orbital-comms` | 🟢 (v2.7: event stream feed) |
+| Quantum Computer | `admin_quantum_computer` | `/api/quantum/*` (Qiskit Aer) | 🟢 (already live-wired pre-v2.6) |
+| Predictive Command | `admin_predictive_command` | `GET /api/ares/global-matrix-summary` | 🟢 (v2.7: rollup stat cards). Closest real analog to "predictive" is Ares's cross-pillar rollup — a dedicated forecasting model is still a real future build, not present today |
+| Resonance Load Monitor | `admin_cognitive_load_monitor` | `GET /api/resonance/fleet` | 🟢 (v2.7: fleet load gauge + per-host list) |
+| Ontology Meta-Platform | `admin_investigation_canvas` | `GET /api/canvas/tasks` | 🟢 (v2.7: pending/in-progress/completed kanban board) |
 | System Diagnostics | `admin_diagnostics` | `/health`, `/api/*/status` fan-out | 🟢 (already live-wired pre-v2.6) |
-
-*"🟡" here specifically means: the endpoint is real and now returns live
-data in the page (v2.6 added the `renderSimpleJsonPanel` wiring), but the
-UI is a raw JSON dump layered above the existing mock, not a
-purpose-designed control surface. Turning each into a proper dashboard
-widget is real, valuable frontend work — scoped out of this pass to keep
-the backend correctness/security work the priority; see "Remaining work"
-in the PR/session summary.*
 
 ## Unified Security Fabric / Risk & Compliance
 
@@ -54,32 +46,43 @@ in the PR/session summary.*
 |---|---|---|---|
 | Unified Security Fabric | `admin_fabric` | `/api/fabric/*` (7-pillar NSA/CISA Zero Trust model) | 🟢 (already live-wired pre-v2.6) |
 | Compliance & Risk Posture | `admin_compliance` | `/api/compliance/axiom/*` | 🟢 (already live-wired pre-v2.6) |
-| Dark Web Monitoring | `admin_dark_web` | `/api/darkweb/*` (new) | 🟢 |
+| Dark Web Monitoring | `admin_dark_web` | `/api/darkweb/*` | 🟢 (v2.7: connector-status badge + setup link, real HIBP wiring) |
 
 ## Human Layer Security
 
 | Frontend label | Page key | Backend | Status |
 |---|---|---|---|
-| Awareness Training | `admin_security_training` | `/api/awareness/training/*` (new) | 🟢 |
-| Phishing Campaigns | `admin_phishing_sim` | `/api/awareness/phishing/*` (new) | 🟢 |
+| Awareness Training | `admin_security_training` | `/api/awareness/training/*` | 🟢 |
+| Phishing Campaigns | `admin_phishing_sim` | `/api/awareness/phishing/*` | 🟢 |
 
 ## GACyber Toolkit
 
 | Frontend label | Page key | Backend | Status |
 |---|---|---|---|
-| CheatSheet Library | `admin_cheatsheet_library` | `/api/cheatsheet/*` (new, exposes existing `payloads/cheatsheet_ontology.py`) | 🟢 |
+| CheatSheet Library | `admin_cheatsheet_library` | `/api/cheatsheet/*` — ontology (13 modules/43 doc-derived tool sheets) **+ v2.7's 43-script real, runnable catalog** with stage → approve → sandbox-execute | 🟢 |
 
-## What "🟡" modules would need to become fully purpose-built (next steps)
+## New in v2.7 — Detection & Response
 
-The read-only JSON panels shipped in this pass prove every one of these
-pages has real, correct backend data flowing into it — none of them are
-faked anymore. Turning each into a first-class control surface (throttle
-sliders for Energy Core, a drag-connect graph for the Ontology Hub, a
-live-updating load gauge for the Resonance Load Monitor, etc.) is
-UI/UX design + component work, intentionally sequenced after the
-correctness/security pass this session focused on. Each existing
-`render<PageName>()` mock function in `index.html` already has the right
-visual shape — the remaining task per page is: replace its hardcoded
-numbers with the live values `integration.js` now fetches, the same
-migration `renderFabricPanel`/`renderDiagPanel` already went through
-pre-v2.6.
+Not a frontend-mock-to-real migration (there was no prior mock for this) —
+genuinely new capability, exposed via the Live Ops drawer's new "Response"
+and "Scripts" tabs so it's reachable from any page, not just one settings
+tab, per the brief that these should be "actioned from that module or any
+module."
+
+| Capability | Backend | Notes |
+|---|---|---|
+| Triage (score + recommend playbook) | `POST /api/response/triage` | Deterministic `threat_scoring.py` + keyword match against the real playbook catalog; auto-stages containment above severity 0.8 |
+| IOC blocking | `POST /api/response/ioc/block` | Real, immediate — writes to `threat_intel` |
+| Artifact quarantine | `POST /api/response/quarantine` (artifact) | Real, immediate, data-layer |
+| Host quarantine / isolation | `POST /api/response/quarantine` (host), `POST /api/response/isolate-host` | Always staged via the Human Approval Gate — never auto-executed against real infrastructure |
+| 14 IR playbooks (was 6) | `security_agents/edr_mdr.py` | +8 in v2.7: supply chain, cloud account compromise, DDoS, insider threat, IoT/OT, emergency patch, wireless rogue AP, PQC crypto-agility |
+| Script catalog | `payloads/script_catalog.py`, `/api/cheatsheet/scripts/*` | 43 real scripts from `gacyber_toolkit/`, staged + approval-gated + sandbox-only execution |
+
+## Known remaining gap
+
+`admin_automation_controls` (Resonance Wave Automation) is the one page
+still marked 🟡: it displays real on/off state for every org-wide security
+setting, but there's no write endpoint yet to flip one from the UI —
+`routers/resonance.py` would need a `POST /resonance/settings` added
+first. Every other module named in the original ops-dashboard request is
+now 🟢.

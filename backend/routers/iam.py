@@ -95,6 +95,8 @@ _DEFAULT_PERMISSIONS = [
     ("audit:read", "Read the audit log", "IAM"),
     ("darkweb:manage", "Manage dark-web watchlist", "Dark Web"),
     ("awareness:manage", "Launch training/phishing campaigns", "Awareness"),
+    ("response:manage", "Trigger detection & response actions (IOC block, quarantine, isolate)", "Detection & Response"),
+    ("response:script_exec", "Stage/run gacyber_toolkit scripts from the CheatSheet Library", "Detection & Response"),
     ("read:dashboard", "View dashboards (read-only)", "General"),
 ]
 
@@ -103,7 +105,7 @@ _DEFAULT_ROLES = [
      ["system:*"]),
     ("security_analyst", "Security Analyst", "Operate day-to-day security tooling", True,
      ["vm:manage", "vm:exec", "edr:manage", "vault:read", "darkweb:manage",
-      "awareness:manage", "audit:read", "read:dashboard"]),
+      "awareness:manage", "response:manage", "response:script_exec", "audit:read", "read:dashboard"]),
     ("read_only", "Read-Only", "Dashboards and reports only, no mutating actions", True,
      ["read:dashboard", "audit:read"]),
 ]
@@ -312,13 +314,35 @@ async def change_password(req: ChangePasswordRequest, request: Request,
 
 @router.post("/auth/mfa/enroll")
 async def mfa_enroll(request: Request, user: dict = Depends(get_authenticated_user)):
-    """Generates a TOTP secret (not yet active) + otpauth:// URI for a QR code."""
+    """
+    Generates a TOTP secret (not yet active) + otpauth:// URI, plus a
+    scannable QR code — v2.7 replaces the raw-URI-only response (no
+    authenticator app will make you type a 32-character base32 secret by
+    hand if it can help it) with a real, server-rendered SVG QR, base64-
+    encoded as a data: URI so the frontend can drop it straight into an
+    <img src="..."> with no extra network fetch. Generated with segno
+    (pure Python, no native/PIL dependency — appropriate for an
+    air-gapped-capable security tool).
+    """
     _require()
     secret = pyotp.random_base32()
     _db.set_mfa_secret(user["user_id"], secret, enabled=False)
     uri = pyotp.TOTP(secret).provisioning_uri(name=user["username"], issuer_name="JAKAL")
+
+    qr_data_uri = None
+    try:
+        import base64
+        import io
+        import segno
+        qr = segno.make(uri, error="m")
+        buf = io.BytesIO()
+        qr.save(buf, kind="svg", scale=6, dark="#111827", light="#ffffff", border=2)
+        qr_data_uri = "data:image/svg+xml;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+    except Exception as e:
+        logger.warning("QR generation failed (falling back to URI-only): %s", e)
+
     _audit(request, user, "mfa_enroll", "success")
-    return {"secret": secret, "otpauth_uri": uri}
+    return {"secret": secret, "otpauth_uri": uri, "qr_data_uri": qr_data_uri}
 
 
 @router.post("/auth/mfa/confirm")

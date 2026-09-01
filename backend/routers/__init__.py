@@ -27,7 +27,10 @@ v2.6 routers — Global Settings & Security + remaining Human/Risk Layer modules
   vault_router      — /api/vault/*     (EAS R&D dependency scanner + Trade Secrets vault)
   awareness_router  — /api/awareness/* (Security Awareness Training + Phishing Campaigns)
   darkweb_router    — /api/darkweb/*   (Dark Web Monitoring — HIBP connector + manual feed)
-  cheatsheet_router — /api/cheatsheet/* (CheatSheet Library — exposes the existing ontology)
+  cheatsheet_router — /api/cheatsheet/* (CheatSheet Library — exposes the existing ontology,
+                                          plus v2.7's real script catalog + staged execution)
+v2.7 routers:
+  response_router   — /api/response/*  (Detection & Response — triage, IOC block, quarantine, isolate)
 """
 
 from .pentest import router as pentest_router
@@ -49,6 +52,7 @@ from .vault import router as vault_router
 from .awareness import router as awareness_router
 from .darkweb import router as darkweb_router
 from .cheatsheet import router as cheatsheet_router
+from .response import router as response_router
 
 __all__ = [
     "pentest_router",
@@ -70,4 +74,5 @@ __all__ = [
     "awareness_router",
     "darkweb_router",
     "cheatsheet_router",
+    "response_router",
 ]

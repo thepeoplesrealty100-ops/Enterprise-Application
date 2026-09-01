@@ -118,6 +118,26 @@ def _hibp_check_account(email: str) -> dict:
         return {"configured": True, "breaches": [], "error": str(e)}
 
 
+@router.get("/connector-status")
+async def connector_status():
+    """
+    Cheap, side-effect-free check for the Dark Web Monitoring setup UX —
+    distinct from POST /scan (which actually queries HIBP for every
+    watched identifier). Lets the frontend show "connector configured /
+    not configured" immediately on page load without spending an HIBP
+    rate-limit unit or waiting on a watchlist to exist.
+    """
+    _require()
+    configured = bool(os.getenv("HIBP_API_KEY"))
+    return {
+        "connector": "hibp",
+        "configured": configured,
+        "setup_url": "https://haveibeenpwned.com/API/Key",
+        "note": "Set HIBP_API_KEY in backend/.env, then restart the backend." if not configured
+                else "HIBP connector is configured — POST /darkweb/scan will return live results.",
+    }
+
+
 @router.post("/watchlist", dependencies=[require_permission("darkweb:manage")])
 async def add_watch(req: WatchlistAddRequest, request: Request, user: dict = Depends(get_authenticated_user)):
     _require()
