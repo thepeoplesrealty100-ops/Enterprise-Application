@@ -57,6 +57,7 @@ from .darkweb import router as darkweb_router
 from .cheatsheet import router as cheatsheet_router
 from .response import router as response_router
 from .scripts import router as scripts_router
+from .ui_bridge import router as ui_bridge_router
 
 __all__ = [
     "pentest_router",
@@ -80,4 +81,5 @@ __all__ = [
     "cheatsheet_router",
     "response_router",
     "scripts_router",
+    "ui_bridge_router",
 ]
