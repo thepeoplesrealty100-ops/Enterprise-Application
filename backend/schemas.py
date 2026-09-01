@@ -66,11 +66,23 @@ class QuantumJobRequest(BaseModel):
     circuit: str = Field(default="bell_state", example="bell_state")
     shots: int = Field(default=1024, ge=1, le=8192)
     backend: str = Field(default="qiskit_aer", example="qiskit_aer")
+    operator_id: str = Field(default="system")
+    # v3.0 Phase 4.4: optional link to an existing Approval Gate request
+    # this quantum job was run in support of -- e.g. a quantum-assisted
+    # analysis backing a staged/approved payload. Purely additive
+    # metadata; the job runs identically whether this is set or not.
+    related_approval_id: Optional[str] = Field(default=None)
 
 
 class QuantumJobResponse(BaseModel):
     job_id: str
     result: Dict[str, Any]
+    # v3.0 Phase 4.4: set only when the job actually finished and was
+    # successfully linked into q_aip_inference_registry (the existing
+    # PQC-signed audit trail for quantum-circuit executions, built in the
+    # original v3.0 Ontology work). None for a job still "submitted" to
+    # IBM hardware, or if linking failed -- never blocks job submission.
+    qaip_inference_id: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------

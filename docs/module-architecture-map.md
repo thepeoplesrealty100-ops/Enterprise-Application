@@ -31,7 +31,7 @@ rather than a full control surface · ⚪ frontend mock only, no backend
 | Energy Core Management | `admin_energy_core` | `GET /api/qaip/energy-core/status` | 🟢 (v2.7: throttle gauge widget) |
 | Q'AIP Logic Core Manager | `admin_logic_core` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
 | Resonance Wave Automation | `admin_automation_controls` | `GET/POST /api/resonance/automation-settings/*` (v2.8) + `/api/resonance/policies/*`, `/api/resonance/enforce/*`, `/api/resonance/audit*` (v2.9, merged from a parallel build) | 🟢 (real, write-controlled automation knobs each read by a real enforcement point, PLUS named isolation policies with a staged/audited enforce workflow (simulate → request approval → execute → release) backed by a real, tamper-evident hash-chained audit trail and the same real Docker/webhook enforcement connectors response.py uses — see docs/v2.8-automation-policy-and-enforcement.md and docs/v2.9-batch1-reconciliation.md) |
-| Ontology & Simulation Hub | `admin_ontology` | `GET /api/cheatsheet/graph` | 🟢 (v2.7: category/phase relationship chip graph) |
+| Ontology & Simulation Hub | `admin_ontology` | `GET /api/cheatsheet/graph` (cheatsheet-corpus relationship graph) + `/api/v3/ontology/*` (v3.0: the real Object/Link digital twin — staged payloads + containment actions now materialize into it; see below) | 🟢 |
 | Model Chains & Inference | `admin_model_chains` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
 | Quantum Orbital & Event Comms | `admin_quantum_nexus` | `GET /api/qaip/orbital-comms` | 🟢 (v2.7: event stream feed) |
 | Quantum Computer | `admin_quantum_computer` | `/api/quantum/*` (Qiskit Aer) | 🟢 (already live-wired pre-v2.6) |
@@ -100,3 +100,34 @@ Both gaps called out at the end of v2.7 are closed:
   SentinelOne.
 
 Every module named in the original ops-dashboard request is now 🟢.
+
+## v3.0 — Ontology Engine + Maya-Vigesimal step-up auth (Phases 0–5)
+
+Not a frontend-mock-to-real migration — a new internal security layer on
+top of the (unmodified) Human Approval Gate. Full writeup + every phase's
+addendum: `docs/v3.0-ontology-maya-enterprise.md`.
+
+| Capability | Backend | Notes |
+|---|---|---|
+| Ontology Engine | `services/ontology_engine.py`, `/api/v3/ontology/*` | Object/Link digital twin; now actually populated — `stage_payloads()` and `routers/response.py`'s containment actions both materialize nodes/edges |
+| Maya-Vigesimal 2FA interlock | `security_agents/exploit_agent.py`, `/api/v3/auth/maya/*` | Internal step-up authenticator for HIGH/CRITICAL actions only (not login MFA); `approve_payload()`/`reject_payload()` refuse a decision until the linked session is `'consumed'` |
+| Dual-mode display | `integration.js`'s Maya modal, `GET /session/{id}` | Friendly timestamps + masked token by default; raw calendar coordinates only behind `?reveal_internal=true` |
+| PQC re-verification | `crypto/pqc_manager.py`'s `verify_stored_entry()` | Re-verifies a *stored* signature against its own recorded public key/algorithm, not a live process's key |
+| Crypto-agility | `crypto/pqc_manager.py`, `config.PQC_PROFILE` | `"commercial"` (ML-DSA-65, default) / `"cnsa2"` (ML-DSA-87); see `docs/crypto-agility.md` |
+| Enriched approval context | `GET /api/approval/{id}/context`, `GET /api/approval/audit/recent` | Risk, blast radius, reversibility, Maya/authorization/ontology status, PQC verification, full status timeline |
+| AIP CheatSheet chat | `POST /api/v3/aip/cheatsheet/chat` | Thin prompt → matching-playbook lookup over the existing `payload_library.PLAYBOOKS` (no new table) |
+| Fabric summary | `GET /api/fabric/summary` | Light "which of the 7 capabilities are active" view, from existing data |
+| Quantum job linking | `POST /api/quantum/submit` | A finished job optionally links into `q_aip_inference_registry` |
+| Gated remediation | `routers/response.py` quarantine/isolate-host/triage auto-stage | Now carry the same Maya interlock as an offensive HIGH/CRITICAL payload — closed a real gap where these bypassed it entirely |
+
+## Track A — Maya-gated containment hardening
+
+Sits on v3.0. Full writeup: `docs/track-a-containment-hardening.md`.
+
+| Capability | Backend | Notes |
+|---|---|---|
+| Compliance constraints | `security_agents/compliance_constraints.py` | HIPAA residency, SOC2 critical-service, PCI-DSS CDE — blocks isolate/quarantine before staging |
+| Hardened EDR orchestrator | `security_agents/edr_hardened.py` | Exponential backoff 1s→4s→16s, transient vs permanent errors, compliance pre-check |
+| Compliance pre-check | `GET /api/response/compliance/pre-check` | Live Ops Response panel runs this automatically before staging isolation |
+| Attack-path related targets | `GET /api/response/related-targets` | Ontology Engine subgraph, Asset nodes within 1–5 hops |
+| Enforce | `POST /api/response/actions/{id}/enforce` | Now routes through the hardened orchestrator, still approval-gated |

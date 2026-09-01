@@ -1,7 +1,20 @@
 """
 JAKAL Database Layer - DuckDB (local, embedded, zero-cost)
 
-Schema version: 2.4
+Schema version: 3.0
+  v3.0 - ontological_object_nodes, lattice_edge_telemetry (a Palantir
+          Foundry-style Object/Link digital twin -- see
+          services/ontology_engine.py), maya_vigesimal_auth_sessions (a
+          Maya-calendar-coordinate second-factor challenge interlocked
+          with the existing v2.3 Human Approval Gate for HIGH/CRITICAL
+          staged payloads -- see security_agents/exploit_agent.py),
+          resonance_policy_enforcements (named, module-scoped policy
+          objects -- distinct from automation_settings's small set of
+          global knobs and from Batch 1's isolation-specific
+          resonance_policy), q_aip_inference_registry (an audit trail of
+          quantum-circuit executions, PQC-signed like everything else in
+          this schema). All five tables are additive; nothing existing
+          changed shape.
   v1.0 - agent_logs, quantum_jobs, pentest_runs, findings, scopes,
           insurance_policies, assessment_reports
   v2.0 - sandboxes, compliance_reports, playbooks, playbook_executions
@@ -41,9 +54,11 @@ Schema version: 2.4
           option below.
 """
 
+import hmac
 import json
 import logging
 import threading
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -1167,8 +1182,458 @@ class DuckDBManager:
         )
         """)
 
+        # ══════════════════════════════════════════════════════════════════
+        # v3.0 — Ontology Engine + Maya-Vigesimal Calendar 2FA
+        # ══════════════════════════════════════════════════════════════════
+        # A Palantir Foundry-style Object/Link digital twin
+        # (ontological_object_nodes + lattice_edge_telemetry) that scan
+        # results, findings, and remediation actions can be materialized
+        # into and linked together for blast-radius/attack-path queries
+        # (see services/ontology_engine.py); a second-factor calendar
+        # challenge (maya_vigesimal_auth_sessions) that interlocks with the
+        # existing v2.3 Human Approval Gate for HIGH/CRITICAL staged
+        # payloads (security_agents/exploit_agent.py) rather than
+        # replacing it; a named, reusable policy-enforcement table
+        # (resonance_policy_enforcements) -- distinct from both
+        # automation_settings (this app's small set of global on/off
+        # knobs) and Batch 1's resonance_policy (named isolation-specific
+        # enforcement policies), scoped generically to `module_target` so
+        # any module can register its own threshold/action policy; and an
+        # audit registry for Q'AIP quantum-circuit executions
+        # (q_aip_inference_registry).
+        #
+        # All five primary keys are UUID strings (str(uuid.uuid4())), not
+        # sequence-backed integers, so unlike every other table in this
+        # schema none of them need a CREATE SEQUENCE.
+        #
+        # lattice_edge_telemetry.source_node/target_node and
+        # q_aip_inference_registry.related_node_id are application-level
+        # foreign keys to ontological_object_nodes(node_id) -- NOT declared
+        # as SQL FOREIGN KEY REFERENCES, matching this schema's existing,
+        # explicit convention elsewhere (see role_permissions' own comment:
+        # "not FKs; DuckDB has no enforced FK constraints, kept consistent
+        # with the rest of this schema"). This was tried and reverted after
+        # two confirmed DuckDB 0.10.0 problems: (1) creating a secondary
+        # index on a table BEFORE another table adds a REFERENCES pointing
+        # at it raises `Cannot alter entry ... because there are entries
+        # that depend on it`, forcing all CREATE TABLEs before any CREATE
+        # INDEX; (2) far more seriously, once any row is referenced by a
+        # REFERENCES elsewhere, DuckDB blocks UPDATE on *any* column of
+        # that row -- not just the key column -- with `Violates foreign
+        # key constraint`, reproduced directly against this exact schema.
+        # That would make update_node_confidence() permanently fail on any
+        # node that has ever been linked into the graph, which is the
+        # normal case, not an edge case. get_ontological_node() and
+        # create/link methods below check referenced IDs exist before
+        # inserting instead (see link_ontological_nodes()/
+        # register_qaip_inference()'s docstrings).
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS ontological_object_nodes (
+            node_id           VARCHAR PRIMARY KEY,
+            object_type       VARCHAR NOT NULL,
+            attributes_json   VARCHAR NOT NULL DEFAULT '{}',
+            confidence_score  DOUBLE NOT NULL DEFAULT 1.0
+                CHECK (confidence_score >= 0.0 AND confidence_score <= 1.0),
+            created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+            created_by        VARCHAR,
+            pqc_entry_id      VARCHAR
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS lattice_edge_telemetry (
+            telemetry_id      VARCHAR PRIMARY KEY,
+            source_node       VARCHAR NOT NULL,   -- application-level FK to ontological_object_nodes(node_id); see comment above
+            target_node       VARCHAR NOT NULL,   -- application-level FK to ontological_object_nodes(node_id); see comment above
+            event_type        VARCHAR NOT NULL,
+            vector_payload    VARCHAR NOT NULL DEFAULT '{}',
+            recorded_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+            operator_id       VARCHAR,
+            pqc_signature     VARCHAR
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS maya_vigesimal_auth_sessions (
+            session_id            VARCHAR PRIMARY KEY,
+            payload_id            VARCHAR NOT NULL,
+            operator_id           VARCHAR NOT NULL,
+            tzolkin_coordinate    VARCHAR NOT NULL,
+            haab_coordinate       VARCHAR NOT NULL,
+            challenge_token       VARCHAR NOT NULL UNIQUE,
+            status                VARCHAR NOT NULL DEFAULT 'pending'
+                CHECK (status IN ('pending', 'approved', 'denied', 'expired', 'consumed')),
+            created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+            expires_at            TIMESTAMPTZ NOT NULL,
+            responded_at          TIMESTAMPTZ,
+            response_token        VARCHAR,
+            pqc_entry_id          VARCHAR,
+            display_issued_at     TIMESTAMPTZ NOT NULL,
+            display_expires_at    TIMESTAMPTZ NOT NULL
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS resonance_policy_enforcements (
+            policy_id             VARCHAR PRIMARY KEY,
+            module_target         VARCHAR NOT NULL,
+            action_signature      VARCHAR NOT NULL,
+            threshold_limit       DOUBLE NOT NULL DEFAULT 0.8
+                CHECK (threshold_limit >= 0.0 AND threshold_limit <= 1.0),
+            enforcement_mode      VARCHAR NOT NULL DEFAULT 'require_approval'
+                CHECK (enforcement_mode IN ('require_approval', 'auto_deny', 'auto_allow', 'log_only')),
+            is_active             BOOLEAN NOT NULL DEFAULT true,
+            created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+            created_by            VARCHAR,
+            pqc_signature         VARCHAR
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS q_aip_inference_registry (
+            inference_id          VARCHAR PRIMARY KEY,
+            circuit_type          VARCHAR NOT NULL,
+            execution_metrics_json VARCHAR NOT NULL DEFAULT '{}',
+            pqc_signature         VARCHAR NOT NULL,
+            executed_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+            operator_id           VARCHAR,
+            related_node_id       VARCHAR    -- application-level FK to ontological_object_nodes(node_id); see comment above
+        )
+        """)
+
+        # NOTE: ontological_object_nodes and maya_vigesimal_auth_sessions
+        # deliberately have NO secondary indexes (only their implicit
+        # PRIMARY KEY index). Both get UPDATEd (update_node_confidence(),
+        # consume_maya_session()'s status transitions) and this DuckDB
+        # version has a confirmed, reproducible bug where UPDATE against a
+        # table that has ANY separate CREATE INDEX raises a spurious
+        # `Constraint Error: Duplicate key ... violates primary key
+        # constraint` -- regardless of which column is indexed or which
+        # column the UPDATE actually touches (DuckDB's own error message
+        # points at "known index limitations" in their docs). Reproduced
+        # directly: adding a single CREATE INDEX on either table turns
+        # every UPDATE against it into a hard failure. The other three v3.0
+        # tables are append-only (no UPDATE method touches them), so their
+        # indexes are safe and kept for query performance.
+        c.execute("CREATE INDEX IF NOT EXISTS idx_let_source ON lattice_edge_telemetry(source_node)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_let_target ON lattice_edge_telemetry(target_node)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_let_event_type ON lattice_edge_telemetry(event_type)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_let_recorded_at ON lattice_edge_telemetry(recorded_at)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_rpe_module ON resonance_policy_enforcements(module_target)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_rpe_active ON resonance_policy_enforcements(is_active)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_qaip_circuit ON q_aip_inference_registry(circuit_type)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_qaip_executed ON q_aip_inference_registry(executed_at)")
+
         self.conn.commit()
-        logger.info("Schema v2.8 initialized at %s", self.db_path)
+        logger.info("Schema v3.0 initialized at %s", self.db_path)
+
+    # ======================================================================
+    # v3.0 helpers — Ontology Engine, Maya-Vigesimal 2FA, resonance policy
+    # enforcements, Q'AIP inference registry
+    #
+    # All of these use self.conn directly (the process-wide singleton's
+    # already lock-protected _LockedConnection -- see its docstring above)
+    # rather than opening a fresh duckdb.connect() per call. A fresh
+    # connection per call would be actively wrong here: DUCKDB_PATH can be
+    # ":memory:" (config.py's test config), and duckdb.connect(":memory:")
+    # creates a brand new, independent, empty in-memory database on every
+    # single call -- every method would see a blank schema, not the real
+    # one. It would also bypass the _LockedConnection wrapper entirely,
+    # reintroducing the exact concurrent-access SIGSEGV that wrapper was
+    # built to fix. None of these methods wrap explicit BEGIN/COMMIT
+    # either, matching this file's existing convention throughout (single
+    # auto-committed statements) -- with a per-call lock, a multi-statement
+    # BEGIN...COMMIT sequence provides no real cross-thread isolation
+    # anyway (another thread's unrelated query could interleave between
+    # the BEGIN and the COMMIT, since the lock is only held for the
+    # duration of each individual execute() call).
+    # ======================================================================
+
+    def create_ontological_node(self, object_type: str, attributes: Dict[str, Any],
+                                 confidence: float = 1.0, operator_id: str = "system",
+                                 pqc_entry_id: Optional[str] = None) -> str:
+        node_id = str(uuid.uuid4())
+        self.conn.execute(
+            """
+            INSERT INTO ontological_object_nodes
+                (node_id, object_type, attributes_json, confidence_score, created_by, pqc_entry_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (node_id, object_type, json.dumps(attributes, default=str), confidence, operator_id, pqc_entry_id),
+        )
+        self.conn.commit()
+        return node_id
+
+    def link_ontological_nodes(self, source_id: str, target_id: str, event_type: str,
+                                vector_payload: Dict[str, Any], operator_id: str = "system",
+                                pqc_signature: Optional[str] = None) -> str:
+        """Raises ValueError if source_id or target_id doesn't name an
+        existing node -- application-level referential-integrity check,
+        since source_node/target_node are not SQL FOREIGN KEYs (see the
+        ontological_object_nodes CREATE TABLE comment for why)."""
+        for label, node_id in (("source_id", source_id), ("target_id", target_id)):
+            if not self.get_ontological_node(node_id):
+                raise ValueError(f"{label} '{node_id}' does not name an existing ontological node")
+        telemetry_id = str(uuid.uuid4())
+        self.conn.execute(
+            """
+            INSERT INTO lattice_edge_telemetry
+                (telemetry_id, source_node, target_node, event_type, vector_payload, operator_id, pqc_signature)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (telemetry_id, source_id, target_id, event_type,
+             json.dumps(vector_payload, default=str), operator_id, pqc_signature),
+        )
+        self.conn.commit()
+        return telemetry_id
+
+    def update_node_confidence(self, node_id: str, new_score: float) -> bool:
+        # SELECT-then-UPDATE rather than trusting UPDATE's own result: this
+        # DuckDB version's cursor.rowcount is always -1 for UPDATE
+        # statements (confirmed empirically), so it can't be used to tell
+        # whether a row actually matched -- same DuckDB-0.10.0-era
+        # limitation already worked around elsewhere in this file (see
+        # rotate_encryption_key/decide_approval_request and friends).
+        existing = self.conn.execute(
+            "SELECT 1 FROM ontological_object_nodes WHERE node_id = ?", (node_id,)
+        ).fetchone()
+        if not existing:
+            return False
+        self.conn.execute(
+            "UPDATE ontological_object_nodes SET confidence_score = ?, updated_at = now() WHERE node_id = ?",
+            (new_score, node_id),
+        )
+        self.conn.commit()
+        return True
+
+    def get_ontological_node(self, node_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM ontological_object_nodes WHERE node_id = ?", (node_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    def find_ontological_node_by_attribute(
+        self, object_type: Optional[str], attr_key: str, attr_value: Any,
+    ) -> Optional[Dict[str, Any]]:
+        """v3.0 Phase 5: best-effort lookup for a node whose
+        attributes_json[attr_key] == attr_value, optionally filtered to
+        object_type (None searches every type) -- used both to reuse
+        (rather than duplicate) the "Asset" node for a given target
+        across every payload staged against it, and to find a staged
+        payload's own action node by its payload_id attribute.
+        attributes_json has no index, so this scans; fine for this
+        table's expected size (one node per staged payload/target, not
+        per raw event), same caveat as get_audit_entries_for_payload()."""
+        if object_type:
+            rows = self.conn.execute(
+                "SELECT * FROM ontological_object_nodes WHERE object_type = ? ORDER BY created_at DESC",
+                (object_type,),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM ontological_object_nodes ORDER BY created_at DESC"
+            ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        for r in rows:
+            d = dict(zip(cols, r))
+            try:
+                attrs = json.loads(d.get("attributes_json") or "{}")
+            except Exception:
+                attrs = {}
+            if attrs.get(attr_key) == attr_value:
+                d["attributes"] = attrs
+                return d
+        return None
+
+    def query_subgraph(self, root_id: str, max_depth: int = 2) -> Dict[str, Any]:
+        """Breadth-first traversal of lattice_edge_telemetry out from
+        root_id, up to max_depth hops, returning every node and edge
+        visited. Used for attack-path / blast-radius style queries."""
+        nodes: Dict[str, Any] = {}
+        edges: List[Dict[str, Any]] = []
+        visited = set()
+        queue = [(root_id, 0)]
+
+        while queue:
+            nid, depth = queue.pop(0)
+            if nid in visited or depth > max_depth:
+                continue
+            visited.add(nid)
+
+            row = self.conn.execute(
+                "SELECT * FROM ontological_object_nodes WHERE node_id = ?", (nid,)
+            ).fetchone()
+            if not row:
+                continue
+            cols = [d[0] for d in self.conn.description]
+            nodes[nid] = dict(zip(cols, row))
+
+            if depth < max_depth:
+                edge_rows = self.conn.execute(
+                    "SELECT * FROM lattice_edge_telemetry WHERE source_node = ? OR target_node = ?",
+                    (nid, nid),
+                ).fetchall()
+                ecols = [d[0] for d in self.conn.description]
+                for erow in edge_rows:
+                    e = dict(zip(ecols, erow))
+                    edges.append(e)
+                    other = e["target_node"] if e["source_node"] == nid else e["source_node"]
+                    if other not in visited:
+                        queue.append((other, depth + 1))
+
+        return {"nodes": nodes, "edges": edges}
+
+    def create_maya_session(self, payload_id: str, operator_id: str,
+                             tzolkin: str, haab: str, challenge_token: str,
+                             expires_at: datetime, pqc_entry_id: Optional[str] = None) -> str:
+        session_id = str(uuid.uuid4())
+        issued_at = datetime.now(timezone.utc)
+        self.conn.execute(
+            """
+            INSERT INTO maya_vigesimal_auth_sessions
+                (session_id, payload_id, operator_id, tzolkin_coordinate, haab_coordinate,
+                 challenge_token, status, expires_at, pqc_entry_id,
+                 display_issued_at, display_expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)
+            """,
+            (session_id, payload_id, operator_id, tzolkin, haab, challenge_token, expires_at, pqc_entry_id,
+             issued_at, expires_at),
+        )
+        self.conn.commit()
+        return session_id
+
+    def get_maya_session(self, session_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM maya_vigesimal_auth_sessions WHERE session_id = ?", (session_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    def get_maya_session_by_payload_id(self, payload_id: str) -> Optional[Dict[str, Any]]:
+        """Most recent Maya session for a payload_id -- approve_payload()/
+        reject_payload() only have payload_id, not session_id, when they
+        need to enforce the interlock."""
+        row = self.conn.execute(
+            "SELECT * FROM maya_vigesimal_auth_sessions WHERE payload_id = ? "
+            "ORDER BY created_at DESC LIMIT 1",
+            (payload_id,),
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    def consume_maya_session(self, session_id: str, response_token: str, operator_id: str) -> Dict[str, Any]:
+        """Verify and consume a pending Maya-Vigesimal challenge. Once
+        successfully consumed, a session is single-use -- a second call
+        with the correct token is rejected ('session already consumed').
+        A WRONG token, however, does NOT burn the session: it just returns
+        an error and leaves status='pending', so a mistyped token can be
+        retried until expiry. (A wrong-token attempt permanently marking
+        the session 'denied' was tried first, matching this feature's
+        original spec -- but that spec's own lifecycle test submits a
+        wrong token and then the correct one against the SAME session and
+        expects the second call to succeed, which a permanent denial on
+        first mismatch makes impossible. Retry-until-expiry is the
+        behavior that actually matches the intended lifecycle.)
+        Constant-time token comparison via hmac.compare_digest to avoid a
+        timing side-channel on the challenge_token, consistent with this
+        codebase's other signature/token comparisons
+        (security_agents/edr_connector.py, etc.)."""
+        row = self.conn.execute(
+            "SELECT * FROM maya_vigesimal_auth_sessions WHERE session_id = ?", (session_id,)
+        ).fetchone()
+        if not row:
+            return {"status": "error", "message": "session not found"}
+        cols = [d[0] for d in self.conn.description]
+        sess = dict(zip(cols, row))
+
+        if sess["status"] != "pending":
+            return {"status": "error", "message": f"session already {sess['status']}"}
+
+        now = datetime.now(timezone.utc)
+        expires_at = sess["expires_at"]
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < now:
+            self.conn.execute(
+                "UPDATE maya_vigesimal_auth_sessions SET status = 'expired' WHERE session_id = ?",
+                (session_id,),
+            )
+            self.conn.commit()
+            return {"status": "error", "message": "session expired"}
+
+        if not hmac.compare_digest(sess["challenge_token"], response_token):
+            return {"status": "error", "message": "invalid response token"}
+
+        self.conn.execute(
+            """
+            UPDATE maya_vigesimal_auth_sessions
+            SET status = 'consumed', response_token = ?, responded_at = now()
+            WHERE session_id = ?
+            """,
+            (response_token, session_id),
+        )
+        self.conn.commit()
+        return {"status": "consumed", "payload_id": sess["payload_id"], "session_id": session_id}
+
+    def upsert_resonance_policy(self, module_target: str, action_signature: str,
+                                 threshold_limit: float = 0.8, enforcement_mode: str = "require_approval",
+                                 is_active: bool = True, operator_id: str = "system",
+                                 pqc_signature: Optional[str] = None) -> str:
+        policy_id = str(uuid.uuid4())
+        self.conn.execute(
+            """
+            INSERT INTO resonance_policy_enforcements
+                (policy_id, module_target, action_signature, threshold_limit,
+                 enforcement_mode, is_active, created_by, pqc_signature)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (policy_id, module_target, action_signature, threshold_limit,
+             enforcement_mode, is_active, operator_id, pqc_signature),
+        )
+        self.conn.commit()
+        return policy_id
+
+    def list_active_policies(self, module_target: Optional[str] = None) -> List[Dict[str, Any]]:
+        if module_target:
+            rows = self.conn.execute(
+                "SELECT * FROM resonance_policy_enforcements WHERE is_active = true AND module_target = ?",
+                (module_target,),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM resonance_policy_enforcements WHERE is_active = true"
+            ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def register_qaip_inference(self, circuit_type: str, metrics: Dict[str, Any],
+                                 pqc_signature: str, operator_id: str = "system",
+                                 related_node_id: Optional[str] = None) -> str:
+        """Raises ValueError if related_node_id is given but doesn't name
+        an existing node -- see link_ontological_nodes()'s docstring for
+        why this is an application-level check, not a SQL FOREIGN KEY."""
+        if related_node_id and not self.get_ontological_node(related_node_id):
+            raise ValueError(f"related_node_id '{related_node_id}' does not name an existing ontological node")
+        inference_id = str(uuid.uuid4())
+        self.conn.execute(
+            """
+            INSERT INTO q_aip_inference_registry
+                (inference_id, circuit_type, execution_metrics_json, pqc_signature, operator_id, related_node_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (inference_id, circuit_type, json.dumps(metrics, default=str), pqc_signature, operator_id, related_node_id),
+        )
+        self.conn.commit()
+        return inference_id
 
     # ======================================================================
     # Generic helpers
@@ -1192,6 +1657,57 @@ class DuckDBManager:
 
     def query(self, sql: str, params: tuple = ()):
         return self.conn.execute(sql, params).fetchall()
+
+    def get_execution_log_events(self, payload_id: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Best-effort lookup of EXPLOIT_EXECUTED/EXPLOIT_COMPLETED
+        agent_logs rows for one payload_id (v3.0 Phase 3's status
+        timeline needs to know if/when a payload was actually executed).
+        details is a JSON string column with no index on it, so this
+        scans the recent tail rather than the whole table -- fine for a
+        per-payload lookup, not meant for bulk queries."""
+        rows = self.conn.execute(
+            "SELECT * FROM agent_logs WHERE event IN ('EXPLOIT_EXECUTED', 'EXPLOIT_COMPLETED') "
+            "ORDER BY id DESC LIMIT 2000"
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        out: List[Dict[str, Any]] = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            try:
+                details = json.loads(d.get("details") or "{}")
+            except Exception:
+                details = {}
+            if details.get("payload_id") == payload_id:
+                d["details"] = details
+                out.append(d)
+                if len(out) >= limit:
+                    break
+        return out
+
+    def get_audit_entries_for_payload(self, payload_id: str, limit: int = 20) -> List[Dict[str, Any]]:
+        """Best-effort match: pqc_audit_log entries whose action_detail
+        JSON has this payload_id, newest first -- used to attach PQC
+        entry IDs to a payload's status timeline (v3.0 Phase 3). Same
+        scan-the-tail caveat as get_execution_log_events(): action_detail
+        has no index, so this is for a single payload's context, not bulk
+        audit queries (use list_pqc_audit_entries() for those)."""
+        rows = self.conn.execute(
+            "SELECT * FROM pqc_audit_log ORDER BY id DESC LIMIT 2000"
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        out: List[Dict[str, Any]] = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            try:
+                detail = json.loads(d.get("action_detail") or "{}")
+            except Exception:
+                detail = {}
+            if detail.get("payload_id") == payload_id:
+                d["action_detail_parsed"] = detail
+                out.append(d)
+                if len(out) >= limit:
+                    break
+        return out
 
     def insert_pentest(self, data: Dict[str, Any]) -> int:
         self.conn.execute(

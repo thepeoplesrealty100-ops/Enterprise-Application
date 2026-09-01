@@ -52,8 +52,15 @@ try:
     from security_agents.edr_mdr import DEFAULT_PLAYBOOKS
     from security_agents.vm_orchestrator import get_vm_orchestrator
     from security_agents.edr_connector import enforce_containment
+    from security_agents.exploit_agent import ExploitAgent
+    from security_agents.edr_hardened import HardenedEnforcementOrchestrator
+    from security_agents.compliance_constraints import validate_containment_compliance
+    from services.ontology_engine import OntologyEngine
     _db = get_db_manager()
     _vm = get_vm_orchestrator(_db)
+    _gate = ExploitAgent(db_manager=_db)
+    _hardened_orchestrator = HardenedEnforcementOrchestrator(db=_db, vm_orchestrator=_vm)
+    _ontology = OntologyEngine(_db)
     RESPONSE_OK = True
     _ERR = None
 except Exception as _e:  # noqa: BLE001
@@ -61,6 +68,9 @@ except Exception as _e:  # noqa: BLE001
     _ERR = str(_e)
     _db = None
     _vm = None
+    _gate = None
+    _hardened_orchestrator = None
+    _ontology = None
     DEFAULT_PLAYBOOKS = []
 
 from dependencies import get_authenticated_user, require_permission
@@ -92,7 +102,13 @@ def _pqc_sign(action_type: str, payload: Dict[str, Any], operator_id: str) -> Op
         _db.insert_pqc_audit_entry({
             "entry_id": signed["entry_id"], "agent_id": "response-router",
             "operator_id": operator_id, "action_type": action_type,
-            "action_detail": __import__("json").dumps(payload, default=str),
+            # sort_keys=True to byte-match sign_agent_action()'s own hash
+            # computation (json.dumps(action_payload, sort_keys=True)) --
+            # otherwise a re-verification (crypto.pqc_manager.
+            # verify_stored_entry(), v3.0 Phase 3) always fails the
+            # integrity pre-check for this router's entries, the same bug
+            # found and fixed in ExploitAgent._sign() in Phase 3.
+            "action_detail": __import__("json").dumps(payload, sort_keys=True, default=str),
             "payload_hash": signed["payload_hash"], "pqc_signature": signed["pqc_signature"],
             "algorithm": signed["algorithm"], "public_key": signed["public_key"],
         })
@@ -100,6 +116,42 @@ def _pqc_sign(action_type: str, payload: Dict[str, Any], operator_id: str) -> Op
     except Exception as e:
         logger.warning("PQC signing unavailable for response action: %s", e)
         return None
+
+
+def _maybe_attach_maya_challenge(request_id: str, operator_id: str, risk_level: str) -> Optional[Dict[str, Any]]:
+    """v3.0 Phase 5: attach the same Maya-Vigesimal step-up challenge
+    stage_payloads() attaches automatically, for a HIGH/CRITICAL
+    approval_requests row created directly by this router (containment
+    actions don't go through stage_payloads()'s MITRE-technique payload
+    shape). None for LOW/MEDIUM -- same exception as everywhere else."""
+    if not _gate:
+        return None
+    return _gate.issue_step_up_challenge(request_id, operator_id, risk_level)
+
+
+def _materialize_containment_ontology_link(
+    request_id: str, target: Optional[str], action_type: str, operator_id: str,
+    extra_attributes: Optional[Dict[str, Any]] = None,
+) -> None:
+    """v3.0 Phase 5: give this containment action the same real position
+    in the Ontology Engine's graph that ExploitAgent.stage_payloads()
+    gives an offensive payload -- an "Asset" node for `target` (reused
+    across actions against the same target) linked to a node for this
+    specific action, so get_enriched_approval_context() can offer a
+    basic attack-path/related-object view for containment decisions too.
+    Best-effort; never raises."""
+    if not _db or not target:
+        return
+    try:
+        from services.ontology_engine import OntologyEngine
+        attrs = {"request_id": request_id, "payload_id": request_id, "action_type": action_type}
+        if extra_attributes:
+            attrs.update(extra_attributes)
+        OntologyEngine(_db).materialize_action_link(
+            target, "ContainmentAction", attrs, operator_id=operator_id,
+        )
+    except Exception as e:
+        logger.warning("Ontology materialization failed for %s: %s", request_id, e)
 
 
 def _record_action(action_type: str, target: Optional[str], status: str, risk_level: str,
@@ -205,15 +257,18 @@ async def triage(req: TriageRequest, request: Request):
         threshold = _db.get_policy_value("response_auto_stage_threshold", 0.8)
 
     staged_request_id = None
+    staged_risk_level = None
+    maya_challenge = None
     if severity >= threshold and recommended:
         staged_request_id = str(uuid.uuid4())
+        staged_risk_level = "HIGH" if severity >= 0.9 else "MEDIUM"
         pqc_entry = _pqc_sign("triage_auto_stage", {
             "target": req.target, "severity": severity, "playbook": recommended[0]["key"],
         }, req.operator_id)
         _db.create_approval_request({
             "request_id": staged_request_id, "requested_by": req.operator_id,
             "action_type": "response_containment", "target": req.target,
-            "phase": "containment", "risk_level": "HIGH" if severity >= 0.9 else "MEDIUM",
+            "phase": "containment", "risk_level": staged_risk_level,
             "summary": f"Auto-staged from triage (severity={severity}): {recommended[0]['name']}",
             "payload_detail": {
                 "finding_summary": req.finding_summary, "threat_category": req.threat_category,
@@ -221,6 +276,13 @@ async def triage(req: TriageRequest, request: Request):
             },
             "pqc_entry_id": pqc_entry, "origin_module": "response_triage",
         })
+        # v3.0 Phase 5: same Maya-gated interlock as an operator-initiated
+        # quarantine/isolate-host -- None for MEDIUM, a real challenge for HIGH.
+        maya_challenge = _maybe_attach_maya_challenge(staged_request_id, req.operator_id, staged_risk_level)
+        _materialize_containment_ontology_link(
+            staged_request_id, req.target, "response_containment", req.operator_id,
+            extra_attributes={"threat_category": req.threat_category, "severity": severity},
+        )
     action_id = _record_action(
         "triage", req.target, "staged" if staged_request_id else "completed",
         "HIGH" if severity >= 0.8 else "MEDIUM" if severity >= 0.4 else "LOW",
@@ -232,6 +294,7 @@ async def triage(req: TriageRequest, request: Request):
         "action_id": action_id, "severity": severity, "recommended_playbooks": recommended,
         "auto_stage_threshold_used": threshold,
         "auto_staged_approval_request_id": staged_request_id,
+        "maya_challenge": maya_challenge,
         "note": ("Severity crossed the auto-stage threshold — a containment approval request was "
                  "created; a human operator must approve it at POST /api/approval/{id}/approve "
                  "before anything further happens.") if staged_request_id else
@@ -313,8 +376,12 @@ async def quarantine(req: QuarantineRequest, request: Request, user: dict = Depe
     action_id = _record_action("quarantine_host_staged", req.target, "staged", "HIGH",
                                 user["username"], {"reason": req.reason}, approval_request_id=request_id)
     _audit(request, user, "quarantine_host_staged", "success", req.target, {"approval_request_id": request_id})
+    maya_challenge = _maybe_attach_maya_challenge(request_id, user["username"], "HIGH")
+    _materialize_containment_ontology_link(request_id, req.target, "quarantine_host_staged", user["username"])
     return {"action_id": action_id, "status": "staged", "approval_request_id": request_id,
-            "note": "Approve at POST /api/approval/{id}/approve to record the decision."}
+            "maya_challenge": maya_challenge,
+            "note": "Approve at POST /api/approval/{id}/approve to record the decision. "
+                    "Requires the Maya-Vigesimal challenge to be consumed first."}
 
 
 @router.post("/isolate-host", dependencies=[require_permission("response:manage")])
@@ -339,9 +406,12 @@ async def isolate_host(req: IsolateHostRequest, request: Request, user: dict = D
     action_id = _record_action("isolate_host_staged", req.target, "staged", "HIGH",
                                 user["username"], {"reason": req.reason}, approval_request_id=request_id)
     _audit(request, user, "isolate_host_staged", "success", req.target, {"approval_request_id": request_id})
+    maya_challenge = _maybe_attach_maya_challenge(request_id, user["username"], "HIGH")
+    _materialize_containment_ontology_link(request_id, req.target, "isolate_host_staged", user["username"])
     return {"action_id": action_id, "status": "staged", "approval_request_id": request_id,
-            "d3fend_technique": "D3-NI",
+            "d3fend_technique": "D3-NI", "maya_challenge": maya_challenge,
             "note": "Approve at POST /api/approval/{id}/approve to record the decision. "
+                    "Requires the Maya-Vigesimal challenge to be consumed first. "
                     "This platform does not itself control the target's network fabric — "
                     "an approved isolation is the authorization record a real firewall/EDR "
                     "integration or on-call operator acts on."}
@@ -373,12 +443,8 @@ async def enforce_action(approval_request_id: str, request: Request,
                           user: dict = Depends(get_authenticated_user)):
     """
     Executes an already-APPROVED isolate_host_staged / quarantine_host_staged
-    decision — never called automatically, never callable before a human
-    has approved at POST /api/approval/{id}/approve. See
-    security_agents/edr_connector.py for what "enforce" actually means:
-    real Docker network isolation for a JAKAL-owned sandbox, or a signed
-    webhook to whatever real EDR/firewall integration this deployment's
-    operator has configured for everything else.
+    decision via hardened orchestrator with retry logic and compliance gating.
+    Never called automatically, never callable before human approval.
     """
     _require()
     approval = _db.get_approval_request(approval_request_id)
@@ -391,8 +457,10 @@ async def enforce_action(approval_request_id: str, request: Request,
 
     target = approval.get("target")
     detail = approval.get("payload_detail") or {}
-    result = enforce_containment(
-        approval["action_type"], target, detail, user["username"], db=_db, vm_orchestrator=_vm,
+
+    # Use hardened orchestrator (retry logic + compliance pre-check).
+    result = _hardened_orchestrator.enforce_with_retry(
+        approval["action_type"], target, detail, user["username"],
     )
 
     new_status = {"enforced": "enforced", "not_configured": "enforcement_not_configured",
@@ -402,3 +470,65 @@ async def enforce_action(approval_request_id: str, request: Request,
            approval_request_id, {"target": target, "result": dict(result)})
 
     return {"approval_request_id": approval_request_id, "target": target, **result}
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Track A — Compliance-aware containment + attack-path remediation
+# ══════════════════════════════════════════════════════════════════════════
+
+@router.get("/compliance/pre-check")
+async def check_compliance(action_type: str, target: str):
+    """
+    Pre-flight compliance check before staging a containment action.
+    Returns violations (if any) and whether an audit exception is required.
+    """
+    _require()
+    if action_type not in ("isolate_host_staged", "quarantine_host_staged"):
+        raise HTTPException(status_code=422, detail="Invalid action_type for compliance check")
+
+    try:
+        posture = _db.conn.execute(
+            "SELECT data FROM global_security_settings WHERE setting_key = 'org_compliance_posture' LIMIT 1"
+        ).fetchone()
+        org_posture = posture[0] if posture else {}
+        result = validate_containment_compliance(action_type, target, org_posture)
+        return {
+            "compliant": result["compliant"],
+            "violations": result["violations"],
+            "requires_audit_exception": result["requires_audit_exception"],
+            "target": target,
+            "action_type": action_type,
+        }
+    except Exception as e:
+        logger.exception("Compliance check failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Compliance check failed: {str(e)}")
+
+
+@router.get("/related-targets")
+async def list_related_targets(target: str, max_depth: int = 2):
+    """
+    Attack-path analysis: identify targets related to the given target
+    via the Ontology Engine graph. Useful for multi-target remediation
+    recommendations when an attacker has lateral-movement paths between
+    hosts.
+
+    Returns a list of related target IPs/hostnames within max_depth graph hops.
+    """
+    _require()
+    if max_depth < 1 or max_depth > 5:
+        raise HTTPException(status_code=422, detail="max_depth must be 1-5")
+
+    try:
+        from security_agents.edr_hardened import get_related_targets_for_remediation
+        related = get_related_targets_for_remediation(target, _ontology, db=_db, max_depth=max_depth)
+        return {
+            "target": target,
+            "max_depth": max_depth,
+            "related_targets": related,
+            "count": len(related),
+            "note": "Use these targets as input for additional quarantine/isolate actions "
+                    "if the attacker has compromised multiple hosts in the same path."
+        }
+    except Exception as e:
+        logger.exception("Related targets query failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")

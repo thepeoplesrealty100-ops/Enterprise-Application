@@ -148,6 +148,13 @@ def test_approval_gate_denial_persists_as_audit_record():
                                   target="10.0.0.5", operator_id="op1")
     payload_id = staged[0]["payload_id"]
 
+    # T1190 is 'critical' severity -> HIGH risk -> a Maya-Vigesimal
+    # challenge was attached and interlocks the decision (v3.0); consume
+    # it before rejecting, same as a real operator would.
+    maya = staged[0]["maya_challenge"]
+    consumed = db.consume_maya_session(maya["session_id"], maya["challenge_token"], "demo-lead")
+    assert consumed["status"] == "consumed"
+
     denial = gate.reject_payload(payload_id, "demo-lead", "out of scope for this engagement")
     assert denial["status"] == "rejected"
 

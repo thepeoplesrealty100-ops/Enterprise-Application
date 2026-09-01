@@ -241,6 +241,38 @@ class UnifiedSecurityFabric:
             "cross_cutting": CROSS_CUTTING,
         }
 
+    def capability_summary(self) -> Dict[str, Any]:
+        """v3.0 Phase 4.3: light summary of which of the 7 Fabric
+        capabilities are currently considered active, using only data
+        that already exists -- each capability's persisted (or default)
+        status field, plus whether any fabric_events have ever been
+        recorded for it. No new collection logic, no polling of the
+        underlying subsystems -- `status()` above already returns full
+        detail per capability; this is the lighter "just tell me what's
+        active" view."""
+        summary = []
+        for key in FABRIC_CAPABILITIES:
+            cap = self.get_capability(key)
+            if not cap:
+                continue
+            has_recorded_activity = bool(
+                self.db and self.db.list_fabric_events(module_key=key, limit=1)
+            )
+            summary.append({
+                "module_key": key,
+                "label": cap["label"],
+                "pillar": cap["pillar"],
+                "status": cap["status"],
+                "considered_active": cap["status"] == "active",
+                "has_recorded_activity": has_recorded_activity,
+            })
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "total_capabilities": len(summary),
+            "active_count": sum(1 for s in summary if s["considered_active"]),
+            "capabilities": summary,
+        }
+
     # ------------------------------------------------------------------
     # Zero Trust posture scoring
     # ------------------------------------------------------------------

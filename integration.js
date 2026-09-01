@@ -200,7 +200,155 @@ async function api(path, options = {}) {
     err.data = data;
     throw err;
   }
+  // v3.0: ExploitAgent.stage_payloads() attaches a "maya_challenge" to
+  // every HIGH/CRITICAL staged payload (see backend/security_agents/
+  // exploit_agent.py). Detecting it generically here -- rather than in
+  // one specific staging call site -- means the modal appears no matter
+  // which endpoint triggered staging (POST /api/approval/stage,
+  // /api/canvas/*, or any future one), since ExploitAgent.stage_payloads()
+  // is the single choke point all of them share.
+  _maybeShowMayaChallenges(data);
   return data;
+}
+
+// ── Maya-Vigesimal calendar 2FA modal (v3.0) ─────────────────────────────
+// Interlocked with the Human Approval Gate: consuming this challenge does
+// NOT itself approve a payload -- POST /api/approval/{id}/approve is still
+// required separately. This just proves the operator saw and echoed back
+// today's calendar coordinate token before that decision is made.
+
+function _maybeShowMayaChallenges(data) {
+  if (!data || typeof data !== 'object') return;
+  const challenges = [];
+  if (data.maya_challenge) challenges.push(data.maya_challenge);
+  if (Array.isArray(data.payloads)) {
+    for (const p of data.payloads) {
+      if (p && p.maya_challenge) challenges.push(p.maya_challenge);
+    }
+  }
+  for (const ch of challenges) showMayaChallengeModal(ch);
+}
+
+function closeMayaModal() {
+  const overlay = el('jakal-maya-modal');
+  if (overlay) overlay.remove();
+}
+
+function showMayaChallengeModal(challenge) {
+  closeMayaModal(); // one at a time
+  const overlay = document.createElement('div');
+  overlay.id = 'jakal-maya-modal';
+  overlay.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:10000', 'display:flex',
+    'align-items:center', 'justify-content:center',
+    'background:rgba(0,0,0,.6)', 'font:13px/1.5 Inter,system-ui,sans-serif',
+  ].join(';');
+
+  const displayIssuedAt = challenge.display_issued_at || '';
+  const displayExpiresAt = challenge.display_expires_at || challenge.expiresAt || challenge.expires_at || '';
+  const expiresAt = new Date(displayExpiresAt).getTime();
+  const formatFriendly = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleString();
+  };
+  const rawToken = challenge.token || challenge.challenge_token || '';
+  const maskedToken = '•'.repeat(Math.max(rawToken.length, 8));
+
+  overlay.innerHTML = `
+    <div style="${cardStyle()};width:min(420px,92vw);background:#111827;border-color:#f97316">
+      <h3 style="color:#f97316;margin:0 0 6px">Maya-Vigesimal Calendar Challenge</h3>
+      <p style="opacity:.8;margin:0 0 10px">
+        This HIGH/CRITICAL payload also requires a second-factor calendar
+        challenge before its approval decision can proceed. This does not
+        replace the Human Approval Gate — approve/deny it separately in
+        the Approval tab.
+      </p>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:8px;text-align:center">
+          <div style="opacity:.6;font-size:10px">ISSUED</div>
+          <div style="color:#f97316;font-weight:700;font-size:11px">${escapeHtml(formatFriendly(displayIssuedAt))}</div>
+        </div>
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:8px;text-align:center">
+          <div style="opacity:.6;font-size:10px">EXPIRES</div>
+          <div style="color:#f97316;font-weight:700;font-size:11px">${escapeHtml(formatFriendly(displayExpiresAt))}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="opacity:.6;font-size:10px;margin-bottom:2px">CHALLENGE TOKEN (hidden by default — echo it back below)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="jakal-maya-token" style="flex:1;font-family:ui-monospace,monospace;font-size:15px;letter-spacing:2px;background:#0f172a;padding:8px;border-radius:8px;user-select:none">${escapeHtml(maskedToken)}</div>
+          <button type="button" id="jakal-maya-token-toggle" style="${btnStyle('#374151')}">Show</button>
+        </div>
+      </div>
+      <div id="jakal-maya-countdown" style="opacity:.7;margin-bottom:10px;font-size:11px"></div>
+      <input type="text" id="jakal-maya-input" placeholder="Enter the token shown above" autocomplete="off"
+             style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #4b5563;background:#0f172a;color:#fff;font-family:ui-monospace,monospace;margin-bottom:10px" />
+      <div id="jakal-maya-error" style="color:#f87171;font-size:11px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" id="jakal-maya-cancel" style="${btnStyle('#374151')}">Cancel</button>
+        <button type="button" id="jakal-maya-submit" style="${btnStyle('#166534')}">Verify</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  let tokenRevealed = false;
+  const tokenEl = el('jakal-maya-token');
+  const tokenToggleBtn = el('jakal-maya-token-toggle');
+  if (tokenToggleBtn && tokenEl) {
+    tokenToggleBtn.onclick = () => {
+      tokenRevealed = !tokenRevealed;
+      tokenEl.textContent = tokenRevealed ? rawToken : maskedToken;
+      tokenEl.style.userSelect = tokenRevealed ? 'all' : 'none';
+      tokenToggleBtn.textContent = tokenRevealed ? 'Hide' : 'Show';
+    };
+  }
+
+  const countdownEl = el('jakal-maya-countdown');
+  const tick = () => {
+    const remainingMs = expiresAt - Date.now();
+    if (!countdownEl) return;
+    if (remainingMs <= 0) {
+      countdownEl.textContent = 'Expired — this challenge is no longer valid.';
+      countdownEl.style.color = '#f87171';
+      clearInterval(timer);
+      return;
+    }
+    const m = Math.floor(remainingMs / 60000);
+    const s = Math.floor((remainingMs % 60000) / 1000);
+    countdownEl.textContent = `Expires in ${m}:${String(s).padStart(2, '0')}`;
+  };
+  tick();
+  const timer = setInterval(tick, 1000);
+
+  const cleanup = () => { clearInterval(timer); closeMayaModal(); };
+  el('jakal-maya-cancel').onclick = cleanup;
+
+  el('jakal-maya-submit').onclick = async () => {
+    const input = el('jakal-maya-input');
+    const errorEl = el('jakal-maya-error');
+    const responseToken = (input?.value || '').trim();
+    if (!responseToken) {
+      if (errorEl) errorEl.textContent = 'Enter the token shown above.';
+      return;
+    }
+    try {
+      await api('/api/v3/auth/maya/verify', {
+        method: 'POST',
+        body: JSON.stringify({
+          session_id: challenge.sessionId || challenge.session_id,
+          response_token: responseToken,
+          operator_id: (sessionStorage.getItem('jakal_operator_id') || 'operator'),
+        }),
+      });
+      updateTelemetryConsole('[MAYA] Calendar challenge verified — proceed to Approval tab to decide.', 'text-emerald-400');
+      cleanup();
+      refreshOpsTab();
+    } catch (e) {
+      if (errorEl) errorEl.textContent = e.message || 'Verification failed';
+    }
+  };
 }
 
 async function renderReportsPanel() {
@@ -267,6 +415,9 @@ async function renderApprovalPanel() {
   return `<h3 style="color:#f97316;margin:0 0 8px">Human Approval Gate</h3>
     <pre style="font-size:10px;background:#0f172a;padding:8px;border-radius:8px">${escapeHtml(JSON.stringify(status, null, 2))}</pre>
     <p style="margin:8px 0">Pending: <b>${pending.count ?? reqs.length}</b></p>
+    <button type="button" data-stage-demo="T1110" style="${btnStyle('#b91c1c')};margin-bottom:10px">
+      Stage HIGH-risk demo payload (triggers Maya challenge)
+    </button>
     ${list}`;
 }
 
@@ -663,10 +814,15 @@ async function renderResponseConsolePanel() {
     <div style="${cardStyle()}">
       <b>Isolate / quarantine a host</b>
       <p style="opacity:.6;font-size:10.5px;margin:4px 0 8px">Always staged behind the Human Approval Gate — never auto-executed.
+        Track A runs a HIPAA/SOC2/PCI-DSS compliance pre-check and attack-path lookup before staging.
         Approve at the Approval tab, then click Enforce below once approved.</p>
       <input id="rc-isolate-target" placeholder="target (must be in an active authorized scope)" style="width:100%;margin-bottom:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
       <input id="rc-isolate-reason" placeholder="reason" style="width:100%;margin-bottom:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
-      <button type="button" data-rc-isolate style="${btnStyle('#b91c1c')}">Stage isolation</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" data-rc-precheck style="${btnStyle('#1d4ed8')}">Compliance pre-check</button>
+        <button type="button" data-rc-related style="${btnStyle('#374151')}">Related targets</button>
+        <button type="button" data-rc-isolate style="${btnStyle('#b91c1c')}">Stage isolation</button>
+      </div>
       <div id="rc-isolate-result" style="margin-top:6px;font-size:11px"></div>
     </div>
 
@@ -707,9 +863,45 @@ function wireResponseConsoleActions(root) {
     const reason = root.querySelector('#rc-isolate-reason')?.value || '';
     const out = root.querySelector('#rc-isolate-result');
     try {
+      const pre = await api(`/api/response/compliance/pre-check?action_type=isolate_host_staged&target=${encodeURIComponent(target)}`);
+      if (pre && pre.compliant === false) {
+        const vis = (pre.violations || []).map((v) => `${v.constraint}: ${v.reason}`).join('<br>');
+        out.innerHTML = `<span style="color:#fbbf24">Blocked by compliance gate.</span>
+          <div style="margin-top:4px;color:#f87171">${vis}</div>
+          ${pre.requires_audit_exception ? '<div style="margin-top:4px;opacity:.8">Requires a documented audit exception before staging.</div>' : ''}`;
+        updateTelemetryConsole(`[COMPLIANCE] isolation blocked for ${target}`, 'text-yellow-400');
+        return;
+      }
       const r = await api('/api/response/isolate-host', { method: 'POST', body: JSON.stringify({ target, reason }) });
-      out.innerHTML = `<span style="color:#34d399">Staged — approval_request_id=${escapeHtml(r.approval_request_id)}. Approve it in the Approval tab, then Enforce from the list below.</span>`;
+      out.innerHTML = `<span style="color:#34d399">Compliance clear. Staged — approval_request_id=${escapeHtml(r.approval_request_id)}. Approve it in the Approval tab, then Enforce from the list below.</span>`;
       refreshOpsTab();
+    } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+  };
+
+  const precheckBtn = root.querySelector('[data-rc-precheck]');
+  if (precheckBtn) precheckBtn.onclick = async () => {
+    const target = root.querySelector('#rc-isolate-target')?.value || '';
+    const out = root.querySelector('#rc-isolate-result');
+    try {
+      const pre = await api(`/api/response/compliance/pre-check?action_type=isolate_host_staged&target=${encodeURIComponent(target)}`);
+      if (pre.compliant) {
+        out.innerHTML = `<span style="color:#34d399">Compliant — HIPAA/SOC2/PCI-DSS pre-check passed for ${escapeHtml(target)}.</span>`;
+      } else {
+        const vis = (pre.violations || []).map((v) => `${escapeHtml(v.constraint)}: ${escapeHtml(v.reason)}`).join('<br>');
+        out.innerHTML = `<span style="color:#fbbf24">Not compliant.</span><div style="margin-top:4px;color:#f87171">${vis}</div>`;
+      }
+    } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+  };
+
+  const relatedBtn = root.querySelector('[data-rc-related]');
+  if (relatedBtn) relatedBtn.onclick = async () => {
+    const target = root.querySelector('#rc-isolate-target')?.value || '';
+    const out = root.querySelector('#rc-isolate-result');
+    try {
+      const r = await api(`/api/response/related-targets?target=${encodeURIComponent(target)}&max_depth=2`);
+      const list = (r.related_targets || []).map((t) => escapeHtml(t)).join(', ') || 'none in graph';
+      out.innerHTML = `<span style="color:#93c5fd">Attack path (${r.count || 0} related, depth ${r.max_depth}): ${list}</span>
+        <div style="opacity:.7;margin-top:4px">${escapeHtml(r.note || '')}</div>`;
     } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
   };
 
@@ -968,6 +1160,27 @@ function wireOpsActions(root) {
         alert((rep.content || JSON.stringify(rep)).slice(0, 1500));
       } catch (e) {
         updateTelemetryConsole(`[REPORT ERROR] ${e.message}`, 'text-red-400');
+      }
+    };
+  });
+  root.querySelectorAll('[data-stage-demo]').forEach((b) => {
+    b.onclick = async () => {
+      const techniqueId = b.getAttribute('data-stage-demo');
+      try {
+        // demo-only ATT&CK mapping so operators can see the Maya
+        // challenge modal without a real pentest run staged first
+        const result = await api('/api/approval/stage', {
+          method: 'POST',
+          body: JSON.stringify({
+            attack_mappings: [{ technique_id: techniqueId, phase: 'credential_access' }],
+            target: DEMO_TARGET,
+            operator_id: 'operator',
+          }),
+        });
+        updateTelemetryConsole(`[APPROVAL] staged ${result.staged_count} payload(s)`, 'text-emerald-400');
+        refreshOpsTab();
+      } catch (e) {
+        updateTelemetryConsole(`[APPROVAL ERROR] ${e.message}`, 'text-red-400');
       }
     };
   });

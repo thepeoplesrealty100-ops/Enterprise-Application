@@ -9,6 +9,8 @@ the NSA/CISA Zero Trust Maturity ladder.
 
 Endpoints:
   GET   /fabric/status                 — all capabilities + posture (single view)
+  GET   /fabric/summary                — v3.0 Phase 4.3: light "which capabilities are
+                                          active" view, derived from existing data only
   GET   /fabric/posture                — Zero Trust maturity posture (overall + per pillar)
   POST  /fabric/posture/snapshot       — persist a posture snapshot
   GET   /fabric/posture/history        — posture trend
@@ -68,6 +70,14 @@ def fabric_status():
     """Full consolidated Fabric view — all seven capabilities + ZT posture in one call."""
     _require()
     return _fabric.status()
+
+
+@router.get("/summary")
+def fabric_summary():
+    """v3.0 Phase 4.3: light summary of which of the 7 Fabric capabilities
+    are currently considered active — see UnifiedSecurityFabric.capability_summary()."""
+    _require()
+    return _fabric.capability_summary()
 
 
 @router.get("/posture")
