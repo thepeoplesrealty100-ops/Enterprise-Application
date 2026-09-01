@@ -648,6 +648,19 @@ else:
     logger.warning("Frontend js/ directory missing at %s — js/api-client.js and "
                     "js/integration-loader.js will not be served", _FRONTEND_JS)
 
+# v3.0 Response Console (frontend/ — Vite/React build, see frontend/README.md).
+# Optional: only mounted when a production build exists at frontend/dist, so
+# a checkout without `npm run build` run still serves the legacy UI above
+# unaffected. `html=True` makes StaticFiles fall back to index.html for the
+# SPA's client-side routes.
+_CONSOLE_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+if _CONSOLE_DIST.is_dir():
+    app.mount("/console", StaticFiles(directory=str(_CONSOLE_DIST), html=True), name="response-console")
+    logger.info("Response Console mounted from %s at /console", _CONSOLE_DIST)
+else:
+    logger.info("Response Console build missing at %s — run `npm run build` in "
+                "frontend/ to serve it at /console", _CONSOLE_DIST)
+
 
 # ============================================================================
 # Startup/Shutdown Events
