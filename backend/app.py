@@ -632,6 +632,21 @@ async def serve_cheatsheet_data():
     return FileResponse(path, media_type="application/json")
 
 
+@app.get("/world_land_map.json")
+async def serve_world_land_map():
+    """
+    Real world landmass outline (Natural Earth / world-atlas land-110m,
+    public domain, simplified to a single SVG path in a 1000x500
+    equirectangular grid) backing the Global Predictive Matrix map on the
+    Global Dashboard. Same one-file-route pattern as /integration.js and
+    /gacyber_toolkit/cheatsheet_data.json above.
+    """
+    path = _FRONTEND / "world_land_map.json"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="world_land_map.json not found")
+    return FileResponse(path, media_type="application/json")
+
+
 # ============================================================================
 # OpenAPI Schema (Phase 5 - Comprehensive Documentation)
 # ============================================================================

@@ -175,25 +175,15 @@
             animation: pulse-glow 2.5s ease-in-out infinite;
         }
         
-        /* Threat Matrix Specific Styles */
-        .threat-source {
-            animation: pulse-dot 1.5s ease-in-out infinite;
-            cursor: pointer;
-            transition: r 0.3s ease;
+        /* Global Predictive Matrix map styles */
+        .gpm-threat-arc {
+            animation: dash-flow 1.2s linear infinite reverse;
         }
-        .threat-source:hover { r: 12; }
-        .threat-path {
-            stroke-dasharray: 4, 4;
-            animation: dash-flow 2s linear infinite reverse;
+        .gpm-origin-pin:hover text {
+            fill: #fff;
         }
-        #world-map-svg .country {
-            fill: #374151; /* Gray 700 */
-            stroke: #1f2937; /* Gray 800 */
-            stroke-width: 0.5;
+        #gpm-landmass {
             transition: fill 0.3s ease;
-        }
-         #world-map-svg .country:hover {
-            fill: var(--primary-color);
         }
         #ucc-graph .link {
             stroke: var(--border-color);
@@ -2125,39 +2115,93 @@
             'EU': { x: 480, y: 130, name: 'Europe' },
             'AF': { x: 490, y: 280, name: 'Africa' },
             'AS': { x: 700, y: 160, name: 'Asia' },
-            'OC': { x: 850, y: 380, name: 'Oceania' },
+            'OC': { x: 870, y: 320, name: 'Oceania' },
         };
-        const targetLocation = { x: 250, y: 160 }; // US East Coast as primary target
+        const targetLocation = { x: 280, y: 155, name: 'Protected Infrastructure (US East)' };
+        let _gpmWorldPath = null; // cached fetch of /world_land_map.json
+        let _gpmSituations = []; // bounded feed backing the right-column cards (replaces the old unbounded log)
+        const GPM_MAX_SITUATIONS = 12;
 
         function renderGlobalPredictiveMatrix() {
-            // Replaced Geopolitical Threat Matrix with Horizon Global Predictive Matrix
-            const worldMapPath = "M500.1,248.8c0.2,0,0.5,0,0.7,0c0.2-0.1,0.5-0.2,0.7-0.3c0.2-0.1,0.4-0.3,0.6-0.5l1-1.1c0.1-0.1,0.2-0.2,0.3-0.4c0.1-0.1,0.1-0.3,0.2-0.4c0.1-0.2,0.1-0.3,0.2-0.5c0.1-0.2,0.1-0.4,0.1-0.6c0-0.2,0-0.4,0-0.6c-0.1-0.4-0.1-0.9-0.2-1.3c0-0.1,0-0.2,0-0.3c-0.1-0.4-0.2-0.8-0.3-1.2c-0.1-0.2-0.2-0.5-0.3-0.7c-0.1-0.2-0.2-0.4-0.4-0.6c-0.1-0.2-0.2-0.3-0.4-0.5c-0.2-0.2-0.3-0.4-0.5-0.5c-0.4-0.4-0.9-0.7-1.4-1c-0.2-0.1-0.5-0.2-0.7-0.3c-0.5-0.3-1-0.5-1.5-0.7c-0.3-0.1-0.5-0.2-0.8-0.3c-0.5-0.2-1-0.4-1.6-0.5c-0.3-0.1-0.6-0.1-0.9-0.2c-0.3-0.1-0.5-0.1-0.8-0.1c-0.6,0-1.1,0.1-1.7,0.2c-0.3,0-0.6,0.1-0.9,0.2c-0.6,0.1-1.1,0.3-1.7,0.5c-0.3,0.1-0.6,0.2-0.9,0.3c-0.5,0.2-1,0.5-1.5,0.8c-0.2,0.1-0.5,0.3-0.7,0.4c-0.5,0.3-0.9,0.7-1.3,1.1c-0.2,0.2-0.4,0.4-0.6,0.6c-0.4,0.5-0.7,1-1,1.5c-0.2,0.3-0.3,0.6-0.5,0.9c-0.3,0.7-0.6,1.4-0.8,2.1c-0.1,0.4-0.2,0.8-0.3,1.2c-0.1,0.4-0.2,0.9-0.2,1.3c0,0.5,0.1,0.9,0.2,1.4c0,0.1,0.1,0.3,0.1,0.4c0.1,0.3,0.2,0.6,0.3,0.9c0.2,0.5,0.5,1,0.8,1.5c0.3,0.5,0.7,0.9,1.1,1.3c0.5,0.4,1,0.8,1.6,1.1c0.6,0.3,1.2,0.6,1.9,0.8c0.3,0.1,0.7,0.2,1,0.3c0.7,0.2,1.4,0.3,2.1,0.4c0.4,0.1,0.8,0.1,1.2,0.2c0.8,0.1,1.6,0.1,2.4,0.1C499,248.8,499.5,248.8,500.1,248.8z M500.2,251.2c-0.8,0-1.6-0.1-2.4-0.1c-0.4,0-0.8-0.1-1.2-0.1c-0.7-0.1-1.4-0.2-2.1-0.4c-0.3-0.1-0.7-0.2-1-0.3c-0.7-0.2-1.3-0.5-1.9-0.8c-0.6-0.3-1.1-0.7-1.6-1.1c-0.4-0.4-0.8-0.8-1.1-1.3c-0.3-0.5-0.6-1-0.8-1.5c-0.1-0.3-0.2-0.6-0.3-0.9c-0.1-0.2-0.1-0.3-0.1-0.4c-0.1-0.5-0.1-0.9-0.2-1.4c0-0.5,0.1-0.9,0.2-1.3c0.1-0.4,0.2-0.8,0.3-1.2c0.2-0.7,0.5-1.4,0.8-2.1c0.1-0.3,0.3-0.6,0.5-0.9c0.3-0.5,0.6-1,1-1.5c0.2-0.2,0.4-0.4,0.6-0.6c0.4-0.4,0.8-0.7,1.3-1.1c0.3-0.1,0.5-0.2,0.8-0.3c0.5-0.2,1.1-0.4,1.7-0.5c0.3-0.1,0.6-0.1,0.9-0.2c0.6-0.1,1.1-0.2,1.7-0.2c0.3,0,0.5,0,0.8,0.1c0.3,0,0.6,0.1,0.9,0.2c0.5,0.1,1.1,0.3,1.6,0.5c0.3,0.1,0.5,0.2,0.8,0.3c0.5,0.2,1,0.4,1.5,0.7c0.3,0.1,0.5,0.2,0.7,0.3c0.5,0.3,1,0.6,1.4,1c0.2,0.2,0.3,0.3,0.5,0.5c0.2,0.2,0.3,0.3,0.4,0.5c0.1,0.2,0.3,0.4,0.4,0.6c0.1,0.2,0.2,0.5,0.3,0.7c0.1,0.4,0.2,0.8,0.3,1.2c0,0.1,0,0.2,0,0.3c0.1,0.4,0.1,0.9,0.2,1.3c0,0.2,0,0.4,0,0.6c-0.1,0.2-0.1,0.4-0.1,0.6c-0.1,0.2-0.1,0.3-0.2,0.5c-0.1,0.1-0.1,0.3-0.2,0.4c-0.1,0.1-0.2,0.2-0.3,0.4l-1,1.1c-0.2,0.2-0.4,0.4-0.6,0.5c-0.2,0.1-0.5,0.2-0.7,0.3c-0.2,0-0.5,0-0.7,0C500.7,251.2,500.5,251.2,500.2,251.2z M994.9,248c-0.4-0.9-0.9-1.8-1.4-2.7l-0.1-0.2c-0.1-0.2-0.2-0.4-0.3-0.5c-0.1-0.2-0.1-0.4-0.2-0.6c-0.1-0.2-0.1-0.4-0.2-0.6c-0.1-0.4-0.1-0.9-0.2-1.3c0-0.1,0-0.1,0-0.2c-0.1-0.4-0.2-0.8-0.3-1.2c-0.1-0.2-0.2-0.5-0.3-0.7c-0.1-0.2-0.2-0.4-0.4-0.6c-0.1-0.2-0.2-0.3-0.4-0.5c-0.2-0.2-0.3-0.4-0.5-0.5c-0.4-0.4-0.9-0.7-1.4-1c-0.2-0.1-0.5-0.2-0.7-0.3c-0.5-0.3-1-0.5-1.5-0.7c-0.3-0.1-0.5-0.2-0.8-0.3c-0.5-0.2-1-0.4-1.6-0.5c-0.3-0.1-0.6-0.1-0.9-0.2c-0.3-0.1-0.5-0.1-0.8-0.1c-0.6,0-1.1,0.1-1.7,0.2c-0.3,0-0.6,0.1-0.9,0.2c-0.6,0.1-1.1,0.3-1.7,0.5c-0.3,0.1-0.6,0.2-0.9,0.3c-0.5,0.2-1,0.5-1.5,0.8c-0.2,0.1-0.5,0.3-0.7,0.4c-0.5,0.3-0.9,0.7-1.3,1.1c-0.2,0.2-0.4,0.4-0.6,0.6c-0.4,0.5-0.7,1-1,1.5c-0.2,0.3-0.3,0.6-0.5,0.9c-0.3,0.7-0.6,1.4-0.8,2.1c-0.1,0.4-0.2,0.8-0.3,1.2c-0.1,0.4-0.2,0.9-0.2,1.3c0,0.5,0.1,0.9,0.2,1.4c0,0.1,0.1,0.3,0.1,0.4c0.1,0.3,0.2,0.6,0.3,0.9c0.2,0.5,0.5,1,0.8,1.5c0.3,0.5,0.7,0.9,1.1,1.3c0.5,0.4,1,0.8,1.6,1.1c0.6,0.3,1.2,0.6,1.9,0.8c0.3,0.1,0.7,0.2,1,0.3c0.7,0.2,1.4,0.3,2.1,0.4c0.4,0.1,0.8,0.1,1.2,0.2c0.8,0.1,1.6,0.1,2.4,0.1c0.5,0,1,0,1.5-0.1c0.2,0,0.5-0.1,0.7-0.1c0.2-0.1,0.5-0.2,0.7-0.3c0.2-0.1,0.4-0.3,0.6-0.5l0.1-0.1c0.5-0.6,1-1.2,1.4-1.9C994.4,249.7,994.7,248.9,994.9,248z M9.2,248.8L8.5,248l-0.7-0.9c-0.1-0.1-0.1-0.2-0.2-0.3c-0.1-0.1-0.1-0.3-0.2-0.4c-0.1-0.2-0.1-0.3-0.2-0.5c-0.1-0.2-0.1-0.4-0.1-0.6c0-0.2,0-0.4,0-0.6c0.1-0.4,0.1-0.9,0.2-1.3c0-0.1,0-0.2,0-0.3c0.1-0.4,0.2-0.8,0.3-1.2c0.1-0.2,0.2-0.5,0.3-0.7c0.1-0.2,0.2-0.4,0.4-0.6c0.1-0.2,0.2-0.3,0.4-0.5c0.2-0.2,0.3-0.4,0.5-0.5c0.4-0.4,0.9-0.7,1.4-1c0.2-0.1,0.5-0.2,0.7-0.3c0.5-0.3,1-0.5,1.5-0.7c0.3-0.1,0.5-0.2,0.8-0.3c0.5-0.2,1-0.4,1.6-0.5c0.3-0.1,0.6-0.1,0.9-0.2c0.3-0.1,0.5-0.1,0.8-0.1c0.6,0,1.1,0.1,1.7,0.2c0.3,0,0.6,0.1,0.9,0.2c0.6,0.1,1.1,0.3,1.7,0.5c0.3,0.1,0.6,0.2,0.9,0.3c0.5,0.2,1,0.5,1.5,0.8c0.2,0.1,0.5,0.3,0.7,0.4c0.5,0.3,0.9,0.7,1.3,1.1c0.2,0.2,0.4,0.4,0.6,0.6c0.4,0.5,0.7,1,1,1.5c0.2,0.3,0.3,0.6,0.5,0.9c0.3,0.7,0.6,1.4,0.8,2.1c0.1,0.4,0.2,0.8,0.3,1.2c0.1,0.4,0.2,0.9,0.2,1.3c0,0.5-0.1,0.9-0.2,1.4c0,0.1-0.1,0.3-0.1,0.4c-0.1,0.3-0.2,0.6-0.3,0.9c-0.2,0.5-0.5,1-0.8,1.5c-0.3,0.5-0.7,0.9-1.1,1.3c-0.5,0.4-1,0.8-1.6,1.1c-0.6,0.3-1.2,0.6-1.9,0.8c-0.3,0.1-0.7,0.2-1,0.3c-0.7,0.2-1.4,0.3-2.1,0.4c-0.4,0.1-0.8,0.1-1.2,0.2c-0.8,0.1-1.6,0.1-2.4,0.1c-0.6,0-1.1,0-1.7,0c-0.3,0-0.5-0.1-0.8-0.1c-0.3-0.1-0.6-0.1-0.9-0.2c-0.5-0.1-1.1-0.3-1.6-0.5c-0.3-0.1-0.5-0.2-0.8-0.3c-0.5-0.2-1-0.4-1.5-0.7c-0.2-0.1-0.5-0.2-0.7-0.3c-0.5-0.3-1-0.6-1.4-1c-0.2-0.2-0.3-0.3-0.5-0.5c-0.2-0.2-0.3-0.3-0.4-0.5c-0.1-0.2-0.3-0.4-0.4-0.6c-0.1-0.2-0.2-0.5-0.3-0.7c-0.1-0.4-0.2-0.8-0.3-1.2c0-0.1,0-0.2,0-0.3C9.3,249.7,9.3,249.2,9.2,248.8z";
+            // v3.1: real world geography (fetched from /world_land_map.json --
+            // Natural Earth land-110m, see backend/app.py), a bounded
+            // "Situations" card feed instead of an unbounded scrolling log,
+            // a layer toggle panel and zoom controls (worldmonitor.app /
+            // Palantir-style ops map), replacing the old single-blob SVG
+            // path and infinite log dump.
             return `
                 <div class="grid grid-cols-1 xl:grid-cols-4 gap-4 h-[calc(100vh-18rem)]">
                     <!-- Left Column: Map & Predictive Intelligence -->
                     <div class="xl:col-span-3 h-full flex flex-col gap-4">
-                        <div class="card p-2 rounded-xl flex-1 flex flex-col">
-                            <h4 class="text-base font-semibold text-white p-2">Global Predictive Matrix (Adversarial AI Modeling)</h4>
-                            <div class="flex-1 bg-black rounded-lg border border-border-color relative overflow-hidden matrix-grid-bg">
-                               <div id="world-map-container" class="w-full h-full opacity-80">
-                                   <svg id="world-map-svg" class="w-full h-full" viewBox="0 0 1000 500">
-                                       <path class="country" d="${worldMapPath}"></path>
-                                   </svg>
-                               </div>
-                               <svg id="threat-overlay" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
-                               <div id="threat-details-pane" class="absolute top-4 right-4 card p-4 w-80 rounded-lg hidden text-sm bg-black/80 backdrop-blur-md border-primary-color/50"></div>
+                        <div class="card p-2 rounded-xl flex-1 flex flex-col min-h-0">
+                            <div class="flex items-center justify-between px-2">
+                                <h4 class="text-base font-semibold text-white">Global Predictive Matrix (Adversarial AI Modeling)</h4>
+                                <span id="gpm-live-count" class="text-xs text-gray-400"></span>
+                            </div>
+                            <div id="gpm-map-shell" class="flex-1 bg-[#060a14] rounded-lg border border-border-color relative overflow-hidden mt-1">
+                                <svg id="gpm-map-svg" class="w-full h-full cursor-grab active:cursor-grabbing" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet">
+                                    <defs>
+                                        <radialGradient id="gpm-vignette" cx="50%" cy="45%" r="75%">
+                                            <stop offset="0%" stop-color="#0d1424" stop-opacity="0"></stop>
+                                            <stop offset="100%" stop-color="#000000" stop-opacity="0.55"></stop>
+                                        </radialGradient>
+                                        <filter id="gpm-glow" x="-100%" y="-100%" width="300%" height="300%">
+                                            <feGaussianBlur stdDeviation="2.2" result="blur"></feGaussianBlur>
+                                            <feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+                                        </filter>
+                                    </defs>
+                                    <rect x="0" y="0" width="1000" height="500" fill="#060a14"></rect>
+                                    <g id="gpm-graticule" stroke="#1b2740" stroke-width="0.5" fill="none"></g>
+                                    <path id="gpm-landmass" d="" fill="#111a2e" stroke="#2b3b5c" stroke-width="0.6"></path>
+                                    <g id="gpm-arcs" fill="none"></g>
+                                    <g id="gpm-origin-pins"></g>
+                                    <g id="gpm-target-pin"></g>
+                                    <rect x="0" y="0" width="1000" height="500" fill="url(#gpm-vignette)" pointer-events="none"></rect>
+                                </svg>
+
+                                <!-- Layer toggles (worldmonitor.app-style) -->
+                                <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-sm border border-border-color rounded-lg p-2.5 text-xs w-40 space-y-1.5 select-none">
+                                    <div class="text-gray-400 font-semibold tracking-wide mb-1">LAYERS</div>
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-200">
+                                        <input type="checkbox" checked data-gpm-layer="origins" class="accent-primary-color"> Threat Origins
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-200">
+                                        <input type="checkbox" checked data-gpm-layer="arcs" class="accent-primary-color"> Predictive Paths
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-200">
+                                        <input type="checkbox" checked data-gpm-layer="grid" class="accent-primary-color"> Grid
+                                    </label>
+                                </div>
+
+                                <!-- Zoom controls -->
+                                <div class="absolute top-3 right-3 flex flex-col bg-black/70 backdrop-blur-sm border border-border-color rounded-lg overflow-hidden text-white">
+                                    <button id="gpm-zoom-in" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 border-b border-border-color" title="Zoom in">+</button>
+                                    <button id="gpm-zoom-out" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 border-b border-border-color" title="Zoom out">&minus;</button>
+                                    <button id="gpm-zoom-reset" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 text-xs" title="Reset view">&#8635;</button>
+                                </div>
+
+                                <!-- Legend -->
+                                <div class="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm border border-border-color rounded-lg p-2.5 text-xs space-y-1 select-none">
+                                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#ef4444"></span><span class="text-gray-300">Data Exfiltration Zero-Day</span></div>
+                                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#f97316"></span><span class="text-gray-300">Adversarial Prompt Injection</span></div>
+                                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#eab308"></span><span class="text-gray-300">Automated Botnet Swarm</span></div>
+                                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#8b5cf6"></span><span class="text-gray-300">Deepfake Phishing Campaign</span></div>
+                                </div>
+
+                                <div id="threat-details-pane" class="absolute top-14 right-3 card p-4 w-80 rounded-lg hidden text-sm bg-black/85 backdrop-blur-md border-primary-color/50 z-10"></div>
                             </div>
                         </div>
-                        <div class="card p-2 rounded-xl flex-1 flex flex-col">
+                        <div class="card p-2 rounded-xl flex-1 flex flex-col min-h-0">
                              <h4 class="text-base font-semibold text-white p-2">Adversarial Predictive Paths (UCC Sync)</h4>
-                             <div class="flex-1 bg-gray-900 rounded-lg border border-border-color overflow-hidden relative">
+                             <p class="text-xs text-gray-400 px-2 -mt-1 mb-1">Link analysis: adversarial actors &rarr; exploited vulnerabilities &rarr; exposed assets</p>
+                             <div class="flex-1 bg-[#060a14] rounded-lg border border-border-color overflow-hidden relative">
                                 <svg id="ucc-graph" class="w-full h-full"></svg>
                              </div>
                         </div>
                     </div>
-                    <!-- Right Column: Controls & Log -->
-                    <div class="card p-4 rounded-xl flex flex-col h-full">
-                         <h3 class="text-lg font-bold text-primary-color mb-3">Matrix Controls & Log</h3>
+                    <!-- Right Column: Situations feed (bounded cards, Palantir-style) -->
+                    <div class="card p-4 rounded-xl flex flex-col h-full min-h-0">
+                         <h3 class="text-lg font-bold text-primary-color mb-3">Situations</h3>
                          <div class="space-y-2 mb-3">
                             <button onclick="window.deployCountermeasures()" class="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-sm flex items-center justify-center transition">
                                 <i data-lucide="shield" class="w-4 h-4 mr-2"></i>Deploy Global Countermeasures
@@ -2166,7 +2210,7 @@
                                 <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>AIP: Run Adversarial Analysis
                             </button>
                          </div>
-                         <div id="threat-log" class="flex-1 overflow-y-auto scrollbar-style text-sm space-y-2 bg-black rounded-lg p-2 border border-border-color"></div>
+                         <div id="gpm-situations" class="flex-1 overflow-y-auto scrollbar-style space-y-2"></div>
                     </div>
                 </div>
             `;
@@ -2192,26 +2236,156 @@
             );
         }
 
-        function startGlobalPredictiveMatrixSimulations() {
-            // Functionality merges the original startThreatMatrix and startUccGraph
-            const threatOverlay = document.getElementById('threat-overlay');
-            if(threatOverlay) {
-                const threatTypes = [
-                    { name: 'Adversarial Prompt Injection', color: '#f97316', icon: 'shield-alert', severity: 5 },
-                    { name: 'Automated Botnet Swarm', color: '#eab308', icon: 'wifi-off', severity: 4 },
-                    { name: 'Data Exfiltration Zero-Day', color: '#ef4444', icon: 'server-crash', severity: 5 },
-                    { name: 'Deepfake Phishing Campaign', color: '#8b5cf6', icon: 'message-square-quote', severity: 4 },
-                ];
+        const GPM_THREAT_TYPES = [
+            { name: 'Adversarial Prompt Injection', color: '#f97316', icon: 'shield-alert', severity: 5 },
+            { name: 'Automated Botnet Swarm', color: '#eab308', icon: 'wifi-off', severity: 4 },
+            { name: 'Data Exfiltration Zero-Day', color: '#ef4444', icon: 'server-crash', severity: 5 },
+            { name: 'Deepfake Phishing Campaign', color: '#8b5cf6', icon: 'message-square-quote', severity: 4 },
+        ];
 
+        // --- Map init: real landmass, graticule, pan/zoom, layer toggles ---
+        async function _gpmInitMap() {
+            const svg = document.getElementById('gpm-map-svg');
+            if (!svg) return;
+
+            // Graticule (drawn once; every 30 deg lon/lat on the same 1000x500 equirectangular grid the landmass path uses)
+            const graticule = document.getElementById('gpm-graticule');
+            if (graticule && !graticule.dataset.built) {
+                let g = '';
+                for (let lon = -180; lon <= 180; lon += 30) {
+                    const x = (lon + 180) * (1000 / 360);
+                    g += `<line x1="${x}" y1="0" x2="${x}" y2="500"></line>`;
+                }
+                for (let lat = -60; lat <= 60; lat += 30) {
+                    const y = (90 - lat) * (500 / 180);
+                    g += `<line x1="0" y1="${y}" x2="1000" y2="${y}"></line>`;
+                }
+                graticule.innerHTML = g;
+                graticule.dataset.built = '1';
+            }
+
+            // Landmass (fetched once, cached across page revisits this session)
+            const landPath = document.getElementById('gpm-landmass');
+            if (landPath && !landPath.getAttribute('d')) {
+                try {
+                    if (!_gpmWorldPath) {
+                        const res = await fetch('/world_land_map.json');
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+                        _gpmWorldPath = data.path;
+                    }
+                    landPath.setAttribute('d', _gpmWorldPath);
+                } catch (e) {
+                    console.warn('Global Predictive Matrix: world map data unavailable, showing grid only.', e);
+                }
+            }
+
+            // Origin + target pins (static, pulsing)
+            const originsG = document.getElementById('gpm-origin-pins');
+            if (originsG && !originsG.dataset.built) {
+                originsG.innerHTML = Object.entries(threatOrigins).map(([key, o]) => `
+                    <g class="gpm-origin-pin" data-region="${key}" style="cursor:pointer">
+                        <circle cx="${o.x}" cy="${o.y}" r="10" fill="#f97316" fill-opacity="0.15">
+                            <animate attributeName="r" values="6;16;6" dur="3s" repeatCount="indefinite"></animate>
+                            <animate attributeName="fill-opacity" values="0.35;0;0.35" dur="3s" repeatCount="indefinite"></animate>
+                        </circle>
+                        <circle cx="${o.x}" cy="${o.y}" r="3.5" fill="#f97316" filter="url(#gpm-glow)"></circle>
+                        <text x="${o.x}" y="${o.y - 12}" text-anchor="middle" fill="#cbd5e1" font-size="10" style="paint-order:stroke;stroke:#060a14;stroke-width:3px">${o.name}</text>
+                    </g>
+                `).join('');
+                originsG.dataset.built = '1';
+            }
+            const targetG = document.getElementById('gpm-target-pin');
+            if (targetG && !targetG.dataset.built) {
+                targetG.innerHTML = `
+                    <circle cx="${targetLocation.x}" cy="${targetLocation.y}" r="6" fill="none" stroke="#34d399" stroke-width="1.5"></circle>
+                    <path d="M${targetLocation.x - 5},${targetLocation.y} L${targetLocation.x + 5},${targetLocation.y} M${targetLocation.x},${targetLocation.y - 5} L${targetLocation.x},${targetLocation.y + 5}" stroke="#34d399" stroke-width="1.5"></path>
+                    <text x="${targetLocation.x}" y="${targetLocation.y + 18}" text-anchor="middle" fill="#34d399" font-size="10" style="paint-order:stroke;stroke:#060a14;stroke-width:3px">${targetLocation.name}</text>
+                `;
+                targetG.dataset.built = '1';
+            }
+
+            // Layer toggles
+            document.querySelectorAll('[data-gpm-layer]').forEach((cb) => {
+                cb.onchange = () => {
+                    const layer = cb.dataset.gpmLayer;
+                    const targets = { origins: '#gpm-origin-pins', arcs: '#gpm-arcs', grid: '#gpm-graticule' };
+                    const el = document.querySelector(targets[layer]);
+                    if (el) el.style.display = cb.checked ? '' : 'none';
+                };
+            });
+
+            // Pan/zoom via viewBox manipulation (no extra dependency)
+            if (!svg.dataset.zoomBound) {
+                let vb = { x: 0, y: 0, w: 1000, h: 500 };
+                const apply = () => svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+                const zoomAt = (factor) => {
+                    const newW = Math.max(150, Math.min(1000, vb.w * factor));
+                    const newH = newW * (500 / 1000);
+                    vb.x += (vb.w - newW) / 2;
+                    vb.y += (vb.h - newH) / 2;
+                    vb.w = newW; vb.h = newH;
+                    apply();
+                };
+                svg.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    zoomAt(e.deltaY > 0 ? 1.15 : 0.87);
+                }, { passive: false });
+                document.getElementById('gpm-zoom-in')?.addEventListener('click', () => zoomAt(0.8));
+                document.getElementById('gpm-zoom-out')?.addEventListener('click', () => zoomAt(1.25));
+                document.getElementById('gpm-zoom-reset')?.addEventListener('click', () => { vb = { x: 0, y: 0, w: 1000, h: 500 }; apply(); });
+
+                let dragging = false, lastX = 0, lastY = 0;
+                svg.addEventListener('mousedown', (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+                window.addEventListener('mouseup', () => { dragging = false; });
+                svg.addEventListener('mousemove', (e) => {
+                    if (!dragging) return;
+                    const scale = vb.w / svg.clientWidth;
+                    vb.x -= (e.clientX - lastX) * scale;
+                    vb.y -= (e.clientY - lastY) * scale;
+                    lastX = e.clientX; lastY = e.clientY;
+                    apply();
+                });
+                svg.dataset.zoomBound = '1';
+            }
+        }
+
+        // --- Bounded "Situations" feed (replaces the old unbounded scrolling log) ---
+        function _gpmAddSituation(threat) {
+            _gpmSituations.unshift(threat);
+            _gpmSituations = _gpmSituations.slice(0, GPM_MAX_SITUATIONS);
+            const container = document.getElementById('gpm-situations');
+            if (!container) return;
+            container.innerHTML = _gpmSituations.map((t) => `
+                <div class="border border-border-color rounded-lg p-2.5 bg-black/40 hover:border-primary-color/60 cursor-pointer transition" onclick='window.displayThreatDetails(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-semibold" style="color:${t.type.color}">${t.type.name}</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded-full ${t.type.severity >= 5 ? 'bg-red-900 text-red-300' : 'bg-yellow-900 text-yellow-300'}">${t.type.severity >= 5 ? 'CRITICAL' : 'ELEVATED'}</span>
+                    </div>
+                    <div class="text-xs text-gray-400">Origin: ${t.origin.name} &middot; ${t.time}</div>
+                </div>
+            `).join('');
+            const counter = document.getElementById('gpm-live-count');
+            if (counter) counter.textContent = `${_gpmSituations.length} active`;
+        }
+
+        function startGlobalPredictiveMatrixSimulations() {
+            _gpmInitMap();
+            const arcsLayer = document.getElementById('gpm-arcs');
+            if (arcsLayer) {
                 const interval = setInterval(() => {
                     const originKey = Object.keys(threatOrigins)[Math.floor(Math.random() * Object.keys(threatOrigins).length)];
                     const origin = threatOrigins[originKey];
-                    const type = threatTypes[Math.floor(Math.random() * threatTypes.length)];
-                    
+                    const type = GPM_THREAT_TYPES[Math.floor(Math.random() * GPM_THREAT_TYPES.length)];
+
                     const threatId = `threat-${Date.now()}`;
-                    const newThreat = { id: threatId, origin, type };
+                    const newThreat = {
+                        id: threatId, origin, type,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    };
                     activeThreats.push(newThreat);
-                    
+                    _gpmAddSituation(newThreat);
+
                     if (type.severity >= 5 && Math.random() > 0.8) {
                          window.showAppModal(
                             'High-Severity Predictive Threat Detected',
@@ -2222,32 +2396,32 @@
 
                     const threatGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     threatGroup.setAttribute('id', threatId);
-                    
+
+                    const midX = (origin.x + targetLocation.x) / 2;
+                    const midY = Math.min(origin.y, targetLocation.y) - 60; // arc bows toward the pole, like the Anduril/worldmonitor reference arcs
                     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    path.setAttribute('class', 'threat-path pointer-events-none');
-                    path.setAttribute('d', `M${origin.x},${origin.y} Q${(origin.x + targetLocation.x) / 2},${(origin.y + targetLocation.y) / 2 - 100} ${targetLocation.x},${targetLocation.y}`);
+                    path.setAttribute('class', 'gpm-threat-arc pointer-events-none');
+                    path.setAttribute('d', `M${origin.x},${origin.y} Q${midX},${midY} ${targetLocation.x},${targetLocation.y}`);
                     path.setAttribute('stroke', type.color);
-                    path.setAttribute('stroke-width', '2');
+                    path.setAttribute('stroke-width', '1.5');
+                    path.setAttribute('stroke-dasharray', '4 3');
                     path.setAttribute('fill', 'none');
+                    path.setAttribute('opacity', '0.85');
 
-                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    circle.setAttribute('class', 'threat-source');
-                    circle.setAttribute('cx', origin.x);
-                    circle.setAttribute('cy', origin.y);
-                    circle.setAttribute('r', 8);
-                    circle.setAttribute('fill', type.color);
-                    circle.onclick = () => displayThreatDetails(newThreat);
-                    
+                    const pulse = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    pulse.setAttribute('r', 5);
+                    pulse.setAttribute('fill', type.color);
+                    pulse.style.cursor = 'pointer';
+                    pulse.onclick = () => window.displayThreatDetails(newThreat);
+                    const anim = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
+                    anim.setAttribute('dur', '2.5s');
+                    anim.setAttribute('fill', 'freeze');
+                    anim.setAttribute('path', path.getAttribute('d'));
+                    pulse.appendChild(anim);
+
                     threatGroup.appendChild(path);
-                    threatGroup.appendChild(circle);
-                    threatOverlay.appendChild(threatGroup);
-
-                    const logDiv = document.getElementById('threat-log');
-                    if (logDiv) {
-                        const logEntryHtml = generateLogEntry(`Predictive Vector: ${type.name} from ${origin.name}`, type.color.replace('#', 'text-[').concat(']'), `lucide-${type.icon}`);
-                        logDiv.innerHTML = logEntryHtml + logDiv.innerHTML;
-                        safeCreateIcons();
-                    }
+                    threatGroup.appendChild(pulse);
+                    arcsLayer.appendChild(threatGroup);
 
                     setTimeout(() => {
                         const el = document.getElementById(threatId);
@@ -2258,7 +2432,7 @@
                 }, 4000);
                 activeIntervals.push(interval);
             }
-            
+
             // UCC Graph Logic
             const container = document.getElementById('ucc-graph');
             if(container && window.d3) {
