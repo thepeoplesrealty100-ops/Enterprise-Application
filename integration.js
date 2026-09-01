@@ -1,13 +1,13 @@
 // integration.js — JAKAL live UI bridge (v2.5 enhanced)
-// Same-origin when UI is served from :8000; otherwise 127.0.0.1:8000.
-
-export const BACKEND_BASE = (() => {
-  const { hostname, port, origin } = window.location;
-  const local = hostname === 'localhost' || hostname === '127.0.0.1';
-  if (local && (port === '8000' || port === '')) return '';
-  if (local) return 'http://127.0.0.1:8000';
-  return origin;
-})();
+//
+// Always same-origin. backend/app.py serves index.html (and this file)
+// itself, at whatever host:port it's bound to -- there's no separate
+// "frontend server" and "backend server" in this architecture, so the
+// API is always reachable at the page's own origin. The one exception
+// (GitHub Pages, a static-only mirror with no backend at all) is handled
+// by index.html itself: startIntegration() is never called there, so
+// this module never runs in that case and BACKEND_BASE is never read.
+export const BACKEND_BASE = '';
 
 const DEMO_TARGET = 'staging.client.com';
 
@@ -452,8 +452,8 @@ async function renderQuantumPanel() {
   try { status = await api('/api/quantum/status'); } catch (e) { status = { error: e.message }; }
   return `<h3 style="color:#f97316;margin:0 0 8px">Quantum engine</h3>
     <pre style="font-size:11px;background:#0f172a;padding:10px;border-radius:8px">${escapeHtml(JSON.stringify(status, null, 2))}</pre>
-    <button type="button" data-qrun="bell_state" style="${btnStyle('#7c3aed');margin-top:10px}">Run Bell state (512 shots)</button>
-    <button type="button" data-qrun="grover" style="${btnStyle('#7c3aed');margin-top:10px;margin-left:6px}">Run Grover</button>
+    <button type="button" data-qrun="bell_state" style="${btnStyle('#7c3aed')};margin-top:10px">Run Bell state (512 shots)</button>
+    <button type="button" data-qrun="grover" style="${btnStyle('#7c3aed')};margin-top:10px;margin-left:6px">Run Grover</button>
     <div id="jakal-q-result" style="margin-top:12px;font-family:ui-monospace,monospace;font-size:11px"></div>`;
 }
 
@@ -1267,7 +1267,7 @@ async function injectPageLive(pageKey) {
               return `<div>${escapeHtml(row[1])} · ${escapeHtml(row[2])} · ${escapeHtml(row[4])}</div>`;
             }).join('') || '<div style="opacity:.6">No logs yet — run a pentest.</div>'}
           </div>
-          <button type="button" id="jakal-open-ops" style="${btnStyle('#0e7490');margin-top:10px}">Open Live Ops</button>
+          <button type="button" id="jakal-open-ops" style="${btnStyle('#0e7490')};margin-top:10px">Open Live Ops</button>
         </div>`;
       const btn = el('jakal-open-ops');
       if (btn) btn.onclick = () => toggleOpsDrawer(true);

@@ -310,13 +310,27 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         
         # Content Security Policy
+        #
+        # The operator UI (index.html, served at same origin) loads a fixed
+        # set of external resources that must be explicitly allowlisted here
+        # or the browser silently drops them: Tailwind's play-CDN script
+        # (generates all utility CSS classes at runtime -- without it the
+        # entire page renders unstyled), Lucide icons, Chart.js, Three.js,
+        # D3, a Google Fonts stylesheet + font files, a YouTube embed
+        # (Awareness Training page), and the Gemini API (phishing-email
+        # generator, called directly from the browser). This is a
+        # host allowlist, not a wildcard -- only these specific origins.
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
-            "style-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline' "
+            "https://cdn.tailwindcss.com https://unpkg.com "
+            "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
+            "https://d3js.org; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "img-src 'self' data: https:; "
-            "font-src 'self'; "
-            "connect-src 'self' ws: wss:; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "connect-src 'self' ws: wss: https://generativelanguage.googleapis.com; "
+            "frame-src https://www.youtube.com; "
             "frame-ancestors 'none'; "
             "base-uri 'self'; "
             "form-action 'self'"

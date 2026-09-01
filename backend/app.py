@@ -616,6 +616,22 @@ async def serve_integration_js():
     return FileResponse(path, media_type="application/javascript")
 
 
+@app.get("/gacyber_toolkit/cheatsheet_data.json")
+async def serve_cheatsheet_data():
+    """
+    The CheatSheet Library page (index.html) fetches this static JSON
+    directly (not through the /api/cheatsheet router) to render its search
+    grid. One explicit file route, same pattern as /integration.js above --
+    gacyber_toolkit/ is not mounted as a directory, since it also holds the
+    actual pentest scripts and reference material that back payloads/
+    script_catalog.py and shouldn't be served over HTTP wholesale.
+    """
+    path = _FRONTEND / "gacyber_toolkit" / "cheatsheet_data.json"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="cheatsheet_data.json not found")
+    return FileResponse(path, media_type="application/json")
+
+
 # ============================================================================
 # OpenAPI Schema (Phase 5 - Comprehensive Documentation)
 # ============================================================================
