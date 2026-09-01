@@ -88,10 +88,7 @@ class HardenedEnforcementOrchestrator:
         compliance_result = None
         if self.db:
             try:
-                posture = self.db.conn.execute(
-                    "SELECT data FROM global_security_settings WHERE setting_key = 'org_compliance_posture' LIMIT 1"
-                ).fetchone()
-                org_posture = posture[0] if posture else {}
+                org_posture = self.db.get_org_compliance_posture()
                 compliance_result = validate_containment_compliance(action_type, target, org_posture)
                 if not compliance_result["compliant"]:
                     logger.warning(
@@ -112,7 +109,14 @@ class HardenedEnforcementOrchestrator:
                         "error_classification": "permanent",
                     }
             except Exception as e:
-                logger.debug("Compliance check skipped: %s", e)
+                # Fail-open by design (compliance gating is best-effort when
+                # org posture is available at all -- see the comment above),
+                # but this must stay loud: a silently-swallowed error here
+                # previously meant the compliance gate never actually
+                # validated anything, for every single call, undetected
+                # (get_org_compliance_posture queried columns that never
+                # existed). warning, not debug, so a regression is visible.
+                logger.warning("Compliance check failed, proceeding without validation: %s", e)
 
         # Attempt enforcement with retry.
         last_result = None

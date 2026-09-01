@@ -132,27 +132,41 @@ def test_retry_policy_backoff():
 
 
 def test_hardened_orchestrator_compliance_violation_returns_early(tmp_path):
+    """
+    Regression test for a bug where the compliance pre-check queried
+    columns ("setting_key", "data") that never existed on
+    global_security_settings, threw a BinderException on every call, and
+    was silently swallowed by enforce_with_retry's except-and-log-debug
+    handler -- so the compliance gate never actually validated anything,
+    for any call, ever, and this test's own try/except-pass around the
+    (also broken) UPDATE hid that fact instead of catching it. Now uses
+    the real get/set_org_compliance_posture() methods and asserts the
+    gate actually fires, not just "didn't crash".
+    """
     db = DuckDBManager(db_path=str(tmp_path / "test_track_a.duckdb"))
     orchestrator = HardenedEnforcementOrchestrator(db=db)
 
-    # Set org compliance posture with HIPAA using the correct schema.
-    try:
-        db.conn.execute(
-            "UPDATE global_security_settings SET data = ? WHERE key = ?",
-            ({"frameworks": ["HIPAA"], "hipaa_allowed_regions": ["us-east"]}, "org_compliance_posture")
-        )
-    except Exception:
-        # If UPDATE fails, try INSERT via the database's own method if available.
-        pass
+    db.set_org_compliance_posture({"frameworks": ["HIPAA"], "hipaa_allowed_regions": ["us-east"]})
 
-    # Try to isolate a host outside allowed regions.
+    # Host region ("eu") is outside the only allowed HIPAA region -- must
+    # be blocked by the compliance gate before any enforcement is attempted.
     result = orchestrator.enforce_with_retry(
         "isolate_host_staged", "eu-db-prod", {"reason": "test"}, "operator1"
     )
+    assert result["status"] == "error"
+    assert result["connector"] == "compliance_gate"
+    assert result["compliance_validated"] is False
+    assert result["error_classification"] == "permanent"
+    assert any(v["constraint"] == "hipaa_data_residency" for v in result["detail"]["violations"])
 
-    # Should either be blocked by compliance or proceed (depending on whether compliance posture exists).
-    # The key test is that it doesn't crash.
-    assert result["status"] in ("error", "not_configured")
+    # A target within the allowed region must NOT be blocked by compliance
+    # (it may still fail downstream with "not_configured" since no real
+    # EDR connector is wired up in this test -- that's a different gate).
+    allowed_result = orchestrator.enforce_with_retry(
+        "isolate_host_staged", "us-east-db-prod", {"reason": "test"}, "operator1"
+    )
+    assert allowed_result["connector"] != "compliance_gate"
+
     db.conn.close()
 
 

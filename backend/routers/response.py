@@ -490,10 +490,7 @@ async def check_compliance(action_type: str, target: str):
         raise HTTPException(status_code=422, detail="Invalid action_type for compliance check")
 
     try:
-        posture = _db.conn.execute(
-            "SELECT data FROM global_security_settings WHERE setting_key = 'org_compliance_posture' LIMIT 1"
-        ).fetchone()
-        org_posture = posture[0] if posture else {}
+        org_posture = _db.get_org_compliance_posture()
         result = validate_containment_compliance(action_type, target, org_posture)
         return {
             "compliant": result["compliant"],
@@ -505,6 +502,34 @@ async def check_compliance(action_type: str, target: str):
     except Exception as e:
         logger.exception("Compliance check failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Compliance check failed: {str(e)}")
+
+
+@router.get("/compliance/posture")
+async def get_compliance_posture():
+    """Current org compliance posture backing /compliance/pre-check."""
+    _require()
+    return {"posture": _db.get_org_compliance_posture()}
+
+
+@router.put("/compliance/posture", dependencies=[require_permission("response:manage")])
+async def set_compliance_posture(posture: Dict[str, Any], user: dict = Depends(get_authenticated_user)):
+    """
+    Configure the org compliance posture that /compliance/pre-check and
+    the hardened enforcement orchestrator (edr_hardened.py) validate
+    containment actions against. Recognized keys (all optional; see
+    security_agents/compliance_constraints.py):
+
+    - frameworks: list of framework names to enforce, e.g. ["HIPAA", "SOC2", "PCI-DSS"]
+    - hipaa_allowed_regions: region strings a target must be in for HIPAA
+    - soc2_critical_service_hosts: hostnames SOC2 availability protects
+    - pci_dss_cde_hosts: cardholder-data-environment hostnames PCI-DSS isolates
+
+    This fully replaces the stored posture (not a merge) — GET first if
+    you're only changing one field.
+    """
+    _require()
+    updated = _db.set_org_compliance_posture(posture, updated_by=user["username"])
+    return {"posture": updated}
 
 
 @router.get("/related-targets")
