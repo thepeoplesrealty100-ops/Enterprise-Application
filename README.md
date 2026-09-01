@@ -171,3 +171,31 @@ Full writeup, the interlock-fix root cause, every bug found across
 Phases 0–5, and deliberate scope decisions (no new `cheatsheet_playbooks`
 table, no ML-KEM-1024, no forced CNSA 2.0):
 `docs/v3.0-ontology-maya-enterprise.md`.
+
+## What's new in Track A — Maya-gated containment hardening
+
+Track A sits on top of v3.0. Containment is no longer "approved then fire
+the webhook." Every isolate/quarantine now has to clear a **compliance
+pre-flight** and is delivered through a **hardened EDR orchestrator**.
+
+- **HIPAA / SOC2 / PCI-DSS constraints** — `backend/security_agents/compliance_constraints.py`.
+  Geographic residency, critical-service availability, and cardholder-data
+  environment hosts can block isolation before it is staged. Operators see
+  the reason; an audit exception is required to proceed.
+- **Hardened EDR orchestrator** — `backend/security_agents/edr_hardened.py`.
+  Exponential backoff (1s → 4s → 16s), transient vs permanent error
+  classification, compliance pre-check, then the existing Docker/webhook
+  connectors.
+- **Attack-path targeting** — `GET /api/response/related-targets` walks
+  the Ontology Engine graph (depth 1–5) and returns related Asset nodes
+  so multi-host remediation is not a guess.
+- **New operator endpoints** — `GET /api/response/compliance/pre-check`
+  and the existing `POST /api/response/actions/{id}/enforce` now go
+  through the hardened orchestrator. The Live Ops Response panel runs
+  the pre-check automatically before staging isolation.
+- **Maya still gates the decision** — compliance and retry sit *in front
+  of* enforcement; they do not replace the step-up authenticator.
+
+Writeup: `docs/track-a-containment-hardening.md`. GitHub Pages (operator
+UI, demo mode when the API is offline):
+https://thepeoplesrealty100-ops.github.io/Enterprise-Application/

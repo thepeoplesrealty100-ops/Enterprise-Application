@@ -814,10 +814,15 @@ async function renderResponseConsolePanel() {
     <div style="${cardStyle()}">
       <b>Isolate / quarantine a host</b>
       <p style="opacity:.6;font-size:10.5px;margin:4px 0 8px">Always staged behind the Human Approval Gate — never auto-executed.
+        Track A runs a HIPAA/SOC2/PCI-DSS compliance pre-check and attack-path lookup before staging.
         Approve at the Approval tab, then click Enforce below once approved.</p>
       <input id="rc-isolate-target" placeholder="target (must be in an active authorized scope)" style="width:100%;margin-bottom:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
       <input id="rc-isolate-reason" placeholder="reason" style="width:100%;margin-bottom:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
-      <button type="button" data-rc-isolate style="${btnStyle('#b91c1c')}">Stage isolation</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" data-rc-precheck style="${btnStyle('#1d4ed8')}">Compliance pre-check</button>
+        <button type="button" data-rc-related style="${btnStyle('#374151')}">Related targets</button>
+        <button type="button" data-rc-isolate style="${btnStyle('#b91c1c')}">Stage isolation</button>
+      </div>
       <div id="rc-isolate-result" style="margin-top:6px;font-size:11px"></div>
     </div>
 
@@ -858,9 +863,45 @@ function wireResponseConsoleActions(root) {
     const reason = root.querySelector('#rc-isolate-reason')?.value || '';
     const out = root.querySelector('#rc-isolate-result');
     try {
+      const pre = await api(`/api/response/compliance/pre-check?action_type=isolate_host_staged&target=${encodeURIComponent(target)}`);
+      if (pre && pre.compliant === false) {
+        const vis = (pre.violations || []).map((v) => `${v.constraint}: ${v.reason}`).join('<br>');
+        out.innerHTML = `<span style="color:#fbbf24">Blocked by compliance gate.</span>
+          <div style="margin-top:4px;color:#f87171">${vis}</div>
+          ${pre.requires_audit_exception ? '<div style="margin-top:4px;opacity:.8">Requires a documented audit exception before staging.</div>' : ''}`;
+        updateTelemetryConsole(`[COMPLIANCE] isolation blocked for ${target}`, 'text-yellow-400');
+        return;
+      }
       const r = await api('/api/response/isolate-host', { method: 'POST', body: JSON.stringify({ target, reason }) });
-      out.innerHTML = `<span style="color:#34d399">Staged — approval_request_id=${escapeHtml(r.approval_request_id)}. Approve it in the Approval tab, then Enforce from the list below.</span>`;
+      out.innerHTML = `<span style="color:#34d399">Compliance clear. Staged — approval_request_id=${escapeHtml(r.approval_request_id)}. Approve it in the Approval tab, then Enforce from the list below.</span>`;
       refreshOpsTab();
+    } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+  };
+
+  const precheckBtn = root.querySelector('[data-rc-precheck]');
+  if (precheckBtn) precheckBtn.onclick = async () => {
+    const target = root.querySelector('#rc-isolate-target')?.value || '';
+    const out = root.querySelector('#rc-isolate-result');
+    try {
+      const pre = await api(`/api/response/compliance/pre-check?action_type=isolate_host_staged&target=${encodeURIComponent(target)}`);
+      if (pre.compliant) {
+        out.innerHTML = `<span style="color:#34d399">Compliant — HIPAA/SOC2/PCI-DSS pre-check passed for ${escapeHtml(target)}.</span>`;
+      } else {
+        const vis = (pre.violations || []).map((v) => `${escapeHtml(v.constraint)}: ${escapeHtml(v.reason)}`).join('<br>');
+        out.innerHTML = `<span style="color:#fbbf24">Not compliant.</span><div style="margin-top:4px;color:#f87171">${vis}</div>`;
+      }
+    } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
+  };
+
+  const relatedBtn = root.querySelector('[data-rc-related]');
+  if (relatedBtn) relatedBtn.onclick = async () => {
+    const target = root.querySelector('#rc-isolate-target')?.value || '';
+    const out = root.querySelector('#rc-isolate-result');
+    try {
+      const r = await api(`/api/response/related-targets?target=${encodeURIComponent(target)}&max_depth=2`);
+      const list = (r.related_targets || []).map((t) => escapeHtml(t)).join(', ') || 'none in graph';
+      out.innerHTML = `<span style="color:#93c5fd">Attack path (${r.count || 0} related, depth ${r.max_depth}): ${list}</span>
+        <div style="opacity:.7;margin-top:4px">${escapeHtml(r.note || '')}</div>`;
     } catch (e) { out.innerHTML = `<span style="color:#f87171">${escapeHtml(e.message)}</span>`; }
   };
 
