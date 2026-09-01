@@ -58,6 +58,7 @@ from routers import (
     darkweb_router, cheatsheet_router, response_router,
     scripts_router, ui_bridge_router,
     ontology_router, maya_auth_router,
+    aip_cheatsheet_router,
 )
 from dependencies import require_permission
 
@@ -151,6 +152,7 @@ app.include_router(scripts_router,    prefix="/api")
 app.include_router(ui_bridge_router,  prefix="/api")
 app.include_router(ontology_router,   prefix="/api/v3/ontology")
 app.include_router(maya_auth_router,  prefix="/api/v3/auth/maya")
+app.include_router(aip_cheatsheet_router, prefix="/api/v3/aip/cheatsheet")
 
 # ============================================================================
 # Shared Components

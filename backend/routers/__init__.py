@@ -40,6 +40,10 @@ v3.0 routers:
   maya_auth_router  — /api/v3/auth/maya/* (Maya-Vigesimal calendar 2FA challenge, interlocked
                                             with the v2.3 Human Approval Gate for HIGH/CRITICAL
                                             staged payloads -- see security_agents/exploit_agent.py)
+v3.0 Phase 4 routers:
+  aip_cheatsheet_router — /api/v3/aip/cheatsheet/* (thin prompt -> matching-playbook lookup
+                                            over the existing playbook_library.PLAYBOOKS
+                                            catalog -- see payloads/aip_cheatsheet_engine.py)
 """
 
 from .pentest import router as pentest_router
@@ -66,6 +70,7 @@ from .scripts import router as scripts_router
 from .ui_bridge import router as ui_bridge_router
 from .ontology_router import router as ontology_router
 from .maya_auth_router import router as maya_auth_router
+from .aip_cheatsheet_router import router as aip_cheatsheet_router
 
 __all__ = [
     "pentest_router",
@@ -92,4 +97,5 @@ __all__ = [
     "ui_bridge_router",
     "ontology_router",
     "maya_auth_router",
+    "aip_cheatsheet_router",
 ]
