@@ -5,7 +5,10 @@ Script Library API Router (JAKAL v2.5)
 
 Provides:
   • Browsable script catalog (community, approved, custom)
-  • Sandbox execution environment (isolated Docker containers)
+  • Sandbox execution via VMOrchestrator (security_agents/vm_orchestrator.py)
+    — a Docker container the operator provisions and owns, the same
+    isolation path routers/cheatsheet.py's run-in-sandbox endpoint uses.
+    Uploaded scripts must be admin-approved before they can be queued.
   • Live output streaming (SSE)
   • Execution history + audit trails
   • Parameter validation + type checking
@@ -13,25 +16,31 @@ Provides:
 Enterprise patterns from: Ansible Tower, Jenkins, GitLab CI
 """
 
+import base64
 import uuid
 import json
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Query, status as http_status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status, BackgroundTasks
 from pydantic import BaseModel
 
+from dependencies import get_authenticated_user, require_permission
+
 try:
-    from database import DuckDBManager
+    from database import get_db_manager
     from core.audit_logger import AuditLogger
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    from security_agents.vm_orchestrator import get_vm_orchestrator
+    _db = get_db_manager()
     _audit_logger: Optional[AuditLogger] = AuditLogger(_db)
+    _vm = get_vm_orchestrator(_db)
     SCRIPTS_OK = True
 except Exception as _e:
     SCRIPTS_OK = False
     _SCRIPTS_ERR = str(_e)
     _db = None
     _audit_logger = None
+    _vm = None
 
 
 class ScriptMetadata(BaseModel):
@@ -52,9 +61,10 @@ class ScriptMetadata(BaseModel):
 
 
 class ScriptExecutionRequest(BaseModel):
-    """Request to execute a script."""
+    """Request to execute a script in a sandbox the operator already owns."""
     script_id: str
     operator_id: str
+    container_name: str  # An existing sandbox from POST /api/vm/sandboxes
     parameters: Dict[str, Any] = {}
     timeout_seconds: int = 300
     environment: Optional[Dict[str, str]] = None  # Environment variables
@@ -189,7 +199,9 @@ def get_script(script_id: str):
             "approval_by": row[12],
             "created_at": row[13],
         }
-    
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to fetch script: {str(e)}")
 
@@ -255,19 +267,25 @@ def approve_script(script_id: str, approval_by: str = "admin"):
     """
     _require()
     try:
-        result = _db.conn.execute(
+        # UPDATE ... RETURNING against a nextval()-default primary key
+        # throws a spurious duplicate-key ConstraintException on the
+        # duckdb==0.10.0 pin in requirements.txt (see
+        # database.py's rotate_encryption_key() for the full writeup and
+        # root cause) -- check existence first, then a plain UPDATE.
+        exists = _db.conn.execute(
+            "SELECT 1 FROM script_library WHERE script_id = ?", (script_id,)
+        ).fetchone()
+        if not exists:
+            raise HTTPException(status_code=404, detail=f"Script {script_id} not found")
+
+        _db.conn.execute(
             """
             UPDATE script_library
             SET approved = true, approval_date = ?, approval_by = ?
             WHERE script_id = ?
-            RETURNING script_id
             """,
             (datetime.now(timezone.utc), approval_by, script_id),
         )
-        
-        if not result.fetchall():
-            raise HTTPException(status_code=404, detail=f"Script {script_id} not found")
-        
         _db.conn.commit()
         
         _audit_logger.log(
@@ -279,7 +297,9 @@ def approve_script(script_id: str, approval_by: str = "admin"):
         )
         
         return {"script_id": script_id, "status": "approved"}
-    
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to approve script: {str(e)}")
 
@@ -288,30 +308,50 @@ def approve_script(script_id: str, approval_by: str = "admin"):
 # Script Execution (Sandbox)
 # ══════════════════════════════════════════════════════════════════════════════
 
-@router.post("/{script_id}/sandbox-execute", status_code=http_status.HTTP_201_CREATED)
+@router.post(
+    "/{script_id}/sandbox-execute",
+    status_code=http_status.HTTP_201_CREATED,
+    dependencies=[require_permission("vm:exec")],
+)
 def execute_script_in_sandbox(
     script_id: str,
     req: ScriptExecutionRequest,
     background_tasks: BackgroundTasks,
+    user: dict = Depends(get_authenticated_user),
 ):
     """
-    Execute a script in an isolated sandbox container.
-    
+    Queue an approved script for execution inside a sandbox container the
+    operator already owns (req.container_name — provision one first at
+    POST /api/vm/sandboxes). Uses VMOrchestrator.exec_in_sandbox, the same
+    isolated-container path routers/cheatsheet.py's run-in-sandbox
+    endpoint uses — never a subprocess on the host running this API.
+
     Returns:
         Execution ID + status (can poll for results or stream via SSE)
     """
     _require()
     try:
-        # Fetch script
+        # Fetch script — only approved scripts may be queued for execution.
+        # create_script() defaults new uploads to approved=false precisely
+        # so an unreviewed upload can't be run by just knowing its ID.
         script_row = _db.conn.execute(
-            "SELECT language, script_content FROM script_library WHERE script_id = ?",
+            "SELECT language, script_content, approved FROM script_library WHERE script_id = ?",
             (script_id,),
         ).fetchone()
-        
+
         if not script_row:
             raise HTTPException(status_code=404, detail=f"Script {script_id} not found")
-        
-        language, script_content = script_row
+
+        language, script_content, approved = script_row
+        if not approved:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Script {script_id} is not approved for execution — "
+                       f"approve it first at POST /scripts/catalog/{script_id}/approve",
+            )
+        if language not in ("bash", "python3"):
+            raise HTTPException(status_code=422, detail=f"Unsupported language: {language}")
+
         execution_id = str(uuid.uuid4())
         
         # Create execution record
@@ -342,9 +382,7 @@ def execute_script_in_sandbox(
             script_id=script_id,
             language=language,
             script_content=script_content,
-            parameters=req.parameters,
-            environment=req.environment,
-            timeout_seconds=req.timeout_seconds,
+            container_name=req.container_name,
             operator_id=req.operator_id,
         )
         
@@ -362,7 +400,9 @@ def execute_script_in_sandbox(
             "status": "queued",
             "message": "Execution queued. Poll /scripts/executions/{id}/result for results.",
         }
-    
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to execute script: {str(e)}")
 
@@ -404,7 +444,9 @@ def get_execution_result(execution_id: str):
             "stderr": row[11],
             "duration_seconds": row[12],
         }
-    
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to fetch result: {str(e)}")
 
@@ -539,20 +581,20 @@ def _execute_script_background(
     script_id: str,
     language: str,
     script_content: str,
-    parameters: Dict[str, Any],
-    environment: Optional[Dict[str, str]],
-    timeout_seconds: int,
+    container_name: str,
     operator_id: str,
 ):
     """
-    Execute a script in background (sandbox).
-    In production, this would use Docker or VM containers.
-    For now, it's a placeholder.
+    Execute the script inside the operator's sandbox container via
+    VMOrchestrator.exec_in_sandbox — never a subprocess on this API's own
+    host. Content is base64-transported into the container and written to
+    a temp file before being run with its interpreter, the same
+    injection-safe pattern routers/cheatsheet.py's run-in-sandbox uses, so
+    script_content (which may contain quotes, backticks, `$(...)`, etc.)
+    never gets shell-interpolated directly.
     """
-    import subprocess
-
     start_time = datetime.now(timezone.utc)
-    
+
     try:
         # Update status
         _db.conn.execute(
@@ -560,31 +602,39 @@ def _execute_script_background(
             ("executing", execution_id),
         )
         _db.conn.commit()
-        
-        # In production, wrap script in Docker container
-        # For now, execute directly (dangerous, for demo only!)
-        if language == "bash":
-            result = subprocess.run(
-                ["bash", "-c", script_content],
-                capture_output=True,
-                text=True,
-                timeout=timeout_seconds,
-                env=environment or {},
-            )
-        elif language == "python3":
-            result = subprocess.run(
-                ["python3", "-c", script_content],
-                capture_output=True,
-                text=True,
-                timeout=timeout_seconds,
-                env=environment or {},
-            )
-        else:
-            raise Exception(f"Unsupported language: {language}")
-        
+
+        interpreter = {"bash": "bash", "python3": "python3"}[language]
+        ext = {"bash": "sh", "python3": "py"}[language]
+        b64 = base64.b64encode(script_content.encode("utf-8")).decode("ascii")
+        remote_path = f"/tmp/jakal_script_{execution_id}.{ext}"
+        command = f"bash -lc \"echo {b64} | base64 -d > {remote_path} && {interpreter} {remote_path}\""
+
+        result = _vm.exec_in_sandbox(container_name, command, operator_id)
         end_time = datetime.now(timezone.utc)
         duration = (end_time - start_time).total_seconds()
-        
+
+        if result.get("status") != "completed":
+            # Sandbox unavailable, container not found/not JAKAL-managed, etc.
+            _db.conn.execute(
+                """
+                UPDATE script_executions
+                SET status = ?, end_time = ?, stderr = ?, duration_seconds = ?
+                WHERE execution_id = ?
+                """,
+                ("failure", end_time, str(result.get("error", "sandbox exec failed"))[:1000], duration, execution_id),
+            )
+            _db.conn.commit()
+            _audit_logger.log(
+                event_type="script_execution_error",
+                action="sandbox_execute",
+                actor=operator_id,
+                resource=script_id,
+                result="failure",
+                details={"execution_id": execution_id, "error": result.get("error")},
+            )
+            return
+
+        exit_code = result.get("exit_code")
         # Store result
         _db.conn.execute(
             """
@@ -593,51 +643,31 @@ def _execute_script_background(
             WHERE execution_id = ?
             """,
             (
-                "success" if result.returncode == 0 else "failure",
+                "success" if exit_code == 0 else "failure",
                 end_time,
-                result.returncode,
-                result.stdout[:10000],  # Truncate to 10KB
-                result.stderr[:10000],
+                exit_code,
+                (result.get("stdout") or "")[:10000],  # Truncate to 10KB
+                (result.get("stderr") or "")[:10000],
                 duration,
                 execution_id,
             ),
         )
         _db.conn.commit()
-        
+
         _audit_logger.log(
             event_type="script_execution_complete",
             action="sandbox_execute",
             actor=operator_id,
             resource=script_id,
-            result="success" if result.returncode == 0 else "failure",
+            result="success" if exit_code == 0 else "failure",
             details={
                 "execution_id": execution_id,
-                "exit_code": result.returncode,
+                "exit_code": exit_code,
                 "duration_seconds": duration,
+                "container_name": container_name,
             },
         )
-    
-    except subprocess.TimeoutExpired:
-        end_time = datetime.now(timezone.utc)
-        _db.conn.execute(
-            """
-            UPDATE script_executions
-            SET status = ?, end_time = ?, duration_seconds = ?
-            WHERE execution_id = ?
-            """,
-            ("timeout", end_time, (end_time - start_time).total_seconds(), execution_id),
-        )
-        _db.conn.commit()
-        
-        _audit_logger.log(
-            event_type="script_execution_timeout",
-            action="sandbox_execute",
-            actor=operator_id,
-            resource=script_id,
-            result="timeout",
-            details={"execution_id": execution_id},
-        )
-    
+
     except Exception as e:
         end_time = datetime.now(timezone.utc)
         _db.conn.execute(

@@ -477,14 +477,24 @@ def update_policy(policy_id: str, req: RessonancePolicyRequest):
     """Update a policy."""
     _require()
     try:
-        result = _db.conn.execute(
+        # UPDATE ... RETURNING against a nextval()-default primary key
+        # throws a spurious duplicate-key ConstraintException on the
+        # duckdb==0.10.0 pin in requirements.txt (see
+        # database.py's rotate_encryption_key() for the full writeup) --
+        # check existence first, then a plain UPDATE.
+        exists = _db.conn.execute(
+            "SELECT 1 FROM resonance_policy WHERE policy_id = ?", (policy_id,)
+        ).fetchone()
+        if not exists:
+            raise HTTPException(status_code=404, detail=f"Policy {policy_id} not found")
+
+        _db.conn.execute(
             """
             UPDATE resonance_policy
             SET policy_name = ?, description = ?, threat_threshold = ?,
                 trigger_type = ?, isolation_mode = ?, auto_enforce = ?,
                 webhook_url = ?, enabled = ?
             WHERE policy_id = ?
-            RETURNING policy_id
             """,
             (
                 req.policy_name,
@@ -498,20 +508,18 @@ def update_policy(policy_id: str, req: RessonancePolicyRequest):
                 policy_id,
             ),
         )
-        
-        if not result.fetchall():
-            raise HTTPException(status_code=404, detail=f"Policy {policy_id} not found")
-        
         _db.conn.commit()
-        
+
         _safe_audit_log(
             event_type="policy_updated",
             action="update_resonance_policy",
             resource=policy_id,
         )
-        
+
         return {"policy_id": policy_id, "status": "updated"}
-    
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to update policy: {str(e)}")
 
