@@ -43,12 +43,109 @@ Schema version: 2.4
 
 import json
 import logging
+import threading
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import duckdb
 
 logger = logging.getLogger(__name__)
+
+
+class _MaterializedResult:
+    """Result of one _LockedConnection.execute() call: rows and column
+    description captured eagerly (see _LockedConnection's docstring for
+    why), served from an in-memory list rather than the shared connection's
+    live cursor state. fetchone() advances a position pointer so code that
+    fetches one row at a time still drains the result set incrementally,
+    matching normal DB-API cursor behavior."""
+    __slots__ = ("_rows", "_pos", "description")
+
+    def __init__(self, rows, description):
+        self._rows = rows
+        self._pos = 0
+        self.description = description
+
+    def fetchall(self):
+        rows = self._rows[self._pos:]
+        self._pos = len(self._rows)
+        return rows
+
+    def fetchone(self):
+        if self._pos >= len(self._rows):
+            return None
+        row = self._rows[self._pos]
+        self._pos += 1
+        return row
+
+
+class _LockedConnection:
+    """
+    Thread-safe wrapper around a single shared duckdb.DuckDBPyConnection.
+
+    CRITICAL FIX: a bare duckdb.Connection is NOT safe for concurrent
+    .execute() calls from multiple threads -- confirmed by direct
+    reproduction (10 threads each looping conn.execute("SELECT ...")
+    against one shared connection reliably segfaults the process,
+    `python3` exits with SIGSEGV / code 139). Every router in this
+    codebase reaches this connection via get_db_manager()'s process-wide
+    singleton, and FastAPI's run_in_threadpool() genuinely runs different
+    requests' DB calls on different worker threads whenever two requests
+    overlap in time -- completely ordinary under real concurrent usage
+    (two browser tabs, one tab plus an open SSE stream, etc.), not just
+    synthetic load tests. Without this fix the entire backend can crash
+    under normal multi-request traffic.
+
+    execute() acquires a lock, runs the real execute()+fetchall(), and
+    captures .description -- all still inside the lock -- then returns a
+    _MaterializedResult built from that already-fetched data, safe to read
+    from without touching the shared connection again. This covers the
+    chained call pattern used almost everywhere in this codebase
+    (`conn.execute(sql).fetchall()` / `.fetchone()`).
+
+    A second pattern also appears throughout (`conn.execute(sql)` on one
+    line, `conn.description` read separately on a later line): that
+    `.description` access is served from `threading.local()` storage --
+    each thread's own last execute() call populates only that thread's
+    slot, so a standalone read always reflects that SAME thread's own
+    last query. Since one HTTP request's DB work runs synchronously on one
+    threadpool worker thread (execute, then whatever follows, in order,
+    before the thread is returned to the pool), this is exactly the
+    isolation the separate-statement pattern needs -- no cross-request
+    interference is possible even though the underlying storage is
+    process-wide.
+    """
+
+    def __init__(self, conn: "duckdb.DuckDBPyConnection"):
+        self._conn = conn
+        self._lock = threading.Lock()
+        self._local = threading.local()
+
+    def execute(self, *args, **kwargs) -> _MaterializedResult:
+        with self._lock:
+            self._conn.execute(*args, **kwargs)
+            rows = self._conn.fetchall()
+            description = self._conn.description
+        self._local.last_description = description
+        return _MaterializedResult(rows, description)
+
+    @property
+    def description(self):
+        return getattr(self._local, "last_description", None)
+
+    def commit(self):
+        with self._lock:
+            return self._conn.commit()
+
+    def close(self):
+        with self._lock:
+            return self._conn.close()
+
+    def __getattr__(self, name):
+        # Fallback for anything not explicitly wrapped above (e.g. the
+        # rare direct .cursor() use) -- passed through unlocked, so avoid
+        # introducing new call sites that bypass execute()/commit() above.
+        return getattr(self._conn, name)
 
 # Agents actually wired in app.py as *Agent instances (ReconAgent, EnumAgent,
 # WebAgent, ReportAgent, WirelessAgent, ExploitAgent) -- kept as a plain
@@ -63,7 +160,7 @@ WIRED_SECURITY_AGENTS = (
 class DuckDBManager:
     def __init__(self, db_path: str = "jakal.duckdb"):
         self.db_path = db_path
-        self.conn = duckdb.connect(db_path)
+        self.conn = _LockedConnection(duckdb.connect(db_path))
         self.initialize_schema()
 
     def initialize_schema(self):
