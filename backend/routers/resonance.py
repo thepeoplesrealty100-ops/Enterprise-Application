@@ -13,18 +13,38 @@ Enhanced with:
 Fleet-wide posture (global_fleet_matrix) + enforcement automation.
 
 Endpoints:
-  GET   /resonance/fleet                      — fleet matrix (optionally quarantined-only)
-  POST  /resonance/fleet/host                 — upsert one host's posture
-  GET   /resonance/settings                   — latest security-settings snapshot
-  POST  /resonance/settings/snapshot          — take a fresh snapshot now
-  
-  // v2.5 Enhanced
-  GET   /resonance/policies                   — list all isolation policies
-  POST  /resonance/policies                   — create new policy
-  GET   /resonance/policies/{id}              — get policy details
-  PUT   /resonance/policies/{id}              — update policy
-  DELETE /resonance/policies/{id}             — delete policy
-  
+  GET   /resonance/fleet                  — fleet matrix (optionally quarantined-only)
+  POST  /resonance/fleet/host             — upsert one host's posture
+  GET   /resonance/settings               — latest security-settings snapshot
+  POST  /resonance/settings/snapshot      — take a fresh snapshot now
+
+  v2.8 — Resonance Wave Automation, real write control:
+  GET   /resonance/automation-settings                 — list every automation policy knob
+  POST  /resonance/automation-settings/{key}           — set one (RBAC-gated, audited, PQC-signed)
+  GET   /resonance/automation-settings/stale-sandboxes — sandboxes older than sandbox_max_lifetime_hours
+
+  NOTE: named "automation-settings" (not "policy") and backed by the
+  automation_settings table specifically to avoid colliding with a
+  separate, differently-shaped resonance_policy/"policies" concept
+  merged in below from a parallel build (see database.py's
+  automation_settings CREATE TABLE comment for the full reconciliation
+  note).
+
+  These are deliberately NOT the same thing as /resonance/settings above --
+  see automation_settings's CREATE TABLE comment in database.py for why
+  global_security_settings stays a derived, read-only snapshot while this
+  is a real, independently-writable set of knobs that live enforcement
+  points (response.py, vault.py, cheatsheet.py) actually read.
+
+  Merged from a parallel build ("Batch 1") -- named isolation POLICY
+  objects (plural, distinct from the automation-settings KNOBS above) plus
+  a staged/audited enforcement workflow and an immutable audit trail:
+  GET    /resonance/policies                   — list all isolation policies
+  POST   /resonance/policies                   — create new policy
+  GET    /resonance/policies/{id}              — get policy details
+  PUT    /resonance/policies/{id}               — update policy
+  DELETE /resonance/policies/{id}               — delete policy
+
   POST  /resonance/enforce/simulate           — dry-run isolation (impact analysis)
   POST  /resonance/enforce/request            — request approval for isolation
   POST  /resonance/enforce/execute            — execute isolation (post-approval)
@@ -33,31 +53,120 @@ Endpoints:
   GET   /resonance/audit                      — immutable audit trail
 """
 
+import logging
 import uuid
-import json
-from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException, Query, status as http_status, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status as http_status
 from pydantic import BaseModel
 
 try:
-    from database import DuckDBManager
-    from core.enforcement import AuditedHostIsolationEngine, IsolationMode, IsolationTrigger, IsolationAction
-    from core.webhook_dispatcher import WebhookDispatcher
-    from core.audit_logger import AuditLogger
-    _db: Optional[DuckDBManager] = DuckDBManager()
-    _enforcement_engine: Optional[AuditedHostIsolationEngine] = AuditedHostIsolationEngine(_db)
-    _webhook_dispatcher: Optional[WebhookDispatcher] = WebhookDispatcher(_db)
-    _audit_logger: Optional[AuditLogger] = AuditLogger(_db)
+    from database import DuckDBManager, get_db_manager
+    _db: Optional[DuckDBManager] = get_db_manager()
     RESONANCE_OK = True
 except Exception as _e:
     RESONANCE_OK = False
     _RESONANCE_ERR = str(_e)
     _db = None
+
+# Batch 1's policy-enforcement stack (core/enforcement.py,
+# core/webhook_dispatcher.py, core/audit_logger.py) -- imported and
+# instantiated independently of the block above, and independently of
+# EACH OTHER. Before this reconciliation, a single shared try/except
+# wrapped ALL of this together with the fleet/settings/automation-settings
+# endpoints above, so one missing optional dependency (webhook_dispatcher.py
+# imported `aiohttp` unconditionally, never added to requirements.txt) took
+# down the entire /resonance router, including endpoints that had nothing
+# to do with it. See requirements.txt / core/webhook_dispatcher.py for the
+# aiohttp fix itself.
+try:
+    from core.enforcement import AuditedHostIsolationEngine, IsolationMode, IsolationTrigger, IsolationAction
+    _enforcement_engine: Optional["AuditedHostIsolationEngine"] = AuditedHostIsolationEngine(_db) if RESONANCE_OK else None
+    ENFORCEMENT_OK = _enforcement_engine is not None
+    _ENFORCEMENT_ERR = None if ENFORCEMENT_OK else "database unavailable"
+except Exception as _e2:
+    ENFORCEMENT_OK = False
+    _ENFORCEMENT_ERR = str(_e2)
     _enforcement_engine = None
+    IsolationMode = IsolationTrigger = IsolationAction = None
+
+try:
+    from core.webhook_dispatcher import WebhookDispatcher
+    _webhook_dispatcher: Optional["WebhookDispatcher"] = WebhookDispatcher(_db) if RESONANCE_OK else None
+except Exception:
     _webhook_dispatcher = None
+
+try:
+    from core.audit_logger import AuditLogger
+    _audit_logger: Optional["AuditLogger"] = AuditLogger(_db) if RESONANCE_OK else None
+    AUDIT_LOGGER_OK = _audit_logger is not None
+    _AUDIT_LOGGER_ERR = None if AUDIT_LOGGER_OK else "database unavailable"
+except Exception as _e4:
+    AUDIT_LOGGER_OK = False
+    _AUDIT_LOGGER_ERR = str(_e4)
     _audit_logger = None
+
+
+def _safe_audit_log(**kwargs):
+    """Best-effort call into Batch 1's AuditLogger -- never let a broken or
+    unavailable immutable-audit-trail write take down the actual enforcement
+    action it's trying to record. Mirrors this file's own `_audit()`
+    helper's try/except-and-log pattern below."""
+    if not _audit_logger:
+        return
+    try:
+        _audit_logger.log(**kwargs)
+    except Exception:
+        logger.exception("resonance audit_logger.log failed for event_type=%s", kwargs.get("event_type"))
+
+from dependencies import get_authenticated_user, require_permission
+
+logger = logging.getLogger(__name__)
+
+# policy_key -> (default_value, value_type, label, description)
+_DEFAULT_POLICY = [
+    ("response_auto_stage_threshold", 0.8, "number", "Auto-stage containment threshold",
+     "Triage severity (0-1) at or above which /api/response/triage auto-stages a containment "
+     "approval request instead of just recommending. Per-request calls may still override it."),
+    ("trade_secret_isolation_enforced", True, "bool", "Enforce Trade Secrets role isolation",
+     "When on, POST /api/vault/items rejects an empty allowed_roles list -- every vault item "
+     "must be explicitly scoped to at least one role, never implicitly world-readable."),
+    ("auto_approve_low_risk_actions", False, "bool", "Auto-approve LOW-risk script executions",
+     "When on, a LOW-risk gacyber_toolkit script staged via POST /cheatsheet/scripts/{id}/stage "
+     "is approved automatically (still authorization-gated, still audited, still sandbox-only) "
+     "instead of waiting on a human at POST /api/approval/{id}/approve. MEDIUM/HIGH/CRITICAL "
+     "always require a human decision regardless of this setting."),
+    ("sandbox_max_lifetime_hours", 24, "number", "Sandbox max lifetime (hours)",
+     "Sandboxes older than this are surfaced by GET /resonance/automation-settings/stale-sandboxes as due "
+     "for review/destruction. Informational only -- nothing auto-destroys a sandbox."),
+]
+
+
+def _seed_policy():
+    if not RESONANCE_OK:
+        return
+    for key, value, value_type, label, description in _DEFAULT_POLICY:
+        _db.seed_policy(key, value, value_type, label, description)
+
+
+_seed_policy()
+
+
+def _audit(request: Request, user: dict, action: str, outcome: str, resource_id: str = "", detail=None):
+    try:
+        _db.insert_audit_entry({
+            "actor_user_id": user["user_id"], "actor_label": user["username"],
+            "action": action, "resource_type": "automation_settings", "resource_id": resource_id,
+            "outcome": outcome, "ip_address": request.client.host if request.client else None,
+            "detail": detail or {},
+        })
+    except Exception:
+        logger.exception("audit write failed for %s", action)
+
+
+class PolicySetRequest(BaseModel):
+    value: Any
 
 
 class FleetHostRequest(BaseModel):
@@ -154,7 +263,7 @@ def upsert_fleet_host(req: FleetHostRequest):
     """Upsert a single host's posture data."""
     _require()
     machine_id = _db.upsert_fleet_host(req.model_dump())
-    _audit_logger.log(
+    _safe_audit_log(
         event_type="fleet_host_upserted",
         action="upsert_fleet_host",
         resource=machine_id,
@@ -178,6 +287,78 @@ def snapshot_settings():
     """Take a fresh security settings snapshot."""
     _require()
     return _db.resonance_settings_snapshot(str(uuid.uuid4()))
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# v2.8 — Resonance Wave Automation policy (real write control)
+# ══════════════════════════════════════════════════════════════════════════
+
+@router.get("/automation-settings")
+async def list_policy():
+    _require()
+    return {"policy": _db.list_policy()}
+
+
+@router.post("/automation-settings/{policy_key}", dependencies=[require_permission("response:manage")])
+async def set_policy(policy_key: str, req: PolicySetRequest, request: Request,
+                      user: dict = Depends(get_authenticated_user)):
+    _require()
+    try:
+        ok = _db.set_policy_value(policy_key, req.value, user["username"])
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    if not ok:
+        raise HTTPException(status_code=404, detail=f"Unknown policy key '{policy_key}'")
+
+    try:
+        from crypto.pqc_manager import PQCAuditManager
+        pqc = PQCAuditManager()
+        signed = pqc.sign_agent_action(
+            agent_id="resonance-policy", operator_id=user["username"],
+            action_payload={"policy_key": policy_key, "value": req.value},
+        )
+        _db.insert_pqc_audit_entry({
+            "entry_id": signed["entry_id"], "agent_id": "resonance-policy",
+            "operator_id": user["username"], "action_type": "policy_change",
+            "action_detail": __import__("json").dumps({"policy_key": policy_key, "value": req.value}),
+            "payload_hash": signed["payload_hash"], "pqc_signature": signed["pqc_signature"],
+            "algorithm": signed["algorithm"], "public_key": signed["public_key"],
+        })
+    except Exception as e:
+        logger.warning("PQC signing unavailable for policy change: %s", e)
+
+    _audit(request, user, "policy_change", "success", policy_key, {"value": req.value})
+    return {"status": "updated", "policy_key": policy_key, "value": req.value}
+
+
+@router.get("/automation-settings/stale-sandboxes")
+async def stale_sandboxes():
+    _require()
+    max_hours = _db.get_policy_value("sandbox_max_lifetime_hours", 24)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=max_hours)
+    rows = _db.conn.execute(
+        "SELECT sandbox_id, container_name, name, image, status, operator_id, created_at "
+        "FROM sandboxes WHERE status != 'destroyed' AND created_at < ? ORDER BY created_at ASC",
+        (cutoff,),
+    ).fetchall()
+    cols = [d[0] for d in _db.conn.description]
+    stale = [dict(zip(cols, r)) for r in rows]
+    return {"max_lifetime_hours": max_hours, "stale_count": len(stale), "sandboxes": stale}
+
+
+def _require_enforcement():
+    """Guard for the /policies and /enforce/* endpoints below (Batch 1's
+    stack). Distinct from `_require()`, which only checks _db -- these
+    endpoints additionally need _enforcement_engine (core/enforcement.py),
+    and /enforce/execute additionally passes _webhook_dispatcher (which is
+    allowed to be None -- AuditedHostIsolationEngine.enforce_isolation
+    already no-ops the webhook step when it is)."""
+    _require()
+    if not ENFORCEMENT_OK:
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Resonance policy-enforcement stack unavailable: {_ENFORCEMENT_ERR}",
+        )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -243,7 +424,7 @@ def create_policy(req: RessonancePolicyRequest):
         )
         _db.conn.commit()
         
-        _audit_logger.log(
+        _safe_audit_log(
             event_type="policy_created",
             action="create_resonance_policy",
             resource=policy_id,
@@ -323,7 +504,7 @@ def update_policy(policy_id: str, req: RessonancePolicyRequest):
         
         _db.conn.commit()
         
-        _audit_logger.log(
+        _safe_audit_log(
             event_type="policy_updated",
             action="update_resonance_policy",
             resource=policy_id,
@@ -350,7 +531,7 @@ def delete_policy(policy_id: str):
         
         _db.conn.commit()
         
-        _audit_logger.log(
+        _safe_audit_log(
             event_type="policy_deleted",
             action="delete_resonance_policy",
             resource=policy_id,
@@ -372,7 +553,7 @@ def simulate_isolation(req: IsolationSimulationRequest):
     Perform a dry-run simulation of host isolation.
     Analyzes impact without modifying the host.
     """
-    _require()
+    _require_enforcement()
     try:
         isolation = _enforcement_engine.create_isolation_request(
             hostname=req.target_hostname,
@@ -388,7 +569,7 @@ def simulate_isolation(req: IsolationSimulationRequest):
         
         result = _enforcement_engine.simulate_isolation(isolation.isolation_id, "system")
         
-        _audit_logger.log(
+        _safe_audit_log(
             event_type="isolation_simulated",
             action="simulate_isolation",
             resource=req.target_hostname,
@@ -407,7 +588,7 @@ def request_isolation_approval(req: IsolationEnforcementRequest):
     Request human approval for host isolation.
     Creates approval ticket in the Human Approval Gate.
     """
-    _require()
+    _require_enforcement()
     try:
         isolation = _enforcement_engine.create_isolation_request(
             hostname=req.target_hostname,
@@ -430,7 +611,7 @@ def request_isolation_approval(req: IsolationEnforcementRequest):
             req.justification,
         )
         
-        _audit_logger.log(
+        _safe_audit_log(
             event_type="approval_requested",
             action="request_isolation_approval",
             actor=req.requested_by,
@@ -460,7 +641,7 @@ def execute_isolation(
     Execute host isolation (post-approval).
     Enforces with HMAC-SHA256 signing and webhook dispatch.
     """
-    _require()
+    _require_enforcement()
     try:
         isolation = _enforcement_engine.create_isolation_request(
             hostname=req.target_hostname,
@@ -484,7 +665,7 @@ def execute_isolation(
             webhook_dispatcher=_webhook_dispatcher,
         )
         
-        _audit_logger.log(
+        _safe_audit_log(
             event_type="isolation_enforced",
             action="execute_isolation",
             actor=req.requested_by,
@@ -505,14 +686,14 @@ def execute_isolation(
 @router.post("/enforce/release", status_code=http_status.HTTP_200_OK)
 def release_isolation(req: IsolationReleaseRequest):
     """Release an active isolation."""
-    _require()
+    _require_enforcement()
     try:
         result = _enforcement_engine.release_isolation(
             req.isolation_id,
             req.released_by,
         )
         
-        _audit_logger.log(
+        _safe_audit_log(
             event_type="isolation_released",
             action="release_isolation",
             actor=req.released_by,
@@ -529,7 +710,7 @@ def release_isolation(req: IsolationReleaseRequest):
 @router.get("/enforce/{isolation_id}/status")
 def get_isolation_status(isolation_id: str):
     """Get current status of an isolation request."""
-    _require()
+    _require_enforcement()
     status = _enforcement_engine.get_isolation_status(isolation_id)
     if not status:
         raise HTTPException(status_code=404, detail=f"Isolation {isolation_id} not found")
@@ -551,7 +732,10 @@ def get_audit_trail(
     Retrieve immutable audit trail (tamper-evident, hash-chained).
     """
     _require()
-    
+    if not AUDIT_LOGGER_OK:
+        raise HTTPException(status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+                             detail=f"Audit logger unavailable: {_AUDIT_LOGGER_ERR}")
+
     events = _audit_logger.list_events(
         event_type=event_type,
         actor=actor,
@@ -573,5 +757,8 @@ def get_audit_trail(
 def get_audit_stats():
     """Get audit trail statistics."""
     _require()
+    if not AUDIT_LOGGER_OK:
+        raise HTTPException(status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+                             detail=f"Audit logger unavailable: {_AUDIT_LOGGER_ERR}")
     stats = _audit_logger.audit_stats()
     return stats

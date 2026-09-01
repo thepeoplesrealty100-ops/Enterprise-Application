@@ -38,10 +38,10 @@ from fastapi import APIRouter, HTTPException, Query, status as http_status
 from pydantic import BaseModel, Field
 
 try:
-    from database import DuckDBManager
+    from database import DuckDBManager, get_db_manager
     from llm_energy_core import ENERGY_CORE
     from threat_scoring import score_recon_finding
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    _db: Optional[DuckDBManager] = get_db_manager()
     QAIP_OK = True
 except Exception as _e:
     QAIP_OK = False

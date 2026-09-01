@@ -20,8 +20,8 @@ from pydantic import BaseModel
 
 try:
     from security_agents.wireless_agent import WirelessAgent
-    from database import DuckDBManager
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    from database import DuckDBManager, get_db_manager
+    _db: Optional[DuckDBManager] = get_db_manager()
     _wireless_agent = WirelessAgent(db_manager=_db)
     WIRELESS_OK = True
 except Exception as _e:

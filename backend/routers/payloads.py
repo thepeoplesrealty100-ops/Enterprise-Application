@@ -48,8 +48,8 @@ except Exception as _e:
     _PAYLOAD_ERR = str(_e)
 
 try:
-    from database import DuckDBManager
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    from database import DuckDBManager, get_db_manager
+    _db: Optional[DuckDBManager] = get_db_manager()
 except Exception:
     _db = None
 

@@ -18,10 +18,10 @@ from schemas import AggregateReportRequest, ReportExportRequest
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 try:
-    from database import DuckDBManager
+    from database import get_db_manager
     from wrappers import ReportsWrapper
 
-    _db = DuckDBManager()
+    _db = get_db_manager()
     _reporter = ReportsWrapper()
     _READY = True
     _ERR: Optional[str] = None

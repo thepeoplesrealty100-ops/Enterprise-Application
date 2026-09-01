@@ -10,14 +10,43 @@ Provides compliance-grade, tamper-evident audit logging with:
   • PQC-compatible (ML-DSA-65 signatures)
 
 Enterprise patterns from: CISA recommendations, NIST SP 800-53
+
+RECONCILIATION FIX: this class originally targeted a `pqc_audit_log` table
+with columns (event_id, event_type, timestamp, actor, resource, action,
+result, details, hash_value, prev_hash) -- but the real pqc_audit_log
+table (backend/database.py) has an entirely different, unrelated schema
+(id, entry_id, timestamp, agent_id, operator_id, action_type,
+action_detail, payload_hash, pqc_signature, algorithm, public_key,
+chain_index, prev_hash), used by crypto/pqc_manager.py for ML-DSA-65
+signed agent actions. Every INSERT/SELECT against pqc_audit_log below was
+therefore hitting the wrong table with the wrong column names -- silently,
+since _persist_event() swallowed the resulting exception in a bare
+try/except: pass, so this "immutable audit trail" was in practice
+persisting zero rows.
+
+Fixed to target `resonance_audit_trail` (also added by this same parallel
+build, in database.py, and actually shaped for this purpose) instead. That
+table's columns (event_id, event_type, isolation_id, policy_id, actor,
+status, event_data, signature_hmac, timestamp) don't have a 1:1 match for
+this class's generic (action, resource, details, hash_value, prev_hash)
+fields either, so those are packed into event_data as JSON -- resource is
+additionally best-effort mirrored into isolation_id/policy_id when the
+caller's `details` dict names one, so isolation- and policy-scoped queries
+stay possible without an ALTER TABLE (DuckDB 0.10.0's ALTER TABLE ADD
+COLUMN has a separately-confirmed WAL-replay crash against a persistent
+.duckdb file -- see database.py's approval_requests comment for the
+reproduction).
 """
 
 import hashlib
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class AuditEvent(BaseModel):
@@ -110,37 +139,46 @@ class AuditLogger:
         
         return event_id
     
+    def _row_to_event(self, r: tuple) -> Dict[str, Any]:
+        """Unpack one resonance_audit_trail row -- (id, event_id, event_type,
+        isolation_id, policy_id, actor, status, event_data, signature_hmac,
+        timestamp) -- back into this class's logical AuditEvent shape."""
+        payload = json.loads(r[7] or "{}")
+        return {
+            "id": r[0],
+            "event_id": r[1],
+            "event_type": r[2],
+            "isolation_id": r[3],
+            "policy_id": r[4],
+            "actor": r[5],
+            "result": r[6],
+            "resource": payload.get("resource"),
+            "action": payload.get("action"),
+            "details": payload.get("details", {}),
+            "hash_value": payload.get("hash_value"),
+            "prev_hash": payload.get("prev_hash"),
+            "signature_hmac": r[8],
+            "timestamp": r[9],
+        }
+
     def get_event(self, event_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve a single audit event."""
         try:
             rows = self.db.conn.execute(
                 """
-                SELECT id, event_id, event_type, timestamp, actor, resource, action, result, details, hash_value, prev_hash
-                FROM pqc_audit_log
+                SELECT id, event_id, event_type, isolation_id, policy_id, actor, status, event_data, signature_hmac, timestamp
+                FROM resonance_audit_trail
                 WHERE event_id = ?
                 LIMIT 1
                 """,
                 (event_id,),
             ).fetchall()
-            
+
             if rows:
-                r = rows[0]
-                return {
-                    "id": r[0],
-                    "event_id": r[1],
-                    "event_type": r[2],
-                    "timestamp": r[3],
-                    "actor": r[4],
-                    "resource": r[5],
-                    "action": r[6],
-                    "result": r[7],
-                    "details": json.loads(r[8] or "{}"),
-                    "hash_value": r[9],
-                    "prev_hash": r[10],
-                }
+                return self._row_to_event(rows[0])
         except Exception:
             pass
-        
+
         return None
     
     def list_events(
@@ -166,7 +204,7 @@ class AuditLogger:
         """
         clauses = []
         params = []
-        
+
         if event_type:
             clauses.append("event_type = ?")
             params.append(event_type)
@@ -174,37 +212,22 @@ class AuditLogger:
             clauses.append("actor = ?")
             params.append(actor)
         if result:
-            clauses.append("result = ?")
+            clauses.append("status = ?")
             params.append(result)
-        
+
         where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
         query = f"""
-            SELECT id, event_id, event_type, timestamp, actor, resource, action, result, details, hash_value, prev_hash
-            FROM pqc_audit_log
+            SELECT id, event_id, event_type, isolation_id, policy_id, actor, status, event_data, signature_hmac, timestamp
+            FROM resonance_audit_trail
             {where}
             ORDER BY timestamp DESC
             LIMIT ? OFFSET ?
         """
         params.extend([limit, offset])
-        
+
         try:
             rows = self.db.conn.execute(query, params).fetchall()
-            events = []
-            for r in rows:
-                events.append({
-                    "id": r[0],
-                    "event_id": r[1],
-                    "event_type": r[2],
-                    "timestamp": r[3],
-                    "actor": r[4],
-                    "resource": r[5],
-                    "action": r[6],
-                    "result": r[7],
-                    "details": json.loads(r[8] or "{}"),
-                    "hash_value": r[9],
-                    "prev_hash": r[10],
-                })
-            return events
+            return [self._row_to_event(r) for r in rows]
         except Exception:
             return []
     
@@ -216,17 +239,18 @@ class AuditLogger:
         try:
             rows = self.db.conn.execute(
                 """
-                SELECT id, event_id, hash_value, prev_hash
-                FROM pqc_audit_log
+                SELECT id, event_id, event_type, isolation_id, policy_id, actor, status, event_data, signature_hmac, timestamp
+                FROM resonance_audit_trail
                 ORDER BY id ASC
                 """
             ).fetchall()
-            
+
             expected_prev = "GENESIS"
-            
+
             for r in rows:
-                row_id, event_id, hash_value, prev_hash = r
-                
+                event = self._row_to_event(r)
+                row_id, hash_value, prev_hash = event["id"], event["hash_value"], event["prev_hash"]
+
                 # Check chain link
                 if prev_hash != expected_prev:
                     return {
@@ -234,60 +258,51 @@ class AuditLogger:
                         "first_broken_id": row_id,
                         "reason": f"prev_hash mismatch at {row_id}",
                     }
-                
-                # Verify hash (retrieve full record for recomputation)
-                event_row = self.db.conn.execute(
-                    """
-                    SELECT event_type, timestamp, actor, resource, action, result, details
-                    FROM pqc_audit_log WHERE id = ?
-                    """,
-                    (row_id,),
-                ).fetchone()
-                
-                if event_row:
-                    recomputed = self._compute_hash_from_row(event_row, prev_hash)
-                    if recomputed != hash_value:
-                        return {
-                            "valid": False,
-                            "first_broken_id": row_id,
-                            "reason": f"hash mismatch at {row_id}",
-                        }
-                
+
+                # Verify hash (recompute from the same fields _compute_hash used)
+                recomputed = self._compute_hash_from_row(event, prev_hash)
+                if recomputed != hash_value:
+                    return {
+                        "valid": False,
+                        "first_broken_id": row_id,
+                        "reason": f"hash mismatch at {row_id}",
+                    }
+
                 expected_prev = hash_value
-            
+
             return {
                 "valid": True,
                 "events_verified": len(rows),
                 "final_hash": expected_prev,
             }
-        
+
         except Exception as e:
             return {
                 "valid": False,
                 "error": str(e),
             }
-    
+
     def audit_stats(self) -> Dict[str, Any]:
         """Get audit trail statistics."""
         try:
-            total = self.db.conn.execute("SELECT COUNT(*) FROM pqc_audit_log").fetchone()[0]
+            total = self.db.conn.execute("SELECT COUNT(*) FROM resonance_audit_trail").fetchone()[0]
             by_type = self.db.conn.execute(
-                "SELECT event_type, COUNT(*) FROM pqc_audit_log GROUP BY event_type ORDER BY 2 DESC"
+                "SELECT event_type, COUNT(*) FROM resonance_audit_trail GROUP BY event_type ORDER BY 2 DESC"
             ).fetchall()
             by_result = self.db.conn.execute(
-                "SELECT result, COUNT(*) FROM pqc_audit_log GROUP BY result"
+                "SELECT status, COUNT(*) FROM resonance_audit_trail WHERE status IS NOT NULL GROUP BY status"
             ).fetchall()
             by_actor = self.db.conn.execute(
-                "SELECT actor, COUNT(*) FROM pqc_audit_log WHERE actor IS NOT NULL GROUP BY actor ORDER BY 2 DESC LIMIT 10"
+                "SELECT actor, COUNT(*) FROM resonance_audit_trail WHERE actor IS NOT NULL GROUP BY actor ORDER BY 2 DESC LIMIT 10"
             ).fetchall()
-            
+
             return {
                 "total_events": total,
                 "by_event_type": {r[0]: r[1] for r in by_type},
                 "by_result": {r[0]: r[1] for r in by_result},
                 "top_actors": {r[0]: r[1] for r in by_actor},
             }
-        
+
         except Exception:
             return {}
     
@@ -309,44 +324,48 @@ class AuditLogger:
         try:
             self.db.conn.execute(
                 """
-                INSERT INTO pqc_audit_log
-                    (event_id, event_type, timestamp, actor, resource, action, result, details, hash_value, prev_hash)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO resonance_audit_trail
+                    (event_id, event_type, isolation_id, policy_id, actor, status, event_data, signature_hmac, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     event.event_id,
                     event.event_type,
-                    event.timestamp,
+                    (event.details or {}).get("isolation_id"),
+                    (event.details or {}).get("policy_id"),
                     event.actor,
-                    event.resource,
-                    event.action,
                     event.result,
-                    json.dumps(event.details or {}, default=str),
-                    event.hash_value,
-                    event.prev_hash,
+                    json.dumps({
+                        "action": event.action,
+                        "resource": event.resource,
+                        "details": event.details or {},
+                        "hash_value": event.hash_value,
+                        "prev_hash": event.prev_hash,
+                    }, default=str),
+                    None,
+                    event.timestamp,
                 ),
             )
             self.db.conn.commit()
-        except Exception as e:
-            # Log to fallback mechanism
-            pass
-    
+        except Exception:
+            logger.exception("resonance_audit_trail insert failed for event_id=%s", event.event_id)
+
     def _get_latest_hash(self) -> Optional[str]:
         """Get the hash value of the most recent audit event."""
         try:
             row = self.db.conn.execute(
-                "SELECT hash_value FROM pqc_audit_log ORDER BY id DESC LIMIT 1"
+                "SELECT event_data FROM resonance_audit_trail ORDER BY id DESC LIMIT 1"
             ).fetchone()
             if row and row[0]:
-                return row[0]
+                return json.loads(row[0]).get("hash_value")
         except Exception:
             pass
         return None
-    
+
     def _compute_hash(self, event: AuditEvent) -> str:
         """
         Compute SHA3-256 hash of an event.
-        
+
         Returns:
             Hex-encoded hash
         """
@@ -361,32 +380,36 @@ class AuditLogger:
             "details": event.details,
             "prev_hash": event.prev_hash,
         }
-        
+
         payload = json.dumps(canonical, sort_keys=True, default=str)
         return hashlib.sha3_256(payload.encode()).hexdigest()
-    
-    def _compute_hash_from_row(self, row: tuple, prev_hash: str) -> str:
+
+    def _compute_hash_from_row(self, event: Dict[str, Any], prev_hash: str) -> str:
         """
-        Recompute hash from database row for verification.
-        
+        Recompute hash from a _row_to_event()-shaped dict for verification.
+        Must mirror _compute_hash()'s canonical field set/order exactly, or
+        every previously-persisted row fails verification spuriously.
+
         Args:
-            row: (event_type, timestamp, actor, resource, action, result, details)
+            event: dict from _row_to_event()
             prev_hash: Previous hash value
-        
+
         Returns:
             Hex-encoded hash
         """
+        ts = event["timestamp"]
         canonical = {
-            "event_type": row[0],
-            "timestamp": str(row[1]),
-            "actor": row[2],
-            "resource": row[3],
-            "action": row[4],
-            "result": row[5],
-            "details": json.loads(row[6] or "{}"),
+            "event_id": event["event_id"],
+            "event_type": event["event_type"],
+            "timestamp": ts.isoformat() if hasattr(ts, "isoformat") else str(ts),
+            "actor": event["actor"],
+            "resource": event["resource"],
+            "action": event["action"],
+            "result": event["result"],
+            "details": event["details"],
             "prev_hash": prev_hash,
         }
-        
+
         payload = json.dumps(canonical, sort_keys=True, default=str)
         return hashlib.sha3_256(payload.encode()).hexdigest()
     

@@ -43,3 +43,71 @@ Visit `http://localhost:8000/docs` for the live API reference, or run `python3 s
 - 25-table DuckDB schema, versioned in `backend/database.py`'s module docstring.
 
 See `backend/tests/` for the test suite (`python -m pytest tests/ -q` from `backend/`).
+
+## What's new in v2.6 — Global Settings & Security
+
+Real backend + live-wired frontend for the tabs that were previously either
+missing entirely or hardcoded frontend mock data:
+
+- **IAM** — registration/login, bcrypt password hashing, account lockout,
+  TOTP MFA, JWT sessions, RBAC (roles/permissions), API key issuance, and a
+  structured, exportable audit log. See `backend/routers/iam.py`.
+- **Vault** — a real AES-256-GCM encrypted document vault for Trade
+  Secrets, and a live OSV.dev dependency-vulnerability scanner for EAS R&D.
+  See `backend/routers/vault.py`.
+- **Dark Web Monitoring** — a real Have I Been Pwned connector (needs
+  `HIBP_API_KEY`) plus a pluggable interface for paid feeds. See
+  `backend/routers/darkweb.py`.
+- **Awareness Training + Phishing Campaigns** — real completion tracking
+  and campaign click-through stats. See `backend/routers/awareness.py`.
+- **CheatSheet Library API** — exposes the existing cheatsheet ontology +
+  playbook library that had no API surface before. See
+  `backend/routers/cheatsheet.py`.
+
+Full endpoint reference: `docs/v2.6-global-settings-security-api.md`.
+Every module name in the ops dashboard mapped to its backing code:
+`docs/module-architecture-map.md`. Bugs found and fixed while getting the
+test suite from 53/16/6 (pass/fail/error) to 85/0/0:
+`docs/v2.6-fixes-and-test-report.md`.
+
+## What's new in v2.7 — Detection & Response + a real script library
+
+- **Detection & Response** (`backend/routers/response.py`) — real,
+  immediate IOC blocking + artifact quarantine, and approval-gated
+  host isolation/quarantine (never auto-executed against real
+  infrastructure). Grounded in NIST SP 800-61 Rev. 3 (CSF 2.0 mapping)
+  and MITRE D3FEND defensive-technique IDs.
+- **8 new incident-response playbooks** (14 total) — supply chain
+  compromise, cloud account compromise, DDoS, insider threat, IoT/OT
+  device compromise, emergency vulnerability patch, wireless rogue AP,
+  and a PQC crypto-agility incident playbook grounded in NIST IR 8547's
+  real 2030/2035 algorithm-deprecation timeline.
+- **A real, runnable script catalog** — the 43 `.py`/`.sh`/`.pl`/`.rb`
+  scripts already in `gacyber_toolkit/` are now indexed, browsable, and
+  actionable: stage → human approval → execute only inside an
+  operator-owned sandbox container (never the host, never a live target
+  directly).
+- **MFA QR codes** — `/api/iam/auth/mfa/enroll` now returns a real
+  server-rendered SVG QR code, not just a raw `otpauth://` string.
+- **Purpose-built widgets** for every ops-dashboard page that previously
+  showed a raw JSON panel (Energy Core, Q'AIP Logic Core, Resonance
+  Automation, Ontology Hub, Model Chains, Quantum Nexus, Predictive
+  Command, Load Monitor, Investigation Canvas).
+
+Full writeup + research citations: `docs/v2.7-detection-response-and-scripts.md`.
+
+## What's new in v2.8 — Automation policy + real containment enforcement
+
+- **Resonance Wave Automation now has real write control** — `resonance_policy`
+  holds knobs (auto-stage severity threshold, vault role-isolation
+  enforcement, script auto-approval, sandbox lifetime) that real
+  enforcement points actually read, RBAC-gated and PQC-signed on every
+  change. Deliberately not a patch to the derived `global_security_settings`
+  snapshot — see the doc below for why.
+- **Host isolation/quarantine now has a real enforcement path** —
+  `POST /api/response/actions/{id}/enforce`: a JAKAL-owned sandbox is
+  genuinely isolated via a real Docker network disconnect; an external
+  target is delivered via a signed HMAC-SHA256 webhook to your own
+  EDR/firewall/SOAR integration (`EDR_WEBHOOK_URL`).
+
+Full writeup + research citations: `docs/v2.8-automation-policy-and-enforcement.md`.

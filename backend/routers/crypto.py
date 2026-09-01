@@ -28,8 +28,8 @@ from pydantic import BaseModel
 
 # ── Local imports (relative; app runs from inside backend/) ────────────────
 try:
-    from database import DuckDBManager
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    from database import DuckDBManager, get_db_manager
+    _db: Optional[DuckDBManager] = get_db_manager()
 except Exception:
     _db = None
 

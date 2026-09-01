@@ -1,4 +1,44 @@
 
+> **Reconciliation note (added when merging this work with a parallel
+> branch, September 2026):** this document's "✅ COMPLETE - Production
+> Ready" status did not hold up under end-to-end testing. Batch 1's own
+> test scripts (`test_batch1.py`, `run_tests_batch1.py`, since removed)
+> ran against a `MockDB` that no-opped every query, so they never actually
+> exercised a real database and caught none of the following, all
+> confirmed by reproduction and fixed as part of the merge:
+> - A literal syntax error in `app.py` (PowerShell `` `n `` escape
+>   sequences instead of real newlines) that made the entire backend fail
+>   to import.
+> - An undeclared `aiohttp` import in `webhook_dispatcher.py` that, once
+>   the syntax error was fixed, crashed `routers/resonance.py`'s import
+>   and disabled the *entire* `/resonance` router, including endpoints
+>   this batch didn't even touch.
+> - `audit_logger.py` targeted a `pqc_audit_log` table with a completely
+>   different, incompatible schema than the real one (used by
+>   `crypto/pqc_manager.py`) -- wrapped in a bare `except: pass`, so the
+>   "immutable audit trail" was persisting zero rows.
+> - `core/enforcement.py`'s `self.logger.log(...)` calls were all missing
+>   the required `action` argument, `enforce_isolation()`'s
+>   `webhook_dispatcher.dispatch(...)` call was missing the required
+>   `webhook_url` argument, and `_persist_isolation()`'s placeholder
+>   JSON-blob-in-`agent_logs` storage (its own docstring already flagged
+>   this as a placeholder) produced non-deterministic reads once an
+>   isolation had been persisted more than once.
+> - `_execute_isolation_action()`/`_execute_release_action()` returned
+>   100% fabricated results (e.g. `"firewall_rules_added": 3`) regardless
+>   of `target` -- honestly documented as simulated, but replaced with
+>   real dispatch through `security_agents/edr_connector.py` (genuine
+>   Docker network isolation for JAKAL-owned sandboxes, signed HMAC
+>   webhook otherwise) so `not_configured` is now a real, verified answer
+>   rather than an untested claim.
+>
+> All of the above are fixed on the reconciled branch, verified via a
+> live FastAPI app instance exercising the full isolation lifecycle
+> (`pending -> active -> released`) against a real DuckDB backend, plus
+> the existing 105-test pytest suite. See `docs/v2.9-batch1-reconciliation.md`
+> for the full writeup. The architecture and scope described below are
+> accurate; the status line is not.
+
 # JAKAL Backend Batch 1 - Build Summary
 
 **Commit:** 4c3c0dd feat(batch1): Backend enforcement + audit + scripts

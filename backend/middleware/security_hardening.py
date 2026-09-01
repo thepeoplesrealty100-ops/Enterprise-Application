@@ -14,18 +14,15 @@ import time
 import json
 import re
 import logging
-from typing import Dict, Tuple, Optional, Any, Callable
+from typing import Dict, Tuple, Any
 from collections import defaultdict, deque
-from datetime import datetime, timedelta
-from functools import wraps
-import hashlib
-import hmac
+from datetime import datetime
 import ipaddress
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp, Scope, Receive, Send
+from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
@@ -176,18 +173,40 @@ class InputValidator:
     - Command injection prevention
     """
     
-    # Regex patterns for dangerous inputs
+    # Regex patterns for dangerous inputs.
+    #
+    # RECONCILIATION FIX: the original patterns blocklisted individual
+    # characters and bare dictionary words (a lone "'", ";", "(", "{",
+    # "~", or any of SELECT/INSERT/UPDATE/DELETE/DROP/CREATE/ALTER/EXEC as
+    # a whole word) rather than actual attack shapes. Reproduced live: a
+    # perfectly ordinary target string like "payload-exec-123" (contains
+    # "exec" as a \b-delimited word) was rejected with a 400 as
+    # "sql_injection", and this middleware runs on EVERY query param, path
+    # param, and JSON body field across the entire app -- so any field
+    # containing an apostrophe ("don't"), a MITRE technique ID with a
+    # sub-technique in parens ("T1059(001)"), or common English/technical
+    # words as substrings would be rejected the same way. This app also
+    # already uses parameterized queries everywhere (no raw SQL string
+    # interpolation), so this middleware is defense-in-depth, not the
+    # actual injection defense -- it should not be blocking legitimate
+    # traffic to provide that marginal extra layer. Retuned to match
+    # actual attack shapes (stacked queries, UNION-based injection,
+    # classic tautologies, comment-truncation, real traversal/shell
+    # metacharacter sequences) instead of individual characters/words.
     PATTERNS = {
         "sql_injection": re.compile(
-            r"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b|--|;|'|\"|\/\*|\*\/)",
+            r"(\bUNION\s+SELECT\b"
+            r"|;\s*(DROP|DELETE|UPDATE|INSERT|ALTER)\s+\w"
+            r"|\bOR\s+['\"]?\s*\d\s*['\"]?\s*=\s*['\"]?\s*\d"
+            r"|--\s*$|\/\*.*?\*\/)",
             re.IGNORECASE
         ),
         "xss": re.compile(
-            r"(<script|javascript:|onerror=|onclick=|<iframe|<embed|<object)",
+            r"(<script[\s>/]|javascript:|on\w+\s*=\s*['\"]|<iframe[\s>]|<embed[\s>]|<object[\s>])",
             re.IGNORECASE
         ),
-        "path_traversal": re.compile(r"(\.\./|\.\.\\|~)"),
-        "command_injection": re.compile(r"([;&|`$(){}[\]<>]|\$\(|\`)")
+        "path_traversal": re.compile(r"(\.\.[/\\]){2,}|\.\.[/\\](etc|windows|system32)\b", re.IGNORECASE),
+        "command_injection": re.compile(r"(\$\([^)]*\)|`[^`]+`|;\s*(rm|cat|wget|curl|nc|bash|sh|powershell)\s)", re.IGNORECASE),
     }
     
     # Whitelist patterns for common parameters
@@ -195,7 +214,13 @@ class InputValidator:
         "device_id": re.compile(r"^[a-zA-Z0-9_-]+$"),
         "client": re.compile(r"^[a-zA-Z0-9_\s-]+$"),
         "status": re.compile(r"^(online|offline|active|inactive|quarantined)$", re.IGNORECASE),
-        "action": re.compile(r"^(scan|isolate|quarantine|block|monitor)$", re.IGNORECASE),
+        # Must match routers/ui_bridge.py's DeviceActionRequest.action
+        # comment exactly -- RECONCILIATION FIX: this whitelist previously
+        # allowed "block"/"monitor" (not real values ui_bridge.py accepts)
+        # while rejecting "reset_pass"/"release" (which it does), so 2 of
+        # the 5 real device actions were unreachable via
+        # POST /api/dashboard/fleet/{id}/action.
+        "action": re.compile(r"^(scan|isolate|quarantine|reset_pass|release)$", re.IGNORECASE),
         "severity": re.compile(r"^(CRITICAL|HIGH|MEDIUM|LOW)$"),
         "page": re.compile(r"^[0-9]+$"),
         "per_page": re.compile(r"^[0-9]+$"),
@@ -237,7 +262,7 @@ class InputValidator:
             if max_val is not None and int_val > max_val:
                 raise ValueError(f"Value {int_val} is greater than maximum {max_val}")
             return int_val
-        except ValueError as e:
+        except ValueError:
             raise ValueError(f"Invalid integer value: {value}")
     
     @staticmethod

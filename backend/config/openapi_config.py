@@ -10,7 +10,6 @@ Phase 5: Comprehensive OpenAPI/Swagger Documentation
 """
 
 from typing import Dict, Any
-from fastapi.openapi.utils import get_openapi
 
 
 def get_openapi_schema() -> Dict[str, Any]:

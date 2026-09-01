@@ -26,9 +26,9 @@ from fastapi import APIRouter, HTTPException, Query, status as http_status
 from pydantic import BaseModel
 
 try:
-    from database import DuckDBManager
+    from database import DuckDBManager, get_db_manager
     from security_agents.exploit_agent import ExploitAgent
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    _db: Optional[DuckDBManager] = get_db_manager()
     _gate = ExploitAgent(db_manager=_db)
     CANVAS_OK = True
 except Exception as _e:

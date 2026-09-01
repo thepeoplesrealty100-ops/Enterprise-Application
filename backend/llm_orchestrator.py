@@ -21,16 +21,40 @@ class AgentOrchestrator:
         self.mitre_tactics = {}
         self.mitre_techniques = {}
         self.tool_registry = {}
+        self.client = None
         self.initialize_llm()
         self.load_mitre_database()
-    
+
     def initialize_llm(self):
-        """Initialize LLM engine (Claude or Ollama)."""
+        """
+        Initialize LLM engine (Claude or Ollama).
+
+        Bug fix: this used to raise ImportError/AttributeError straight out
+        of __init__ whenever the Claude client couldn't be constructed --
+        missing API key, an incompatible/stubbed `anthropic` module (this is
+        exactly what tests/test_suite.py's `sys.modules.setdefault("anthropic",
+        types.ModuleType("anthropic"))` produces to avoid needing a real key
+        in CI), or any SDK-level validation error. Since AgentOrchestrator is
+        instantiated at module import time in app.py, that one LLM
+        misconfiguration took down `import app` entirely -- every endpoint
+        in the API, not just the LLM-backed ones, including the /health
+        check that ops tooling uses to know the process is even alive.
+        Now it degrades: self.client stays None, LLM-backed calls
+        (_call_claude) fail individually with a clear error instead of the
+        whole process failing to start.
+        """
         if self.config.LLM_ENGINE == 'claude':
             if not anthropic:
-                raise ImportError("anthropic not installed. Install: pip install anthropic")
-            self.client = anthropic.Anthropic(api_key=self.config.CLAUDE_API_KEY)
-            logger.info(f"Initialized Claude LLM: {self.config.CLAUDE_MODEL}")
+                logger.warning("anthropic package not installed — Claude-backed features disabled.")
+                return
+            try:
+                self.client = anthropic.Anthropic(api_key=self.config.CLAUDE_API_KEY)
+                logger.info(f"Initialized Claude LLM: {self.config.CLAUDE_MODEL}")
+            except Exception as e:
+                logger.warning(
+                    "Could not initialize Claude client (%s) — Claude-backed features "
+                    "disabled, rest of the API is unaffected.", e,
+                )
         else:
             # Ollama fallback
             logger.info(f"Using Ollama LLM: {self.config.OLLAMA_MODEL}")
@@ -137,6 +161,9 @@ Respond with JSON:
     
     async def _call_claude(self, prompt: str) -> str:
         """Call Claude API for agentic decision."""
+        if not self.client:
+            logger.error("Claude client not initialized — see initialize_llm() warning at startup.")
+            return ""
         try:
             message = self.client.messages.create(
                 model=self.config.CLAUDE_MODEL,

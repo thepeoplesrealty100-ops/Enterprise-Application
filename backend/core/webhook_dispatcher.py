@@ -22,7 +22,19 @@ from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Optional
 
 import asyncio
-import aiohttp
+
+try:
+    import aiohttp
+    AIOHTTP_AVAILABLE = True
+except ImportError:
+    # aiohttp is only needed by dispatch_async()/_send_webhook_async() --
+    # the synchronous dispatch() path (requests-based) works without it.
+    # Guarded so a missing/not-yet-installed optional dependency degrades
+    # only the async path instead of raising ModuleNotFoundError at import
+    # time, which previously took down the entire routers/resonance.py
+    # module (and every endpoint in it, not just the enforcement ones).
+    aiohttp = None
+    AIOHTTP_AVAILABLE = False
 
 
 class WebhookDispatcher:
@@ -162,9 +174,14 @@ class WebhookDispatcher:
         Returns:
             Dict with status, event_id, delivery_timestamp, signature
         """
+        if not AIOHTTP_AVAILABLE:
+            raise RuntimeError(
+                "dispatch_async() requires aiohttp, which is not installed. "
+                "Use the synchronous dispatch() instead, or install aiohttp."
+            )
         event_id = event_id or str(uuid.uuid4())
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         # Create signed envelope
         envelope = {
             "event_id": event_id,
@@ -172,9 +189,9 @@ class WebhookDispatcher:
             "timestamp": timestamp,
             "payload": payload,
         }
-        
+
         signature = self._sign_envelope(envelope)
-        
+
         # Attempt delivery with retries
         for attempt in range(self.max_retries + 1):
             try:

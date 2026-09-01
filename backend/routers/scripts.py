@@ -419,9 +419,7 @@ def stream_execution_output(execution_id: str):
     async def event_generator():
         """Generator for SSE events."""
         import asyncio
-        
-        last_check = None
-        
+
         while True:
             try:
                 row = _db.conn.execute(
@@ -552,8 +550,7 @@ def _execute_script_background(
     For now, it's a placeholder.
     """
     import subprocess
-    import time
-    
+
     start_time = datetime.now(timezone.utc)
     
     try:

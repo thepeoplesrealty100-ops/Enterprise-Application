@@ -19,6 +19,30 @@ TIMEOUT = 30
 PERFORMANCE_THRESHOLD = 500  # ms
 CONCURRENT_REQUESTS = 100
 
+
+def _live_server_reachable() -> bool:
+    """
+    This whole file is a live-server integration suite (it hits BASE_URL
+    over real HTTP), unlike the rest of tests/ which drives the app
+    in-process via ASGITransport and needs no running server. Skips
+    cleanly here rather than failing every test with ConnectError when no
+    server is up (e.g. a normal `pytest tests/` run in this sandbox) --
+    run `uvicorn app:app` first, then this file, to actually exercise it.
+    """
+    try:
+        with Client() as client:
+            client.get(f"{BASE_URL}/health", timeout=2)
+        return True
+    except Exception:
+        return False
+
+
+pytestmark = pytest.mark.skipif(
+    not _live_server_reachable(),
+    reason=f"no live server reachable at {BASE_URL} -- start one (uvicorn app:app) to run this integration suite",
+)
+
+
 class TestPhase3Integration:
     """Phase 3 Integration Testing Suite"""
     
@@ -65,7 +89,7 @@ class TestPhase3Integration:
                         assert startup_time < 30, f"Startup took {startup_time}s"
                         break
                 except Exception:
-                    await asyncio.sleep(0.5)
+                    time.sleep(0.5)
     
     def test_image_size_and_layers(self):
         """Verify Docker image is reasonably sized"""

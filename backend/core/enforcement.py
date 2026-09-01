@@ -16,12 +16,16 @@ Enterprise patterns from: Datto EDR, Palantir Foundry, RocketCyber, NSA CISA
 import hashlib
 import hmac
 import json
+import logging
+import os
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class IsolationMode(str, Enum):
@@ -115,6 +119,17 @@ class AuditedHostIsolationEngine:
     3. Request approval (human review gate)
     4. Enforce isolation (execute with signing)
     5. Release isolation (cleanup)
+
+    RECONCILIATION FIX: every self.logger.log(...) call below was missing
+    the required `action` argument (AuditLogger.log()'s signature is
+    `log(event_type, action, ...)`), which raised
+    `TypeError: log() missing 1 required positional argument: 'action'`
+    the moment this actually ran end-to-end. This went uncaught before
+    because core/audit_logger.py's own persistence bug (see its module
+    docstring) meant AuditLogger was never exercised for real, and
+    routers/resonance.py's aiohttp import crash meant this whole engine
+    was never reachable from a live request either -- fixed both, which
+    is what surfaced this one. Added an explicit action= to each call.
     """
     
     def __init__(self, db_manager, hmac_secret: Optional[str] = None):
@@ -196,6 +211,7 @@ class AuditedHostIsolationEngine:
         # Emit audit event
         self.logger.log(
             event_type="isolation_request_created",
+            action="create_isolation_request",
             isolation_id=isolation.isolation_id,
             hostname=hostname,
             requested_by=requested_by,
@@ -238,6 +254,7 @@ class AuditedHostIsolationEngine:
         # Emit audit event
         self.logger.log(
             event_type="isolation_simulated",
+            action="simulate_isolation",
             isolation_id=isolation_id,
             hostname=isolation.target_hostname,
             operator=operator_id,
@@ -298,6 +315,7 @@ class AuditedHostIsolationEngine:
             # Emit audit event
             self.logger.log(
                 event_type="approval_requested",
+                action="request_isolation_approval",
                 isolation_id=isolation_id,
                 approval_request_id=approval_req_id,
                 requestor=requestor,
@@ -362,15 +380,36 @@ class AuditedHostIsolationEngine:
             # Emit audit event
             self.logger.log(
                 event_type="isolation_enforced",
+                action="enforce_isolation",
                 isolation_id=isolation_id,
                 hostname=isolation.target_hostname,
                 approved_by=approved_by,
                 signature=signature,
             )
             
-            # Dispatch webhook if provided
-            if webhook_dispatcher:
+            # Dispatch webhook if provided AND a target URL is actually
+            # configured. RECONCILIATION FIX: this call was missing
+            # `webhook_url`, WebhookDispatcher.dispatch()'s required first
+            # positional argument -- raised
+            # `TypeError: dispatch() missing 1 required positional
+            # argument: 'webhook_url'` on every enforce_isolation() call
+            # once webhook_dispatcher was actually reachable (see
+            # core/webhook_dispatcher.py's aiohttp-import fix). There was
+            # also no webhook_url to thread through in the first place --
+            # no isolation/policy field carries one to this call site --
+            # so this now reads the same EDR_WEBHOOK_URL env var
+            # security_agents/edr_connector.py's WebhookEnforcementConnector
+            # already uses (set once, used consistently), and skips the
+            # dispatch entirely rather than blocking on 3 retries against
+            # an empty URL when it's unset -- _execute_isolation_action
+            # above already delivered the real enforcement notification via
+            # that same connector, so this is a second, best-effort ping
+            # for callers that specifically want WebhookDispatcher's
+            # envelope shape.
+            _webhook_url = os.getenv("EDR_WEBHOOK_URL", "")
+            if webhook_dispatcher and _webhook_url:
                 webhook_dispatcher.dispatch(
+                    webhook_url=_webhook_url,
                     event_type="isolation_enforced",
                     payload={
                         "isolation_id": isolation_id,
@@ -395,6 +434,7 @@ class AuditedHostIsolationEngine:
             
             self.logger.log(
                 event_type="isolation_failed",
+                action="enforce_isolation",
                 isolation_id=isolation_id,
                 error=str(e),
             )
@@ -427,8 +467,8 @@ class AuditedHostIsolationEngine:
             }
         
         try:
-            # Execute release action (in real deployment, would call VM/network APIs)
-            release_result = self._execute_release_action(isolation)
+            # Execute release action via the real enforcement connectors
+            release_result = self._execute_release_action(isolation, released_by)
             
             # Update status
             isolation.status = IsolationStatus.RELEASED
@@ -438,6 +478,7 @@ class AuditedHostIsolationEngine:
             # Emit audit event
             self.logger.log(
                 event_type="isolation_released",
+                action="release_isolation",
                 isolation_id=isolation_id,
                 hostname=isolation.target_hostname,
                 released_by=released_by,
@@ -453,6 +494,7 @@ class AuditedHostIsolationEngine:
         except Exception as e:
             self.logger.log(
                 event_type="release_failed",
+                action="release_isolation",
                 isolation_id=isolation_id,
                 error=str(e),
             )
@@ -492,44 +534,49 @@ class AuditedHostIsolationEngine:
     # ══════════════════════════════════════════════════════════════════════════════
     
     def _persist_isolation(self, isolation: AuditedHostIsolation):
-        """Store isolation object to database."""
+        """
+        Store isolation object to the dedicated resonance_isolations table
+        (see its CREATE TABLE comment in database.py for why this replaced
+        the original JSON-blob-in-agent_logs placeholder). Upserts by
+        isolation_id -- DuckDB 0.10.0's INSERT ... ON CONFLICT support is
+        limited, so this uses the same SELECT-then-UPDATE/INSERT pattern
+        already established elsewhere in database.py for this DuckDB
+        version, rather than an unsupported/unreliable upsert syntax.
+        """
         try:
-            # For now, store as JSON in agent_logs or a dedicated table
-            # This is a placeholder; in production, add dedicated table to database.py
-            self.db.conn.execute(
-                """
-                INSERT INTO agent_logs (timestamp, event, action, status, details)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (
-                    isolation.created_at,
-                    "isolation_event",
-                    "audited_host_isolation",
-                    isolation.status.value,
-                    json.dumps(isolation.model_dump(), default=str),
-                ),
-            )
+            state = json.dumps(isolation.model_dump(), default=str)
+            existing = self.db.conn.execute(
+                "SELECT 1 FROM resonance_isolations WHERE isolation_id = ?",
+                (isolation.isolation_id,),
+            ).fetchone()
+            if existing:
+                self.db.conn.execute(
+                    "UPDATE resonance_isolations SET status = ?, target_hostname = ?, state = ?, updated_at = now() "
+                    "WHERE isolation_id = ?",
+                    (isolation.status.value, isolation.target_hostname, state, isolation.isolation_id),
+                )
+            else:
+                self.db.conn.execute(
+                    "INSERT INTO resonance_isolations (isolation_id, status, target_hostname, state, created_at, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, now())",
+                    (isolation.isolation_id, isolation.status.value, isolation.target_hostname, state, isolation.created_at),
+                )
             self.db.conn.commit()
-        except Exception as e:
-            # Graceful fallback
-            pass
-    
+        except Exception:
+            logger.exception("resonance_isolations persist failed for isolation_id=%s", isolation.isolation_id)
+
     def _fetch_isolation(self, isolation_id: str) -> Optional[AuditedHostIsolation]:
-        """Retrieve isolation object from database."""
+        """Retrieve isolation object from resonance_isolations by primary key."""
         try:
             row = self.db.conn.execute(
-                """
-                SELECT details FROM agent_logs
-                WHERE event = 'isolation_event' AND details LIKE ?
-                ORDER BY timestamp DESC LIMIT 1
-                """,
-                (f'%"{isolation_id}"%',),
+                "SELECT state FROM resonance_isolations WHERE isolation_id = ?",
+                (isolation_id,),
             ).fetchone()
             if row and row[0]:
                 data = json.loads(row[0])
                 return AuditedHostIsolation(**data)
         except Exception:
-            pass
+            logger.exception("resonance_isolations fetch failed for isolation_id=%s", isolation_id)
         return None
     
     def _compute_isolation_impact(self, isolation: AuditedHostIsolation) -> Dict[str, Any]:
@@ -566,31 +613,118 @@ class AuditedHostIsolationEngine:
     
     def _execute_isolation_action(self, isolation: AuditedHostIsolation) -> Dict[str, Any]:
         """
-        Execute the actual isolation (simulated in this implementation).
-        In production, this would call VM, network, or EDR APIs.
+        Execute isolation via the real enforcement connector
+        (security_agents/edr_connector.py) instead of fabricating a
+        result.
+
+        RECONCILIATION FIX: this previously returned a 100% canned dict
+        (affected_interfaces: ["eth0", "eth1"], firewall_rules_added: 3)
+        regardless of what target was passed, no matter whether anything
+        was actually enforced -- confirmed by direct testing before this
+        fix. Now delegates to enforce_containment(), which does one of two
+        real things: a genuine Docker network disconnect if `target` names
+        a JAKAL-owned sandbox container (security_agents/vm_orchestrator.py
+        + real docker-py calls), or a signed HMAC-SHA256 webhook to a
+        configured external EDR/firewall/SOAR (EDR_WEBHOOK_URL /
+        EDR_WEBHOOK_SECRET -- the same integration shape Cortex
+        XSOAR/Splunk SOAR use to call CrowdStrike/SentinelOne with the
+        customer's own credentials). If neither applies, it honestly
+        reports "not_configured" -- this platform genuinely has no live
+        EDR/firewall agent on an arbitrary real-world host, and that stays
+        a staged, audited decision rather than a silently-fabricated one.
         """
+        target = isolation.target_hostname or isolation.target_ip_address
+        try:
+            from security_agents.edr_connector import enforce_containment
+            from security_agents.vm_orchestrator import get_vm_orchestrator
+            vm = get_vm_orchestrator(self.db)
+            result = enforce_containment(
+                action_type=isolation.action.value,
+                target=target,
+                detail={
+                    "isolation_id": isolation.isolation_id,
+                    "isolation_mode": isolation.isolation_mode.value,
+                    "target_ip_address": isolation.target_ip_address,
+                    "threat_indicator": isolation.threat_indicator,
+                    "mitre_technique": isolation.mitre_technique,
+                },
+                operator_id=isolation.requested_by,
+                db=self.db,
+                vm_orchestrator=vm,
+            )
+        except Exception as e:
+            result = {"status": "error", "connector": None, "detail": {"error": str(e)}}
+
+        enforced = result.get("status") == "enforced"
         return {
             "action": isolation.action.value,
-            "target": isolation.target_ip_address,
+            "target": target,
             "mode": isolation.isolation_mode.value,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "result": "success",
-            "affected_interfaces": ["eth0", "eth1"],
-            "firewall_rules_added": 3,
+            "result": "success" if enforced else result.get("status", "error"),
+            "connector": result.get("connector"),
+            "connector_detail": result.get("detail"),
+            "note": None if enforced else (
+                "No live EDR/firewall agent is configured for this target "
+                "(target is not a JAKAL-owned sandbox, and EDR_WEBHOOK_URL/"
+                "EDR_WEBHOOK_SECRET are unset) -- staged and audited, not "
+                "silently pretended."
+            ),
         }
-    
-    def _execute_release_action(self, isolation: AuditedHostIsolation) -> Dict[str, Any]:
+
+    def _execute_release_action(self, isolation: AuditedHostIsolation, released_by: str = "system") -> Dict[str, Any]:
         """
-        Execute release of isolation.
-        In production, this would call VM, network, or EDR APIs.
+        Execute release of isolation via the same real connectors used by
+        _execute_isolation_action above -- see its docstring for the
+        rationale behind this reconciliation fix (this previously returned
+        an equally fabricated canned dict).
         """
+        target = isolation.target_hostname or isolation.target_ip_address
+        status = "not_configured"
+        connector = None
+        detail: Dict[str, Any] = {}
+        try:
+            from security_agents.edr_connector import (
+                DockerSandboxIsolationConnector, WebhookEnforcementConnector,
+            )
+            from security_agents.vm_orchestrator import get_vm_orchestrator
+            is_sandbox = False
+            try:
+                row = self.db.conn.execute(
+                    "SELECT 1 FROM sandboxes WHERE container_name = ? AND status != 'destroyed'",
+                    (target,),
+                ).fetchone()
+                is_sandbox = bool(row)
+            except Exception:
+                is_sandbox = False
+
+            if is_sandbox:
+                vm = get_vm_orchestrator(self.db)
+                result = DockerSandboxIsolationConnector(vm).reconnect(target)
+            else:
+                result = WebhookEnforcementConnector().enforce(
+                    "release_isolation", target,
+                    {"isolation_id": isolation.isolation_id}, released_by,
+                )
+            status = result.get("status", "not_configured")
+            connector = result.get("connector")
+            detail = result.get("detail", {})
+        except Exception as e:
+            status = "error"
+            detail = {"error": str(e)}
+
+        enforced = status == "enforced"
         return {
             "action": "release_isolation",
-            "target": isolation.target_ip_address,
+            "target": target,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "result": "success",
-            "firewall_rules_removed": 3,
-            "connectivity_restored": True,
+            "result": "success" if enforced else status,
+            "connector": connector,
+            "connector_detail": detail,
+            "note": None if enforced else (
+                "No live EDR/firewall agent is configured for this target -- "
+                "release recorded as staged/audited, not silently pretended."
+            ),
         }
     
     def _sign_isolation(self, isolation: AuditedHostIsolation, result: Dict[str, Any]) -> str:

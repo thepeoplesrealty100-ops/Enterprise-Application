@@ -5,16 +5,38 @@ UI Bridge Router — Connects the static frontend to live backend data.
 Provides REST endpoints that map to dashboard components (fleet, matrix, settings, etc.)
 
 Endpoints:
-  - GET  /api/dashboard/fleet           — Device/user fleet with filtering
-  - GET  /api/dashboard/fleet/{id}      — Single device details
-  - POST /api/dashboard/fleet/{id}/action — Device action (isolate, scan, etc.)
-  - GET  /api/dashboard/matrix          — Threat matrix data (global predictive)
-  - GET  /api/dashboard/settings        — Global settings snapshot
-  - GET  /api/fabric/status             — Unified Security Fabric posture
-  - GET  /api/scripts/catalog           — Script library catalog
-  - GET  /api/resonance/policies        — Automation policies
-  - GET  /api/resonance/audit           — Immutable audit trail
-  - GET  /api/health/detailed           — Detailed system health
+  - GET  /api/dashboard/fleet              — Device/user fleet with filtering
+  - GET  /api/dashboard/fleet/{id}         — Single device details
+  - POST /api/dashboard/fleet/{id}/action  — Device action (isolate, scan, etc.)
+  - GET  /api/dashboard/matrix             — Threat matrix data (global predictive)
+  - GET  /api/dashboard/settings           — Global settings snapshot
+  - GET  /api/dashboard/fabric/status      — Unified Security Fabric posture (dashboard-shaped)
+  - GET  /api/dashboard/scripts/catalog    — Script library catalog (paginated, dashboard-shaped)
+  - GET  /api/dashboard/resonance/policies — Automation policies (dashboard-shaped)
+  - GET  /api/dashboard/resonance/audit    — Recent agent_logs activity (dashboard-shaped)
+  - GET  /api/health/detailed              — Detailed system health
+
+  RECONCILIATION NOTE: the four /dashboard/{fabric/status, scripts/catalog,
+  resonance/policies, resonance/audit} routes were originally defined
+  WITHOUT the /dashboard prefix (i.e. at /api/fabric/status,
+  /api/scripts/catalog, /api/resonance/policies, /api/resonance/audit) --
+  exact path collisions with routers/fabric.py, routers/scripts.py, and
+  routers/resonance.py, which are registered earlier in app.py and would
+  have silently won every request, making these four endpoints
+  unreachable dead code. Worse: this branch's own frontend (integration.js)
+  and this Phase-2 frontend (frontend/js/api-client.js) both call some of
+  those same paths expecting DIFFERENT response shapes from DIFFERENT
+  backend implementations (e.g. fabric.py's /status returns
+  security_agents' native FabricEngine.status() shape; this router's
+  fabric endpoint returns a different, dashboard-flattened shape) -- so
+  reordering router registration to let one win would have silently broken
+  the other frontend instead. Renamed under /dashboard/ so both coexist;
+  frontend/js/api-client.js was updated to match. Separately: this
+  router's /resonance/audit reads agent_logs (generic telemetry), NOT the
+  tamper-evident, hash-chained resonance_audit_trail table
+  core/audit_logger.py maintains -- it is a different, weaker view under a
+  similar name, not a duplicate of the real audit trail exposed at
+  GET /api/resonance/audit (routers/resonance.py).
 
 v1.0 - Fully integrated with DuckDB, SSE telemetry, and approval gates
 """
@@ -23,7 +45,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from datetime import datetime, timezone, timedelta
 import json
-from typing import List, Dict, Optional, Any
+from typing import Optional
 import logging
 import uuid
 
@@ -77,8 +99,8 @@ async def get_device_fleet(
     Get global device & user fleet with filtering.
     Returns paginated device list with current status, risk level, last seen, etc.
     """
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     try:
         # Build query
@@ -141,8 +163,8 @@ async def get_device_fleet(
 @router.get("/dashboard/fleet/{device_id}")
 async def get_device_details(device_id: int):
     """Get detailed information for a single device."""
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     try:
         rows = db.query(
@@ -180,8 +202,8 @@ async def execute_device_action(device_id: int, request: DeviceActionRequest):
     Execute an action on a device (isolate, scan, reset password, quarantine, release).
     Logs action to audit trail and returns confirmation.
     """
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     # Validate action
     valid_actions = ["scan", "isolate", "reset_pass", "quarantine", "release"]
@@ -233,33 +255,41 @@ async def get_global_matrix(time_window_minutes: int = Query(60, ge=5, le=1440))
     Get global predictive threat matrix data.
     Returns threat events with severity and distribution.
     """
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     try:
         cutoff_time = (datetime.now(timezone.utc) - timedelta(minutes=time_window_minutes)).isoformat()
         
-        # Query recent threat findings
+        # Query recent threat findings. findings has no numeric CVSS column
+        # (RECONCILIATION FIX: this query originally selected a
+        # `cvss_score` column that doesn't exist in the real findings
+        # schema -- database.py's CREATE TABLE only has id/pentest_id/
+        # severity/title/description/attack_technique/remediation/
+        # created_at -- raising a live Binder Error on every call. Severity
+        # is the only real risk signal on this table, so `score` below is
+        # derived from it rather than read from a nonexistent column.)
         rows = db.query(
             """
-            SELECT id, title, severity, cvss_score, created_at
+            SELECT id, title, severity, created_at
             FROM findings
             WHERE created_at > ? AND severity IN ('CRITICAL', 'HIGH')
             ORDER BY created_at DESC LIMIT 100
             """,
             (cutoff_time,)
         )
-        
+
         # Group by severity for matrix
         threats_by_severity = {"CRITICAL": [], "HIGH": [], "MEDIUM": [], "LOW": []}
-        
+        severity_score = {"CRITICAL": 1.0, "HIGH": 0.75, "MEDIUM": 0.5, "LOW": 0.25}
+
         for row in (rows or []):
             threat = {
                 "id": row[0],
                 "title": row[1],
                 "severity": row[2],
-                "score": float(row[3] or 0),
-                "timestamp": row[4],
+                "score": severity_score.get(row[2], 0.0),
+                "timestamp": row[3],
             }
             if row[2] in threats_by_severity:
                 threats_by_severity[row[2]].append(threat)
@@ -303,14 +333,14 @@ async def get_global_settings():
 # UNIFIED SECURITY FABRIC ENDPOINTS
 # ============================================================================
 
-@router.get("/fabric/status")
+@router.get("/dashboard/fabric/status")
 async def get_fabric_status():
     """
     Get unified security fabric posture (7-pillar NSA/CISA Zero Trust model).
     Returns overall score, maturity level, and per-pillar breakdown.
     """
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     try:
         # Query fabric modules
@@ -389,15 +419,15 @@ async def get_fabric_status():
 # SCRIPT CATALOG ENDPOINTS
 # ============================================================================
 
-@router.get("/scripts/catalog")
+@router.get("/dashboard/scripts/catalog")
 async def get_script_catalog(
     category: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
 ):
     """Get script library catalog with filtering."""
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     try:
         rows = db.query(
@@ -441,11 +471,11 @@ async def get_script_catalog(
 # RESONANCE POLICY ENDPOINTS
 # ============================================================================
 
-@router.get("/resonance/policies")
+@router.get("/dashboard/resonance/policies")
 async def get_resonance_policies():
     """Get all automation policies."""
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     try:
         rows = db.query(
@@ -478,11 +508,11 @@ async def get_resonance_policies():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/resonance/policies")
+@router.post("/dashboard/resonance/policies")
 async def create_resonance_policy(request: PolicyRequest):
     """Create a new automation policy."""
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     try:
         policy_id = f"POL-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
@@ -519,15 +549,15 @@ async def create_resonance_policy(request: PolicyRequest):
 # AUDIT TRAIL ENDPOINTS
 # ============================================================================
 
-@router.get("/resonance/audit")
+@router.get("/dashboard/resonance/audit")
 async def get_resonance_audit(
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
     event_type: Optional[str] = Query(None),
 ):
     """Get immutable audit trail with optional filtering."""
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     try:
         rows = db.query(
@@ -567,8 +597,8 @@ async def get_resonance_audit(
 @router.get("/health/detailed")
 async def get_detailed_health():
     """Get detailed system health with component status."""
-    from database import DuckDBManager
-    db = DuckDBManager()
+    from database import get_db_manager
+    db = get_db_manager()
     
     try:
         # Check database connectivity

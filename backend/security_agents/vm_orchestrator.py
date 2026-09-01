@@ -187,3 +187,24 @@ class VMOrchestrator:
             return True
         except Exception:
             return False
+
+
+# Process-wide singleton, same rationale as database.get_db_manager(): by
+# v2.8 three different modules (app.py, routers/response.py,
+# routers/cheatsheet.py) each independently constructed a VMOrchestrator,
+# meaning up to 3 redundant `docker.from_env()` client connections/ping
+# attempts on every process start (harmless when the daemon is absent --
+# each just logs its own "unreachable" warning -- but real waste, and a
+# real correctness risk, when it IS present: 3 separate client objects
+# for the exact same daemon instead of one shared handle).
+_vm_singleton: Optional["VMOrchestrator"] = None
+
+
+def get_vm_orchestrator(db_manager=None) -> "VMOrchestrator":
+    global _vm_singleton
+    if _vm_singleton is None:
+        if db_manager is None:
+            from database import get_db_manager
+            db_manager = get_db_manager()
+        _vm_singleton = VMOrchestrator(db_manager)
+    return _vm_singleton
