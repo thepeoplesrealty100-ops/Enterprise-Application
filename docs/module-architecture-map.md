@@ -119,3 +119,15 @@ addendum: `docs/v3.0-ontology-maya-enterprise.md`.
 | Fabric summary | `GET /api/fabric/summary` | Light "which of the 7 capabilities are active" view, from existing data |
 | Quantum job linking | `POST /api/quantum/submit` | A finished job optionally links into `q_aip_inference_registry` |
 | Gated remediation | `routers/response.py` quarantine/isolate-host/triage auto-stage | Now carry the same Maya interlock as an offensive HIGH/CRITICAL payload — closed a real gap where these bypassed it entirely |
+
+## Track A — Maya-gated containment hardening
+
+Sits on v3.0. Full writeup: `docs/track-a-containment-hardening.md`.
+
+| Capability | Backend | Notes |
+|---|---|---|
+| Compliance constraints | `security_agents/compliance_constraints.py` | HIPAA residency, SOC2 critical-service, PCI-DSS CDE — blocks isolate/quarantine before staging |
+| Hardened EDR orchestrator | `security_agents/edr_hardened.py` | Exponential backoff 1s→4s→16s, transient vs permanent errors, compliance pre-check |
+| Compliance pre-check | `GET /api/response/compliance/pre-check` | Live Ops Response panel runs this automatically before staging isolation |
+| Attack-path related targets | `GET /api/response/related-targets` | Ontology Engine subgraph, Asset nodes within 1–5 hops |
+| Enforce | `POST /api/response/actions/{id}/enforce` | Now routes through the hardened orchestrator, still approval-gated |
