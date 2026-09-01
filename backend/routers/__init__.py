@@ -39,6 +39,7 @@ from .resonance import router as resonance_router
 from .qaip import router as qaip_router
 from .ares import router as ares_router
 from .scripts import router as scripts_router
+from .ui_bridge import router as ui_bridge_router
 
 __all__ = [
     "pentest_router",
@@ -56,4 +57,5 @@ __all__ = [
     "qaip_router",
     "ares_router",
     "scripts_router",
+    "ui_bridge_router",
 ]

@@ -35,7 +35,8 @@ from routers import (
     aip_router, fabric_router,
     wireless_router, approval_router,
     horizon_router, canvas_router, resonance_router, qaip_router,
-    ares_router, scripts_router,`n)
+    ares_router, scripts_router, ui_bridge_router,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -80,20 +81,22 @@ app.add_middleware(
 )
 
 # ── Modular routers ───────────────────────────────────────────────────────
-app.include_router(pentest_router,   prefix="/api")
-app.include_router(quantum_router,   prefix="/api")
-app.include_router(reports_router,   prefix="/api")
-app.include_router(crypto_router,    prefix="/api")
-app.include_router(payloads_router,  prefix="/api")
-app.include_router(aip_router,       prefix="/api")
-app.include_router(fabric_router,    prefix="/api")
-app.include_router(wireless_router,  prefix="/api")
-app.include_router(approval_router,  prefix="/api")
-app.include_router(horizon_router,   prefix="/api")
-app.include_router(canvas_router,    prefix="/api")
-app.include_router(resonance_router, prefix="/api")
-app.include_router(qaip_router,      prefix="/api")
-app.include_router(ares_router,     prefix="/api")`napp.include_router(scripts_router, prefix="/api")
+app.include_router(pentest_router,    prefix="/api")
+app.include_router(quantum_router,    prefix="/api")
+app.include_router(reports_router,    prefix="/api")
+app.include_router(crypto_router,     prefix="/api")
+app.include_router(payloads_router,   prefix="/api")
+app.include_router(aip_router,        prefix="/api")
+app.include_router(fabric_router,     prefix="/api")
+app.include_router(wireless_router,   prefix="/api")
+app.include_router(approval_router,   prefix="/api")
+app.include_router(horizon_router,    prefix="/api")
+app.include_router(canvas_router,     prefix="/api")
+app.include_router(resonance_router,  prefix="/api")
+app.include_router(qaip_router,       prefix="/api")
+app.include_router(ares_router,       prefix="/api")
+app.include_router(scripts_router,    prefix="/api")
+app.include_router(ui_bridge_router,  prefix="/api")
 
 db = DuckDBManager()
 orchestrator = AgentOrchestrator(config)
@@ -390,5 +393,3 @@ if __name__ == "__main__":
     host = getattr(config, "API_HOST", "0.0.0.0")
     port = int(getattr(config, "API_PORT", 8000))
     uvicorn.run(app, host=host, port=port, log_level="info")
-
-
