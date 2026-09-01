@@ -111,3 +111,63 @@ Full writeup + research citations: `docs/v2.7-detection-response-and-scripts.md`
   EDR/firewall/SOAR integration (`EDR_WEBHOOK_URL`).
 
 Full writeup + research citations: `docs/v2.8-automation-policy-and-enforcement.md`.
+
+## What's new in v2.9 / v2.10 — reconciling three parallel builds
+
+While the v2.6–v2.8 work above was in progress, three other sessions
+pushed overlapping work directly to `main`. All three are merged in, with
+14 real bugs found and fixed by actually running the merged code — not
+trusting any "production ready" claims at face value (including a syntax
+error that broke the entire backend's import, and a critical DuckDB
+concurrency SIGSEGV fixed with a lock-serializing connection wrapper).
+Full writeups: `docs/v2.9-batch1-reconciliation.md`,
+`docs/v2.10-phase2-ui-bridge-reconciliation.md`.
+
+## What's new in v3.0 — Ontology Engine + Maya-Vigesimal step-up auth
+
+- **Ontology Engine** — a Palantir Foundry-style Object/Link digital twin
+  (`backend/services/ontology_engine.py`, `/api/v3/ontology/*`). Every
+  staged payload and containment action now materializes a real node in
+  the graph (an `Asset` node per target, linked to the action), so the
+  Approval Gate can show a basic attack-path/related-object view instead
+  of an empty graph.
+- **Maya-Vigesimal calendar 2FA** — an **internal high-assurance step-up
+  authenticator for HIGH/CRITICAL actions only** (`backend/security_agents/exploit_agent.py`,
+  `/api/v3/auth/maya/*`) — explicitly *not* login MFA. A real interlock,
+  not a parallel confirmation step: `approve_payload()`/`reject_payload()`
+  refuse to record a decision until the linked session's status is
+  `'consumed'`, and every real remediation action (host quarantine/
+  isolation, auto-staged containment) is gated the same way as an
+  offensive payload. **Dual-mode display**: only friendly
+  `display_issued_at`/`display_expires_at` timestamps and a masked token
+  (reveal toggle) are ever shown by default — the actual Tzolkin/Haab
+  calendar coordinates the token is derived from stay internal, surfaced
+  only behind an explicit `?reveal_internal=true` auditor toggle.
+- **PQC decision audit** — every stage/challenge/decision is ML-DSA-65-signed;
+  `crypto.pqc_manager.verify_stored_entry()` re-verifies a *stored*
+  signature against the exact public key/algorithm recorded at signing
+  time (not a live process's own key, which is per-instance and not
+  persisted) — surfaced per-payload as
+  `original_pqc_signature_verification` in the enriched approval context.
+- **Crypto-agility** — a `PQC_PROFILE` config flag (`"commercial"` default
+  → ML-DSA-65; `"cnsa2"` → ML-DSA-87) abstracts the signer so no caller
+  hardcodes a parameter set. Full policy: `docs/crypto-agility.md`.
+- **Core loop visibility** — `GET /api/approval/{id}/context` (risk
+  level, blast-radius summary, reversibility, Maya + authorization +
+  ontology status, PQC verification result, a `staged → challenge_issued
+  → challenge_consumed → approved/denied → executed_simulated` timeline)
+  and `GET /api/approval/audit/recent` (recent high-risk decisions with
+  re-verified signatures), mapped explicitly to the CISA Zero Trust
+  Maturity Model (Policy Enforcement Point, continuous verification,
+  least privilege, assume breach).
+- **Progressive enhancements** — a thin prompt-driven playbook lookup
+  over the existing IR playbook catalog (`POST /api/v3/aip/cheatsheet/chat`),
+  read-only authorization-status visibility in the approval context,
+  `GET /api/fabric/summary` (which of the 7 Fabric capabilities are
+  active, from existing data), and finished quantum jobs optionally
+  linking into the PQC audit trail.
+
+Full writeup, the interlock-fix root cause, every bug found across
+Phases 0–5, and deliberate scope decisions (no new `cheatsheet_playbooks`
+table, no ML-KEM-1024, no forced CNSA 2.0):
+`docs/v3.0-ontology-maya-enterprise.md`.
