@@ -24,8 +24,8 @@ from pydantic import BaseModel
 try:
     from payloads.aip_payload_generator import AIPPayloadGenerator
     from payloads.cheatsheet_ontology import CheatsheetOntology
-    from database import DuckDBManager
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    from database import DuckDBManager, get_db_manager
+    _db: Optional[DuckDBManager] = get_db_manager()
     _aip = AIPPayloadGenerator(db=_db)
     _ontology = _aip.ontology
     AIP_OK = True

@@ -15,28 +15,36 @@ from pathlib import Path
 
 import asyncio
 import json as _json
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from config import get_config
-from database import DuckDBManager
+from database import get_db_manager
 from llm_orchestrator import AgentOrchestrator
 from tools.authorization import AuthorizationError
 from security_agents.vm_orchestrator import VMOrchestrator
 from security_agents.compliance_axiom import ComplianceAxiom
 from security_agents.edr_mdr import EdrMdrEngine
 from middleware import TimingAndSecurityMiddleware
+from schemas import (
+    ScopeAddRequest, InsuranceAddRequest, ScopeValidateRequest,
+    ComplianceReportRequest, VMCreateRequest, VMExecRequest,
+    PlaybookExecuteRequest, PlaybookStepCompleteRequest,
+)
 from routers import (
     pentest_router, quantum_router, reports_router,
     crypto_router, payloads_router,
     aip_router, fabric_router,
     wireless_router, approval_router,
     horizon_router, canvas_router, resonance_router, qaip_router,
-    ares_router,
+    ares_router, iam_router, vault_router, awareness_router,
+    darkweb_router, cheatsheet_router,
 )
+from dependencies import require_permission
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -95,8 +103,13 @@ app.include_router(canvas_router,    prefix="/api")
 app.include_router(resonance_router, prefix="/api")
 app.include_router(qaip_router,      prefix="/api")
 app.include_router(ares_router,      prefix="/api")
+app.include_router(iam_router,       prefix="/api")
+app.include_router(vault_router,     prefix="/api")
+app.include_router(awareness_router, prefix="/api")
+app.include_router(darkweb_router,   prefix="/api")
+app.include_router(cheatsheet_router, prefix="/api")
 
-db = DuckDBManager()
+db = get_db_manager()
 orchestrator = AgentOrchestrator(config)
 vm_orchestrator = VMOrchestrator(db)
 compliance_axiom = ComplianceAxiom(db)
@@ -147,38 +160,46 @@ async def llm_health():
 # SCOPE / AUTHORIZATION
 # ============================================================================
 
-@app.post("/api/scope/add")
-async def add_scope(payload: dict):
-    scope_id = db.add_scope(
-        client_name=payload["client_name"],
-        scope_definition=payload["scope_definition"],
-        start_date=datetime.fromisoformat(payload["start_date"]),
-        end_date=datetime.fromisoformat(payload["end_date"]),
-        roe_document_path=payload.get("roe_document_path"),
+@app.post("/api/scope/add", dependencies=[require_permission("scope:manage")])
+async def add_scope(payload: ScopeAddRequest):
+    try:
+        start_date = datetime.fromisoformat(payload.start_date)
+        end_date = datetime.fromisoformat(payload.end_date)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid ISO-8601 date: {e}")
+    scope_id = await run_in_threadpool(
+        db.add_scope,
+        client_name=payload.client_name,
+        scope_definition=payload.scope_definition,
+        start_date=start_date,
+        end_date=end_date,
+        roe_document_path=payload.roe_document_path,
     )
     return {"scope_id": scope_id, "status": "created"}
 
 
-@app.post("/api/insurance/add")
-async def add_insurance(payload: dict):
-    policy_id = db.add_insurance_policy(
-        policy_number=payload["policy_number"],
-        provider=payload["provider"],
-        coverage_amount=payload["coverage_amount"],
-        expiry=datetime.fromisoformat(payload["expiry"]),
+@app.post("/api/insurance/add", dependencies=[require_permission("scope:manage")])
+async def add_insurance(payload: InsuranceAddRequest):
+    try:
+        expiry = datetime.fromisoformat(payload.expiry)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid ISO-8601 date: {e}")
+    policy_id = await run_in_threadpool(
+        db.add_insurance_policy,
+        policy_number=payload.policy_number,
+        provider=payload.provider,
+        coverage_amount=payload.coverage_amount,
+        expiry=expiry,
     )
     return {"policy_id": policy_id, "status": "created"}
 
 
 @app.post("/api/scope/validate")
-async def validate_scope(payload: dict):
+async def validate_scope(payload: ScopeValidateRequest):
     from tools.authorization import check_authorization_and_scope
     try:
-        result = check_authorization_and_scope(
-            payload["target"],
-            "scope_check",
-            payload.get("operator_id", "system"),
-            db=db,
+        result = await run_in_threadpool(
+            check_authorization_and_scope, payload.target, "scope_check", payload.operator_id, db,
         )
         return result
     except AuthorizationError as e:
@@ -191,7 +212,10 @@ async def validate_scope(payload: dict):
 
 @app.get("/api/agent/logs")
 async def get_agent_logs(limit: int = 50, offset: int = 0):
-    rows = db.query(
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
+    rows = await run_in_threadpool(
+        db.query,
         "SELECT id, timestamp, event, action, status, operator_id, details "
         "FROM agent_logs ORDER BY timestamp DESC LIMIT ? OFFSET ?",
         (limit, offset),
@@ -204,12 +228,13 @@ async def get_agent_logs(limit: int = 50, offset: int = 0):
 # ============================================================================
 
 @app.get("/api/telemetry/stream")
-async def telemetry_stream():
+async def telemetry_stream(request: Request):
     async def event_generator():
         last_id = None
-        rows = db.query(
+        rows = await run_in_threadpool(
+            db.query,
             "SELECT id, timestamp, event, action, status FROM agent_logs "
-            "ORDER BY timestamp DESC LIMIT 50"
+            "ORDER BY timestamp DESC LIMIT 50",
         )
         for row in reversed(rows or []):
             ts = _row_field(row, "timestamp", 1)
@@ -225,13 +250,25 @@ async def telemetry_stream():
             yield "data: {}\n\n".format(payload)
             last_id = rid
         while True:
+            # Without this check, a client that navigates away or drops the
+            # connection leaves this generator (and its 3s poll loop) running
+            # forever — StreamingResponse has no way to know the consumer is
+            # gone unless we ask. Each orphaned generator is a permanent
+            # asyncio task plus a DB round-trip every 3s for the life of the
+            # process, so this was an unbounded resource leak under normal
+            # browser usage (tab close, page navigation), not just a rare edge case.
+            if await request.is_disconnected():
+                logger.info("Telemetry stream client disconnected; closing generator")
+                break
             await asyncio.sleep(3)
             if last_id is not None:
-                new_rows = db.query(
+                new_rows = await run_in_threadpool(
+                    db.query,
                     "SELECT id, timestamp, event, action, status FROM agent_logs "
                     "WHERE id > ? ORDER BY timestamp ASC LIMIT 20", (last_id,))
             else:
-                new_rows = db.query(
+                new_rows = await run_in_threadpool(
+                    db.query,
                     "SELECT id, timestamp, event, action, status FROM agent_logs "
                     "ORDER BY timestamp ASC LIMIT 20")
             for row in new_rows or []:
@@ -271,12 +308,10 @@ async def vm_list_images():
     return vm_orchestrator.list_images()
 
 
-@app.post("/api/vm/sandboxes")
-async def vm_create_sandbox(payload: dict):
-    result = vm_orchestrator.create_sandbox(
-        name=payload.get("name", "unnamed"),
-        image_key=payload.get("image_key", "ubuntu-lab"),
-        operator_id=payload.get("operator_id", "system"),
+@app.post("/api/vm/sandboxes", dependencies=[require_permission("vm:manage")])
+async def vm_create_sandbox(payload: VMCreateRequest):
+    result = await run_in_threadpool(
+        vm_orchestrator.create_sandbox, payload.name, payload.image_key, payload.operator_id,
     )
     if result.get("status") == "error":
         raise HTTPException(status_code=400, detail=result["error"])
@@ -285,22 +320,33 @@ async def vm_create_sandbox(payload: dict):
 
 @app.get("/api/vm/sandboxes")
 async def vm_list_sandboxes():
-    return {"sandboxes": vm_orchestrator.list_sandboxes()}
+    return {"sandboxes": await run_in_threadpool(vm_orchestrator.list_sandboxes)}
 
 
-@app.post("/api/vm/sandboxes/{container_name}/exec")
-async def vm_exec_sandbox(container_name: str, payload: dict):
-    result = vm_orchestrator.exec_in_sandbox(
-        container_name, payload.get("command", ""), payload.get("operator_id", "system")
+# NOTE: this is the single highest-risk endpoint in the whole API — it runs an
+# arbitrary shell command inside the operator's sandbox container. It is
+# isolation-mitigated (VMOrchestrator scopes it to a per-operator Docker
+# container, not the host), but isolation is not authorization: prior to this
+# fix it was reachable by anyone who could reach the API with zero checks
+# beyond an unvalidated free-text `command` string. It now requires
+# `vm:exec` (a strictly narrower grant than `vm:manage`, since running
+# commands is more sensitive than creating/destroying a lab container) and
+# every invocation is written to the structured audit_log via the dependency.
+@app.post("/api/vm/sandboxes/{container_name}/exec", dependencies=[require_permission("vm:exec")])
+async def vm_exec_sandbox(container_name: str, payload: VMExecRequest):
+    if len(payload.command) > 4000:
+        raise HTTPException(status_code=422, detail="command exceeds 4000 characters")
+    result = await run_in_threadpool(
+        vm_orchestrator.exec_in_sandbox, container_name, payload.command, payload.operator_id,
     )
     if result.get("status") == "error":
         raise HTTPException(status_code=400, detail=result["error"])
     return result
 
 
-@app.delete("/api/vm/sandboxes/{container_name}")
+@app.delete("/api/vm/sandboxes/{container_name}", dependencies=[require_permission("vm:manage")])
 async def vm_destroy_sandbox(container_name: str, operator_id: str = "system"):
-    result = vm_orchestrator.destroy_sandbox(container_name, operator_id)
+    result = await run_in_threadpool(vm_orchestrator.destroy_sandbox, container_name, operator_id)
     if result.get("status") == "error":
         raise HTTPException(status_code=400, detail=result["error"])
     return result
@@ -312,48 +358,46 @@ async def compliance_frameworks():
 
 
 @app.post("/api/compliance/axiom/report")
-async def compliance_generate_report(payload: dict):
-    result = compliance_axiom.generate_report(
-        framework=payload.get("framework", "NIST_CSF"),
-        findings=payload.get("findings", []),
-        scope_id=payload.get("scope_id"),
-        operator_id=payload.get("operator_id", "system"),
+async def compliance_generate_report(payload: ComplianceReportRequest):
+    result = await run_in_threadpool(
+        compliance_axiom.generate_report,
+        payload.framework, payload.findings, payload.scope_id, payload.operator_id,
     )
     if result.get("status") == "error":
         raise HTTPException(status_code=400, detail=result["error"])
     return result
 
 
-@app.post("/api/edr/playbooks/seed")
+@app.post("/api/edr/playbooks/seed", dependencies=[require_permission("edr:manage")])
 async def edr_seed_playbooks(operator_id: str = "system"):
-    return edr_mdr.seed_default_playbooks(operator_id)
+    return await run_in_threadpool(edr_mdr.seed_default_playbooks, operator_id)
 
 
 @app.get("/api/edr/playbooks")
 async def edr_list_playbooks():
-    return {"playbooks": edr_mdr.list_playbooks()}
+    return {"playbooks": await run_in_threadpool(edr_mdr.list_playbooks)}
 
 
-@app.post("/api/edr/playbooks/{playbook_key}/execute")
-async def edr_execute_playbook(playbook_key: str, payload: dict):
-    result = edr_mdr.start_execution(
-        playbook_key, payload.get("context", ""), payload.get("operator_id", "system")
+@app.post("/api/edr/playbooks/{playbook_key}/execute", dependencies=[require_permission("edr:manage")])
+async def edr_execute_playbook(playbook_key: str, payload: PlaybookExecuteRequest):
+    result = await run_in_threadpool(
+        edr_mdr.start_execution, playbook_key, payload.context, payload.operator_id,
     )
     if result.get("status") == "error":
         raise HTTPException(status_code=400, detail=result["error"])
     return result
 
 
-@app.post("/api/edr/executions/{execution_id}/steps/{step_index}")
-async def edr_complete_step(execution_id: int, step_index: int, payload: dict):
-    return edr_mdr.complete_step(
-        execution_id, step_index, payload.get("notes", ""), payload.get("operator_id", "system")
+@app.post("/api/edr/executions/{execution_id}/steps/{step_index}", dependencies=[require_permission("edr:manage")])
+async def edr_complete_step(execution_id: int, step_index: int, payload: PlaybookStepCompleteRequest):
+    return await run_in_threadpool(
+        edr_mdr.complete_step, execution_id, step_index, payload.notes, payload.operator_id,
     )
 
 
-@app.post("/api/edr/executions/{execution_id}/finish")
+@app.post("/api/edr/executions/{execution_id}/finish", dependencies=[require_permission("edr:manage")])
 async def edr_finish_execution(execution_id: int, operator_id: str = "system"):
-    return edr_mdr.finish_execution(execution_id, operator_id)
+    return await run_in_threadpool(edr_mdr.finish_execution, execution_id, operator_id)
 
 
 # ============================================================================

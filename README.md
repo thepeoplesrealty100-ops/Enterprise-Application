@@ -43,3 +43,29 @@ Visit `http://localhost:8000/docs` for the live API reference, or run `python3 s
 - 25-table DuckDB schema, versioned in `backend/database.py`'s module docstring.
 
 See `backend/tests/` for the test suite (`python -m pytest tests/ -q` from `backend/`).
+
+## What's new in v2.6 — Global Settings & Security
+
+Real backend + live-wired frontend for the tabs that were previously either
+missing entirely or hardcoded frontend mock data:
+
+- **IAM** — registration/login, bcrypt password hashing, account lockout,
+  TOTP MFA, JWT sessions, RBAC (roles/permissions), API key issuance, and a
+  structured, exportable audit log. See `backend/routers/iam.py`.
+- **Vault** — a real AES-256-GCM encrypted document vault for Trade
+  Secrets, and a live OSV.dev dependency-vulnerability scanner for EAS R&D.
+  See `backend/routers/vault.py`.
+- **Dark Web Monitoring** — a real Have I Been Pwned connector (needs
+  `HIBP_API_KEY`) plus a pluggable interface for paid feeds. See
+  `backend/routers/darkweb.py`.
+- **Awareness Training + Phishing Campaigns** — real completion tracking
+  and campaign click-through stats. See `backend/routers/awareness.py`.
+- **CheatSheet Library API** — exposes the existing cheatsheet ontology +
+  playbook library that had no API surface before. See
+  `backend/routers/cheatsheet.py`.
+
+Full endpoint reference: `docs/v2.6-global-settings-security-api.md`.
+Every module name in the ops dashboard mapped to its backing code:
+`docs/module-architecture-map.md`. Bugs found and fixed while getting the
+test suite from 53/16/6 (pass/fail/error) to 85/0/0:
+`docs/v2.6-fixes-and-test-report.md`.

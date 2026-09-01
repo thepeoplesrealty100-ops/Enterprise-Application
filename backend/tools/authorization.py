@@ -165,8 +165,8 @@ def check_authorization_and_scope(
     to make this function easy to unit test with a fake db.
     """
     if db is None:
-        from database import DuckDBManager
-        db = DuckDBManager()
+        from database import DuckDBManager, get_db_manager
+        db = get_db_manager()
 
     now = datetime.now(timezone.utc)
 

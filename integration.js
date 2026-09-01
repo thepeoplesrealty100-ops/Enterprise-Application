@@ -161,13 +161,26 @@ function escapeHtml(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function authToken() {
+  try { return sessionStorage.getItem('jakal_token') || ''; } catch { return ''; }
+}
+
+function setAuthToken(token) {
+  try {
+    if (token) sessionStorage.setItem('jakal_token', token);
+    else sessionStorage.removeItem('jakal_token');
+  } catch { /* sessionStorage unavailable (private mode etc.) — token just won't persist */ }
+}
+
 async function api(path, options = {}) {
   const url = `${BACKEND_BASE}${path}`;
+  const token = authToken();
   const res = await fetch(url, {
     ...options,
     headers: {
       Accept: 'application/json',
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
   });
@@ -308,6 +321,237 @@ async function renderFabricPanel() {
     <div style="margin-top:8px">${pillars}</div></div>${cards}`;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// v2.6 — Global Settings & Security + remaining ops-module live panels
+// ─────────────────────────────────────────────────────────────────────────
+
+async function renderAuthPanel() {
+  const token = authToken();
+  if (token) {
+    try {
+      const me = await api('/api/iam/auth/me');
+      return `<div style="${cardStyle()}">
+        <b>Signed in as ${escapeHtml(me.username)}</b>
+        <div style="opacity:.75;margin-top:4px">Roles: ${(me.roles || []).join(', ') || 'none'}</div>
+        <div style="opacity:.75">Permissions: ${(me.permissions || []).join(', ') || 'none'}</div>
+        <button type="button" data-iam-logout style="${btnStyle('#7f1d1d')};margin-top:8px">Sign out</button>
+      </div>`;
+    } catch (e) {
+      setAuthToken('');
+    }
+  }
+  return `<div style="${cardStyle()}">
+    <b>Operator Sign-in</b>
+    <p style="opacity:.75;font-size:11px;margin:4px 0 8px">First account created on a fresh install becomes root admin automatically.</p>
+    <input id="iam-username" placeholder="username" style="width:100%;margin-bottom:6px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+    <input id="iam-password" type="password" placeholder="password (12+ chars)" style="width:100%;margin-bottom:8px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+    <input id="iam-email" placeholder="email (only needed to register)" style="width:100%;margin-bottom:8px;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+    <div style="display:flex;gap:6px">
+      <button type="button" data-iam-login style="${btnStyle('#1d4ed8')};flex:1">Sign in</button>
+      <button type="button" data-iam-register style="${btnStyle('#166534')};flex:1">Register</button>
+    </div>
+    <div id="iam-auth-msg" style="margin-top:8px;font-size:11px;opacity:.85"></div>
+  </div>`;
+}
+
+function wireAuthPanel(root) {
+  const msg = (t, ok) => { const m = root.querySelector('#iam-auth-msg'); if (m) { m.textContent = t; m.style.color = ok ? '#34d399' : '#f87171'; } };
+  const loginBtn = root.querySelector('[data-iam-login]');
+  const registerBtn = root.querySelector('[data-iam-register]');
+  const logoutBtn = root.querySelector('[data-iam-logout]');
+  if (loginBtn) loginBtn.onclick = async () => {
+    const username = root.querySelector('#iam-username')?.value || '';
+    const password = root.querySelector('#iam-password')?.value || '';
+    try {
+      const r = await api('/api/iam/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+      if (r.mfa_required) { msg('MFA required — this UI does not collect a TOTP code yet; use POST /api/iam/auth/login with totp_code via /docs.', false); return; }
+      setAuthToken(r.access_token);
+      msg('Signed in.', true);
+      window.switchSettingsSubTab?.(window.currentSettingsSubTab || 'profile');
+    } catch (e) { msg(e.message, false); }
+  };
+  if (registerBtn) registerBtn.onclick = async () => {
+    const username = root.querySelector('#iam-username')?.value || '';
+    const password = root.querySelector('#iam-password')?.value || '';
+    const email = root.querySelector('#iam-email')?.value || undefined;
+    try {
+      await api('/api/iam/auth/register', { method: 'POST', body: JSON.stringify({ username, password, email }) });
+      msg('Registered — signing in…', true);
+      const r = await api('/api/iam/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+      setAuthToken(r.access_token);
+      window.switchSettingsSubTab?.(window.currentSettingsSubTab || 'profile');
+    } catch (e) { msg(e.message, false); }
+  };
+  if (logoutBtn) logoutBtn.onclick = async () => {
+    try { await api('/api/iam/auth/logout', { method: 'POST' }); } catch (_) {}
+    setAuthToken('');
+    window.switchSettingsSubTab?.(window.currentSettingsSubTab || 'profile');
+  };
+}
+
+async function renderRbacPanelLive() {
+  const [roles, users] = await Promise.all([
+    api('/api/iam/rbac/roles').catch(() => ({ roles: [] })),
+    api('/api/iam/rbac/users').catch(() => ({ users: [] })),
+  ]);
+  const rows = (roles.roles || []).map((r) => `
+    <tr style="border-bottom:1px solid #1f2937">
+      <td style="padding:6px;color:#f97316;font-weight:700">${escapeHtml(r.label)}</td>
+      <td style="padding:6px">${r.assigned_users ?? 0}</td>
+      <td style="padding:6px;font-family:ui-monospace,monospace;font-size:11px">${escapeHtml((r.permissions || []).join(', '))}</td>
+    </tr>`).join('');
+  return `<div style="${cardStyle()}">
+    <b>RBAC (live)</b> — ${(users.users || []).length} user(s) provisioned
+    <table style="width:100%;margin-top:8px;font-size:12px"><thead><tr style="text-align:left;opacity:.7">
+      <th style="padding:6px">Role</th><th style="padding:6px">Assigned</th><th style="padding:6px">Permissions</th>
+    </tr></thead><tbody>${rows || '<tr><td style="padding:6px;opacity:.7" colspan="3">No roles yet.</td></tr>'}</tbody></table>
+  </div>`;
+}
+
+async function renderAuditingPanelLive() {
+  let data;
+  try { data = await api('/api/iam/audit/log?limit=25'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)} ${e.status === 401 ? '(sign in above to view the audit trail)' : ''}</div>`; }
+  const rows = (data.entries || []).map((e) => `
+    <div style="border-bottom:1px solid #1f2937;padding:6px 0;font-size:11px">
+      <span style="opacity:.6">${escapeHtml(e.timestamp)}</span>
+      <b> ${escapeHtml(e.actor_label || 'anonymous')}</b> → ${escapeHtml(e.action)}
+      <span style="color:${e.outcome === 'success' ? '#34d399' : e.outcome === 'denied' ? '#f87171' : '#fbbf24'}"> (${escapeHtml(e.outcome)})</span>
+    </div>`).join('');
+  return `<div style="${cardStyle()}"><b>Audit Log (live)</b> — ${data.count} recent entries<div style="margin-top:8px;max-height:320px;overflow:auto">${rows || '<div style="opacity:.7">No audit entries yet.</div>'}</div></div>`;
+}
+
+async function renderApiIntegrationPanelLive() {
+  let keys;
+  try { keys = await api('/api/iam/api-keys'); } catch (e) {
+    return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)} ${e.status === 401 ? '(sign in above to manage API keys)' : ''}</div>`;
+  }
+  const rows = (keys.keys || []).map((k) => `
+    <div style="${cardStyle()}"><b>${escapeHtml(k.label || k.key_id)}</b> · ${escapeHtml(k.status)}
+      <div style="opacity:.7;font-size:11px">${escapeHtml(k.key_id)} · created ${escapeHtml(k.created_at)}</div></div>`).join('');
+  return `<div style="${cardStyle()}"><b>API Keys (live)</b>
+    <input id="apikey-label" placeholder="key label" style="width:100%;margin:8px 0;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+    <button type="button" data-create-apikey style="${btnStyle('#1d4ed8')}">Generate key</button>
+    <div id="apikey-secret" style="margin-top:8px;font-size:11px;word-break:break-all"></div>
+  </div>${rows}`;
+}
+
+async function renderVaultPanelLive() {
+  let items;
+  try { items = await api('/api/vault/items'); } catch (e) {
+    return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)} ${e.status === 401 ? '(sign in above — vault access is RBAC-gated)' : ''}</div>`;
+  }
+  const rows = (items.items || []).map((i) => `
+    <div style="${cardStyle()}"><b>${escapeHtml(i.title)}</b> · ${escapeHtml(i.classification)}
+      <div style="opacity:.7;font-size:11px">item_id=${escapeHtml(i.item_id)} · ${escapeHtml(i.created_at)}</div></div>`).join('');
+  return `<div style="${cardStyle()}"><b>Trade Secrets / EAS R&D Vault (live, AES-256-GCM at rest)</b></div>${rows || '<p style="opacity:.7">No vault items yet.</p>'}`;
+}
+
+async function renderEasRdPanelLive() {
+  let last;
+  try { last = await api('/api/vault/eas-rd/last-scan'); } catch (e) { last = { findings: [] }; }
+  const findings = (last.findings || []).slice(0, 10).map((f) => `
+    <div style="${cardStyle()};border-left:3px solid #f87171">
+      <b>${escapeHtml(f.package)}==${escapeHtml(f.version)}</b> — ${escapeHtml(f.id)}
+      <div style="opacity:.75;font-size:11px;margin-top:4px">${escapeHtml((f.summary || '').slice(0, 200))}</div>
+    </div>`).join('');
+  return `<div style="${cardStyle()}">
+    <b>EAS R&D — live OSV.dev dependency scan</b>
+    <div style="opacity:.7;font-size:11px;margin:4px 0">Last scan: ${escapeHtml(last.scanned_at || 'never')} · ${last.packages_scanned ?? 0} packages · ${(last.findings || []).length} findings</div>
+    <button type="button" data-run-eas-scan style="${btnStyle('#1d4ed8')}">Run live scan now</button>
+  </div>${findings}`;
+}
+
+async function renderDarkWebPanelLive() {
+  const [watch, findings] = await Promise.all([
+    api('/api/darkweb/watchlist').catch(() => ({ watchlist: [] })),
+    api('/api/darkweb/findings').catch(() => ({ findings: [] })),
+  ]);
+  const wRows = (watch.watchlist || []).map((w) => `<div style="${cardStyle()}">${escapeHtml(w.identifier)} <span style="opacity:.6">(${escapeHtml(w.identifier_type)})</span></div>`).join('');
+  const fRows = (findings.findings || []).map((f) => `<div style="${cardStyle()};border-left:3px solid #fbbf24"><b>${escapeHtml(f.breach_name || f.source)}</b> · ${escapeHtml(f.severity)}</div>`).join('');
+  return `<div style="${cardStyle()}"><b>Dark Web Monitoring (live)</b>
+    <div style="opacity:.7;font-size:11px;margin-top:4px">HIBP connector ${watch.watchlist?.length ? '' : '— add an identifier to the watchlist to begin.'}</div>
+    <input id="darkweb-identifier" placeholder="email to watch" style="width:100%;margin:8px 0;padding:6px;border-radius:6px;border:1px solid #4b5563;background:#111827;color:#fff">
+    <div style="display:flex;gap:6px">
+      <button type="button" data-darkweb-add style="${btnStyle('#1d4ed8')};flex:1">Add to watchlist</button>
+      <button type="button" data-darkweb-scan style="${btnStyle('#166534')};flex:1">Run scan</button>
+    </div>
+  </div>
+  <div style="margin-top:8px"><b style="opacity:.7;font-size:11px">WATCHLIST</b>${wRows || '<p style="opacity:.6;font-size:11px">Empty.</p>'}</div>
+  <div style="margin-top:8px"><b style="opacity:.7;font-size:11px">FINDINGS</b>${fRows || '<p style="opacity:.6;font-size:11px">None yet.</p>'}</div>`;
+}
+
+async function renderAwarenessPanelLive() {
+  const [modules, stats] = await Promise.all([
+    api('/api/awareness/training/modules').catch(() => ({ modules: [] })),
+    api('/api/awareness/training/stats').catch(() => null),
+  ]);
+  const rows = (modules.modules || []).map((m) => `
+    <div style="${cardStyle()}"><b>${escapeHtml(m.title)}</b>
+      <div style="opacity:.7;font-size:11px">${escapeHtml(m.category)} · ${m.duration_min}min · passing score ${m.passing_score}%</div></div>`).join('');
+  const statLine = stats ? `${stats.total_completions} completions · ${stats.pass_rate_pct}% pass rate` : 'sign in to view stats';
+  return `<div style="${cardStyle()}"><b>Security Awareness Training (live)</b><div style="opacity:.7;font-size:11px">${escapeHtml(statLine)}</div></div>${rows}`;
+}
+
+async function renderPhishingPanelLive() {
+  const campaigns = await api('/api/awareness/phishing/campaigns').catch(() => ({ campaigns: [] }));
+  const rows = await Promise.all((campaigns.campaigns || []).slice(0, 10).map(async (c) => {
+    const s = await api(`/api/awareness/phishing/campaigns/${c.campaign_id}/stats`).catch(() => ({}));
+    return `<div style="${cardStyle()}"><b>${escapeHtml(c.name)}</b> · ${escapeHtml(c.status)}
+      <div style="opacity:.7;font-size:11px">sent ${s.sent ?? 0} · opened ${s.opened ?? 0} · clicked ${s.clicked ?? 0} · reported ${s.reported ?? 0} (${s.click_rate_pct ?? 0}% click rate)</div></div>`;
+  }));
+  return `<div style="${cardStyle()}"><b>Phishing Campaigns (live)</b></div>${rows.join('') || '<p style="opacity:.7">No campaigns launched yet.</p>'}`;
+}
+
+async function renderCheatsheetPanelLive() {
+  const stats = await api('/api/cheatsheet/stats').catch(() => ({}));
+  return `<div style="${cardStyle()}"><b>CheatSheet Library (live)</b>
+    <pre style="font-size:11px;margin-top:8px;white-space:pre-wrap">${escapeHtml(JSON.stringify(stats, null, 2))}</pre></div>`;
+}
+
+async function renderSimpleJsonPanel(title, path) {
+  try {
+    const data = await api(path);
+    return `<div style="${cardStyle()}"><b>${escapeHtml(title)} (live)</b>
+      <pre style="font-size:11px;margin-top:8px;white-space:pre-wrap">${escapeHtml(JSON.stringify(data, null, 2).slice(0, 2000))}</pre></div>`;
+  } catch (e) {
+    return `<div style="${cardStyle()};color:#f87171">${escapeHtml(title)}: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function wireNewPanelActions(root) {
+  const btn = (sel) => root.querySelector(sel);
+  if (btn('[data-create-apikey]')) btn('[data-create-apikey]').onclick = async () => {
+    const label = root.querySelector('#apikey-label')?.value || 'unlabeled';
+    try {
+      const r = await api('/api/iam/api-keys', { method: 'POST', body: JSON.stringify({ label, scopes: [] }) });
+      const out = root.querySelector('#apikey-secret');
+      if (out) out.innerHTML = `<b style="color:#34d399">Secret (shown once):</b> ${escapeHtml(r.secret)}`;
+    } catch (e) { updateTelemetryConsole(`[APIKEY ERROR] ${e.message}`, 'text-red-400'); }
+  };
+  if (btn('[data-run-eas-scan]')) btn('[data-run-eas-scan]').onclick = async () => {
+    updateTelemetryConsole('[EAS R&D] running live OSV.dev scan…');
+    try {
+      const r = await api('/api/vault/eas-rd/scan', { method: 'POST' });
+      updateTelemetryConsole(`[EAS R&D] ${r.packages_scanned} packages, ${r.findings.length} findings`, 'text-emerald-400');
+      window.switchSettingsSubTab?.('eas_rd');
+    } catch (e) { updateTelemetryConsole(`[EAS R&D ERROR] ${e.message}`, 'text-red-400'); }
+  };
+  if (btn('[data-darkweb-add]')) btn('[data-darkweb-add]').onclick = async () => {
+    const identifier = root.querySelector('#darkweb-identifier')?.value || '';
+    try {
+      await api('/api/darkweb/watchlist', { method: 'POST', body: JSON.stringify({ identifier, identifier_type: 'email' }) });
+      injectPageLive('admin_dark_web');
+    } catch (e) { updateTelemetryConsole(`[DARKWEB ERROR] ${e.message}`, 'text-red-400'); }
+  };
+  if (btn('[data-darkweb-scan]')) btn('[data-darkweb-scan]').onclick = async () => {
+    try {
+      const r = await api('/api/darkweb/scan', { method: 'POST' });
+      updateTelemetryConsole(`[DARKWEB] scanned ${r.watched_identifiers}, ${r.new_findings} new findings`, 'text-emerald-400');
+      injectPageLive('admin_dark_web');
+    } catch (e) { updateTelemetryConsole(`[DARKWEB ERROR] ${e.message}`, 'text-red-400'); }
+  };
+}
+
 function wireOpsActions(root) {
   root.querySelectorAll('[data-export]').forEach((b) => {
     b.onclick = async () => {
@@ -416,11 +660,95 @@ async function injectPageLive(pageKey) {
       } catch (e) {
         host.innerHTML = `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`;
       }
+    } else if (pageKey === 'admin_energy_core') {
+      host.innerHTML = await renderSimpleJsonPanel('Energy Core Status', '/api/qaip/energy-core/status');
+    } else if (pageKey === 'admin_logic_core' || pageKey === 'admin_model_chains') {
+      host.innerHTML = await renderSimpleJsonPanel("Q'AIP Inference Ledger", '/api/qaip/orbital-comms/stats');
+    } else if (pageKey === 'admin_automation_controls') {
+      host.innerHTML = await renderSimpleJsonPanel('Resonance Wave Automation (org security settings)', '/api/resonance/settings');
+    } else if (pageKey === 'admin_ontology' || pageKey === 'admin_investigation_canvas') {
+      host.innerHTML = await renderSimpleJsonPanel('Ontology & Simulation Hub', '/api/aip/ontology');
+    } else if (pageKey === 'admin_quantum_nexus') {
+      host.innerHTML = await renderSimpleJsonPanel('Quantum Orbital & Event Comms', '/api/qaip/orbital-comms');
+    } else if (pageKey === 'admin_predictive_command') {
+      host.innerHTML = await renderSimpleJsonPanel('Predictive Command (Ares cross-pillar rollup)', '/api/ares/global-matrix-summary');
+    } else if (pageKey === 'admin_cognitive_load_monitor') {
+      host.innerHTML = await renderSimpleJsonPanel('Resonance Load Monitor (fleet posture)', '/api/resonance/fleet');
+    } else if (pageKey === 'admin_dark_web') {
+      host.innerHTML = await renderDarkWebPanelLive();
+      wireNewPanelActions(host);
+    } else if (pageKey === 'admin_security_training') {
+      host.innerHTML = await renderAwarenessPanelLive();
+    } else if (pageKey === 'admin_phishing_sim') {
+      host.innerHTML = await renderPhishingPanelLive();
+    } else if (pageKey === 'admin_cheatsheet_library') {
+      host.innerHTML = await renderCheatsheetPanelLive();
     } else {
       host.remove();
     }
   } catch (e) {
     host.innerHTML = `<div style="${cardStyle()};color:#f87171">Live inject failed: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// switchSettingsSubTab() is a separate router from loadPage() (see
+// renderGlobalSettingsTab in index.html) so it needs its own hook to
+// overlay live data the same way injectPageLive() does for the main pages.
+async function injectSettingsLive(tabKey) {
+  const container = document.getElementById('settings-content-container');
+  if (!container) return;
+  let host = document.getElementById('jakal-settings-live');
+  if (host) host.remove();
+  host = document.createElement('div');
+  host.id = 'jakal-settings-live';
+  host.style.cssText = 'margin-bottom:16px';
+  container.insertBefore(host, container.firstChild);
+  try {
+    if (tabKey === 'profile' || tabKey === 'login_encryption') {
+      host.innerHTML = await renderAuthPanel();
+      wireAuthPanel(host);
+    } else if (tabKey === 'api_integration') {
+      host.innerHTML = await renderApiIntegrationPanelLive();
+      wireNewPanelActions(host);
+    } else if (tabKey === 'eas_rd') {
+      host.innerHTML = await renderEasRdPanelLive();
+      wireNewPanelActions(host);
+    } else if (tabKey === 'trade_secrets') {
+      host.innerHTML = await renderVaultPanelLive();
+    } else if (tabKey === 'rbac') {
+      host.innerHTML = await renderRbacPanelLive();
+    } else if (tabKey === 'auditing') {
+      host.innerHTML = await renderAuditingPanelLive();
+    } else if (tabKey === 'kms') {
+      host.innerHTML = await renderSimpleJsonPanel('Encryption / Key Management', '/api/crypto/status');
+    } else {
+      host.remove();
+    }
+  } catch (e) {
+    host.innerHTML = `<div style="${cardStyle()};color:#f87171">Live inject failed: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function hookSettingsSubTab() {
+  if (window.__jakalSettingsHooked) return;
+  const tryHook = () => {
+    if (typeof window.switchSettingsSubTab !== 'function') return false;
+    if (window.__jakalSettingsHooked) return true;
+    const orig = window.switchSettingsSubTab.bind(window);
+    window.switchSettingsSubTab = function (tab, shouldRerender = true) {
+      const ret = orig(tab, shouldRerender);
+      setTimeout(() => injectSettingsLive(tab), 150);
+      return ret;
+    };
+    window.__jakalSettingsHooked = true;
+    return true;
+  };
+  if (!tryHook()) {
+    let n = 0;
+    const t = setInterval(() => {
+      n += 1;
+      if (tryHook() || n > 40) clearInterval(t);
+    }, 250);
   }
 }
 
@@ -614,6 +942,7 @@ export function wireIntegrationButtons() {
 export async function startIntegration() {
   ensurePanel();
   hookLoadPage();
+  hookSettingsSubTab();
   const baseLabel = BACKEND_BASE === '' ? window.location.origin : BACKEND_BASE;
   updateTelemetryConsole(`Integration → ${baseLabel}`, 'text-emerald-400');
   try {

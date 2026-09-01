@@ -32,8 +32,8 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, status as http_status
 
 try:
-    from database import DuckDBManager
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    from database import DuckDBManager, get_db_manager
+    _db: Optional[DuckDBManager] = get_db_manager()
     ARES_OK = True
 except Exception as _e:
     ARES_OK = False

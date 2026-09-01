@@ -27,8 +27,8 @@ from pydantic import BaseModel
 
 try:
     from security_agents.unified_fabric import UnifiedSecurityFabric, MATURITY_LEVELS
-    from database import DuckDBManager
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    from database import DuckDBManager, get_db_manager
+    _db: Optional[DuckDBManager] = get_db_manager()
     _fabric = UnifiedSecurityFabric(db=_db)
     FABRIC_OK = True
 except Exception as _e:

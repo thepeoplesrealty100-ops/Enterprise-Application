@@ -28,8 +28,8 @@ from pydantic import BaseModel
 
 try:
     from security_agents.exploit_agent import ExploitAgent
-    from database import DuckDBManager
-    _db: Optional[DuckDBManager] = DuckDBManager()
+    from database import DuckDBManager, get_db_manager
+    _db: Optional[DuckDBManager] = get_db_manager()
     _gate = ExploitAgent(db_manager=_db)
     APPROVAL_OK = True
 except Exception as _e:

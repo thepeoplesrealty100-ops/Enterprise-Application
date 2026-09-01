@@ -56,23 +56,52 @@ async def test_health_check(client):
 
 @pytest.mark.asyncio
 async def test_pentest_start_missing_target(client):
-    """POST /api/pentest/scan with no target should return 422."""
-    response = await client.post("/api/pentest/scan", json={})
+    """
+    POST /api/pentest/run with no target should return 422.
+
+    Fixed: this used to POST to /api/pentest/scan, a path that doesn't
+    exist in routers/pentest.py (only POST /pentest/run is defined) — so
+    every assertion here was really asserting against a bare FastAPI
+    "route not found" 404, not the pentest router's own validation.
+    """
+    response = await client.post("/api/pentest/run", json={})
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_pentest_start_valid(client):
-    """POST /api/pentest/scan should accept a valid target and return 202."""
+async def test_pentest_start_valid(client, app):
+    """
+    POST /api/pentest/run with a valid target completes synchronously and
+    returns the finished report (this pipeline is deliberately not an
+    async job queue — see routers/pentest.py's module docstring — so
+    "queued" is not part of its contract; fixed to match the real
+    PentestResponse shape instead of an older async-job assumption).
+
+    Also fixed: every network-facing agent call goes through
+    tools.authorization.check_authorization_and_scope() (by design — see
+    that module's docstring), which denies with 403 unless an active
+    scope + insurance policy covers the target. This test was asserting
+    against that 403 without ever seeding one, so it only "passed" by
+    accident on whichever machine/run order happened to leave a prior
+    test's scope lying around in the shared on-disk DB. Seed a real scope
+    covering 192.0.2.1 explicitly so this test is self-contained.
+    """
+    from datetime import datetime, timezone, timedelta
+    from database import get_db_manager
+    db = get_db_manager()
+    now = datetime.now(timezone.utc)
+    db.add_scope("test-suite", "192.0.2.0/24", now - timedelta(days=1), now + timedelta(days=30))
+    db.add_insurance_policy(f"TS-{now.timestamp()}", "Test Underwriter", 1_000_000, now + timedelta(days=365))
+
     response = await client.post(
-        "/api/pentest/scan",
+        "/api/pentest/run",
         json={"target": "192.0.2.1", "scan_type": "quick", "operator_id": "test"},
     )
-    # 202 Accepted (scan queued) or 422 if schema changed
-    assert response.status_code in (202, 200)
+    assert response.status_code == 200
     data = response.json()
     assert "test_id" in data
-    assert data["status"] == "queued"
+    assert data["status"] == "report_ready"
+    assert "report_markdown" in data
 
 
 @pytest.mark.asyncio
@@ -121,27 +150,15 @@ async def test_reports_aggregate(client):
     assert data["total_findings"] == 0
 
 
-# ---------------------------------------------------------------------------
-# Repository unit tests (no HTTP)
-# ---------------------------------------------------------------------------
-
-def test_scan_repository_lifecycle():
-    from repository import ScanRepository  # noqa: PLC0415
-    repo = ScanRepository()
-
-    record = repo.create_scan("10.0.0.1", "comprehensive", "operator-1")
-    assert record["status"] == "queued"
-
-    scan_id = record["scan_id"]
-    updated = repo.update_scan_status(scan_id, "running")
-    assert updated["status"] == "running"
-
-    fetched = repo.get_scan(scan_id)
-    assert fetched is not None
-    assert fetched["status"] == "running"
-
-    repo.delete_scan(scan_id)
-    assert repo.get_scan(scan_id) is None
+# NOTE: a `test_scan_repository_lifecycle` test previously lived here,
+# importing `from repository import ScanRepository`. No such module has
+# existed anywhere in this codebase for a while now (grep confirms
+# `ScanRepository` appeared nowhere but this one test) — pentest scan
+# persistence goes straight through DuckDBManager.insert_pentest()
+# (see routers/pentest.py), no repository abstraction layer was ever
+# built. Removed rather than resurrecting a module nothing else uses,
+# since the real contract is already covered by test_pentest_start_valid
+# below and backend/tests/test_v25_ares_integration.py's DB-level tests.
 
 
 # ---------------------------------------------------------------------------

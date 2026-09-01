@@ -24,10 +24,29 @@ qiskit-aer==0.14.2
 qiskit-ibm-runtime==0.20.0
 
 # ── AI / LLM (Anthropic Claude) ──────────────────────────────────────────────
-anthropic==0.25.0
+# v2.6 fix: 0.25.0 was pinned without pinning its httpx dependency. A fresh
+# `pip install -r requirements.txt` today pulls current httpx (0.28+), which
+# removed the `proxies=` kwarg that anthropic==0.25.0's client passes
+# internally -- `import app` crashed with
+# "Client.__init__() got an unexpected keyword argument 'proxies'" on every
+# clean install, before this backend could serve a single request. Bumped to
+# a version built against modern httpx; llm_orchestrator.py's usage
+# (anthropic.Anthropic(api_key=...), .messages.create(...)) is stable across
+# this range so no call-site changes were needed.
+anthropic>=1.2.0,<2.0.0
 
 # ── Container / VM orchestration ─────────────────────────────────────────────
 docker==7.0.0
+
+# ── Identity & Access Management (v2.6 — Global Settings & Security) ────────
+# bcrypt: password hashing (Argon2id would need argon2-cffi's C extension,
+# which is not guaranteed to build in every deployment target; bcrypt via
+# the `bcrypt` package is a pure-C-extension-but-widely-prebuilt, NIST/OWASP-
+# acceptable alternative with a mature audit history).
+bcrypt>=4.1.0
+pyjwt>=2.8.0
+pyotp>=2.9.0            # TOTP for MFA (RFC 6238)
+email-validator>=2.1.0  # required by pydantic's EmailStr (iam.py, awareness.py)
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 pytest>=8.0.0

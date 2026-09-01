@@ -22,6 +22,12 @@ v2.4 routers:
 v2.5 routers:
   ares_router       — /api/ares/*      (Ares Unified Control Plane — cross-pillar
                                          event bus + Horizon/Resonance/Fabric rollup)
+v2.6 routers — Global Settings & Security + remaining Human/Risk Layer modules:
+  iam_router        — /api/iam/*       (Profile, Login/MFA, RBAC, API keys, Auditing)
+  vault_router      — /api/vault/*     (EAS R&D dependency scanner + Trade Secrets vault)
+  awareness_router  — /api/awareness/* (Security Awareness Training + Phishing Campaigns)
+  darkweb_router    — /api/darkweb/*   (Dark Web Monitoring — HIBP connector + manual feed)
+  cheatsheet_router — /api/cheatsheet/* (CheatSheet Library — exposes the existing ontology)
 """
 
 from .pentest import router as pentest_router
@@ -38,6 +44,11 @@ from .canvas import router as canvas_router
 from .resonance import router as resonance_router
 from .qaip import router as qaip_router
 from .ares import router as ares_router
+from .iam import router as iam_router
+from .vault import router as vault_router
+from .awareness import router as awareness_router
+from .darkweb import router as darkweb_router
+from .cheatsheet import router as cheatsheet_router
 
 __all__ = [
     "pentest_router",
@@ -54,4 +65,9 @@ __all__ = [
     "resonance_router",
     "qaip_router",
     "ares_router",
+    "iam_router",
+    "vault_router",
+    "awareness_router",
+    "darkweb_router",
+    "cheatsheet_router",
 ]
