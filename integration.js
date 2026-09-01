@@ -200,7 +200,131 @@ async function api(path, options = {}) {
     err.data = data;
     throw err;
   }
+  // v3.0: ExploitAgent.stage_payloads() attaches a "maya_challenge" to
+  // every HIGH/CRITICAL staged payload (see backend/security_agents/
+  // exploit_agent.py). Detecting it generically here -- rather than in
+  // one specific staging call site -- means the modal appears no matter
+  // which endpoint triggered staging (POST /api/approval/stage,
+  // /api/canvas/*, or any future one), since ExploitAgent.stage_payloads()
+  // is the single choke point all of them share.
+  _maybeShowMayaChallenges(data);
   return data;
+}
+
+// ── Maya-Vigesimal calendar 2FA modal (v3.0) ─────────────────────────────
+// Interlocked with the Human Approval Gate: consuming this challenge does
+// NOT itself approve a payload -- POST /api/approval/{id}/approve is still
+// required separately. This just proves the operator saw and echoed back
+// today's calendar coordinate token before that decision is made.
+
+function _maybeShowMayaChallenges(data) {
+  if (!data || typeof data !== 'object') return;
+  const challenges = [];
+  if (data.maya_challenge) challenges.push(data.maya_challenge);
+  if (Array.isArray(data.payloads)) {
+    for (const p of data.payloads) {
+      if (p && p.maya_challenge) challenges.push(p.maya_challenge);
+    }
+  }
+  for (const ch of challenges) showMayaChallengeModal(ch);
+}
+
+function closeMayaModal() {
+  const overlay = el('jakal-maya-modal');
+  if (overlay) overlay.remove();
+}
+
+function showMayaChallengeModal(challenge) {
+  closeMayaModal(); // one at a time
+  const overlay = document.createElement('div');
+  overlay.id = 'jakal-maya-modal';
+  overlay.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:10000', 'display:flex',
+    'align-items:center', 'justify-content:center',
+    'background:rgba(0,0,0,.6)', 'font:13px/1.5 Inter,system-ui,sans-serif',
+  ].join(';');
+
+  const expiresAt = new Date(challenge.expiresAt || challenge.expires_at).getTime();
+
+  overlay.innerHTML = `
+    <div style="${cardStyle()};width:min(420px,92vw);background:#111827;border-color:#f97316">
+      <h3 style="color:#f97316;margin:0 0 6px">Maya-Vigesimal Calendar Challenge</h3>
+      <p style="opacity:.8;margin:0 0 10px">
+        This HIGH/CRITICAL payload also requires a second-factor calendar
+        challenge before its approval decision can proceed. This does not
+        replace the Human Approval Gate — approve/deny it separately in
+        the Approval tab.
+      </p>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:8px;text-align:center">
+          <div style="opacity:.6;font-size:10px">TZOLKIN</div>
+          <div style="color:#f97316;font-weight:700">${escapeHtml(challenge.tzolkin || challenge.tzolkin_coordinate || '')}</div>
+        </div>
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:8px;text-align:center">
+          <div style="opacity:.6;font-size:10px">HAAB</div>
+          <div style="color:#f97316;font-weight:700">${escapeHtml(challenge.haab || challenge.haab_coordinate || '')}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="opacity:.6;font-size:10px;margin-bottom:2px">CHALLENGE TOKEN (echo this back below)</div>
+        <div id="jakal-maya-token" style="font-family:ui-monospace,monospace;font-size:15px;letter-spacing:2px;background:#0f172a;padding:8px;border-radius:8px;user-select:all">${escapeHtml(challenge.token || challenge.challenge_token || '')}</div>
+      </div>
+      <div id="jakal-maya-countdown" style="opacity:.7;margin-bottom:10px;font-size:11px"></div>
+      <input type="text" id="jakal-maya-input" placeholder="Enter the token shown above" autocomplete="off"
+             style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #4b5563;background:#0f172a;color:#fff;font-family:ui-monospace,monospace;margin-bottom:10px" />
+      <div id="jakal-maya-error" style="color:#f87171;font-size:11px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" id="jakal-maya-cancel" style="${btnStyle('#374151')}">Cancel</button>
+        <button type="button" id="jakal-maya-submit" style="${btnStyle('#166534')}">Verify</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  const countdownEl = el('jakal-maya-countdown');
+  const tick = () => {
+    const remainingMs = expiresAt - Date.now();
+    if (!countdownEl) return;
+    if (remainingMs <= 0) {
+      countdownEl.textContent = 'Expired — this challenge is no longer valid.';
+      countdownEl.style.color = '#f87171';
+      clearInterval(timer);
+      return;
+    }
+    const m = Math.floor(remainingMs / 60000);
+    const s = Math.floor((remainingMs % 60000) / 1000);
+    countdownEl.textContent = `Expires in ${m}:${String(s).padStart(2, '0')}`;
+  };
+  tick();
+  const timer = setInterval(tick, 1000);
+
+  const cleanup = () => { clearInterval(timer); closeMayaModal(); };
+  el('jakal-maya-cancel').onclick = cleanup;
+
+  el('jakal-maya-submit').onclick = async () => {
+    const input = el('jakal-maya-input');
+    const errorEl = el('jakal-maya-error');
+    const responseToken = (input?.value || '').trim();
+    if (!responseToken) {
+      if (errorEl) errorEl.textContent = 'Enter the token shown above.';
+      return;
+    }
+    try {
+      await api('/api/v3/auth/maya/verify', {
+        method: 'POST',
+        body: JSON.stringify({
+          session_id: challenge.sessionId || challenge.session_id,
+          response_token: responseToken,
+          operator_id: (sessionStorage.getItem('jakal_operator_id') || 'operator'),
+        }),
+      });
+      updateTelemetryConsole('[MAYA] Calendar challenge verified — proceed to Approval tab to decide.', 'text-emerald-400');
+      cleanup();
+      refreshOpsTab();
+    } catch (e) {
+      if (errorEl) errorEl.textContent = e.message || 'Verification failed';
+    }
+  };
 }
 
 async function renderReportsPanel() {
@@ -267,6 +391,9 @@ async function renderApprovalPanel() {
   return `<h3 style="color:#f97316;margin:0 0 8px">Human Approval Gate</h3>
     <pre style="font-size:10px;background:#0f172a;padding:8px;border-radius:8px">${escapeHtml(JSON.stringify(status, null, 2))}</pre>
     <p style="margin:8px 0">Pending: <b>${pending.count ?? reqs.length}</b></p>
+    <button type="button" data-stage-demo="T1110" style="${btnStyle('#b91c1c')};margin-bottom:10px">
+      Stage HIGH-risk demo payload (triggers Maya challenge)
+    </button>
     ${list}`;
 }
 
@@ -968,6 +1095,27 @@ function wireOpsActions(root) {
         alert((rep.content || JSON.stringify(rep)).slice(0, 1500));
       } catch (e) {
         updateTelemetryConsole(`[REPORT ERROR] ${e.message}`, 'text-red-400');
+      }
+    };
+  });
+  root.querySelectorAll('[data-stage-demo]').forEach((b) => {
+    b.onclick = async () => {
+      const techniqueId = b.getAttribute('data-stage-demo');
+      try {
+        // demo-only ATT&CK mapping so operators can see the Maya
+        // challenge modal without a real pentest run staged first
+        const result = await api('/api/approval/stage', {
+          method: 'POST',
+          body: JSON.stringify({
+            attack_mappings: [{ technique_id: techniqueId, phase: 'credential_access' }],
+            target: DEMO_TARGET,
+            operator_id: 'operator',
+          }),
+        });
+        updateTelemetryConsole(`[APPROVAL] staged ${result.staged_count} payload(s)`, 'text-emerald-400');
+        refreshOpsTab();
+      } catch (e) {
+        updateTelemetryConsole(`[APPROVAL ERROR] ${e.message}`, 'text-red-400');
       }
     };
   });

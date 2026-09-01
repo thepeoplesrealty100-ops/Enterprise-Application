@@ -34,6 +34,12 @@ v2.7 routers:
   scripts_router    — /api/scripts/*   (operator-uploaded script marketplace + sandbox execution;
                                          complementary to cheatsheet_router's prepopulated,
                                          auto-indexed gacyber_toolkit script catalog)
+v3.0 routers:
+  ontology_router   — /api/v3/ontology/*  (Palantir Foundry-style Object/Link digital twin --
+                                            see services/ontology_engine.py)
+  maya_auth_router  — /api/v3/auth/maya/* (Maya-Vigesimal calendar 2FA challenge, interlocked
+                                            with the v2.3 Human Approval Gate for HIGH/CRITICAL
+                                            staged payloads -- see security_agents/exploit_agent.py)
 """
 
 from .pentest import router as pentest_router
@@ -58,6 +64,8 @@ from .cheatsheet import router as cheatsheet_router
 from .response import router as response_router
 from .scripts import router as scripts_router
 from .ui_bridge import router as ui_bridge_router
+from .ontology_router import router as ontology_router
+from .maya_auth_router import router as maya_auth_router
 
 __all__ = [
     "pentest_router",
@@ -82,4 +90,6 @@ __all__ = [
     "response_router",
     "scripts_router",
     "ui_bridge_router",
+    "ontology_router",
+    "maya_auth_router",
 ]
