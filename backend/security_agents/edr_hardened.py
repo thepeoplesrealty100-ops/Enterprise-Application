@@ -198,6 +198,7 @@ def get_related_targets_for_remediation(target: str, ontology_engine, db=None,
 
     Returns a list of related target identifiers (IPs, hostnames, etc.).
     """
+    import json
     if not ontology_engine:
         return []
 
@@ -214,8 +215,17 @@ def get_related_targets_for_remediation(target: str, ontology_engine, db=None,
         related = []
         for node_id, node_data in subgraph.get("nodes", {}).items():
             if node_id != target_node_id and node_data.get("object_type") == "Asset":
-                if "value" in node_data:
-                    related.append(node_data["value"])
+                # Try to get target from attributes_json first, else from value key.
+                attributes = {}
+                if "attributes_json" in node_data and isinstance(node_data["attributes_json"], str):
+                    try:
+                        attributes = json.loads(node_data["attributes_json"])
+                    except (json.JSONDecodeError, ValueError):
+                        pass
+
+                target_val = attributes.get("target") or node_data.get("value")
+                if target_val:
+                    related.append(target_val)
 
         return related
     except Exception as e:
