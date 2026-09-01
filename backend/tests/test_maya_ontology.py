@@ -240,8 +240,10 @@ def test_maya_challenge_hides_raw_calendar_values(db):
     session = db.get_maya_session(challenge["session_id"])
     assert session["tzolkin_coordinate"]
     assert session["haab_coordinate"]
-    assert session["display_issued_at"] == challenge["display_issued_at"]
-    assert session["display_expires_at"] == challenge["display_expires_at"]
+    # DB columns are TIMESTAMPTZ (real datetimes); the challenge dict holds
+    # their friendly isoformat() string form for the frontend.
+    assert session["display_issued_at"].isoformat() == challenge["display_issued_at"]
+    assert session["display_expires_at"].isoformat() == challenge["display_expires_at"]
 
 
 # ---------------------------------------------------------------------------
