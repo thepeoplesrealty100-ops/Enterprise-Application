@@ -630,6 +630,108 @@ class DuckDBManager:
         )
         """)
 
+        # ══════════════════════════════════════════════════════════════════════════════
+        # v2.5 Enhanced - Resonance Policy Management & Enforcement
+        # ══════════════════════════════════════════════════════════════════════════════
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS resonance_policy (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_resonance_policy'),
+            policy_id           VARCHAR UNIQUE NOT NULL,
+            policy_name         VARCHAR NOT NULL,
+            description         VARCHAR,
+            threat_threshold    DECIMAL DEFAULT 0.7,    -- Severity at which isolation triggers
+            trigger_type        VARCHAR DEFAULT 'threat_detection',  -- threat_detection, compliance_breach, etc.
+            isolation_mode      VARCHAR DEFAULT 'network_only',      -- network_only, full_isolation, monitored
+            auto_enforce        BOOLEAN DEFAULT false,   -- Skip approval gate if true
+            webhook_url         VARCHAR,                 -- Send signed webhooks to this URL
+            enabled             BOOLEAN DEFAULT true,
+            created_at          TIMESTAMPTZ DEFAULT now(),
+            updated_at          TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS resonance_actions (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_resonance_actions'),
+            policy_id           VARCHAR NOT NULL,
+            action_type         VARCHAR NOT NULL,        -- isolate_host, kill_process, quarantine_data, snapshot_state
+            trigger_threshold   DECIMAL,                 -- Specific threshold for this action
+            enforcement_mode    VARCHAR DEFAULT 'block', -- block, alert_only, staged
+            created_at          TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS resonance_audit_trail (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_resonance_audit'),
+            event_id            VARCHAR UNIQUE NOT NULL,
+            event_type          VARCHAR NOT NULL,        -- isolation_requested, isolation_simulated, isolation_enforced, etc.
+            isolation_id        VARCHAR,
+            policy_id           VARCHAR,
+            actor                VARCHAR,                 -- Operator ID
+            status               VARCHAR,                 -- pending, simulated, approved, executing, active, released, failed
+            event_data          VARCHAR DEFAULT '{}',    -- JSON event details
+            signature_hmac      VARCHAR,                 -- HMAC-SHA256 signature for non-repudiation
+            timestamp           TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # ══════════════════════════════════════════════════════════════════════════════
+        # v2.5 Enhanced - Script Library Management
+        # ══════════════════════════════════════════════════════════════════════════════
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS script_library (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_script_lib'),
+            script_id           VARCHAR UNIQUE NOT NULL,
+            name                VARCHAR NOT NULL,
+            description         VARCHAR,
+            category            VARCHAR NOT NULL,        -- network_recon, endpoint_hardening, threat_hunting, etc.
+            language            VARCHAR NOT NULL,        -- python3, bash, powershell, etc.
+            script_content      VARCHAR NOT NULL,        -- Full script source code
+            parameters          VARCHAR DEFAULT '{}',    -- JSON: {param_name: {type, required, default, description}}
+            author              VARCHAR,
+            version             VARCHAR DEFAULT '1.0.0',
+            tags                VARCHAR DEFAULT '[]',    -- JSON array of tags
+            approved            BOOLEAN DEFAULT false,   -- Requires admin approval
+            approval_date       TIMESTAMPTZ,
+            approval_by         VARCHAR,
+            created_at          TIMESTAMPTZ DEFAULT now(),
+            updated_at          TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS script_executions (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_script_exec'),
+            execution_id        VARCHAR UNIQUE NOT NULL,
+            script_id           VARCHAR NOT NULL,
+            operator_id         VARCHAR NOT NULL,
+            status              VARCHAR DEFAULT 'queued',    -- queued, executing, success, failure, timeout, cancelled
+            parameters          VARCHAR DEFAULT '{}',        -- JSON input parameters
+            environment         VARCHAR DEFAULT '{}',        -- JSON environment variables
+            timeout_seconds     INTEGER DEFAULT 300,
+            start_time          TIMESTAMPTZ DEFAULT now(),
+            end_time            TIMESTAMPTZ,
+            exit_code           INTEGER,
+            stdout              VARCHAR,                     -- First 10KB of output
+            stderr              VARCHAR,                     -- First 10KB of error output
+            duration_seconds    DECIMAL,
+            sandbox_container_id VARCHAR                    -- Docker/VM container ID if applicable
+        )
+        """)
+
+        # Create sequences for new tables
+        try:
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_resonance_policy START 1")
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_resonance_actions START 1")
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_resonance_audit START 1")
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_script_lib START 1")
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_script_exec START 1")
+        except Exception:
+            pass  # Sequences may already exist
+
         self.conn.commit()
         logger.info("Schema v2.5 initialized at %s", self.db_path)
 

@@ -35,8 +35,7 @@ from routers import (
     aip_router, fabric_router,
     wireless_router, approval_router,
     horizon_router, canvas_router, resonance_router, qaip_router,
-    ares_router,
-)
+    ares_router, scripts_router,`n)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -94,7 +93,7 @@ app.include_router(horizon_router,   prefix="/api")
 app.include_router(canvas_router,    prefix="/api")
 app.include_router(resonance_router, prefix="/api")
 app.include_router(qaip_router,      prefix="/api")
-app.include_router(ares_router,      prefix="/api")
+app.include_router(ares_router,     prefix="/api")`napp.include_router(scripts_router, prefix="/api")
 
 db = DuckDBManager()
 orchestrator = AgentOrchestrator(config)
@@ -391,3 +390,5 @@ if __name__ == "__main__":
     host = getattr(config, "API_HOST", "0.0.0.0")
     port = int(getattr(config, "API_PORT", 8000))
     uvicorn.run(app, host=host, port=port, log_level="info")
+
+

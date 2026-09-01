@@ -38,6 +38,7 @@ from .canvas import router as canvas_router
 from .resonance import router as resonance_router
 from .qaip import router as qaip_router
 from .ares import router as ares_router
+from .scripts import router as scripts_router
 
 __all__ = [
     "pentest_router",
@@ -54,4 +55,5 @@ __all__ = [
     "resonance_router",
     "qaip_router",
     "ares_router",
+    "scripts_router",
 ]
