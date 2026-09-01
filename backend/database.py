@@ -920,6 +920,156 @@ class DuckDBManager:
         )
         """)
 
+        # ── Batch 1 Tables (merged from a parallel local build) ─────────────
+        # Reconciliation: these tables were added directly on main by a
+        # separate session while the automation_settings work above was in
+        # progress on this branch. resonance_policy here is a DIFFERENT,
+        # complementary concept to automation_settings (named, reusable,
+        # multi-row enforcement-policy objects vs. a small set of global
+        # single-row on/off and threshold knobs) -- kept as-is, not merged
+        # or renamed, since it does not collide once automation_settings
+        # was renamed off of the resonance_policy name. script_library /
+        # script_executions back routers/scripts.py, the operator-uploaded
+        # script marketplace, distinct from payloads/script_catalog.py's
+        # auto-indexed, prepopulated gacyber_toolkit corpus that
+        # routers/cheatsheet.py exposes.
+        #
+        # BUG FIX: these tables' PRIMARY KEY columns use
+        # DEFAULT nextval('seq_...') -- DuckDB resolves the sequence name at
+        # CREATE TABLE time (not lazily at first INSERT), so the sequences
+        # must exist before any of these five CREATE TABLEs run. The
+        # original code created them in the opposite order (sequences
+        # created in a block AFTER all five tables), which raised
+        # `CatalogException: Sequence with name seq_resonance_policy does
+        # not exist!` on the very first fresh-database initialize_schema()
+        # call -- confirmed by reproducing it here. Moved sequence creation
+        # to right here, ahead of the tables that reference it.
+        try:
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_resonance_policy START 1")
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_resonance_actions START 1")
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_resonance_audit START 1")
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_script_lib START 1")
+            c.execute("CREATE SEQUENCE IF NOT EXISTS seq_script_exec START 1")
+        except Exception:
+            pass  # Sequences may already exist
+
+        # ══════════════════════════════════════════════════════════════════════════════
+        # v2.5 Enhanced - Resonance Policy Management & Enforcement
+        # ══════════════════════════════════════════════════════════════════════════════
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS resonance_policy (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_resonance_policy'),
+            policy_id           VARCHAR UNIQUE NOT NULL,
+            policy_name         VARCHAR NOT NULL,
+            description         VARCHAR,
+            threat_threshold    DECIMAL DEFAULT 0.7,    -- Severity at which isolation triggers
+            trigger_type        VARCHAR DEFAULT 'threat_detection',  -- threat_detection, compliance_breach, etc.
+            isolation_mode      VARCHAR DEFAULT 'network_only',      -- network_only, full_isolation, monitored
+            auto_enforce        BOOLEAN DEFAULT false,   -- Skip approval gate if true
+            webhook_url         VARCHAR,                 -- Send signed webhooks to this URL
+            enabled             BOOLEAN DEFAULT true,
+            created_at          TIMESTAMPTZ DEFAULT now(),
+            updated_at          TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS resonance_actions (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_resonance_actions'),
+            policy_id           VARCHAR NOT NULL,
+            action_type         VARCHAR NOT NULL,        -- isolate_host, kill_process, quarantine_data, snapshot_state
+            trigger_threshold   DECIMAL,                 -- Specific threshold for this action
+            enforcement_mode    VARCHAR DEFAULT 'block', -- block, alert_only, staged
+            created_at          TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS resonance_audit_trail (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_resonance_audit'),
+            event_id            VARCHAR UNIQUE NOT NULL,
+            event_type          VARCHAR NOT NULL,        -- isolation_requested, isolation_simulated, isolation_enforced, etc.
+            isolation_id        VARCHAR,
+            policy_id           VARCHAR,
+            actor                VARCHAR,                 -- Operator ID
+            status               VARCHAR,                 -- pending, simulated, approved, executing, active, released, failed
+            event_data          VARCHAR DEFAULT '{}',    -- JSON event details
+            signature_hmac      VARCHAR,                 -- HMAC-SHA256 signature for non-repudiation
+            timestamp           TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # core/enforcement.py's AuditedHostIsolationEngine originally had no
+        # dedicated table to persist AuditedHostIsolation state to -- its
+        # own _persist_isolation() docstring said so explicitly ("This is a
+        # placeholder; in production, add dedicated table to database.py")
+        # and instead stuffed a JSON blob into agent_logs.details, fetched
+        # back via `details LIKE '%"<isolation_id>"%' ORDER BY timestamp
+        # DESC LIMIT 1`. That broke in two ways once actually exercised
+        # (this reconciliation was the first time it ran end-to-end): the
+        # LIKE search doesn't scope to a single isolation reliably, and
+        # every persist wrote the object's ORIGINAL created_at as the row's
+        # timestamp (never the current write time), so "ORDER BY timestamp
+        # DESC" ties on every update after the first -- confirmed by
+        # reproducing a stale-status read after enforce_isolation(). One
+        # real table, upserted by isolation_id, fixes both.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS resonance_isolations (
+            isolation_id  VARCHAR PRIMARY KEY,
+            status        VARCHAR NOT NULL,         -- pending | simulated | approved | active | released | failed
+            target_hostname VARCHAR,
+            state         VARCHAR NOT NULL,          -- JSON: AuditedHostIsolation.model_dump()
+            created_at    TIMESTAMPTZ DEFAULT now(),
+            updated_at    TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        # ══════════════════════════════════════════════════════════════════════════════
+        # v2.5 Enhanced - Script Library Management
+        # ══════════════════════════════════════════════════════════════════════════════
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS script_library (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_script_lib'),
+            script_id           VARCHAR UNIQUE NOT NULL,
+            name                VARCHAR NOT NULL,
+            description         VARCHAR,
+            category            VARCHAR NOT NULL,        -- network_recon, endpoint_hardening, threat_hunting, etc.
+            language            VARCHAR NOT NULL,        -- python3, bash, powershell, etc.
+            script_content      VARCHAR NOT NULL,        -- Full script source code
+            parameters          VARCHAR DEFAULT '{}',    -- JSON: {param_name: {type, required, default, description}}
+            author              VARCHAR,
+            version             VARCHAR DEFAULT '1.0.0',
+            tags                VARCHAR DEFAULT '[]',    -- JSON array of tags
+            approved            BOOLEAN DEFAULT false,   -- Requires admin approval
+            approval_date       TIMESTAMPTZ,
+            approval_by         VARCHAR,
+            created_at          TIMESTAMPTZ DEFAULT now(),
+            updated_at          TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS script_executions (
+            id                  INTEGER PRIMARY KEY DEFAULT nextval('seq_script_exec'),
+            execution_id        VARCHAR UNIQUE NOT NULL,
+            script_id           VARCHAR NOT NULL,
+            operator_id         VARCHAR NOT NULL,
+            status              VARCHAR DEFAULT 'queued',    -- queued, executing, success, failure, timeout, cancelled
+            parameters          VARCHAR DEFAULT '{}',        -- JSON input parameters
+            environment         VARCHAR DEFAULT '{}',        -- JSON environment variables
+            timeout_seconds     INTEGER DEFAULT 300,
+            start_time          TIMESTAMPTZ DEFAULT now(),
+            end_time            TIMESTAMPTZ,
+            exit_code           INTEGER,
+            stdout              VARCHAR,                     -- First 10KB of output
+            stderr              VARCHAR,                     -- First 10KB of error output
+            duration_seconds    DECIMAL,
+            sandbox_container_id VARCHAR                    -- Docker/VM container ID if applicable
+        )
+        """)
+
         self.conn.commit()
         logger.info("Schema v2.8 initialized at %s", self.db_path)
 

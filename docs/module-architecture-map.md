@@ -30,7 +30,7 @@ rather than a full control surface · ⚪ frontend mock only, no backend
 |---|---|---|---|
 | Energy Core Management | `admin_energy_core` | `GET /api/qaip/energy-core/status` | 🟢 (v2.7: throttle gauge widget) |
 | Q'AIP Logic Core Manager | `admin_logic_core` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
-| Resonance Wave Automation | `admin_automation_controls` | `GET/POST /api/resonance/automation-settings/*` (v2.8) | 🟢 (real, write-controlled automation knobs, each read by a real enforcement point — see docs/v2.8-automation-policy-and-enforcement.md) |
+| Resonance Wave Automation | `admin_automation_controls` | `GET/POST /api/resonance/automation-settings/*` (v2.8) + `/api/resonance/policies/*`, `/api/resonance/enforce/*`, `/api/resonance/audit*` (v2.9, merged from a parallel build) | 🟢 (real, write-controlled automation knobs each read by a real enforcement point, PLUS named isolation policies with a staged/audited enforce workflow (simulate → request approval → execute → release) backed by a real, tamper-evident hash-chained audit trail and the same real Docker/webhook enforcement connectors response.py uses — see docs/v2.8-automation-policy-and-enforcement.md and docs/v2.9-batch1-reconciliation.md) |
 | Ontology & Simulation Hub | `admin_ontology` | `GET /api/cheatsheet/graph` | 🟢 (v2.7: category/phase relationship chip graph) |
 | Model Chains & Inference | `admin_model_chains` | `GET /api/qaip/orbital-comms/stats` | 🟢 (v2.7: inference ledger table) |
 | Quantum Orbital & Event Comms | `admin_quantum_nexus` | `GET /api/qaip/orbital-comms` | 🟢 (v2.7: event stream feed) |
@@ -59,7 +59,7 @@ rather than a full control surface · ⚪ frontend mock only, no backend
 
 | Frontend label | Page key | Backend | Status |
 |---|---|---|---|
-| CheatSheet Library | `admin_cheatsheet_library` | `/api/cheatsheet/*` — ontology (13 modules/43 doc-derived tool sheets) **+ v2.7's 43-script real, runnable catalog** with stage → approve → sandbox-execute | 🟢 |
+| CheatSheet Library | `admin_cheatsheet_library` | `/api/cheatsheet/*` — ontology (13 modules/43 doc-derived tool sheets) **+ v2.7's 43-script real, runnable catalog** with stage → approve → sandbox-execute, plus `/api/scripts/*` (v2.9, merged from a parallel build) — a separate, operator-uploaded script marketplace with catalog approval + sandbox execution + SSE-streamed run output, complementary to the auto-indexed gacyber_toolkit corpus above | 🟢 |
 
 ## New in v2.7 — Detection & Response
 

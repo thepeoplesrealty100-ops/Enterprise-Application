@@ -43,6 +43,7 @@ from routers import (
     horizon_router, canvas_router, resonance_router, qaip_router,
     ares_router, iam_router, vault_router, awareness_router,
     darkweb_router, cheatsheet_router, response_router,
+    scripts_router,
 )
 from dependencies import require_permission
 
@@ -109,6 +110,7 @@ app.include_router(awareness_router, prefix="/api")
 app.include_router(darkweb_router,   prefix="/api")
 app.include_router(cheatsheet_router, prefix="/api")
 app.include_router(response_router,  prefix="/api")
+app.include_router(scripts_router,   prefix="/api")
 
 db = get_db_manager()
 orchestrator = AgentOrchestrator(config)
@@ -436,3 +438,5 @@ if __name__ == "__main__":
     host = getattr(config, "API_HOST", "0.0.0.0")
     port = int(getattr(config, "API_PORT", 8000))
     uvicorn.run(app, host=host, port=port, log_level="info")
+
+

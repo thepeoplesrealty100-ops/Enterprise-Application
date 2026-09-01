@@ -49,6 +49,16 @@ pyotp>=2.9.0            # TOTP for MFA (RFC 6238)
 segno>=1.6.0             # pure-Python QR code generation (SVG/PNG), no PIL/native deps -- MFA enrollment QR
 email-validator>=2.1.0  # required by pydantic's EmailStr (iam.py, awareness.py)
 
+# ── Resonance policy enforcement (core/webhook_dispatcher.py async path) ────
+# core/webhook_dispatcher.py's dispatch_async()/_send_webhook_async() use
+# aiohttp for non-blocking webhook delivery; the synchronous dispatch()
+# (requests-based) path works without it. Declared here so a real install
+# actually has it -- core/webhook_dispatcher.py itself also guards the
+# import so a missing aiohttp degrades only the async path instead of
+# crashing routers/resonance.py's import (and thus the whole /resonance
+# router) at startup.
+aiohttp>=3.9.0
+
 # ── Testing ──────────────────────────────────────────────────────────────────
 pytest>=8.0.0
 pytest-asyncio>=0.23.0

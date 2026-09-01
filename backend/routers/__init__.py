@@ -31,6 +31,9 @@ v2.6 routers — Global Settings & Security + remaining Human/Risk Layer modules
                                           plus v2.7's real script catalog + staged execution)
 v2.7 routers:
   response_router   — /api/response/*  (Detection & Response — triage, IOC block, quarantine, isolate)
+  scripts_router    — /api/scripts/*   (operator-uploaded script marketplace + sandbox execution;
+                                         complementary to cheatsheet_router's prepopulated,
+                                         auto-indexed gacyber_toolkit script catalog)
 """
 
 from .pentest import router as pentest_router
@@ -53,6 +56,7 @@ from .awareness import router as awareness_router
 from .darkweb import router as darkweb_router
 from .cheatsheet import router as cheatsheet_router
 from .response import router as response_router
+from .scripts import router as scripts_router
 
 __all__ = [
     "pentest_router",
@@ -75,4 +79,5 @@ __all__ = [
     "darkweb_router",
     "cheatsheet_router",
     "response_router",
+    "scripts_router",
 ]
