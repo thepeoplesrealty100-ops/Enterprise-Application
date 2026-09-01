@@ -3160,6 +3160,40 @@ class DuckDBManager:
     # v2.4 — Q'AIP Logic & Quantum Orchestration
     # ======================================================================
 
+    def record_quantum_job(self, job_id: str, circuit_name: str, backend: str,
+                            shots: int, result: Dict[str, Any], status: str) -> None:
+        """
+        Durable mirror of routers/quantum.py's QuantumEngine.store_result(),
+        which only kept an in-process dict (job_cache) -- job history was
+        lost on restart and unqueryable via SQL despite the quantum_jobs
+        table existing in this schema for exactly this purpose. The
+        in-memory cache stays the fast-path read; this is the fallback for
+        anything (a restart, or a different QuantumEngine instance --
+        routers/pentest.py constructs its own, separate from this router's)
+        that doesn't have it.
+        """
+        completed_at = datetime.now(timezone.utc) if status in ("completed", "error") else None
+        self.conn.execute(
+            """
+            INSERT INTO quantum_jobs
+                (job_id, circuit_name, backend, shots, result, status, completed_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (job_id, circuit_name, backend, shots, json.dumps(result, default=str), status, completed_at),
+        )
+        self.conn.commit()
+
+    def get_quantum_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT result FROM quantum_jobs WHERE job_id = ?", (job_id,)
+        ).fetchone()
+        if not row:
+            return None
+        try:
+            return json.loads(row[0])
+        except (TypeError, ValueError):
+            return None
+
     def log_orbital_comm(self, record: Dict[str, Any]) -> str:
         """Required: comm_id, event_type. Optional: computational_agent_id,
         inference_chain_hash, quantum_entropy_seed, execution_latency_ms."""

@@ -124,6 +124,35 @@ async def test_quantum_status(client):
     assert data["status"] in ("ready", "unavailable")
 
 
+@pytest.mark.asyncio
+async def test_quantum_job_survives_restart(client):
+    """
+    Regression test: QuantumEngine.store_result() only ever kept an
+    in-process dict (job_cache); quantum_jobs existed in the schema but
+    nothing wrote to it, so job history was unqueryable via SQL and lost
+    on restart despite the table's own purpose. GET /jobs/{id} now falls
+    back to database.py's get_quantum_job() when the in-memory engine
+    doesn't have it -- simulate "after a restart" by querying the DB
+    directly instead of going through the same process's cache.
+    """
+    submit = await client.post(
+        "/api/quantum/submit",
+        json={"circuit": "bell_state", "shots": 50, "backend": "qiskit_aer", "operator_id": "tester"},
+    )
+    assert submit.status_code == 200
+    job_id = submit.json()["job_id"]
+
+    from database import get_db_manager
+    db_row = get_db_manager().get_quantum_job(job_id)
+    assert db_row is not None
+    assert db_row.get("status") == "completed"
+
+    # The real endpoint must also resolve it (cache hit in this process,
+    # but the DB fallback is exercised above independently).
+    fetched = await client.get(f"/api/quantum/jobs/{job_id}")
+    assert fetched.status_code == 200
+
+
 # ---------------------------------------------------------------------------
 # Reports — aggregate
 # ---------------------------------------------------------------------------
