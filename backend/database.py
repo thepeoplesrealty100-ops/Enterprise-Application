@@ -1268,7 +1268,9 @@ class DuckDBManager:
             expires_at            TIMESTAMPTZ NOT NULL,
             responded_at          TIMESTAMPTZ,
             response_token        VARCHAR,
-            pqc_entry_id          VARCHAR
+            pqc_entry_id          VARCHAR,
+            display_issued_at     VARCHAR NOT NULL,
+            display_expires_at    VARCHAR NOT NULL
         )
         """)
 
@@ -1457,14 +1459,19 @@ class DuckDBManager:
                              tzolkin: str, haab: str, challenge_token: str,
                              expires_at: datetime, pqc_entry_id: Optional[str] = None) -> str:
         session_id = str(uuid.uuid4())
+        issued_at = datetime.now(timezone.utc)
+        display_issued_at = issued_at.isoformat()
+        display_expires_at = expires_at.isoformat()
         self.conn.execute(
             """
             INSERT INTO maya_vigesimal_auth_sessions
                 (session_id, payload_id, operator_id, tzolkin_coordinate, haab_coordinate,
-                 challenge_token, status, expires_at, pqc_entry_id)
-            VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+                 challenge_token, status, expires_at, pqc_entry_id,
+                 display_issued_at, display_expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)
             """,
-            (session_id, payload_id, operator_id, tzolkin, haab, challenge_token, expires_at, pqc_entry_id),
+            (session_id, payload_id, operator_id, tzolkin, haab, challenge_token, expires_at, pqc_entry_id,
+             display_issued_at, display_expires_at),
         )
         self.conn.commit()
         return session_id
@@ -1472,6 +1479,20 @@ class DuckDBManager:
     def get_maya_session(self, session_id: str) -> Optional[Dict[str, Any]]:
         row = self.conn.execute(
             "SELECT * FROM maya_vigesimal_auth_sessions WHERE session_id = ?", (session_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    def get_maya_session_by_payload_id(self, payload_id: str) -> Optional[Dict[str, Any]]:
+        """Most recent Maya session for a payload_id -- approve_payload()/
+        reject_payload() only have payload_id, not session_id, when they
+        need to enforce the interlock."""
+        row = self.conn.execute(
+            "SELECT * FROM maya_vigesimal_auth_sessions WHERE payload_id = ? "
+            "ORDER BY created_at DESC LIMIT 1",
+            (payload_id,),
         ).fetchone()
         if not row:
             return None

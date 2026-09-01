@@ -221,6 +221,161 @@ def test_stage_payloads_attaches_maya_challenge_for_high_risk_only(db):
     assert "maya_challenge" not in low_staged[0]
 
 
+def test_maya_challenge_hides_raw_calendar_values(db):
+    """The challenge handed back to callers (and, through them, the
+    frontend) must expose only friendly display timestamps + session_id +
+    challenge_token -- never the raw Tzolkin/Haab coordinates or the raw
+    expires_at. The coordinates still live in the DB row (internal)."""
+    agent = ExploitAgent(db_manager=db)
+    payload_id = str(uuid.uuid4())
+    challenge = agent._maya_vigesimal_challenge(payload_id, "op1", "CRITICAL")
+
+    assert set(challenge.keys()) == {
+        "session_id", "challenge_token", "display_issued_at", "display_expires_at", "status",
+    }
+    assert "tzolkin_coordinate" not in challenge
+    assert "haab_coordinate" not in challenge
+    assert "expires_at" not in challenge
+
+    session = db.get_maya_session(challenge["session_id"])
+    assert session["tzolkin_coordinate"]
+    assert session["haab_coordinate"]
+    assert session["display_issued_at"] == challenge["display_issued_at"]
+    assert session["display_expires_at"] == challenge["display_expires_at"]
+
+
+# ---------------------------------------------------------------------------
+# Maya-Vigesimal interlock with the Human Approval Gate
+# ---------------------------------------------------------------------------
+
+def _authorized_db(tmp_path, name="test_v3_interlock.duckdb"):
+    from datetime import datetime, timezone, timedelta
+    path = str(tmp_path / name)
+    manager = DuckDBManager(db_path=path)
+    now = datetime.now(timezone.utc)
+    manager.add_scope("ACME", "10.0.0.0/24, acme.example.org",
+                       now - timedelta(days=1), now + timedelta(days=30))
+    manager.add_insurance_policy("P1", "Lloyds", 1_000_000, now + timedelta(days=365))
+    return manager
+
+
+def test_approve_payload_blocked_while_maya_pending(tmp_path):
+    db = _authorized_db(tmp_path)
+    gate = ExploitAgent(db_manager=db)
+    staged = gate.stage_payloads(
+        [{"technique_id": "T1110", "phase": "credential_access"}],  # -> HIGH -> Maya challenge
+        target="10.0.0.5", operator_id="op1",
+    )
+    payload_id = staged[0]["payload_id"]
+    assert "maya_challenge" in staged[0]
+
+    result = gate.approve_payload(payload_id, "demo-lead", "authorized")
+    assert result["status"] == "error"
+    assert db.get_approval_request(payload_id)["status"] == "pending"  # decision never recorded
+    db.conn.close()
+
+
+def test_reject_payload_blocked_while_maya_pending(tmp_path):
+    db = _authorized_db(tmp_path)
+    gate = ExploitAgent(db_manager=db)
+    staged = gate.stage_payloads(
+        [{"technique_id": "T1190", "finding": "demo"}],  # -> CRITICAL -> Maya challenge
+        target="10.0.0.5", operator_id="op1",
+    )
+    payload_id = staged[0]["payload_id"]
+
+    result = gate.reject_payload(payload_id, "demo-lead", "out of scope")
+    assert result["status"] == "error"
+    assert db.get_approval_request(payload_id)["status"] == "pending"
+    db.conn.close()
+
+
+def test_approve_payload_succeeds_only_after_maya_consumed(tmp_path):
+    db = _authorized_db(tmp_path)
+    gate = ExploitAgent(db_manager=db)
+    staged = gate.stage_payloads(
+        [{"technique_id": "T1110", "phase": "credential_access"}],
+        target="10.0.0.5", operator_id="op1",
+    )
+    payload_id = staged[0]["payload_id"]
+    maya = staged[0]["maya_challenge"]
+
+    blocked = gate.approve_payload(payload_id, "demo-lead", "authorized")
+    assert blocked["status"] == "error"
+
+    consumed = db.consume_maya_session(maya["session_id"], maya["challenge_token"], "demo-lead")
+    assert consumed["status"] == "consumed"
+
+    approved = gate.approve_payload(payload_id, "demo-lead", "authorized")
+    assert approved["status"] == "approved"
+    assert db.get_approval_request(payload_id)["status"] == "approved"
+    db.conn.close()
+
+
+def test_reject_payload_succeeds_only_after_maya_consumed(tmp_path):
+    db = _authorized_db(tmp_path)
+    gate = ExploitAgent(db_manager=db)
+    staged = gate.stage_payloads(
+        [{"technique_id": "T1190", "finding": "demo"}],
+        target="10.0.0.5", operator_id="op1",
+    )
+    payload_id = staged[0]["payload_id"]
+    maya = staged[0]["maya_challenge"]
+
+    consumed = db.consume_maya_session(maya["session_id"], maya["challenge_token"], "demo-lead")
+    assert consumed["status"] == "consumed"
+
+    rejected = gate.reject_payload(payload_id, "demo-lead", "out of scope")
+    assert rejected["status"] == "rejected"
+    assert db.get_approval_request(payload_id)["status"] == "denied"
+    db.conn.close()
+
+
+def test_approve_payload_signed_audit_entry_includes_maya_session_id(tmp_path):
+    """The PQC-signed audit entry for the approval decision must include
+    maya_session_id so the calendar 2FA is traceable in the tamper-evident
+    audit log, not just enforced at decision time."""
+    import json
+    db = _authorized_db(tmp_path)
+    gate = ExploitAgent(db_manager=db)
+    staged = gate.stage_payloads(
+        [{"technique_id": "T1110", "phase": "credential_access"}],
+        target="10.0.0.5", operator_id="op1",
+    )
+    payload_id = staged[0]["payload_id"]
+    maya = staged[0]["maya_challenge"]
+    db.consume_maya_session(maya["session_id"], maya["challenge_token"], "demo-lead")
+
+    approved = gate.approve_payload(payload_id, "demo-lead", "authorized")
+    assert approved["status"] == "approved"
+
+    rows = db.conn.execute(
+        "SELECT action_detail FROM pqc_audit_log WHERE action_type = 'exploit_approval_granted' "
+        "ORDER BY timestamp DESC LIMIT 1"
+    ).fetchone()
+    assert rows is not None
+    detail = json.loads(rows[0])
+    assert detail["maya_session_id"] == maya["session_id"]
+    db.conn.close()
+
+
+def test_approve_payload_without_maya_session_proceeds_unimpeded(tmp_path):
+    """LOW/MEDIUM-risk payloads never get a Maya challenge; the interlock
+    must not invent a requirement that was never staged."""
+    db = _authorized_db(tmp_path)
+    gate = ExploitAgent(db_manager=db)
+    staged = gate.stage_payloads(
+        [{"technique_id": "T1595", "phase": "recon_active"}],  # -> LOW -> no Maya challenge
+        target="10.0.0.5", operator_id="op1",
+    )
+    payload_id = staged[0]["payload_id"]
+    assert "maya_challenge" not in staged[0]
+
+    approved = gate.approve_payload(payload_id, "demo-lead", "authorized")
+    assert approved["status"] == "approved"
+    db.conn.close()
+
+
 # ---------------------------------------------------------------------------
 # Resonance policy enforcements + Q'AIP inference registry
 # ---------------------------------------------------------------------------

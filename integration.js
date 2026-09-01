@@ -244,7 +244,16 @@ function showMayaChallengeModal(challenge) {
     'background:rgba(0,0,0,.6)', 'font:13px/1.5 Inter,system-ui,sans-serif',
   ].join(';');
 
-  const expiresAt = new Date(challenge.expiresAt || challenge.expires_at).getTime();
+  const displayIssuedAt = challenge.display_issued_at || '';
+  const displayExpiresAt = challenge.display_expires_at || challenge.expiresAt || challenge.expires_at || '';
+  const expiresAt = new Date(displayExpiresAt).getTime();
+  const formatFriendly = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleString();
+  };
+  const rawToken = challenge.token || challenge.challenge_token || '';
+  const maskedToken = '•'.repeat(Math.max(rawToken.length, 8));
 
   overlay.innerHTML = `
     <div style="${cardStyle()};width:min(420px,92vw);background:#111827;border-color:#f97316">
@@ -257,17 +266,20 @@ function showMayaChallengeModal(challenge) {
       </p>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <div style="flex:1;background:#0f172a;border-radius:8px;padding:8px;text-align:center">
-          <div style="opacity:.6;font-size:10px">TZOLKIN</div>
-          <div style="color:#f97316;font-weight:700">${escapeHtml(challenge.tzolkin || challenge.tzolkin_coordinate || '')}</div>
+          <div style="opacity:.6;font-size:10px">ISSUED</div>
+          <div style="color:#f97316;font-weight:700;font-size:11px">${escapeHtml(formatFriendly(displayIssuedAt))}</div>
         </div>
         <div style="flex:1;background:#0f172a;border-radius:8px;padding:8px;text-align:center">
-          <div style="opacity:.6;font-size:10px">HAAB</div>
-          <div style="color:#f97316;font-weight:700">${escapeHtml(challenge.haab || challenge.haab_coordinate || '')}</div>
+          <div style="opacity:.6;font-size:10px">EXPIRES</div>
+          <div style="color:#f97316;font-weight:700;font-size:11px">${escapeHtml(formatFriendly(displayExpiresAt))}</div>
         </div>
       </div>
       <div style="margin-bottom:10px">
-        <div style="opacity:.6;font-size:10px;margin-bottom:2px">CHALLENGE TOKEN (echo this back below)</div>
-        <div id="jakal-maya-token" style="font-family:ui-monospace,monospace;font-size:15px;letter-spacing:2px;background:#0f172a;padding:8px;border-radius:8px;user-select:all">${escapeHtml(challenge.token || challenge.challenge_token || '')}</div>
+        <div style="opacity:.6;font-size:10px;margin-bottom:2px">CHALLENGE TOKEN (hidden by default — echo it back below)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="jakal-maya-token" style="flex:1;font-family:ui-monospace,monospace;font-size:15px;letter-spacing:2px;background:#0f172a;padding:8px;border-radius:8px;user-select:none">${escapeHtml(maskedToken)}</div>
+          <button type="button" id="jakal-maya-token-toggle" style="${btnStyle('#374151')}">Show</button>
+        </div>
       </div>
       <div id="jakal-maya-countdown" style="opacity:.7;margin-bottom:10px;font-size:11px"></div>
       <input type="text" id="jakal-maya-input" placeholder="Enter the token shown above" autocomplete="off"
@@ -280,6 +292,18 @@ function showMayaChallengeModal(challenge) {
     </div>`;
 
   document.body.appendChild(overlay);
+
+  let tokenRevealed = false;
+  const tokenEl = el('jakal-maya-token');
+  const tokenToggleBtn = el('jakal-maya-token-toggle');
+  if (tokenToggleBtn && tokenEl) {
+    tokenToggleBtn.onclick = () => {
+      tokenRevealed = !tokenRevealed;
+      tokenEl.textContent = tokenRevealed ? rawToken : maskedToken;
+      tokenEl.style.userSelect = tokenRevealed ? 'all' : 'none';
+      tokenToggleBtn.textContent = tokenRevealed ? 'Hide' : 'Show';
+    };
+  }
 
   const countdownEl = el('jakal-maya-countdown');
   const tick = () => {
