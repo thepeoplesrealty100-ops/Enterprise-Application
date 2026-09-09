@@ -59,6 +59,13 @@ from routers import (
     scripts_router, ui_bridge_router,
     ontology_router, maya_auth_router,
     aip_cheatsheet_router,
+    av_command_center_router, digital_twin_router,
+    autonomous_response_router, compliance_intelligence_router,
+    energy_logic_router, vr_command_center_router,
+    capabilities_router,
+    msp_multi_tenant_router, fleet_management_router,
+    vulnerability_management_router,
+    enterprise_gaps_router,
 )
 from dependencies import require_permission
 
@@ -153,6 +160,20 @@ app.include_router(ui_bridge_router,  prefix="/api")
 app.include_router(ontology_router,   prefix="/api/v3/ontology")
 app.include_router(maya_auth_router,  prefix="/api/v3/auth/maya")
 app.include_router(aip_cheatsheet_router, prefix="/api/v3/aip/cheatsheet")
+
+# JAKAL v4.0 consolidated command modules (each router self-prefixes)
+app.include_router(av_command_center_router)
+app.include_router(digital_twin_router)
+app.include_router(autonomous_response_router)
+app.include_router(compliance_intelligence_router)
+app.include_router(energy_logic_router)
+app.include_router(vr_command_center_router)
+app.include_router(capabilities_router)
+# ── Enterprise platform modules (self-prefixed) ──
+app.include_router(msp_multi_tenant_router)
+app.include_router(fleet_management_router)
+app.include_router(vulnerability_management_router)
+app.include_router(enterprise_gaps_router)
 
 # ============================================================================
 # Shared Components
@@ -608,6 +629,17 @@ async def serve_index():
     }
 
 
+@app.get("/world_land_map.json")
+async def serve_world_map():
+    """Serve the world map data the Global Predictive Matrix renders from
+    (top-level asset; previously only reachable when the dir was statically
+    served, so the map went black in backend-served mode)."""
+    path = _FRONTEND / "world_land_map.json"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="world_land_map.json not found")
+    return FileResponse(path, media_type="application/json")
+
+
 @app.get("/integration.js")
 async def serve_integration_js():
     path = _FRONTEND / "integration.js"
@@ -684,6 +716,15 @@ async def startup_event():
     logger.info("="*70)
     logger.info("Documentation: http://localhost:8000/docs")
     logger.info("="*70)
+    # Security Capabilities data layer — create + seed the 7-domain tables
+    # (managed devices, EDR alerts, CVEs, credential leaks, SOAR playbooks,
+    #  command repo, RBAC, YARA, patch jobs, human-risk) idempotently.
+    try:
+        from services import capabilities_seed
+        result = capabilities_seed.ensure_schema_and_seed(db)
+        logger.info("✓ Security Capabilities seed: %s", result.get("seeded", {}))
+    except Exception as _seed_err:
+        logger.warning("Capabilities seed skipped: %s", _seed_err)
 
 
 @app.on_event("shutdown")

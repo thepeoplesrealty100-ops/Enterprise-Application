@@ -47,12 +47,23 @@ class JAKALClient {
 
         const response = await fetch(url, config);
 
-        if (!response.ok) {
-          const error = await response.text();
-          throw new Error(`HTTP ${response.status}: ${error}`);
+        const ctype = (response.headers.get('content-type') || '').toLowerCase();
+        const raw = await response.text();
+        const isHtml = /^\s*<(!doctype|html)/i.test(raw) || /site not found/i.test(raw);
+
+        if (!response.ok || isHtml || (ctype && !ctype.includes('json'))) {
+          // Never surface a raw HTML/404 body (e.g. GitHub Pages
+          // "Site not found"); convert to a clean, bounded error.
+          let detail = `HTTP ${response.status || ''}`.trim();
+          if (!isHtml && ctype.includes('json')) {
+            try { const j = JSON.parse(raw); detail = j.detail || j.message || detail; } catch (_e) {}
+          } else {
+            detail = `backend unavailable (non-JSON ${response.status} response)`;
+          }
+          throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
         }
 
-        return await response.json();
+        return raw ? JSON.parse(raw) : null;
       } catch (error) {
         lastError = error;
         console.warn(`[JAKALClient] Attempt ${attempt}/${retries} failed for ${endpoint}:`, error.message);

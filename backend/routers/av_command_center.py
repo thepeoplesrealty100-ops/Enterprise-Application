@@ -5,7 +5,7 @@ Real-time multi-modal data fusion with threat detection
 
 from fastapi import APIRouter, WebSocket
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from uuid import uuid4
 import json

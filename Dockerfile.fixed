@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# JAKAL — multi-stage image
+#   Stage 1 builds the v3.0 React "Response Console" (frontend/) into static
+#   assets. Stage 2 is the FastAPI backend, which serves those assets at
+#   /console. Previously the Dockerfile copied only index.html + integration.js
+#   and never ran the Vite build, so `docker compose up` came up WITHOUT the
+#   Response Console (the backend logged "Response Console build missing at
+#   frontend/dist"). This stage fixes that.
+# ─────────────────────────────────────────────────────────────────────────────
+FROM node:22-slim AS console
+WORKDIR /fe
+# Install deps against the lockfile first (better layer caching)
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build          # → /fe/dist
+
+# ─────────────────────────────────────────────────────────────────────────────
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# System deps. Note: `nikto` is not in Debian trixie apt — omit it.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nmap \
+    curl \
+    wget \
+    git \
+    ca-certificates \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python deps
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+
+# Application code
+COPY backend/ /app/backend/
+COPY gacyber_toolkit/ /app/gacyber_toolkit/
+
+# Frontend (served by FastAPI at / so UI + API share one origin — no CORS pain)
+COPY index.html integration.js /app/frontend/
+RUN mkdir -p /app/frontend/gacyber_toolkit \
+    && cp -a /app/gacyber_toolkit/. /app/frontend/gacyber_toolkit/ 2>/dev/null || true
+
+# v3.0 Response Console — built React SPA from stage 1, served at /console
+COPY --from=console /fe/dist /app/frontend/dist
+
+RUN mkdir -p /app/data /app/logs /app/backups
+
+WORKDIR /app/backend
+ENV PYTHONPATH=/app/backend
+ENV DUCKDB_PATH=/app/data/jakal.duckdb
+ENV FRONTEND_DIR=/app/frontend
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

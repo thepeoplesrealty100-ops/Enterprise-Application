@@ -244,4 +244,4 @@ export async function startIntegration() {
 }
 
 // Export client class for direct use
-export { JAKALIntegrationClient };
+// (class is already exported at its declaration)

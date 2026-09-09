@@ -80,3 +80,15 @@ backups/
 
 # AI agent local state (may contain credentials)
 ai_agent_layer/openhands-state/
+Claude outputs/
+ai_agent_layer/
+venv/
+data/
+logs/
+backups/
+DockerDesktopWSL/
+*.duckdb
+__pycache__/
+.pytest_cache/
+.openhands-state/
+openhands-state/

@@ -71,6 +71,19 @@ from .ui_bridge import router as ui_bridge_router
 from .ontology_router import router as ontology_router
 from .maya_auth_router import router as maya_auth_router
 from .aip_cheatsheet_router import router as aip_cheatsheet_router
+# JAKAL v4.0 consolidated command modules
+from .av_command_center import router as av_command_center_router
+from .digital_twin import router as digital_twin_router
+from .autonomous_response import router as autonomous_response_router
+from .compliance_intelligence import router as compliance_intelligence_router
+from .energy_logic import router as energy_logic_router
+from .vr_command_center import router as vr_command_center_router
+from .capabilities import router as capabilities_router
+# Enterprise platform modules (MSP gateway, RMM fleet, vuln/patch)
+from .msp_multi_tenant import router as msp_multi_tenant_router
+from .fleet_management import router as fleet_management_router
+from .vulnerability_management import router as vulnerability_management_router
+from .enterprise_gaps import router as enterprise_gaps_router
 
 __all__ = [
     "pentest_router",
@@ -98,4 +111,15 @@ __all__ = [
     "ontology_router",
     "maya_auth_router",
     "aip_cheatsheet_router",
+    "av_command_center_router",
+    "digital_twin_router",
+    "autonomous_response_router",
+    "compliance_intelligence_router",
+    "energy_logic_router",
+    "vr_command_center_router",
+    "capabilities_router",
+    "msp_multi_tenant_router",
+    "fleet_management_router",
+    "vulnerability_management_router",
+    "enterprise_gaps_router",
 ]

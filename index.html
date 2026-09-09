@@ -290,6 +290,42 @@
             50% { opacity: 0.7; transform: scale(1.05); }
         }
 
+    
+        /* JAKAL additive legibility + auto-fit safety (non-destructive) */
+        #content-area, .content-card, .card, table td, table th { overflow-wrap:anywhere; word-break:break-word; }
+        #content-area { max-width:100%; }
+        #content-area img, #content-area canvas, #content-area svg { max-width:100%; height:auto; }
+        .jakal-scroll-x { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        pre, code { white-space:pre-wrap; word-break:break-word; }
+        .jk-cog{cursor:pointer;border:1px solid #374151;background:#1f2937;color:#9ca3af;border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
+        .jk-cog:hover{color:#f97316;border-color:#f97316;box-shadow:0 0 10px rgba(249,115,22,.25)}
+        .jk-dot{width:12px;height:12px;border-radius:999px;border:2px solid #4b5563;cursor:pointer;display:inline-block;transition:.15s}
+        .jk-dot.on{background:#34d399;border-color:#34d399;box-shadow:0 0 8px rgba(52,211,153,.5)}
+        .jk-dot.off{background:transparent}
+        .jk-seg{display:inline-flex;background:#111827;border:1px solid #374151;border-radius:8px;overflow:hidden}
+        .jk-seg button{background:transparent;color:#9ca3af;border:0;padding:5px 12px;font-size:12px;cursor:pointer}
+        .jk-seg button.active{background:#f97316;color:#0b0f1a;font-weight:700}
+        .jk-radial{display:inline-flex;gap:10px;flex-wrap:wrap}
+        .jk-radial label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#d1d5db}
+        .jk-radial input{accent-color:#f97316}
+        .jk-slider{-webkit-appearance:none;appearance:none;height:6px;border-radius:999px;background:linear-gradient(90deg,#f97316 var(--fill,50%),#374151 var(--fill,50%));outline:none;width:100%}
+        .jk-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:999px;background:#f97316;border:2px solid #0b0f1a;box-shadow:0 0 8px rgba(249,115,22,.5);cursor:pointer}
+        .jk-slider::-moz-range-thumb{width:18px;height:18px;border-radius:999px;background:#f97316;border:2px solid #0b0f1a;cursor:pointer}
+        .jk-pop{position:fixed;z-index:99997;background:#0f172a;border:1px solid #f97316;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px;max-width:min(420px,92vw);max-height:70vh;overflow:auto;color:#e5e7eb}
+        /* ── JAKAL responsive AUTO-FIT: fill space, adapt desktop/mobile, no dead space, no endless scroll ── */
+        #content-area{min-height:calc(100vh - 150px);padding-bottom:72px}
+        .jk-autofit{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+        .jk-autofit-sm{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr))}
+        .jk-grow{flex:1 1 auto}
+        @media (max-width:1024px){ #content-area .lg\:grid-cols-3, #content-area .lg\:grid-cols-4, #content-area .grid-cols-3, #content-area .grid-cols-4 { grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr)) !important; } }
+        @media (max-width:640px){ #content-area .md\:grid-cols-2, #content-area .grid-cols-2 { grid-template-columns:1fr !important; } [id$="-live-bar"]{flex-wrap:wrap} }
+        #content-area h1{font-size:clamp(1.35rem,2.4vw,2.1rem);line-height:1.15}
+        #content-area h2{font-size:clamp(1.1rem,1.8vw,1.6rem);line-height:1.2}
+        #content-area h3{font-size:clamp(1rem,1.4vw,1.25rem)}
+        #content-area .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px}
+        #content-area table{width:100%;border-collapse:collapse}
+        @media (max-width:768px){ #sidebar:not(.open){transform:translateX(-100%)} }
+
     </style>
     <!-- Phase 2: Frontend-Backend Integration -->
     <script src="./js/api-client.js"></script>
@@ -435,20 +471,25 @@
         
         // --- Background Image Rotator ---
         function setupBackground() {
-            // New static background image of a black hole (Sagittarius A*)
-            const imageUrl = 'https://placehold.co/1920x1080/000000/f97316?text=JAKAL+DATA+CORE&font=inter';
-            
-            const bgContainer = document.getElementById('background-container');
-            const img = document.createElement('img');
-            img.src = imageUrl;
-            img.onerror = () => { 
-                img.src = 'https://placehold.co/1920x1080/000000/374151?text=Background+Load+Error'; 
-                console.error("Failed to load background image.");
-            };
-            bgContainer.appendChild(img);
-
-            // Make the image active immediately
-            img.classList.add('active');
+            // Efficient, dependency-free background: layered CSS gradients + a
+            // faint orange grid + a slow scan sheen. No external images (the old
+            // placehold.co "JAKAL DATA CORE" placeholder was a wasted round-trip).
+            const bg = document.getElementById('background-container');
+            if (!bg) return;
+            bg.innerHTML = '';
+            bg.style.background = [
+                'radial-gradient(1200px 700px at 78% -10%, rgba(249,115,22,0.10), transparent 60%)',
+                'radial-gradient(900px 600px at 12% 110%, rgba(59,130,246,0.08), transparent 60%)',
+                'linear-gradient(180deg, #0b0f1a 0%, #0a0d16 100%)'
+            ].join(',');
+            const grid = document.createElement('div');
+            grid.style.cssText = 'position:absolute;inset:0;pointer-events:none;'
+                + 'background-image:radial-gradient(circle, rgba(249,115,22,0.06) 1px, transparent 1px);'
+                + 'background-size:34px 34px;opacity:.5';
+            bg.appendChild(grid);
+            const sheen = document.createElement('div');
+            sheen.className = 'horizon-scanline';
+            bg.appendChild(sheen);
         }
 
         // --- Modal Functions (Made global for inline onclick handlers) ---
@@ -2740,6 +2781,8 @@
             selectedDeviceId: null,
             clientFilter: 'All'
         };
+        // Expose so js/jakal-live-data.js can populate the fleet from the real backend.
+        window.globalDashboardState = globalDashboardState;
         
         function renderGlobalAdminDashboard() {
             return `
@@ -3938,6 +3981,11 @@
         };
 
     </script>
+
+    <!-- Operator Command Console: self-contained, 404-proof, live+demo. -->
+    <script src="./js/operator-console.js"></script>
+    <script src="./js/jakal-controls.js"></script>
+    <script src="./js/jakal-live-data.js"></script>
 
     <!-- JAKAL backend integration: live telemetry SSE + button wiring.
          Skipped on GitHub Pages (static demo) - only runs against a live backend. -->
