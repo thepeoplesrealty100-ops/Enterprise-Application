@@ -89,6 +89,7 @@ from .threat_intel import router as threat_intel_router
 from .fleet_agent import router as fleet_agent_router
 from .soar import router as soar_router
 from .assistant import router as assistant_router
+from .vulnscan import router as vulnscan_router
 
 __all__ = [
     "pentest_router",
@@ -132,4 +133,5 @@ __all__ = [
     "fleet_agent_router",
     "soar_router",
     "assistant_router",
+    "vulnscan_router",
 ]

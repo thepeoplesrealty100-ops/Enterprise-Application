@@ -71,6 +71,7 @@ from routers import (
     fleet_agent_router,
     soar_router,
     assistant_router,
+    vulnscan_router,
 )
 from dependencies import require_permission
 
@@ -184,6 +185,7 @@ app.include_router(threat_intel_router)
 app.include_router(fleet_agent_router)
 app.include_router(soar_router)
 app.include_router(assistant_router)
+app.include_router(vulnscan_router)
 
 # ============================================================================
 # Shared Components

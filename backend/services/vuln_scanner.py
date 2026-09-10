@@ -202,3 +202,32 @@ def scan_manifest(paths: List[str]) -> Dict[str, Any]:
     result = osv_scan(pkgs)
     result["manifests"] = [p for p in (paths or []) if os.path.exists(p)]
     return result
+
+
+# ── Combined routing: OSV for package ecosystems, NVD for OS/app software ──
+_OSV_ECOSYSTEMS = {"pypi", "npm", "go", "maven", "rubygems", "crates.io", "nuget",
+                   "packagist", "pub", "hex", "composer", "cargo", "gem"}
+
+
+def scan_combined(products):
+    """Route each product to the right engine and merge results.
+    Package-ecosystem items -> OSV.dev (fast); OS/app items -> NVD (CPE)."""
+    osv_items, nvd_items = [], []
+    for p in products or []:
+        eco = (p.get("ecosystem") or "").strip().lower()
+        if eco in _OSV_ECOSYSTEMS:
+            osv_items.append(p)
+        else:
+            nvd_items.append(p)
+    out = {"ok": True, "osv": None, "nvd": None, "critical": 0, "high": 0,
+           "scanned_at": _now(), "sources": []}
+    if osv_items:
+        out["osv"] = osv_scan(osv_items)
+        out["critical"] += out["osv"].get("critical", 0); out["high"] += out["osv"].get("high", 0)
+        out["sources"].append("osv.dev")
+    if nvd_items:
+        from services.nvd_scanner import nvd_scan
+        out["nvd"] = nvd_scan(nvd_items)
+        out["critical"] += out["nvd"].get("critical", 0); out["high"] += out["nvd"].get("high", 0)
+        out["sources"].append("nvd")
+    return out

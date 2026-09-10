@@ -310,13 +310,22 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         
         # Content Security Policy
+        # NOTE: the operator UI (index.html) intentionally loads a few pinned
+        # front-end libraries from public CDNs — Tailwind, Lucide icons,
+        # Chart.js, three.js, d3 — and Firebase auth/firestore from gstatic.
+        # The CSP must allow exactly those origins or the whole styled UI,
+        # icons, charts and 3D globe silently fail to load. Keep this list in
+        # sync with the <script>/<link> tags in index.html.
+        _CDN = ("https://cdn.tailwindcss.com https://unpkg.com "
+                "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
+                "https://d3js.org https://www.gstatic.com")
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
-            "style-src 'self' 'unsafe-inline'; "
+            f"script-src 'self' 'unsafe-inline' 'unsafe-eval' {_CDN}; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
             "img-src 'self' data: https:; "
-            "font-src 'self'; "
-            "connect-src 'self' ws: wss:; "
+            "font-src 'self' data: https://fonts.gstatic.com; "
+            f"connect-src 'self' ws: wss: https: {_CDN}; "
             "frame-ancestors 'none'; "
             "base-uri 'self'; "
             "form-action 'self'"

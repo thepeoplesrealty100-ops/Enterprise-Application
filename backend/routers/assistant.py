@@ -60,8 +60,8 @@ async def _run_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         from services.threat_intel import lookup
         return lookup(args.get("indicator", ""))
     if name == "cve_scan":
-        from services.vuln_scanner import osv_scan
-        return osv_scan(args.get("packages", []))
+        from services.vuln_scanner import scan_combined
+        return scan_combined(args.get("packages", []))
     if name == "list_fleet":
         from routers.fleet_agent import list_agents
         return await list_agents()
@@ -104,7 +104,10 @@ def _summarize(tool: str, result: Dict[str, Any]) -> str:
     if tool == "threat_intel_lookup":
         return f"{result.get('indicator')} is **{result.get('verdict','?')}** (score {result.get('score',0)}). Flagged by: {', '.join(result.get('malicious_sources') or []) or 'none of the live feeds'}."
     if tool == "cve_scan":
-        return f"Scanned {result.get('packages_scanned',0)} package(s): {result.get('critical',0)} critical, {result.get('high',0)} high, {len(result.get('findings',[]))} total CVEs (live OSV.dev)."
+        srcs = ", ".join(result.get("sources", [])) or "osv.dev/nvd"
+        osv_n = (result.get("osv") or {}).get("vulnerable_packages", 0)
+        nvd_n = (result.get("nvd") or {}).get("vulnerable_products", 0)
+        return f"CVE scan ({srcs}): {result.get('critical',0)} critical, {result.get('high',0)} high across {osv_n+nvd_n} affected item(s)."
     if tool == "list_fleet":
         return f"{result.get('online',0)} of {result.get('count',0)} endpoint agent(s) online."
     if tool == "isolate_host":

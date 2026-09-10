@@ -19,6 +19,7 @@ Endpoints
 An endpoint is 'online' only if it heartbeat within AGENT_OFFLINE_SECONDS.
 """
 import json
+import os
 import secrets as _secrets
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -91,7 +92,12 @@ class RegisterReq(BaseModel):
 
 
 @router.post("/register")
-async def register(req: RegisterReq):
+async def register(req: RegisterReq, x_enroll_token: Optional[str] = Header(None)):
+    # Optional enrollment hardening: when JAKAL_ENROLL_TOKEN is set on the hub,
+    # agents must present it to enroll. Unset -> open enrollment (zero-config).
+    enroll = os.getenv("JAKAL_ENROLL_TOKEN", "")
+    if enroll and x_enroll_token != enroll:
+        raise HTTPException(status_code=401, detail="invalid or missing enrollment token")
     db = _db(); _ensure_schema(db)
     agent_id = req.agent_id or f"agt-{uuid.uuid4().hex[:12]}"
     key = _secrets.token_urlsafe(24)
@@ -226,3 +232,25 @@ async def command_result(cmd_id: str, req: ResultReq, x_agent_key: Optional[str]
                     (req.status, json.dumps(req.result), _now(), cmd_id))
     db.conn.commit()
     return {"ok": True, "cmd_id": cmd_id, "status": req.status}
+
+
+@router.post("/{agent_id}/deep-scan")
+async def deep_scan(agent_id: str, limit: int = 8):
+    """On-demand NVD/CPE scan of the asset's OS/application software (the
+    non-package-ecosystem inventory). Bounded (NVD is rate-limited); package
+    software is already covered live by OSV.dev on the asset detail."""
+    db = _db(); _ensure_schema(db)
+    inv = _rows(db, "SELECT software FROM agent_inventory WHERE agent_id=?", (agent_id,))
+    if not inv:
+        raise HTTPException(status_code=404, detail="no inventory for this agent")
+    try:
+        software = json.loads(inv[0].get("software") or "[]")
+    except Exception:
+        software = []
+    _OSV = {"pypi", "npm", "go", "maven", "rubygems", "crates.io", "nuget", "packagist", "pub", "hex", "composer", "cargo", "gem"}
+    os_apps = [p for p in software if (p.get("ecosystem") or "").lower() not in _OSV][:max(1, min(limit, 12))]
+    from services.nvd_scanner import nvd_scan
+    result = nvd_scan(os_apps)
+    result["agent_id"] = agent_id
+    result["os_app_software_total"] = len([p for p in software if (p.get("ecosystem") or "").lower() not in _OSV])
+    return result

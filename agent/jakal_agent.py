@@ -15,6 +15,7 @@ Safe by design: it does NOT execute arbitrary shell by default. `execute_script`
 commands are ignored unless JAKAL_AGENT_ALLOW_EXEC=1 is set by the machine owner.
 """
 import argparse
+import re
 import json
 import os
 import platform
@@ -42,8 +43,8 @@ def _local_ip() -> str:
 
 
 def collect_software():
-    """Installed Python packages as OSV-PyPI-ready inventory. (Extendable to
-    OS package managers: dpkg/rpm/winget — kept to PyPI here for portability.)"""
+    """Installed software inventory: Python packages (OSV/PyPI) plus OS/app
+    packages (NVD) from the platform's package manager."""
     pkgs = []
     try:
         from importlib import metadata
@@ -53,7 +54,52 @@ def collect_software():
                 pkgs.append({"name": name, "version": ver, "ecosystem": "PyPI"})
     except Exception:
         pass
+    pkgs.extend(_collect_os_packages())
     return pkgs
+
+
+def _collect_os_packages():
+    """Best-effort OS/application inventory tagged for NVD scanning."""
+    import subprocess, platform
+    out = []
+    sysname = platform.system()
+    try:
+        if sysname == "Linux":
+            # Debian/Ubuntu
+            try:
+                r = subprocess.run(["dpkg-query", "-W", "-f=${Package}\t${Version}\n"],
+                                   capture_output=True, text=True, timeout=20)
+                for line in r.stdout.splitlines():
+                    if "\t" in line:
+                        n, v = line.split("\t", 1)
+                        out.append({"name": n, "version": re.sub(r"^\d+:", "", v).split("-")[0], "ecosystem": "deb"})
+            except FileNotFoundError:
+                r = subprocess.run(["rpm", "-qa", "--qf", "%{NAME}\t%{VERSION}\n"],
+                                   capture_output=True, text=True, timeout=20)
+                for line in r.stdout.splitlines():
+                    if "\t" in line:
+                        n, v = line.split("\t", 1); out.append({"name": n, "version": v, "ecosystem": "rpm"})
+        elif sysname == "Windows":
+            ps = ("Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*,"
+                  "HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* "
+                  "| Where-Object {$_.DisplayName} | Select-Object DisplayName,DisplayVersion "
+                  "| ForEach-Object {\"$($_.DisplayName)`t$($_.DisplayVersion)\"}")
+            r = subprocess.run(["powershell", "-NoProfile", "-Command", ps],
+                               capture_output=True, text=True, timeout=30)
+            for line in r.stdout.splitlines():
+                if "\t" in line:
+                    n, v = line.split("\t", 1)
+                    if n.strip() and v.strip():
+                        out.append({"name": n.strip(), "version": v.strip(), "ecosystem": "windows"})
+        elif sysname == "Darwin":
+            r = subprocess.run(["bash", "-c", "ls /Applications | sed 's/.app$//'"],
+                               capture_output=True, text=True, timeout=15)
+            for n in r.stdout.splitlines():
+                if n.strip():
+                    out.append({"name": n.strip(), "version": "", "ecosystem": "macos"})
+    except Exception:
+        pass
+    return out[:500]
 
 
 def collect_ports():
@@ -119,7 +165,11 @@ class Agent:
     def register(self):
         info = system_info()
         body = dict(info, agent_id=self.agent_id, tags=[info["os"].lower()])
-        r = requests.post(self._url("/api/agents/register"), json=body, timeout=15)
+        headers = {}
+        _et = os.getenv("JAKAL_ENROLL_TOKEN")
+        if _et:
+            headers["X-Enroll-Token"] = _et
+        r = requests.post(self._url("/api/agents/register"), json=body, headers=headers, timeout=15)
         r.raise_for_status()
         d = r.json()
         self.agent_id = d["agent_id"]; self.key = d["agent_key"]
