@@ -155,9 +155,18 @@
     var P = Promise.resolve();
     if (!slash) {
       if (demo) { print("(demo) I can run operator commands — type /help. Live actions need a connected backend.", "muted"); return; }
+      // Free-text goes to the AI assistant, which can invoke REAL actions
+      // (threat-intel, CVE scan, fleet, isolate, dark-web, SOAR). Runs in
+      // intent-router mode with no key; upgrades to Claude tool-calling when
+      // an Anthropic key is set in Integrations.
+      print("thinking…", "muted");
       P = api("/api/capabilities/aisafety/scan", { method: "POST", body: JSON.stringify({ prompt: raw }) }).then(function (s) {
-        if (!s.safe) { print("⚠ Safety Fabric flagged this input (" + (s.matched_signatures || []).length + " signatures). Not forwarded.", "warn"); return; }
-        print("Noted. Use slash-commands to act — /help for the list. (Free-text LLM chat wires to /api/llm when configured.)", "muted");
+        if (s && s.safe === false) { print("⚠ Safety Fabric flagged this input. Not forwarded.", "warn"); return; }
+        return api("/api/assistant/chat", { method: "POST", body: JSON.stringify({ message: raw, executor_id: "operator" }) }).then(function (r) {
+          print(r.reply || "(no reply)", "info");
+          (r.actions_taken || []).forEach(function (a) { printJson("↳ " + a.tool, a.result); });
+          if (r.mode === "router") print("· intent-router mode — add an Anthropic key in Integrations for full AI chat.", "muted");
+        });
       }).catch(function (e) { print("[error] " + e.message, "err"); });
       P.catch(function () {}); return;
     }

@@ -66,6 +66,11 @@ from routers import (
     msp_multi_tenant_router, fleet_management_router,
     vulnerability_management_router,
     enterprise_gaps_router,
+    integrations_router,
+    threat_intel_router,
+    fleet_agent_router,
+    soar_router,
+    assistant_router,
 )
 from dependencies import require_permission
 
@@ -174,6 +179,11 @@ app.include_router(msp_multi_tenant_router)
 app.include_router(fleet_management_router)
 app.include_router(vulnerability_management_router)
 app.include_router(enterprise_gaps_router)
+app.include_router(integrations_router)
+app.include_router(threat_intel_router)
+app.include_router(fleet_agent_router)
+app.include_router(soar_router)
+app.include_router(assistant_router)
 
 # ============================================================================
 # Shared Components

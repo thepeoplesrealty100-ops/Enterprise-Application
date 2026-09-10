@@ -449,10 +449,28 @@
     </div>
 
     <script type="module">
-        // Lazy load Firebase modules (Simulated import for single HTML file)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Firebase modules load DYNAMICALLY and defensively. A failed CDN import
+        // (offline / blocked / CSP) must never blank the whole console: with
+        // static top-level imports, one failed fetch aborts this entire module
+        // and the nav never renders. These are loaded at boot instead, wrapped
+        // in try/catch, so the UI comes up with or without cloud auth.
+        let initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, setLogLevel;
+        async function __loadFirebase() {
+            try {
+                const [appMod, authMod, fsMod] = await Promise.all([
+                    import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"),
+                    import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"),
+                    import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"),
+                ]);
+                initializeApp = appMod.initializeApp;
+                ({ getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = authMod);
+                ({ getFirestore, setLogLevel } = fsMod);
+                return true;
+            } catch (e) {
+                console.warn("Firebase modules unavailable — console runs without cloud auth/DB.", e);
+                return false;
+            }
+        }
 
         let chartInstances = {};
         let activeIntervals = [];
@@ -461,12 +479,16 @@
         let d3Simulations = {}; // Store multiple simulations
 
         // Global utility for icon rendering
-        window.onload = function() {
-            lucide.createIcons();
-            setupAuthAndDatabase();
-            setupBackground();
-            setupSidebarControls();
-            window.setView('admin'); // Set initial view to Admin Console
+        window.onload = async function() {
+            // Bring the console up FIRST — nothing here may gate the nav on
+            // Firebase. Each step is isolated so one failure can't blank the rest.
+            try { lucide.createIcons(); } catch (e) { console.warn("icons:", e); }
+            try { setupBackground(); } catch (e) { console.warn("background:", e); }
+            try { setupSidebarControls(); } catch (e) { console.warn("sidebar:", e); }
+            try { window.setView('admin'); } catch (e) { console.error("setView failed:", e); }
+            // Then load Firebase + auth in the background; failure is non-fatal.
+            try { await __loadFirebase(); await setupAuthAndDatabase(); }
+            catch (e) { console.warn("auth/db init skipped:", e); }
         }
         
         // --- Background Image Rotator ---
@@ -617,9 +639,9 @@
             const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-            if (firebaseConfig) {
+            if (firebaseConfig && initializeApp) {
                 try {
-                    setLogLevel('Debug');
+                    if (setLogLevel) setLogLevel('Debug');
                     const app = initializeApp(firebaseConfig);
                     db = getFirestore(app);
                     auth = getAuth(app);
@@ -3986,6 +4008,7 @@
     <script src="./js/operator-console.js"></script>
     <script src="./js/jakal-controls.js"></script>
     <script src="./js/jakal-live-data.js"></script>
+    <script src="./js/jakal-integrations.js"></script>
 
     <!-- JAKAL backend integration: live telemetry SSE + button wiring.
          Skipped on GitHub Pages (static demo) - only runs against a live backend. -->

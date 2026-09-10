@@ -84,6 +84,11 @@ from .msp_multi_tenant import router as msp_multi_tenant_router
 from .fleet_management import router as fleet_management_router
 from .vulnerability_management import router as vulnerability_management_router
 from .enterprise_gaps import router as enterprise_gaps_router
+from .integrations import router as integrations_router
+from .threat_intel import router as threat_intel_router
+from .fleet_agent import router as fleet_agent_router
+from .soar import router as soar_router
+from .assistant import router as assistant_router
 
 __all__ = [
     "pentest_router",
@@ -122,4 +127,9 @@ __all__ = [
     "fleet_management_router",
     "vulnerability_management_router",
     "enterprise_gaps_router",
+    "integrations_router",
+    "threat_intel_router",
+    "fleet_agent_router",
+    "soar_router",
+    "assistant_router",
 ]

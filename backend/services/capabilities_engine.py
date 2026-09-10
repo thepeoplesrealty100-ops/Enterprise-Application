@@ -100,6 +100,12 @@ def _registry() -> Dict[str, ModuleAction]:
           "Generate a compressed forensic bundle (syslogs, event logs, persistence items).",
           "fleet:read", R.MEDIUM, {"agent_id": "str", "include_memory": "bool"},
           {"button": "secondary"}),
+        # 0. Threat Intelligence (live enrichment; keyless + keyed sources)
+        A("intel:lookup", C.DETECT_RESPOND, "Threat-Intel Lookup",
+          "Enrich an IP / domain / URL / hash against live threat feeds (Feodo, Tor, "
+          "VirusTotal, AbuseIPDB, OTX).",
+          "detect:read", R.LOW, {"indicator": "str"},
+          {"button": "primary", "cog": True}),
         # 2. Remote Access
         A("remote:spawn_shell", C.REMOTE_ACCESS, "Spawn Shell",
           "Open an authenticated interactive terminal (PowerShell/Bash) over secure WS.",
@@ -356,8 +362,62 @@ class SecurityCapabilitiesEngine:
     def pending_approvals(self) -> List[Dict[str, Any]]:
         return [{"approval_id": k, **v} for k, v in self._pending.items()]
 
+    # Actions that can only act on a real managed endpoint. Until a live JAKAL
+    # agent (roadmap #4) is connected for the target, these return an honest
+    # "not_connected" instead of a simulated success. No fake data.
+    _AGENT_REQUIRED = {
+        "fleet:ping", "fleet:execute_script", "fleet:collect_diagnostics",
+        "remote:spawn_shell", "remote:fs_list", "remote:fs_transfer", "remote:terminate_session",
+        "detect:kill_process_tree", "detect:quarantine_file", "detect:fetch_pcap",
+        "detect:process_tree", "detect:memory_dump",
+        "patch:apply_updates", "patch:rollback_patch",
+        "darkweb:force_password_reset",
+    }
+
+    def _agent_online(self, agent_id: Any) -> bool:
+        """True only if a real JAKAL agent has registered + recently heartbeat.
+        Backed by the endpoint-agent registry (routers/fleet_agent.py). Returns
+        False when the registry/table is absent, so agent actions stay honest."""
+        if not agent_id:
+            return False
+        rows = self._dbq(
+            "SELECT last_seen FROM agent_endpoints WHERE agent_id = ? AND status = 'online'",
+            (str(agent_id),))
+        return bool(rows)
+
+    def _queue_agent_command(self, agent_id: str, action_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Queue a REAL command onto a live agent's channel (agent_commands)."""
+        if not self.db:
+            return {"ok": False, "status": "error", "reason": "no database", "at": _now()}
+        cmd_id = f"cmd-{uuid.uuid4().hex[:10]}"
+        try:
+            self.db.conn.execute(
+                "INSERT INTO agent_commands (cmd_id,agent_id,action,payload,status,created_at,updated_at) "
+                "VALUES (?,?,?,?,?,?,?)",
+                (cmd_id, str(agent_id), action_id, __import__("json").dumps(payload), "pending",
+                 datetime.now(timezone.utc), datetime.now(timezone.utc)))
+            self.db.conn.commit()
+        except Exception as e:
+            return {"ok": False, "status": "error", "reason": f"could not queue command: {e}", "at": _now()}
+        return {"ok": True, "status": "queued", "action": action_id, "agent_id": agent_id,
+                "cmd_id": cmd_id, "note": "Command dispatched to the live agent; poll the asset detail for its result.",
+                "at": _now()}
+
     # ---- Handlers (grounded; delegate where a real subsystem exists) ----
     async def _dispatch(self, action: ModuleAction, payload: Dict[str, Any], executor: str) -> Dict[str, Any]:
+        if action.id in self._AGENT_REQUIRED:
+            agent_id = payload.get("agent_id")
+            if not self._agent_online(agent_id):
+                tgt = agent_id or "target"
+                return {"ok": True, "status": "not_connected", "action": action.id,
+                        "reason": (f"'{action.name}' acts on a managed endpoint, but no live JAKAL "
+                                   f"agent is connected for '{tgt}'. Install the endpoint agent "
+                                   f"(roadmap #4). This is reported honestly — not simulated."),
+                        "requires": "endpoint_agent", "at": _now()}
+            # Agent is live: fleet:ping is a liveness read; everything else is a
+            # real command queued to the agent's command channel.
+            if action.id != "fleet:ping":
+                return self._queue_agent_command(agent_id, action.id, payload)
         cat, act = action.id.split(":", 1)
         fn = getattr(self, f"_h_{cat}_{act}", None)
         if fn is None:
@@ -367,8 +427,16 @@ class SecurityCapabilitiesEngine:
 
     # Fleet & RMM ----------------------------------------------------------
     async def _h_fleet_ping(self, p, ex):
-        return {"ok": True, "agent_id": p.get("agent_id"), "state": "active",
-                "version": "1.0", "version_drift": False, "latency_ms": 14, "at": _now()}
+        # REAL liveness from the agent's last heartbeat (agent_endpoints).
+        rows = self._dbq("SELECT hostname, os, ip, last_seen, status FROM agent_endpoints WHERE agent_id = ?",
+                         (str(p.get("agent_id")),))
+        if not rows:
+            return {"ok": True, "status": "not_connected", "agent_id": p.get("agent_id"),
+                    "reason": "no such registered agent", "at": _now()}
+        r = rows[0]
+        return {"ok": True, "status": "active", "agent_id": p.get("agent_id"),
+                "hostname": r.get("hostname"), "os": r.get("os"), "ip": r.get("ip"),
+                "last_seen": str(r.get("last_seen")), "at": _now()}
 
     async def _h_fleet_execute_script(self, p, ex):
         shell = p.get("shell", "bash"); script = p.get("script", ""); timeout = int(p.get("timeout_sec", 60))
@@ -384,9 +452,24 @@ class SecurityCapabilitiesEngine:
                 "return_code": 0, "streamed": True, "timeout_sec": timeout, "at": _now()}
 
     async def _h_fleet_isolate_host(self, p, ex):
-        # Delegate to routers.response.isolate_host semantics.
-        return {"ok": True, "agent_id": p.get("agent_id"), "isolation_status": True,
-                "rmm_tunnel": "active", "reason": p.get("reason", ""), "at": _now()}
+        # REAL containment via security_agents.edr_connector. With no endpoint
+        # agent (#4), no reachable Docker sandbox and no EDR webhook configured,
+        # this returns an honest not_configured rather than a fake success.
+        agent = p.get("agent_id")
+        try:
+            from security_agents.edr_connector import enforce_containment
+        except Exception as e:
+            return {"ok": False, "status": "unavailable",
+                    "reason": f"edr_connector import failed: {e}", "at": _now()}
+        res = enforce_containment("isolate_host_staged", agent or "",
+                                  {"reason": p.get("reason", "")}, ex, db=self.db)
+        status = res.get("status", "not_configured")
+        return {"ok": status == "enforced", "agent_id": agent, "status": status,
+                "connector": res.get("connector"), "detail": res.get("detail"),
+                "reason": (None if status == "enforced" else
+                           "Isolation needs the JAKAL agent (#4), a Docker sandbox, or a "
+                           "configured EDR_WEBHOOK_URL in the Integrations vault."),
+                "at": _now()}
 
     async def _h_fleet_collect_diagnostics(self, p, ex):
         bundle = f"diag-{p.get('agent_id','host')}-{int(time.time())}.tar.gz"
@@ -468,17 +551,23 @@ class SecurityCapabilitiesEngine:
 
     # Patch & Vulnerability ------------------------------------------------
     async def _h_patch_scan_cve(self, p, ex):
-        # Reads the operational NVD table (seeded); grounds on the same OSV
-        # approach used by routers.vault EAS R&D scan for live lookups.
-        agent = p.get("agent_id")
-        where = "WHERE affected_asset = ?" if agent else ""
-        rows = self._dbq(f"SELECT cve_id, cvss_score, severity, package, patch_status FROM cap_nvd_vulnerabilities {where} ORDER BY cvss_score DESC",
-                         (agent,) if agent else ())
-        crit = len([r for r in rows if r.get("severity") == "CRITICAL"])
-        high = len([r for r in rows if r.get("severity") == "HIGH"])
-        return {"ok": True, "agent_id": agent, "scan_id": f"cve-{uuid.uuid4().hex[:6]}",
-                "source": "OSV.dev + NVD", "packages_scanned": len(rows), "findings": rows[:25],
-                "critical": crit, "high": high, "at": _now()}
+        # REAL live scan via the shared OSV.dev engine (services.vuln_scanner).
+        # Accepts an explicit package list in the payload; otherwise scans the
+        # server's own pinned dependency manifest. No seeded rows.
+        import os as _os
+        from services.vuln_scanner import osv_scan, scan_manifest
+        packages = p.get("packages")
+        if packages:
+            result = osv_scan(packages); scope = "payload_packages"
+        else:
+            here = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+            manifests = [_os.path.join(here, "requirements.txt"),
+                         _os.path.join(here, "backend", "requirements.txt")]
+            result = scan_manifest([m for m in manifests if _os.path.exists(m)])
+            scope = "server_manifest"
+        result.update({"agent_id": p.get("agent_id"), "scope": scope,
+                       "scan_id": f"cve-{uuid.uuid4().hex[:6]}"})
+        return result
 
     async def _h_patch_apply_updates(self, p, ex):
         return {"ok": True, "agent_id": p.get("agent_id"), "kb_ids": p.get("kb_ids", []),
@@ -491,15 +580,29 @@ class SecurityCapabilitiesEngine:
 
     # Dark Web -------------------------------------------------------------
     async def _h_darkweb_run_recon(self, p, ex):
-        ident = (p.get("identifier") or "").lower()
-        rows = self._dbq("SELECT leak_id, exposed_email, source_forum, breach, severity, discovered_date, reset_status FROM cap_credential_leaks ORDER BY discovered_date DESC")
-        if ident:
-            rows = [r for r in rows if ident in str(r.get("exposed_email", "")).lower()] or rows
-        crit = any(r.get("severity") == "CRITICAL" for r in rows)
-        return {"ok": True, "identifier": p.get("identifier"),
-                "identifier_type": p.get("identifier_type", "domain"),
-                "exposures": rows, "exposure_count": len(rows),
-                "threat_level": "critical" if crit else ("high" if rows else "low"), "at": _now()}
+        # REAL Have I Been Pwned lookup, delegated to routers.darkweb. Honest
+        # "not_connected" when HIBP_API_KEY is unset — never seeded rows.
+        ident = (p.get("identifier") or "").strip()
+        try:
+            from routers.darkweb import _hibp_check_account
+        except Exception as e:
+            return {"ok": False, "status": "unavailable",
+                    "reason": f"dark web connector import failed: {e}", "at": _now()}
+        if not ident or "@" not in ident:
+            return {"ok": False, "status": "bad_request",
+                    "reason": "provide an email in `identifier` for a real HIBP breach lookup",
+                    "at": _now()}
+        res = _hibp_check_account(ident)
+        if not res.get("configured"):
+            return {"ok": True, "status": "not_connected", "connector": "hibp", "identifier": ident,
+                    "reason": "Set HIBP_API_KEY in the Integrations vault to enable live breach lookups.",
+                    "exposures": [], "exposure_count": 0, "at": _now()}
+        breaches = res.get("breaches", []) or []
+        crit = any("Passwords" in (b.get("DataClasses") or []) for b in breaches)
+        return {"ok": True, "status": "ok", "connector": "hibp", "identifier": ident,
+                "exposures": breaches, "exposure_count": len(breaches),
+                "threat_level": "critical" if crit else ("high" if breaches else "low"),
+                "error": res.get("error"), "at": _now()}
 
     async def _h_darkweb_force_password_reset(self, p, ex):
         return {"ok": True, "account": p.get("account"), "reset_triggered": True,
@@ -514,6 +617,11 @@ class SecurityCapabilitiesEngine:
 
     async def _h_aisafety_audit_llm_response(self, p, ex):
         return {"ok": True, **self.audit_llm_response(p.get("response", ""), p.get("context", ""))}
+
+    # Threat Intelligence -------------------------------------------------
+    async def _h_intel_lookup(self, p, ex):
+        from services.threat_intel import lookup
+        return lookup(p.get("indicator", ""))
 
 
     # MSP Multi-Tenant ------------------------------------------------------
