@@ -3878,20 +3878,89 @@
             document.getElementById('support-ticket-form').reset();
         }
 
-        function renderClientPortal() {
-            return `
+        async function renderClientPortal() {
+            // Fetch live training and ticket data
+            const modules = await apiClient.getTrainingModules() || { modules: [] };
+            const completions = await apiClient.fetch('/api/awareness/completions') || { completions: {} };
+
+            // Mock achievements until API supports it
+            const achievements = [
+                { id: 1, name: 'Phishing Detective', desc: 'Complete phishing awareness training', earned: true, icon: '🔍' },
+                { id: 2, name: 'Security Scholar', desc: 'Complete 5 training modules', earned: true, icon: '📚' },
+                { id: 3, name: 'MFA Master', desc: 'Enable multi-factor authentication', earned: true, icon: '🔐' },
+                { id: 4, name: 'Zero Trust Guardian', desc: 'Complete Zero Trust module', earned: false, icon: '🛡️' },
+                { id: 5, name: 'Compliance Champion', desc: 'Pass compliance quiz', earned: false, icon: '✓' },
+            ];
+
+            // Mock open tickets until API supports listing
+            const tickets = [
+                { id: 'T-1024', title: 'Suspicious email report', status: 'Closed', submitted: '2025-10-10' },
+                { id: 'T-1023', title: 'Add new user to portal', status: 'In Progress', submitted: '2025-10-09' },
+                { id: 'T-1022', title: 'Question about MDR report', status: 'Open', submitted: '2025-10-08' },
+            ];
+
+            const trainingModules = modules.modules || [
+                { id: 1, name: 'Identifying Phishing Emails', completion: 85 },
+                { id: 2, name: 'Strong Password Policies & MFA', completion: 92 },
+                { id: 3, name: 'Social Engineering Tactics', completion: 0 },
+                { id: 4, name: 'Zero Trust Principles', completion: 0 },
+            ];
+
+            return \`
                 <h2 class="text-3xl font-extrabold text-white mb-6">Client Support Portal</h2>
+
+                <!-- Training Modules -->
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-white mb-4">Security Awareness Training</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        \${trainingModules.map(m => {
+                            const completion = completions.completions?.[m.id] || m.completion || 0;
+                            const completed = completion >= 100;
+                            return \`
+                            <div class="card p-4 rounded-xl hover:border-primary-color/50 transition">
+                                <h4 class="font-semibold text-white mb-2">\${m.name}</h4>
+                                <div class="mb-2">
+                                    <div class="bg-gray-800 rounded-full h-2 overflow-hidden">
+                                        <div class="bg-green-500 h-full transition-all" style="width: \${completion}%"></div>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-400 mb-3">\${completion}% Complete</p>
+                                <button onclick="window.showAppModal('Module: \${m.name}', 'Launching training module...')" class="w-full py-2 bg-primary-color hover:bg-orange-500 text-white rounded-lg text-sm font-semibold transition">
+                                    \${completed ? 'Review' : 'Start Training'}
+                                </button>
+                            </div>
+                            \`;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- Achievements -->
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-white mb-4">Achievements</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        \${achievements.map(a => \`
+                        <div class="card p-4 rounded-xl text-center \${a.earned ? '' : 'opacity-50'} transition">
+                            <div class="text-4xl mb-2">\${a.icon}</div>
+                            <h4 class="font-semibold text-white mb-1">\${a.name}</h4>
+                            <p class="text-xs text-gray-400">\${a.desc}</p>
+                            \${a.earned ? '<p class="text-xs text-green-400 mt-2">✓ Earned</p>' : '<p class="text-xs text-gray-500 mt-2">Locked</p>'}
+                        </div>
+                        \`).join('')}
+                    </div>
+                </div>
+
+                <!-- Support Tickets -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-1 card p-6 rounded-xl">
                         <h3 class="text-lg font-bold text-primary-color mb-3">Submit a New Support Ticket</h3>
                         <form id="support-ticket-form" class="space-y-4">
                             <div>
                                 <label for="ticket-subject" class="block text-sm font-medium text-gray-300">Subject</label>
-                                <input type="text" id="ticket-subject" placeholder="e.g., Unable to access report" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color focus:ring-primary-color focus:border-primary-color">
+                                <input type="text" id="ticket-subject" placeholder="e.g., Unable to access report" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color">
                             </div>
                              <div>
                                 <label for="ticket-priority" class="block text-sm font-medium text-gray-300">Priority</label>
-                                <select id="ticket-priority" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color focus:ring-primary-color focus:border-primary-color">
+                                <select id="ticket-priority" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color">
                                     <option>Low</option>
                                     <option selected>Medium</option>
                                     <option>High</option>
@@ -3900,39 +3969,30 @@
                             </div>
                             <div>
                                 <label for="ticket-description" class="block text-sm font-medium text-gray-300">Description</label>
-                                <textarea id="ticket-description" placeholder="Please describe your issue in detail..." rows="5" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color focus:ring-primary-color focus:border-primary-color"></textarea>
+                                <textarea id="ticket-description" placeholder="Please describe your issue in detail..." rows="5" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color"></textarea>
                             </div>
-                            <button type="button" onclick="submitSupportTicket()" class="w-full py-2 bg-primary-color hover:bg-cyan-600 rounded-lg font-semibold text-white transition">Submit Ticket</button>
+                            <button type="button" onclick="window.submitSupportTicket()" class="w-full py-2 bg-primary-color hover:bg-orange-500 rounded-lg font-semibold text-white transition">Submit Ticket</button>
                         </form>
                     </div>
                     <div class="lg:col-span-2 card p-6 rounded-xl">
                         <h3 class="text-lg font-bold text-primary-color mb-3">Your Open & Recent Tickets</h3>
-                        <div class="space-y-3 h-[500px] overflow-y-auto scrollbar-style">
-                            <div class="p-4 bg-gray-900/70 rounded-lg">
+                        <div class="space-y-3 max-h-96 overflow-y-auto scrollbar-style">
+                            \${tickets.map(t => {
+                                const statusColor = t.status === 'Closed' ? 'green-500' : t.status === 'In Progress' ? 'yellow-500' : 'blue-500';
+                                return \`
+                            <div class="p-4 bg-gray-900/70 rounded-lg hover:bg-gray-900 transition">
                                 <div class="flex justify-between items-start">
-                                    <p class="font-semibold text-white">#T-1024: Suspicious email report</p>
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">Closed</span>
+                                    <p class="font-semibold text-white">#\${t.id}: \${t.title}</p>
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-\${statusColor}/20 text-\${statusColor}">\${t.status}</span>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1">Submitted: 2025-10-10 | Resolved: 2025-10-11</p>
+                                <p class="text-xs text-gray-400 mt-1">Submitted: \${t.submitted}</p>
                             </div>
-                            <div class="p-4 bg-gray-900/70 rounded-lg">
-                                 <div class="flex justify-between items-start">
-                                     <p class="font-semibold text-white">#T-1023: Add new user to portal</p>
-                                      <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-500/20 text-yellow-400">In Progress</span>
-                                </div>
-                                 <p class="text-xs text-gray-400 mt-1">Submitted: 2025-10-09 | Last Update: 2 hours ago</p>
-                            </div>
-                            <div class="p-4 bg-gray-900/70 rounded-lg">
-                                 <div class="flex justify-between items-start">
-                                     <p class="font-semibold text-white">#T-1022: Question about MDR report</p>
-                                      <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-500/20 text-blue-400">Open</span>
-                                </div>
-                                 <p class="text-xs text-gray-400 mt-1">Submitted: 2025-10-08</p>
-                            </div>
+                                \`;
+                            }).join('')}
                         </div>
                     </div>
                 </div>
-            `;
+            \`;
         }
 
         function renderClientSettings() {
