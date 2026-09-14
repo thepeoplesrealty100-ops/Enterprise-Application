@@ -697,12 +697,14 @@
 
         window.setView = function(view) {
             currentView = view;
-            
+
             const setActive = (el) => {
+                if(!el) return;
                 el.classList.remove('text-gray-400', 'hover:bg-gray-600');
                 el.classList.add('bg-primary-color', 'text-white');
             };
             const setInactive = (el) => {
+                if(!el) return;
                 el.classList.remove('bg-primary-color', 'text-white');
                 el.classList.add('text-gray-400', 'hover:bg-gray-600');
             };
@@ -713,14 +715,17 @@
                 viewTitle.textContent = 'HUS-OS Console';
                 operatorName.textContent = 'Operator Alpha';
                 renderNavigation(adminNavLinks);
-                loadPage('admin_global_dashboard'); 
-            } else {
+                loadPage('admin_global_dashboard');
+            } else if (view === 'client') {
                 setActive(switchClient);
                 setInactive(switchAdmin);
                 viewTitle.textContent = 'Client Portal';
                 operatorName.textContent = 'Valued Client';
                 renderNavigation(clientNavLinks);
                 loadPage('client_global_dashboard');
+            } else {
+                console.warn('Unknown view:', view);
+                return;
             }
 
             if (window.innerWidth < 1024) {
@@ -764,19 +769,23 @@
             // Cleanup previous page's intervals and animations
             activeIntervals.forEach(clearInterval);
             activeIntervals = [];
-            Object.values(chartInstances).forEach(chart => chart.destroy());
+            Object.values(chartInstances).forEach(chart => {
+                if (chart && chart.destroy) chart.destroy();
+            });
             chartInstances = {};
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
             // Stop all D3 simulations
-            Object.values(d3Simulations).forEach(sim => sim.stop());
+            Object.values(d3Simulations).forEach(sim => {
+                if (sim && sim.stop) sim.stop();
+            });
             d3Simulations = {};
 
             const page = pages[pageKey];
             if (!page) {
-                console.error(`Page with key ${pageKey} not found.`);
+                console.error(`Page with key ${pageKey} not found. Available:`, Object.keys(pages));
                 return;
             }
 
@@ -786,26 +795,32 @@
                 <div class="page-content">${page.html()}</div>
             `;
             safeCreateIcons();
-            
+
+            // Special initialization for modules with live data
+            if(pageKey === 'admin_cheatsheet_library') {
+                if (window._loadCsData) _loadCsData().then(() => {
+                    if (window.filterCheatsheets) window.filterCheatsheets();
+                });
+            }
+
             // Post-render initialization for specific pages
             if(pageKey === 'admin_global_dashboard') {
                 window.switchDashboardTab(currentDashboardTab, false); // Load the last active tab
             }
-            if(pageKey === 'admin_automation_controls') startAxiomEdgeSimulation();
-            if(pageKey === 'admin_cognitive_load_monitor') startCognitiveMonitor();
-            if(pageKey === 'admin_energy_core') setupEnergySliders();
-            if(pageKey === 'client_global_dashboard') startClientGlobalDashboard();
-            if (pageKey === 'admin_quantum_computer') startQuantumComputerModule();
-            if (pageKey === 'admin_logic_core') startAipLogicCoreSimulations();
-            if (pageKey === 'admin_ontology') startOntologySimulation();
-            if (pageKey === 'admin_investigation_canvas') startInvestigationCanvas();
-            // Horizon Inits
-            if (pageKey === 'admin_horizon_agentic') startHorizonAgenticCanvas();
+            if(pageKey === 'admin_automation_controls' && window.startAxiomEdgeSimulation) startAxiomEdgeSimulation();
+            if(pageKey === 'admin_cognitive_load_monitor' && window.startCognitiveMonitor) startCognitiveMonitor();
+            if(pageKey === 'admin_energy_core' && window.setupEnergySliders) setupEnergySliders();
+            if(pageKey === 'client_global_dashboard' && window.startClientGlobalDashboard) startClientGlobalDashboard();
+            if (pageKey === 'admin_quantum_computer' && window.startQuantumComputerModule) startQuantumComputerModule();
+            if (pageKey === 'admin_logic_core' && window.startAipLogicCoreSimulations) startAipLogicCoreSimulations();
+            if (pageKey === 'admin_ontology' && window.startOntologySimulation) startOntologySimulation();
+            if (pageKey === 'admin_investigation_canvas' && window.startInvestigationCanvas) startInvestigationCanvas();
+            if (pageKey === 'admin_horizon_agentic' && window.startHorizonAgenticCanvas) startHorizonAgenticCanvas();
 
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.querySelector(`.nav-link[data-page="${pageKey}"]`);
             if (activeLink) activeLink.classList.add('active');
-            
+
             if (window.innerWidth < 1024) {
                 sidebar.classList.remove('open');
             }
@@ -4089,24 +4104,20 @@
             modal.classList.add('flex');
         };
 
-        // Auto-load data and render cards when cheatsheet page activates
-        const _origLoadPage = window.loadPage;
-        window.loadPage = function(pageKey) {
-            _origLoadPage(pageKey);
-            if (pageKey === 'admin_cheatsheet_library') {
-                _loadCsData().then(() => window.filterCheatsheets());
+        // JAKAL backend integration: live telemetry SSE + button wiring.
+        // Skipped on GitHub Pages (static demo) - only runs against a live backend.
+        (async () => {
+            if (window.location.hostname !== 'thepeoplesrealty100-ops.github.io') {
+                try {
+                    const { startIntegration } = await import('./integration.js');
+                    window.addEventListener('load', () => startIntegration());
+                } catch (e) {
+                    console.warn('Backend integration module not available:', e.message);
+                    // Graceful degradation: app still works in demo mode
+                }
             }
-        };
+        })();
 
-    </script>
-
-    <!-- JAKAL backend integration: live telemetry SSE + button wiring.
-         Skipped on GitHub Pages (static demo) - only runs against a live backend. -->
-    <script type="module">
-        import { startIntegration } from './integration.js';
-        if (window.location.hostname !== 'thepeoplesrealty100-ops.github.io') {
-            window.addEventListener('load', () => startIntegration());
-        }
     </script>
 </body>
 </html>
