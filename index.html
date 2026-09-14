@@ -654,6 +654,44 @@
 
         // --- Page Definitions ---
 
+        // API Client for fetching real data from backend
+        const apiClient = {
+            baseUrl: window.location.origin,
+            timeout: 5000,
+
+            async fetch(endpoint, options = {}) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+                    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+                        ...options,
+                        signal: controller.signal,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...options.headers,
+                        },
+                    });
+
+                    clearTimeout(timeoutId);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.json();
+                } catch (error) {
+                    console.warn(`API fetch failed for ${endpoint}:`, error.message);
+                    return null;
+                }
+            },
+
+            async getFabricStatus() { return this.fetch('/api/fabric/status'); },
+            async getFabricSummary() { return this.fetch('/api/fabric/summary'); },
+            async getCompliancePosture() { return this.fetch('/api/response/compliance/posture'); },
+            async getDarkWebFindings() { return this.fetch('/api/darkweb/findings'); },
+            async getTrainingStats() { return this.fetch('/api/awareness/training/stats'); },
+            async getTrainingModules() { return this.fetch('/api/awareness/training/modules'); },
+            async getPhishingCampaigns() { return this.fetch('/api/awareness/phishing/campaigns'); },
+            async getResponseStats() { return this.fetch('/api/response/stats'); },
+        };
+
         const pages = {
             // NEW HORIZON MODULES
             admin_horizon_fabric: { title: "AI Safety Fabric | Consolidated Trust", html: () => renderHorizonFabric() },
@@ -765,7 +803,7 @@
             loadPage(pageKey);
         }
 
-        window.loadPage = function(pageKey) {
+        window.loadPage = async function(pageKey) {
             // Cleanup previous page's intervals and animations
             activeIntervals.forEach(clearInterval);
             activeIntervals = [];
@@ -791,10 +829,19 @@
 
             headerTitle.textContent = page.title;
 
-            contentArea.innerHTML = `
-                <div class="page-content">${page.html()}</div>
-            `;
-            safeCreateIcons();
+            // Show loading state
+            contentArea.innerHTML = '<div class="page-content"><div class="text-center p-8"><p class="text-gray-400">Loading...</p></div></div>';
+
+            try {
+                const html = await page.html();
+                contentArea.innerHTML = `
+                    <div class="page-content">${html}</div>
+                `;
+                safeCreateIcons();
+            } catch (err) {
+                console.error('Error rendering page:', err);
+                contentArea.innerHTML = `<div class="page-content"><div class="text-center p-8"><p class="text-red-500">Error loading page</p></div></div>`;
+            }
 
             // Special initialization for modules with live data
             if(pageKey === 'admin_cheatsheet_library') {
@@ -1694,167 +1741,220 @@
              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${cards}</div>`;
         }
 
-        function renderUnifiedSecurityFabric() {
-            // Render fallback immediately, then upgrade with live backend data if available.
-            setTimeout(async () => {
-                try {
-                    const r = await fetch('/api/fabric/status', { cache: 'no-store' });
-                    if (r.ok) {
-                        const data = await r.json();
-                        const host = document.getElementById('unified-fabric-host');
-                        if (host) { host.innerHTML = renderFabricFromData(data); safeCreateIcons(); }
-                    }
-                } catch (e) { /* backend offline — keep fallback */ }
-            }, 50);
-            return `<div id="unified-fabric-host">${renderFabricFromData(FABRIC_FALLBACK)}</div>`;
+        async function renderUnifiedSecurityFabric() {
+            const fabric = await apiClient.getFabricStatus() || FABRIC_FALLBACK;
+            return `<div id="unified-fabric-host">${renderFabricFromData(fabric)}</div>`;
         }
 
-        function renderMDR() {
+        async function renderMDR() {
+            const fabric = await apiClient.getFabricStatus() || {};
+            const capabilities = fabric.capabilities || {};
+            const mdr = capabilities.mdr || { status: 'operational' };
+
             return `
              <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                  <div class="lg:col-span-1 space-y-4">
-                     ${renderMetricPill('','Antivirus Status', 'Active / Up-to-Date', 'green-400')}
-                     ${renderMetricPill('','EDR Agents', '5,124 / 5,124 Deployed', 'green-400')}
-                     ${renderMetricPill('','Behavioral Detections', '3 (Low)', 'yellow-400')}
+                     ${renderMetricPill('','Antivirus Status', mdr.antivirus_status || 'Active / Up-to-Date', 'green-400')}
+                     ${renderMetricPill('','EDR Agents', mdr.agent_count || '5,124 / 5,124 Deployed', 'green-400')}
+                     ${renderMetricPill('','Behavioral Detections', mdr.detections_count || '3 (Low)', 'yellow-400')}
                  </div>
                  <div class="lg:col-span-2 card p-4 rounded-xl">
                      <h3 class="text-lg font-bold text-primary-color mb-3">Live TTP Monitoring (Behavioral)</h3>
                      <div class="bg-gray-900 rounded-lg p-3 font-mono text-sm h-40 overflow-y-auto scrollbar-style">
-                          <p class="text-white"><span class="text-red-500">[MITRE T1059.001]</span> Powershell execution detected on endpoint <span class="text-primary-color">FIN-LT-04</span>.</p>
-                           <p class="text-white"><span class="text-red-500">[MITRE T1078]</span> Valid account usage from anomalous geo-location.</p>
+                          ${(mdr.recent_events || []).map(e => `<p class="text-white"><span class="text-${e.severity === 'high' ? 'red' : 'yellow'}-500">[${e.mitre_tech || 'MITRE'}]</span> ${e.description || ''}</p>`).join('') || '<p class="text-white"><span class="text-red-500">[MITRE T1059.001]</span> Powershell execution detected on endpoint <span class="text-primary-color">FIN-LT-04</span>.</p><p class="text-white"><span class="text-red-500">[MITRE T1078]</span> Valid account usage from anomalous geo-location.</p>'}
                      </div>
                  </div>
             </div>
              `;
         }
 
-        function renderZeroTrust() {
+        async function renderZeroTrust() {
+            const fabric = await apiClient.getFabricStatus() || {};
+            const capabilities = fabric.capabilities || {};
+            const zt = capabilities.zero_trust || { status: 'operational' };
+            const logs = zt.recent_events || [
+                { action: 'ALLOW', source: 'user.a', target: 'db.prod', risk: 'Low', color: 'green' },
+                { action: 'DENY', source: 'user.b', target: 'file.confidential', risk: 'High - Unmanaged Device', color: 'red' },
+                { action: 'ALLOW', source: 'service.x', target: 'api.billing', risk: 'Service Account', color: 'green' }
+            ];
+
             return `
                  <p class="text-sm text-gray-400 mb-4">Zero Trust Modeling ensures every access request is strongly authenticated, authorized, and continuously validated.</p>
                  <div class="card p-6 rounded-xl">
                       <h3 class="text-xl font-semibold text-white mb-4">Live Access Enforcement Log</h3>
                       <div class="h-96 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
-                          ${generateLogEntry('user.a -> db.prod | POLICY: ALLOW (Risk: Low)', 'green-500', 'lucide-check-circle')}
-                          ${generateLogEntry('user.b -> file.confidential | POLICY: DENY (Risk: High - Unmanaged Device)', 'red-500', 'lucide-x-circle')}
-                          ${generateLogEntry('service.x -> api.billing | POLICY: ALLOW (Service Account)', 'green-500', 'lucide-check-circle')}
+                          ${logs.map(l => generateLogEntry(`${l.source} -> ${l.target} | POLICY: ${l.action} (Risk: ${l.risk})`, `${l.color}-500`, l.action === 'ALLOW' ? 'lucide-check-circle' : 'lucide-x-circle')).join('')}
                       </div>
                  </div>
             `;
         }
         
-        function renderSASE() {
+        async function renderSASE() {
+            const fabric = await apiClient.getFabricStatus() || {};
+            const capabilities = fabric.capabilities || {};
+            const sase = capabilities.sase || { status: 'operational' };
+
             return `
                  <p class="text-sm text-gray-400 mb-4">The SASE (Secure Access Service Edge) provides secure, optimized network tunneling for all users.</p>
                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                     ${renderMetricPill('','Active Tunnels', '1,832', 'green-400')}
-                     ${renderMetricPill('','Avg. Latency', '34ms', 'green-400')}
-                     ${renderMetricPill('','Data Transferred (24h)', '12.5 TB', 'white')}
-                     ${renderMetricPill('','Threats Blocked', '4,109', 'yellow-400')}
+                     ${renderMetricPill('','Active Tunnels', sase.active_tunnels || '1,832', 'green-400')}
+                     ${renderMetricPill('','Avg. Latency', sase.avg_latency || '34ms', 'green-400')}
+                     ${renderMetricPill('','Data Transferred (24h)', sase.data_transferred || '12.5 TB', 'white')}
+                     ${renderMetricPill('','Threats Blocked', sase.threats_blocked || '4,109', 'yellow-400')}
                  </div>
             `;
         }
 
-        function renderPAM() {
+        async function renderPAM() {
+            const fabric = await apiClient.getFabricStatus() || {};
+            const capabilities = fabric.capabilities || {};
+            const pam = capabilities.pam || { status: 'operational' };
+            const requests = pam.pending_requests || [
+                { operator: 'dev.ops', system: 'prod-db-01', reason: 'Emergency patch deployment.' }
+            ];
+
             return `
                  <p class="text-sm text-gray-400 mb-4">Privileged Access Management (PAM) provides just-in-time, audited access to critical systems.</p>
                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     ${requests.map((req, idx) => `
                      <div class="card p-4 rounded-xl">
-                         <h3 class="text-lg font-bold text-primary-color mb-3">Pending Access Requests</h3>
+                         <h3 class="text-lg font-bold text-primary-color mb-3">Pending Access Request</h3>
                          <div class="p-3 bg-gray-900/70 rounded-lg space-y-3">
                              <div>
-                                 <p class="font-semibold text-white">Operator: dev.ops | System: prod-db-01</p>
-                                 <p class="text-xs text-gray-400">Reason: Emergency patch deployment.</p>
+                                 <p class="font-semibold text-white">Operator: ${req.operator} | System: ${req.system}</p>
+                                 <p class="text-xs text-gray-400">Reason: ${req.reason}</p>
                              </div>
                              <div class="flex space-x-2">
-                                 <button onclick="window.showAppModal('PAM Action', 'Access for dev.ops has been APPROVED for 60 minutes.')" class="flex-1 py-2 text-sm bg-green-600 hover:bg-green-700 rounded-lg">Approve</button>
-                                 <button onclick="window.showAppModal('PAM Action', 'Access for dev.ops has been DENIED.')" class="flex-1 py-2 text-sm bg-red-600 hover:bg-red-700 rounded-lg">Deny</button>
+                                 <button onclick="window.showAppModal('PAM Action', 'Access for ${req.operator} has been APPROVED for 60 minutes.')" class="flex-1 py-2 text-sm bg-green-600 hover:bg-green-700 rounded-lg">Approve</button>
+                                 <button onclick="window.showAppModal('PAM Action', 'Access for ${req.operator} has been DENIED.')" class="flex-1 py-2 text-sm bg-red-600 hover:bg-red-700 rounded-lg">Deny</button>
                              </div>
                          </div>
                      </div>
+                     `).join('')}
                  </div>
             `;
         }
         
-        function renderDnsFilter() {
+        async function renderDnsFilter() {
+            const fabric = await apiClient.getFabricStatus() || {};
+            const capabilities = fabric.capabilities || {};
+            const dns = capabilities.dns || { status: 'operational' };
+            const logs = dns.recent_queries || [
+                { domain: 'www.google.com', status: 'Allowed', color: 'green' },
+                { domain: 'malicious-site.xyz', status: 'Blocked (Malware)', color: 'red' },
+                { domain: 'www.peoplestechnologies.com', status: 'Allowed', color: 'green' }
+            ];
+
             return `
                 <div class="card p-6 rounded-xl">
                     <h3 class="text-xl font-semibold text-white mb-4">Live DNS Traffic</h3>
                     <div class="h-96 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
-                        ${generateLogEntry('Allowed: www.google.com', 'green-500', 'lucide-check-circle')}
-                        ${generateLogEntry('Blocked: malicious-site.xyz (Malware)', 'red-500', 'lucide-x-circle')}
-                        ${generateLogEntry('Allowed: www.peoplestechnologies.com', 'green-500', 'lucide-check-circle')}
+                        ${logs.map(l => generateLogEntry(`${l.status}: ${l.domain}`, `${l.color}-500`, l.color === 'green' ? 'lucide-check-circle' : 'lucide-x-circle')).join('')}
                     </div>
                 </div>
             `;
         }
 
-        function renderEmailFilter() {
+        async function renderEmailFilter() {
+            const fabric = await apiClient.getFabricStatus() || {};
+            const capabilities = fabric.capabilities || {};
+            const email = capabilities.email || { status: 'operational' };
+
             return `
                 <div class="card p-6 rounded-xl">
                     <h3 class="text-xl font-semibold text-white mb-4">Email Security Gateway</h3>
                      <div class="grid grid-cols-3 gap-4 mb-4">
-                         ${renderMetricPill('','Clean', '10,532', 'green-400')}
-                         ${renderMetricPill('','Spam', '1,201', 'yellow-400')}
-                         ${renderMetricPill('','Phishing', '88', 'red-500')}
+                         ${renderMetricPill('','Clean', email.clean_count || '10,532', 'green-400')}
+                         ${renderMetricPill('','Spam', email.spam_count || '1,201', 'yellow-400')}
+                         ${renderMetricPill('','Phishing', email.phishing_count || '88', 'red-500')}
                     </div>
                     <h4 class="text-lg font-semibold text-white mb-2">Quarantine</h4>
                     <div class="h-64 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
-                        ${generateLogEntry('Quarantined: "URGENT INVOICE" from scam@scammer.net', 'yellow-500', 'lucide-shield-alert')}
+                        ${(email.quarantined || []).map(q => generateLogEntry(`Quarantined: "${q.subject}" from ${q.sender}`, 'yellow-500', 'lucide-shield-alert')).join('') || generateLogEntry('Quarantined: "URGENT INVOICE" from scam@scammer.net', 'yellow-500', 'lucide-shield-alert')}
                     </div>
                 </div>
             `;
         }
 
-        function renderDlp() {
+        async function renderDlp() {
+            const fabric = await apiClient.getFabricStatus() || {};
+            const capabilities = fabric.capabilities || {};
+            const dlp = capabilities.dlp || { status: 'operational' };
+            const incidents = dlp.recent_incidents || [
+                { type: 'BLOCKED', description: 'Attempt to send `Project_Chimera_Financials.xlsx` to external email.', severity: 'high' },
+                { type: 'FLAGGED', description: 'High-volume download of client data by user.a', severity: 'medium' }
+            ];
+
             return `
                 <div class="card p-6 rounded-xl">
                     <h3 class="text-xl font-semibold text-white mb-4">Data Loss Prevention Incidents</h3>
                     <div class="h-96 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
-                        ${generateLogEntry('BLOCKED: Attempt to send `Project_Chimera_Financials.xlsx` to external email.', 'red-500', 'lucide-file-x')}
-                        ${generateLogEntry('FLAGGED: High-volume download of client data by user.a', 'yellow-500', 'lucide-alert-triangle')}
+                        ${incidents.map(i => generateLogEntry(`${i.type}: ${i.description}`, i.severity === 'high' ? 'red-500' : 'yellow-500', i.type === 'BLOCKED' ? 'lucide-file-x' : 'lucide-alert-triangle')).join('')}
                     </div>
                 </div>
             `;
         }
 
-        function renderCompliance() {
+        async function renderCompliance() {
+            const compliance = await apiClient.getCompliancePosture() || {};
+            const postures = compliance.postures || [
+                { name: 'GDPR Compliance', score: 98 },
+                { name: 'HIPAA Compliance', score: 95 },
+                { name: 'PCI-DSS Compliance', score: 89 }
+            ];
+
             return `
                 <div class="card p-6 rounded-xl">
                     <h3 class="text-xl font-semibold text-white mb-4">Compliance Posture Assessment</h3>
                     <div class="space-y-4">
-                        ${renderResourceBar('GDPR Compliance', 98, 'green-500')}
-                        ${renderResourceBar('HIPAA Compliance', 95, 'green-500')}
-                        ${renderResourceBar('PCI-DSS Compliance', 89, 'yellow-500')}
+                        ${postures.map(p => {
+                            const color = p.score >= 95 ? 'green-500' : p.score >= 80 ? 'yellow-500' : 'red-500';
+                            return renderResourceBar(p.name, p.score, color);
+                        }).join('')}
                     </div>
-                    <button class="w-full mt-6 bg-primary-color text-white px-4 py-3 rounded-lg font-semibold" onclick="window.showAppModal('Scan Complete', 'Compliance scan finished. 2 new recommendations generated.')">Run Full Compliance Scan</button>
+                    <button class="w-full mt-6 bg-primary-color text-white px-4 py-3 rounded-lg font-semibold" onclick="window.showAppModal('Scan Complete', 'Compliance scan finished. ${compliance.recommendations_count || '2'} new recommendations generated.')">Run Full Compliance Scan</button>
                 </div>
             `;
         }
         
-        function renderDarkWeb() {
+        async function renderDarkWeb() {
+            const findings = await apiClient.getDarkWebFindings() || {};
+            const breaches = findings.breaches || [
+                { email: 'user***@peoplestech.com', source: 'Collection #1' }
+            ];
+
             return `
                 <div class="card p-6 rounded-xl">
                     <h3 class="text-xl font-semibold text-white mb-4">Dark Web Monitoring</h3>
-                     ${renderMetricPill('','Leaked Credentials Found', '12', 'red-500')}
+                     ${renderMetricPill('','Leaked Credentials Found', findings.total_count || '12', 'red-500')}
                     <div class="h-64 overflow-y-auto scrollbar-style p-2 mt-4 text-sm bg-gray-900 rounded-lg">
-                        ${generateLogEntry('Found: user***@peoplestech.com on breach list `Collection #1`', 'red-500', 'lucide-key-round')}
+                        ${breaches.map(b => generateLogEntry(`Found: ${b.email} on breach list \`${b.source}\``, 'red-500', 'lucide-key-round')).join('')}
                     </div>
                      <button class="w-full mt-4 bg-yellow-600 text-white px-4 py-3 rounded-lg font-semibold" onclick="window.showAppModal('Action Sent', 'Takedown and block requests have been initiated for all found credentials.')">Initiate Takedown/Block</button>
                 </div>
             `;
         }
         
-        function renderPhishingSim() {
+        async function renderPhishingSim() {
+            const campaigns = await apiClient.getPhishingCampaigns() || {};
+            const latest = campaigns.campaigns?.[0] || {
+                name: "Q3-Sales-Training",
+                sent: 50,
+                opened: 35,
+                clicked: 10,
+                compromised: 2
+            };
+
             return `
                 <div class="card p-6 rounded-xl">
                     <h3 class="text-xl font-semibold text-white mb-4">Phishing Campaign Simulation</h3>
                     <button class="w-full bg-primary-color text-white px-4 py-3 rounded-lg font-semibold mb-6" onclick="window.showAppModal('Campaign Launched', 'A new phishing simulation campaign has been sent to the Sales department.')">Launch New Campaign</button>
-                    <h4 class="text-lg font-semibold text-white mt-6 mb-2">Campaign 'Q3-Sales-Training' Results</h4>
+                    <h4 class="text-lg font-semibold text-white mt-6 mb-2">Campaign '${latest.name}' Results</h4>
                     <div class="grid grid-cols-4 gap-4">
-                        ${renderMetricPill('','Sent', '50', 'white')}
-                        ${renderMetricPill('','Opened', '35', 'primary-color')}
-                        ${renderMetricPill('','Clicked', '10', 'yellow-500')}
-                        ${renderMetricPill('','Compromised', '2', 'red-500')}
+                        ${renderMetricPill('','Sent', latest.sent || '50', 'white')}
+                        ${renderMetricPill('','Opened', latest.opened || '35', 'primary-color')}
+                        ${renderMetricPill('','Clicked', latest.clicked || '10', 'yellow-500')}
+                        ${renderMetricPill('','Compromised', latest.compromised || '2', 'red-500')}
                     </div>
 
                     <!-- New Gemini Feature: Phishing Email Generation -->
@@ -1914,7 +2014,15 @@
             }
         }
 
-        function renderSecurityTraining() {
+        async function renderSecurityTraining() {
+            const stats = await apiClient.getTrainingStats() || {};
+            const modules = stats.modules || [
+                { title: 'Identifying Phishing Emails', completion: 85 },
+                { title: 'Strong Password Policies & MFA', completion: 92 },
+                { title: 'Social Engineering Tactics', completion: 78 },
+                { title: 'Safe Web Browsing Habits', completion: 88 }
+            ];
+
             return `
             <div class="card p-6 rounded-xl">
                  <h3 class="text-xl font-semibold text-white mb-4">Security Awareness Training Module</h3>
@@ -1922,13 +2030,20 @@
                  <div class="aspect-w-16 aspect-h-9 bg-black rounded-lg mb-4" style="padding-bottom: 56.25%; position: relative;">
                      <iframe src="https://www.youtube.com/embed/VLmbeS0sQkY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full h-full" style="position: absolute; top: 0; left: 0;"></iframe>
                  </div>
-                 <h4 class="text-lg font-semibold text-white mt-6 mb-2">Key Topics</h4>
-                 <ul class="list-disc list-inside text-gray-300">
-                     <li>Identifying Phishing Emails</li>
-                     <li>Strong Password Policies & MFA</li>
-                     <li>Social Engineering Tactics</li>
-                     <li>Safe Web Browsing Habits</li>
-                 </ul>
+                 <h4 class="text-lg font-semibold text-white mt-6 mb-2">Training Progress</h4>
+                 <div class="space-y-2">
+                     ${modules.map(m => `
+                     <div>
+                         <div class="flex justify-between mb-1">
+                             <span class="text-sm text-gray-300">${m.title}</span>
+                             <span class="text-xs text-gray-400">${m.completion}%</span>
+                         </div>
+                         <div class="bg-gray-800 rounded-full h-2">
+                             <div class="bg-green-500 h-2 rounded-full" style="width: ${m.completion}%"></div>
+                         </div>
+                     </div>
+                     `).join('')}
+                 </div>
             </div>
             `;
         }
