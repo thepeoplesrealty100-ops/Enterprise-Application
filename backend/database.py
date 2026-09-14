@@ -1343,6 +1343,18 @@ class DuckDBManager:
         c.execute("CREATE INDEX IF NOT EXISTS idx_qaip_circuit ON q_aip_inference_registry(circuit_type)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_qaip_executed ON q_aip_inference_registry(executed_at)")
 
+        # Priority #6: Additional performance indexes for frequently queried columns
+        c.execute("CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp DESC)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_audit_log_operator ON audit_log(operator_id)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_findings_pentest_id ON findings(pentest_id)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_findings_severity ON findings(severity)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_approval_status ON approval_requests(status)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_approval_created ON approval_requests(created_at DESC)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_threat_intel_indicator ON threat_intel(indicator)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_pqc_audit_entity ON pqc_audit_log(entity_type)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_fabric_events_type ON fabric_events(event_type)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_fabric_events_timestamp ON fabric_events(timestamp DESC)")
+
         self.conn.commit()
         logger.info("Schema v3.0 initialized at %s", self.db_path)
 
