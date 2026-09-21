@@ -28,6 +28,7 @@ services:
       # Live-edit UI without rebuild (optional)
       - ./index.html:/app/frontend/index.html:ro
       - ./integration.js:/app/frontend/integration.js:ro
+      - ./world_land_map.json:/app/frontend/world_land_map.json:ro
     networks:
       - jakal_network
     restart: unless-stopped
