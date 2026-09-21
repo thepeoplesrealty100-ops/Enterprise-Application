@@ -1,19 +1,35 @@
-name: Deploy Frontend UI
+# Publishes the static project page in site/ to GitHub Pages.
+#
+# It publishes site/ and nothing else, deliberately. JAKAL is a FastAPI
+# backend with an embedded DuckDB database, so the operator dashboard
+# (index.html at the repo root) cannot function on static hosting --
+# every /api/* call 404s, and GitHub's own 404 HTML then gets rendered
+# into the dashboard's panels. Publishing the repo root shipped exactly
+# that: a dashboard that looked real and was permanently dead.
+# site/index.html is a documentation page that tells people how to run
+# the real thing locally instead.
+#
+# There used to be a second workflow (static.yml) that also deployed to
+# Pages on every push to main, sharing this same `pages` concurrency
+# group, with `path: '.'` -- the entire repository, backend included.
+# The two raced on every push and whichever finished last won, so what
+# was actually live was nondeterministic. It was removed; this is now
+# the only Pages deploy.
+name: Deploy project page to GitHub Pages
 
 on:
-  # Triggers the workflow on pushes to the main branch
   push:
     branches: ["main"]
-  # Allows you to run this workflow manually from the Actions tab
+    paths:
+      - "site/**"
+      - ".github/workflows/deploy-ui.yml"
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -28,21 +44,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Isolate Frontend Files
-        run: |
-          # Create a clean directory for deployment
-          mkdir _site
-          # Copy everything into _site EXCEPT the backend folder and hidden git files
-          rsync -av --exclude='backend' --exclude='.git' --exclude='.github' --exclude='_site' ./ _site/
-
       - name: Setup GitHub Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Tell GitHub Pages to only deploy the isolated folder
-          path: './_site'
+          path: './site'
 
       - name: Deploy to GitHub Pages
         id: deployment
