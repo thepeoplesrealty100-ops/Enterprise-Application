@@ -1,0 +1,14 @@
+346d53ed2c4b716e41c3545b5cb50a7d718cdd56	refs/heads/backup/local-work-2026-08-20
+47a921926d2c651667337a04c6a1596dae31284a	refs/heads/feat/v4-all
+fc56136d547dfe89eced6d25e671983a5666dc38	refs/heads/gacyber-toolkit
+74f5050fc41dc328f6059fd1586d5d59b621770d	refs/heads/jakal-micromodules
+94a29123cd012ce75e41da1e46def8b403ad4aed	refs/heads/main
+c512d27f577028e3f0099a386756f9be7e99b7c1	refs/heads/v3.0-ontology-maya-enterprise
+47a921926d2c651667337a04c6a1596dae31284a	refs/remotes/origin/HEAD
+47a921926d2c651667337a04c6a1596dae31284a	refs/remotes/origin/feat/v4-all
+47a921926d2c651667337a04c6a1596dae31284a	refs/remotes/origin/main
+ead5204b1bb6f48068724da06399fce0726cba28	refs/stash
+c512d27f577028e3f0099a386756f9be7e99b7c1	refs/tags/archive/v3.0-ontology-maya-enterprise
+530a81e7e12ad0f04ef1db62e3470247559565f7	refs/tags/backup/pre-consolidation
+d2cc344ff17b78b87ad73c769764abb2a3301310	refs/tags/v2.8
+94a29123cd012ce75e41da1e46def8b403ad4aed	refs/tags/v2.8^{}

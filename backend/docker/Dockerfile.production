@@ -1,0 +1,84 @@
+"""
+backend/docker/Dockerfile.production
+
+Production-grade Dockerfile for JAKAL Enterprise Application
+Multi-stage build for optimal image size and security
+Phase 2-5 complete: Integration, Testing, Deployment, Hardening
+"""
+
+# Stage 1: Builder
+FROM python:3.11-slim as builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY backend/requirements.txt .
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+LABEL maintainer="JAKAL Development Team"
+LABEL version="2.8"
+LABEL description="JAKAL Enterprise Penetration Testing Platform - Phase 2-5 Complete"
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -u 1000 -s /bin/bash jakal
+
+WORKDIR /app
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application code
+COPY backend/ /app/backend/
+COPY frontend/ /app/frontend/
+
+# Set permissions
+RUN chown -R jakal:jakal /app
+
+# Create data directory for DuckDB
+RUN mkdir -p /data && chown -R jakal:jakal /data
+
+# Switch to non-root user
+USER jakal
+
+# Expose port
+EXPOSE 8000
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV DATABASE_PATH=/data/jakal.duckdb
+ENV ENVIRONMENT=production
+ENV LOG_LEVEL=INFO
+ENV API_WORKERS=4
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Startup command
+CMD ["python", "-m", "uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

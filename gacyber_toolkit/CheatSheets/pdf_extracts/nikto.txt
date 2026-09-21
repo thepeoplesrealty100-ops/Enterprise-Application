@@ -1,0 +1,226 @@
+Certified Penetration Testing Professional Exam 412-80
+Nikto Cheat Sheet
+Certified Penetration Testing Professional
+Nikto Cheat Sheet
+Nikto
+Source: https://cirt.net
+Nikto is an Open Source (GPL) web server vulnerability scanner that can perform wide-ranging
+tests against web servers of over 6700 potentially dangerous files/CGIs and can check for any
+older versions of over 1250 servers, and version specific problems on over 270 servers. It also
+checks for server configuration items, HTTP server options, captures, and prints any cookies
+received and tries to identify any newly installed web servers and software.
+1. Nikto Parameters
+2. Types of Display Options
+3. Types of Evasion Options
+4. Types of Format Options
+5. Types of Mutate Options
+6. Types of Tuning Options
+7. Nikto Variables
+8. Nikto Commands
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nikto Cheat Sheet
+Nikto Parameters
+Parameter Description
+Ask about submitting updates: yes (ask about each-- the default), no
+-ask+
+(don't ask, just send), auto (don't ask, just send)
+-Cgidirs+ Scan CGI directories by using special words "none" or "all"
+-config+ Use an alternative config file instead of the nikto.conf file
+-dbcheck Verify the scan databases for syntax errors
+-Display+ Use to control the output of Nikto
+-evasion+ Input the LibWhisker encoding/evasion technique to use
+-findonly Identify the HTTP(S) ports without performing security scan
+-host+ IP address, hostname or text file of hosts
+-Help Show extended help information
+Give ID and password for host Basic host authentication. The format
+-id
+is "id:password"
+-IgnoreCode Ignore HTTP codes as negative responses
+-list-plugins Display all plugins that Nikto can run against targets
+-maxtime+ Retrieves maximum execution time per host, in seconds
+Input mutation technique. This will cause Nikto to combine tests or
+-mutate+
+attempt to guess values
+-mutate-options Input extra information for mutates, e.g. a dictionary file
+-nolookup Avoid performing name lookups on IP addresses
+-nointeractive Disable interactive features
+-nossl Do not use SSL to connect to the server
+-no404 Disable 404 (file not found) checking
+-output+ Specify the file to write output
+-Plugins+ Give plugins to run on the specified targets
+-port+ Specify TCP port(s) to target
+-Pause+ Seconds (integer or floating-point) to delay between each test
+-root+ Prepend the value specified to the beginning of every request
+-ssl Only check SSL on the ports specified
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nikto Cheat Sheet
+-Save Save request/response of findings to this directory
+Seconds to wait before timing out a request. The default timeout is
+-timeout+
+10 seconds
+-Tuning+ Control the test that Nikto will use against a target
+-Userdbs Load user-defined databases instead of standard databases
+-until Execute until the specified time or duration, then pause
+-update Update the plugins and databases directly from cirt.net
+-useproxy Use the HTTP proxy defined in the configuration file
+-Version Display the Nikto software, plugin and database versions
+-vhost+ Specify the Host header to be sent to the target
+Types of Display Options
+Parameter Description
+Shows redirects, that displays all requests which receive a "redirect"
+-Display 1
+response from the server
+-Display 2 Displays cookies received from a remote host
+-Display 3 Retrieves all 200/OK responses
+-Display 4 Retrieves URLs which require authentication
+Debug output. Show debug output, which shows the verbose output
+-Display D
+and extra information such as variable content
+-Display E Display details of all HTTP errors
+-Display P Displays progress to STDOUT
+-Display S Scrub output of IPs and hostnames
+-Display V Gives verbose output
+Types of Evasion Options
+Parameter Description
+-evasion 1 Random URI encoding (non-UTF8)
+-evasion 2 Directory self-reference (/./)
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nikto Cheat Sheet
+-evasion 3 Premature URL ending
+-evasion 4 Prepend long random string
+-evasion 5 Fake parameter
+-evasion 6 TAB as request spacer
+-evasion 7 Change the case of the URL
+-evasion 8 Use Windows directory separator (\)
+-evasion A Use a carriage return (0x0d) as a request spacer
+-evasion B Use binary value 0x0b as a request spacer
+Types of Format Options
+Parameter Description
+-Format csv Comma-separated list
+-Format htm HTML report
+-Format msf+ Log to Metasploit
+-Format nbe Nessus NBE format
+-Format txt Text report
+-Format xml XML report
+Types of Mutate Options
+Parameter Description
+-mutate 1 Test all files with all root directories
+-mutate 2 Guess for password file names
+-mutate 3 Enumerate usernames via Apache (/~user type requests).
+Enumerate usernames via cgiwrap (/cgi-bin/cgiwrap/~user type
+-mutate 4
+requests)
+Attempt to brute force sub-domain names assume that the hostname
+-mutate 5
+is the parent domain
+-mutate 6 Attempt to guess directory names from the supplied dictionary file
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nikto Cheat Sheet
+Types of Tuning Options
+Parameter Description
+-Tuning 0 File Upload
+-Tuning 1 Interesting File / Seen in logs
+-Tuning 2 Misconfiguration / Default File
+-Tuning 3 Information Disclosure
+-Tuning 4 Injection (XSS/Script/HTML
+-Tuning 5 Remote File Retrieval
+Denial of Service. Resource allows a denial of service against the
+-Tuning 6
+target application
+-Tuning 7 Remote File Retrieval - Server Wide
+-Tuning 8 Command Execution / Remote Shell
+-Tuning 9 SQL Injection
+-Tuning a Authentication Bypass
+-Tuning b Software Identification
+-Tuning c Remote source inclusion
+-Tuning x Reverse Tuning Options
+Nikto Variables
+Variable Description
+CLIOPTS=-output results.txt-Format
+Pass default options to the command line
+text
+Path to the location of the DTD used for
+NIKTODTD=docs/nikto.dtd
+XML output
+RFIURL=http://cirt.net/rfiinc. Specify full URL to a file for remote file
+txt? inclusion
+SKIPPORTS=21 111 Specify ports that would never be scanned
+Specify a space-separated list of Test IDs
+SKIPIDS=000045 000345
+(tids) that Nikto will not run on the system
+Defines the default version of HTTP used by
+DEFAULTHTTPVER=1.1
+Nikto
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nikto Cheat Sheet
+Use the specified SSL library instead of the
+LW_SSL_ENGINE=auto
+default
+PROMPTS= Disable or Enable Nikto prompts
+PROXYHOST=
+PROXYPORT= Address, port and username password of a
+PROXYUSER= proxy to relay all requests through
+PROXYPASS=
+STATIC-COOKIE="cookie1"="cookie Include the supplied cookie(s) to all
+value";"cookie2"="cookie val" requests made via Nikto
+Identify targets as webservers by sending a
+CHECKMETHODS=HEAD GET request to fetch the / URI via certain HTTP
+methods
+EXECDIR=.
+PLUGINDIR=EXECDIR/plugins
+Find the location of Nikto, its plugins,
+TEMPLATEDIR=EXECDIR/templates databases, XML/HTML templates and
+DBDIR=EXECDIR/databases documents.
+DOCDIR=EXECDIR/docs
+Nikto Commands
+Command Description
+perl nikto.pl -h <Target IP>
+Basic Nikto scan
+perl nikto.pl -h <Target IP> -p
+Scan a given port
+443
+perl nikto.pl -h https:// <Target
+Scan a given URL
+IP>:443/
+perl nikto.pl -h <Target IP> -p
+Scan port
+443 -ssl
+perl nikto.pl -h <Target IP> -
+Use -mutate parameter to perform
+mutate 3 -mutate-options user-
+complex tests
+list.txt
+perl nikto.pl -h <Target IP> -p
+Scan multiple ports
+80,88,443
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nikto Cheat Sheet
+1) perl nikto.pl -h localhost -p
+1) Use the -useproxy option to relay all
+80 -useproxy
+connections through the HTTP proxy
+specified in the configuration file
+2) ./nikto.pl -h localhost -
+2) Use the -useproxy option with the
+useproxy
+proxy set as the argument
+http://localhost:8080/
+Scan the target on a specified IP address
+perl nikto.pl -h <Target IP> -
+with specific types of tests determined by
+Tunning x
+the tuning options
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

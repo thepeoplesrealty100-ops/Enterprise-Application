@@ -1,0 +1,75 @@
+Certified Penetration Testing Professional Exam 412-80
+Nbtstat Cheat Sheet
+Certified Penetration Testing Professional
+Nbtstat Cheat Sheet
+Nbtstat
+Source: https://www.microsoft.com
+Nbtstat displays NetBIOS over TCP/IP (NetBT) protocol statistics, NetBIOS name tables for both
+the local computer and remote computers, and the NetBIOS name cache. Nbtstat allows a refresh
+of the NetBIOS name cache and the names registered with Windows Internet Name Service
+(WINS). Used without parameters, nbtstat displays help.
+Syntax
+nbtstat [/a <remotename>] [/A <IPaddress>] [/c] [/n] [/r] [/R] [/RR]
+[/s] [/S] [<interval>]
+Nbtstat Parameters
+Parameter Description
+Displays the NetBIOS name table of a remote computer, where
+/a
+remoteName is the NetBIOS computer name of the remote computer
+Displays the NetBIOS name table of a remote computer, specified by the IP
+/A
+address (in dotted decimal notation) of the remote computer
+Displays the contents of the NetBIOS name cache, the table of NetBIOS
+/c
+names and their resolved IP addresses
+Displays the NetBIOS name table of the local computer. The status
+/n of registered indicates that the name is registered either by broadcast or
+with a WINS server
+/r Displays NetBIOS name resolution statistics
+Purges the contents of the NetBIOS name cache and then reloads the #PRE-
+/R
+tagged entries from the Lmhosts file
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Nbtstat Cheat Sheet
+Releases and then refreshes NetBIOS names for the local computer that is
+/RR
+registered with WINS servers
+Displays NetBIOS client and server sessions, attempting to convert the
+/s
+destination IP address to a name
+Displays NetBIOS client and server sessions, listing the remote computers
+/S
+by destination IP address only
+/? Displays help at the command prompt
+Redisplays selected statistics, pausing the number of seconds specified in
+Interval between each display. Press CTRL+C to stop redisplaying statistics.
+interval
+If this parameter is omitted, nbtstat prints the current configuration
+information only once
+Nbtstat Commands
+Command Description
+Shows the contents of the NetBIOS name cache, which contains NetBIOS
+nbtstat /c
+name-to-IP address mappings
+Displays the names that have been registered locally on the system by
+nbtstat /n
+NetBIOS applications such as the server and redirector
+nbtstat /A Displays the NetBIOS name table of the remote computer assigned the IP
+10.0.0.99 address of 10.0.0.99
+Displays the count of all NetBIOS names resolved by broadcast and by
+nbtstat /r
+querying a WINS server
+nbtstat /S Lists the current NetBIOS sessions and their statuses.
+Used to purge the NetBIOS name cache and reload the #PRE-tagged entries
+nbtstat /R
+in the local Lmhosts file
+Release NetBIOS names registered with the WINS server and re-register
+nbtstat /RR
+them
+nbtstat /a Displays the NetBIOS name table of the remote computer with the NetBIOS
+CORP07 computer name of CORP07
+nbtstat /S 10 Display NetBIOS session statistics by IP address every 10 seconds
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

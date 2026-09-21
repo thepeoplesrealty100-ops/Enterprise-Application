@@ -1,0 +1,1494 @@
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+Certified Penetration Testing Professional
+Wireshark Filters Cheat Sheet
+Wireshark
+Source: https://www.wireshark.org
+Wireshark is a protocol analyzer tool that can capture and interactively browse the traffic
+running on a computer network. This tool uses Winpcap to capture packets on its supported
+networks. It captures live network traffic from Ethernet, IEEE 802.11, PPP/HDLC, ATM,
+Bluetooth, USB, Token Ring, Frame Relay, FDDI networks. The captured files can be
+programmatically edited via the command-line. A set of filters for customized data displays can
+be refined using a display filter.
+1. Frame Filters
+2. Ethernet Filters
+3. DNS Filters
+4. ARP Filters
+5. PPP Filters
+6. DTP Filters
+7. IEEE 802.1Q VLAN Filters
+8. MPLS Filters
+9. VTP (VLAN Trunking Protocol) Filters
+10. FR (Frame Relay) Filters
+11. IPv4 Filters
+12. IPv6 Filters
+13. ICMP Filters
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+14. ICMPv6 Filters
+15. TCP Filters
+16. UDP Filters
+17. HTTP Filters
+18. BGP Filters
+19. TLS Filters
+20. RIPv2 Filters
+21. OSPF and OSPFv2 Filters
+22. OSPFv3/IP v6 Filters
+23. Common Filtering Commands
+24. Filtering Packets
+25. Logical Operators
+26. Default Columns in Packet Capture Output
+27. Display Window Keyboard Shortcuts
+28. Other Commands
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+1. Frame Filters
+Wireshark Filters Description
+frame.cap_len Frame length stored into the capture file
+frame.coloring_rule.name Coloring Rule Name
+frame.coloring_rule.string Coloring Rule String
+frame.file_off File Offset
+frame.number Frame Number
+frame.p2p_dir Point-to-Point Direction
+frame.protocols Protocols in frame
+frame.ref_time Time Reference frame
+frame.time Arrival Time
+frame.ignored Frame is ignored
+frame.len Frame length on the wire
+frame.link_nr Link Number
+frame.marked Frame is marked
+frame.md5_hash Frame MD5 Hash
+frame.time_delta Time delta from previous captured frame
+frame.time_delta_displayed Time delta from previous displayed frame
+frame.time_epoch Epoch Time
+Arrival Time: Fractional second out of range
+frame.time_invalid
+(0-1000000000)
+frame.time_relative Time since reference or first frame
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+2. Ethernet Filters
+Wireshark Filters Description
+eth.addr Address of Ethernet or other MAC address
+Destination of Ethernet or other MAC
+eth.dst
+address
+eth.ig IG (Individual/Group) bit
+eth.len Length
+eth.lg LG (Local/Global) bit
+eth.src Source of Ethernet or other MAC address
+eth.trailer Trailer
+eth.type Type
+Source OUI (Organizationally Unique
+eth.src.oui_resolved
+Identifier) resolved
+eth.vlan.id VLAN
+eth.fcs_bad Bad checksum
+3. DNS Filters
+Wireshark Filters Description
+dns.afsdb.hostname Display DNS AFSDB hostname
+dns.a Display IP address of DNS server
+dns.caa.tag_length Tag length
+dns.csync.flags Flags
+dns.count.prerequisites Prerequisites
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+4. ARP Filters
+Wireshark Filters Description
+arp.duplicate-address-detected Locate duplicate IP address traffic
+arp.proto.size Display protocol size
+arp.proto.type Display protocol type
+arp.src.hw_mac Display sender’s MAC address
+arp.src.proto Display sender’s protocol address
+arp.src.proto_ipv4 Display sender’s IP address
+arp.dst.hw_mac Target MAC address
+arp.dst.proto_ipv4 Target IP address
+arp.hw.size Hardware size
+arp.hw.type Hardware type
+arp.opcode Opcode
+5. PPP Filters
+Wireshark Filters Description
+ppp.address Address
+ppp.control Control
+ppp.direction Direction
+ppp.protocol Protocol
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+6. DTP Filters
+Wireshark Filters Description
+dtp.neighbor Neighbor
+dtp.tlv_type Type
+dtp.tlv_len Length
+dtp.version Version
+dtp.domain Domain
+dtp.senderid Sender ID
+dtp.tos Trunk Operating Status
+dtp.truncated DTP message is truncated prematurely
+dtp.data Data
+dtp.tas Trunk Administrative Status
+dtp.tat Trunk Administrative Type
+7. IEEE 802.1Q VLAN Filters
+Wireshark Filters Description
+vlan.trailer Trailer
+vlan.priority Priority
+vlan.len Length
+vlan.cfi CFI
+vlan.etype Type
+vlan.id ID
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+vlan.too_many_tags Too many nested VLAN tags
+Length field value goes past the end of the
+vlan.len.past_end
+payload
+8. MPLS Filters
+x
+Wireshark Filters Description
+mpls.bottom MPLS Bottom of Label Stack
+mpls.cw.control MPLS Control Channel
+mpls.cw.res MPLS Control Word Reserved
+mpls.exp MPLS Experimental Bits
+mpls.label MPLS Label
+mpls.oam.bip16 BIP16
+mpls.oam.defect_location Defect Location (AS)
+mpls.oam.defect_type Defect Type
+mpls.oam.frequency Frequency
+mpls.oam.function_type Function Type
+mpls.oam.ttsi Trail Termination Source Identifier
+mpls.ttl MPLS TTL
+9. VTP (VLAN Trunking Protocol) Filters
+Wireshark Filters Description
+vtp.code Code
+vtp.conf_rev_num Configuration Revision Number
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+vtp.followers Followers
+vtp.md Management Domain
+vtp.md5_digest MD5 Digest
+vtp.md_len Management Domain Length
+vtp.neighbor Neighbor
+vtp.seq_num Sequence Number
+vtp.start_value Start Value
+vtp.upd_id Updater Identity
+vtp.upd_ts Update Timestamp
+vtp.version Version
+vtp.vlan_info.802_10_index 802.10 Index
+vtp.vlan_info.isl_vlan_id ISL VLAN ID
+vtp.vlan_info.len VLAN Information Length
+vtp.vlan_info.mtu_size MTU Size
+vtp.vlan_info.status.vlan_susp VLAN suspended
+vtp.vlan_info.tlv_len Length
+vtp.vlan_info.tlv_type Type
+vtp.vlan_info.vlan_name VLAN Name
+vtp.vlan_info.vlan_name_len VLAN Name Length
+vtp.vlan_info.vlan_type VLAN Type
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+10. FR (Frame Relay) Filters
+Wireshark Filters Description
+fr.becn BECN
+fr.chdlctype Type
+fr.control Control Field
+fr.control.f Final
+fr.control.ftype Frame type
+fr.control.p Poll
+fr.control.s_ftype Supervisory frame type
+fr.control.u_modifier_cmd Command
+fr.control.u_modifier_resp Response
+fr.upper_dlci Upper Data Link Connection Identifier (DLCI)
+fr.third_dlci Third DLCI
+fr.snaptype Type
+fr.snap.pid Protocol ID
+fr.snap.oui Organization Code
+fr.second_dlci Second DLCI
+fr.lower_dlci Lower DLCI
+fr.dlcore_control DL-CORE Control
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+11. IPv4 Filters
+Wireshark Filters Description
+Filter by Single IP Address displays all traffic
+ip.addr
+from IP, be it source or destination
+Filter by destination display traffic only from
+ip.dst
+IP destination
+ip.addr== <IP address> && Monitoring the Specific Port using the IP
+tcp.port== <port number> address and TCP port number.
+ip.addr == <IP address1> or
+Filter by Multiple IP Addresses
+ip.addr == <IP address2>
+ip.checksum.status Display the header checksum status
+ip.src != xxx.xxx.xxx.xxx && Filter by a protocol (e.g. SIP) and filter out
+ip.dst != xxx.xxx.xxx.xxx && sip unwanted IPs
+Filter by Source IP display traffic only from IP
+ip.src
+source
+ip.checksum Header checksum
+ip.checksum_bad Bad
+ip.checksum_good Good
+ip.dsfield Differentiated Services Field
+ip.dsfield.ect ECN-Capable Transport (ECT)
+ip.dst Destination
+ip.dst_host Destination Host
+ip.flags Flags
+ip.flags.df Do not fragment
+ip.flags.mf More fragments
+ip.flags.rb Reserved bit
+ip.frag_offset Fragment offset
+Page | 10 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ip.fragment.error Defragmentation error
+ip.fragment.multipletails Multiple tail fragments found
+ip.fragment.overlap Fragment overlap
+ip.fragment.overlap.conflict Conflicting data in fragment overlap
+ip.fragment.toolongfragment Fragment too long
+ip.fragments IPv4 Fragments
+ip.hdr_len Header Length
+ip.host Source or Destination Host
+ip.id Identification
+ip.len Total Length
+ip.proto Protocol
+ip.reassembled_in Reassembled IPv4 in frame
+ip.src Filter by Source IPv4
+ip.src_host Source Host
+ip.tos Type of Service
+ip.tos.cost Cost
+ip.tos.delay Delay
+ip.tos.precedence Precedence
+ip.tos.reliability Reliability
+ip.tos.throughput Throughput
+ip.ttl Time to live
+ip.version Version
+Page | 11 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+12. IPv6 Filters
+Wireshark Filters Description
+ipv6.addr Source or Destination Address
+ipv6.class Traffic class
+ipv6.dst Destination
+ipv6.dst_host Destination Host
+ipv6.dst_opt Destination Option
+ipv6.flow Flow Label
+ipv6.fragment IPv6 Fragment
+ipv6.fragment.error Defragmentation error
+ipv6.hop_opt Hop-by-Hop Option
+ipv6.host Source or Destination Host
+ipv6.mipv6_home_address Home Address
+ipv6.mipv6_length Option Length
+ipv6.mipv6_type Option Type
+ipv6.nxt Next Header
+ipv6.fragment.more More Fragment
+ipv6.fragment.multipletails Multiple tail fragments found
+ipv6.fragment.offset Offset
+ipv6.fragment.overlap Fragment overlap
+ipv6.fragment.overlap.conflict Conflicting data in fragment overlap
+Page | 12 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ipv6.fragment.toolongfragment Fragment too long
+ipv6.fragments IPv6 Fragments
+ipv6.fragment.id Identification
+ipv6.hlim Hop Limit
+ipv6.plen Payload Length
+ipv6.reassembled_in Reassembled IPv6 in frame
+ipv6.routing_hdr Routing Header, Type
+ipv6.routing_hdr.addr Address
+ipv6.routing_hdr.left Segments Left
+ipv6.routing_hdr.type Type
+ipv6.src_host Source Host
+ipv6.version Version
+13. ICMP Filters
+Wireshark Filters Description
+icmp.checksum_bad Display bad checksum
+icmp.type==8 or icmp.type==0 Detect an ICMP ping sweep attempt
+icmp.checksum Display checksum
+icmp.ident Display identifier (BE)
+icmp.seq Display sequence number (BE)
+icmp.mtu Display MTU of next hop
+icmp.redir_gw Display Gateway address
+Page | 13 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+icmp.checksum Checksum
+icmp.code Code
+icmp.type Type
+14. ICMPv6 Filters
+Wireshark Filters Description
+icmpv6.all_comp All components
+icmpv6.checksum Checksum
+icmpv6.checksum_bad Bad checksum
+icmpv6.code Code
+icmpv6.comp Component
+icmpv6.haad.ha_addrs Home agent addresses
+icmpv6.identifier Identifier
+icmpv6.option ICMPv6 Option
+icmpv6.option.cga CGA
+icmpv6.option.length Length
+icmpv6.option.name_type Name type
+icmpv6.option.name_type.fqdn FQDN
+icmpv6.option.name_x501 DER Encoded X.501 Name
+icmpv6.option.rsa.key_hash Key hash
+icmpv6.option.type Type
+icmpv6.ra.cur_hop_limit Cur hop limit
+Page | 14 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+icmpv6.ra.reachable_time Reachable time
+icmpv6.ra.retrans_timer Retrans timer
+icmpv6.ra.router_lifetime Router lifetime
+icmpv6.recursive_dns_serv Recursive DNS Servers
+icmpv6.type Type
+15. TCP Filters
+Wireshark Filters Description
+Displays all TCP packets that contains the
+tcp contains traffic
+word ‘traffic’
+Monitoring the Specific Port using tcp port
+tcp.port==23
+number.
+tcp.flags.reset==1 Displays all TCP resets
+tcp.analysis.retransmission Displays all retransmissions in the trace
+Sets a filter for any TCP packet with 4000 as
+tcp.port == 4000
+a source or destination port
+Displays only SMTP (port 25) and ICMP
+tcp.port eq 25 or icmp
+traffic
+tcp.dstport==7 Detect TCP ping sweep attempt
+View the packets with FIN, PSH, and URG
+tcp.flags==0X029
+TCP flags set
+tcp.ack Acknowledgment number
+tcp.checksum Checksum
+tcp.checksum_bad Bad Checksum
+Page | 15 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tcp.checksum_good Good Checksum
+tcp.options.qs TCP QS Option
+tcp.options.sack TCP SACK Option
+tcp.options.sack_le TCP SACK Left Edge
+tcp.options.sack_perm TCP SACK Permitted Option
+tcp.continuation_to This is a continuation to the PDU in frame
+tcp.options.sack_re TCP SACK Right Edge
+tcp.options.time_stamp TCP Time Stamp Option
+tcp.flags Flags
+tcp.dstport Destination Port
+tcp.options.wscale TCP Window Scale Option
+tcp.flags.ack Acknowledgment
+tcp.options.wscale_val TCP Windows Scale Option Value
+tcp.flags.cwr Congestion Window Reduced (CWR)
+tcp.pdu.last_frame Last frame of this PDU
+tcp.flags.ecn ECN-Echo
+tcp.pdu.size PDU Size
+tcp.flags.fin Fin
+tcp.pdu.time Time until the last segment of this PDU
+tcp.flags.push Push
+tcp.port Source or Destination Port
+Page | 16 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tcp.flags.reset Reset
+tcp.flags.syn TCP; Filter SYN flag
+tcp.flags.urg Urgent
+tcp.hdr_len Header Length
+tcp.reassembled_in Reassembled PDU in frame
+tcp.segment TCP Segment
+tcp.segment.error Reassembling error
+tcp.segment.multipletails Multiple tail segments found
+tcp.len TCP Segment Len
+tcp.nxtseq Next sequence number
+tcp.options TCP Options
+tcp.options.cc TCP CC Option
+tcp.options.ccecho TCP CC Echo Option
+tcp.options.ccnew TCP CC New Option
+tcp.options.echo TCP Echo Option
+tcp.options.echo_reply TCP Echo Reply Option
+tcp.options.md5 TCP MD5 Option
+tcp.options.mss TCP MSS Option
+tcp.options.mss_val MSS Value
+tcp.segment.overlap Segment overlap
+tcp.segment.overlap.conflict Conflicting data in segment overlap
+Page | 17 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tcp.segment.toolongfragment Segment too long
+tcp.segments Reassembled TCP Segments
+tcp.seq Sequence number
+tcp.srcport Source Port
+tcp.time_delta Time since previous frame in this TCP stream
+tcp.time_relative Time since first frame in this TCP stream
+tcp.urgent_pointer Urgent pointer
+tcp.window_size Calculated window size
+16. UDP Filters
+Wireshark Filters Description
+Sets a filter for the HEX values of 0x33 0x27
+udp contains 33:27:58
+0x58 at any offset
+udp.dstport==7 Detect UDP ping sweep attempt
+udp.proc.dstuid Displays the destination process User ID
+udp.proc.srcuid Displays the source process User ID
+udp.checksum Checksum
+udp.dstport Destination Port
+udp.srcport Source Port
+udp.checksum_bad Bad checksum
+udp.length Length
+udp.checksum.zero Illegal Checksum value (0)
+udp.pdu.size PDU Size
+Page | 18 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+udp.possible_traceroute Possible traceroute
+udp.proc.dstpid Destination process ID
+udp.stream Stream index
+udp.time_delta Time since previous frame
+udp.time_relative Time since first frame
+udplite.checksum_coverage.bad Bad checksum coverage length value
+17. HTTP Filters
+Wireshark Filters Description
+http.request Displays and filter all HTTP GET requests
+http.accept Accept
+http.accept_encoding Accept Encoding
+http.accept_language Accept-Language
+http.authbasic Credentials
+http.authcitrix Citrix AG Auth
+http.authcitrix.domain Citrix AG Domain
+http.authcitrix.password Citrix AG Password
+http.authcitrix.session Citrix AG Session ID
+http.authcitrix.user Citrix AG Username
+http.authorization Authorization
+http.referer Referer
+http.cache_control Cache-Control
+Page | 19 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+http.connection Connection
+http.content_encoding Content-Encoding
+http.content_length Content length
+http.content_type Content-Type
+http.cookie Cookie
+http.date Date
+http.file_data File Data
+http.host Host
+http.last_modified Last-Modified
+http.location Location
+http.notification Notification
+http.proxy_authenticate Proxy-Authenticate
+http.request.method Request Method
+http.request.uri Request URI
+http.request.version Request Version
+http.response Filter all HTTP get responses
+http.response.code HTTP
+http.request or http.response Filter all HTTP get requests and responses
+http.server Server
+http.set_cookie Set-Cookie
+http.transfer_encoding Transfer-Encoding
+http.user_agent User-Agent
+Page | 20 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+http.www_authenticate WWW-Authenticate
+http.x_forwarded_for X-Forwarded-For
+!http.user_agent contains
+"Firefox" && !http.user_agent Find user agents
+contains "Chrome"
+frame contains "GET" &&
+HTTP Get not on port 80
+!tcp.port==80
+http.response.code > 299 &&
+HTTP Redirections
+http.response.code < 400
+http.request.uri matches
+HTTP .exe,.zip,.jar objects
+"\.(exe|zip|jar)$"
+http.request.method in {PUT POST} HTTP PUT and POST messages
+18. BGP Filters
+Wireshark Filters Description
+bgp.aggregator_as Aggregator AS
+bgp.aggregator_origin Aggregator origin
+bgp.as_path AS Path
+bgp.cluster_identifier Cluster identifier
+bgp.cluster_list Cluster List
+bgp.community_as Community AS
+bgp.community_value Community value
+bgp.local_pref Local preference
+bgp.mp_nlri_tnl_id MP Reach NLRI Tunnel Identifier
+bgp.mp_reach_nlri_ipv4_prefix MP Reach NLRI IPv4 prefix
+bgp.mp_unreach_nlri_ipv4_prefix MP Unreach NLRI IPv4 prefix
+Page | 21 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+bgp.multi_exit_disc Multiple exit discriminator
+bgp.next_hop Next hop
+bgp.nlri_prefix NLRI prefix
+bgp.origin Origin
+bgp.originator_id Originator identifier
+bgp.type Type
+bgp.withdrawn_prefix Withdrawn prefix
+bgp.wildcard_route_target Wildcard route target
+bgp.vplsbgp.labelblock.size Label Block Size
+bgp.vplsbgp.labelblock.offset Label Block Offset
+bgp.vplsbgp.labelblock.base Label Block Base
+bgp.vplsad.length Length
+bgp.update.withdrawn_routes.length Withdrawn Routes Length
+bgp.update.withdrawn_routes Withdrawn Routes
+bgp.update.path_attribute.multi_exit_disc Multiple exit discriminator
+bgp.update.path_attribute.next_hop Next hop
+bgp.unknown_safi Unknown SAFI
+bgp.unknown_label Unknown Label VPN
+bgp.unknown_afi Unknown Address Family
+bgp.ssa_value Value
+bgp.ssa_type SSA Type
+bgp.ssa_t Transitive bit
+Page | 22 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+bgp.ssa_l2tpv3_Unused Unused
+bgp.ssa_l2tpv3_session_id Session ID
+bgp.ssa_l2tpv3_s Sequencing bit
+bgp.ssa_l2tpv3_pref Preference
+bgp.ssa_l2tpv3_cookie_len Cookie Length
+bgp.route_refresh.subtype Subtype
+bgp.route_refresh.orf.entry.ip ORFEntry IP address
+bgp.rd Route Distinguisher
+bgp.prefix_sid.type_err BGP Prefix-SID unknown TLV type
+bgp.prefix_length Prefix Length
+bgp.path_attribute.cluster_id Cluster ID
+bgp.path_attribute.cluster_list Cluster List
+bgp.open.version Version
+bgp.open.opt.param.type Parameter Type
+bgp.open.holdtime Hold Time
+Minor error Code (Update
+bgp.notify.minor_error_update
+Message)
+bgp.notify.minor_error_unknown Minor error Code (Unknown)
+bgp.notify.minor_error_state Minor error Code (State Machine)
+bgp.notify.minor_error_open Minor error Code (Open Message)
+bgp.nlri_path_id NLRI path id
+bgp.mp_unreach_nlri_ipv6_prefix MP Unreach NLRI IPv6 prefix
+Page | 23 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+bgp.mdt_safi_rd Route Distinguisher
+bgp.mdt_safi_ipv4_addr IPv4 Address
+bgp.mdt_safi_group_addr Group Address
+bgp.mcast_vpn_nlri_source_length Multicast Source Length
+bgp.marker_invalid Marker is not all ones
+bgp.marker Marker
+bgp.ls.warn Link State warning
+bgp.ls.tlv.unreserved_bandwidth Unreserved bandwidth TLV
+bgp.ls.node_flag_bits.abr ABR Bit
+bgp.ls.node_flag_bits.external External Bit
+bgp.ls.bandwidth_value Bandwidth
+bgp.ls.error Link State error
+bgp.large_communities Large Communities
+bgp.label_stack Label Stack
+bgp.flowspec_route_distinguisher Route Distinguisher
+bgp.flags.transitive Transitive
+bgp.ext_communities Carried extended communities
+bgp.evpn.nlri.rt Route Type
+bgp.cap.orf.sendreceive Send Receive
+bgp.attr.pmsi.tunnel_type Unknown Tunnel type
+bgp.afi_type_not_supported AFI Type not supported
+bgp.ad.pe_addr PE Addr
+Page | 24 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+19. TLS Filters
+Wireshark Filters Description
+tls All TLS Packets
+tls.record.content_type == 22 TLS Handshake Packets
+tls.handshake Handshake Protocol
+tls.handshake.cert_type Certificate Type
+tls.handshake.cert_type.type Certificate Type
+tls.handshake.cert_type.types Certificate Type List
+tls.handshake.cert_type.types_len Certificate Type List Length
+tls.handshake.type == 1 TLS Client Hello Packets
+tls.handshake.type == 2 TLS Server Hello Packets
+tls.record.content_type == 21 TLS Encrypted Alert
+tls.handshake.cert_types Certificate types
+tls.handshake.cert_types_count Certificate types count
+tls.handshake.cert_url.padding Padding
+tls.handshake.cert_url.sha1 SHA1 Hash
+tls.handshake.cert_url.url URL
+tls.handshake.cert_url.url_hash URL and Hash
+tls.handshake.cert_url.url_len URL Length
+tls.handshake.cert_url.url_hash_len URL and Hash list Length
+tls.handshake.cert_url_type Certificate Chain Type
+tls.handshake.certificate Certificate
+Page | 25 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.handshake.certificate_length Certificate Length
+tls.handshake.certificate_request_conte
+Certificate Request Context
+xt
+tls.handshake.certificate_request_conte
+Certificate Request Context Length
+xt_length
+tls.handshake.certificates Certificates
+tls.handshake.certificates_length Certificates Length
+tls.handshake.challenge Challenge
+tls.handshake.challenge_length Challenge Length
+tls.handshake.cipher_spec_len Cipher Spec Length
+tls.handshake.cipher_suites_length Cipher Suites Length
+tls.handshake.cipherspec Cipher Spec
+tls.handshake.ciphersuite Cipher Suite
+tls.handshake.ciphersuites Cipher Suites
+tls.handshake.clear_key_data Clear Key Data
+tls.handshake.clear_key_length Clear Key Data Length
+tls.handshake.client_cert_vrfy.sig Signature
+tls.handshake.client_cert_vrfy.sig_len Signature length
+tls.handshake.client_point Pubkey
+tls.handshake.client_point_len Pubkey Length
+tls.handshake.comp_method Compression Method
+tls.handshake.extensions_server_name
+TLS contains "hack" in server name
+contains "hack"
+Page | 26 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.alert_message Alert Message
+tls.alert_message.desc Description
+tls.alert_message.level Level
+tls.app_data Encrypted Application Data
+tls.change_cipher_spec Change Cipher Spec Message
+tls.compress_certificate.algorithm Algorithm
+tls.compress_certificate.algorithms_len
+Algorithms Length
+gth
+tls.compress_certificate.compressed_cer
+Compressed Certificate Message
+tificate_message
+tls.compress_certificate.compressed_cer
+Length
+tificate_message.length
+tls.compress_certificate.uncompressed_l
+Uncompressed Length
+ength
+tls.early_data.max_early_data_size Maximum Early Data Size
+tls.esni.encrypted_sni Encrypted SNI
+tls.esni.encrypted_sni_length Encrypted SNI Length
+tls.esni.nonce Nonce
+tls.esni.record_digest Record Digest
+tls.esni.record_digest_length Record Digest Length
+tls.esni.suite Cipher Suite
+tls.extension.oid_filters.oid Certificate Extension OID
+tls.extension.oid_filters.oid_length Certificate Extension OID Length
+tls.extension.oid_filters.values_length Certificate Extension Values Length
+Page | 27 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.extension.oid_filters_length OID Filters Length
+tls.extension.psk_ke_mode PSK Key Exchange Mode
+tls.extension.psk_ke_modes_length PSK Key Exchange Modes Length
+tls.handshake.comp_methods Compression Methods
+tls.handshake.comp_methods_length Compression Methods Length
+tls.handshake.connection_id Connection ID
+tls.handshake.connection_id_length Connection ID Length
+tls.handshake.dname Distinguished Name
+tls.handshake.dname_len Distinguished Name Length
+tls.handshake.dnames Distinguished Names
+tls.handshake.dnames_len Distinguished Names Length
+tls.handshake.encrypted_key Encrypted Key
+tls.handshake.encrypted_key_length Encrypted Key Data Length
+tls.handshake.epms Encrypted PreMaster
+tls.handshake.epms_len Encrypted PreMaster length
+tls.handshake.exponent Exponent
+tls.handshake.exponent_len Exponent Length
+tls.handshake.extension.data Data
+tls.handshake.extension.heartbeat.mode Mode
+tls.handshake.extension.len Length
+tls.handshake.extension.type Type
+Page | 28 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.handshake.extensions.cookie Cookie
+tls.handshake.extensions.cookie_len Cookie length
+tls.handshake.extensions.psk.binders PSK Binders
+tls.handshake.extensions.psk.binders_le
+PSK Binders length
+n
+tls.handshake.extensions.psk.identities
+Identities Length
+.length
+tls.handshake.extensions.psk.identity.
+Identity
+identity
+tls.handshake.extensions.psk.identity.
+Identity Length
+identity_length
+tls.handshake.extensions.psk.identity.
+Obfuscated Ticket Age
+obfuscated_ticket_age
+tls.handshake.extensions.psk.identity.
+Selected Identity
+selected
+tls.handshake.extensions.supported_
+Supported Version
+version
+tls.handshake.extensions.supported_
+Supported Versions length
+versions_len
+tls.handshake.extensions_alpn_len ALPN Extension Length
+tls.handshake.extensions_alpn_list ALPN Protocol
+tls.handshake.extensions_alpn_str ALPN Next Protocol
+tls.handshake.extensions_alpn_str_len ALPN string length
+tls.handshake.extensions_ec_point_
+EC point format
+format
+tls.handshake.extensions_ec_point_
+EC point formats
+formats
+tls.handshake.extensions_ec_point_
+EC point formats Length
+formats_length
+Page | 29 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.handshake.extensions_key_share_
+Client Key Share Length
+client_length
+tls.handshake.extensions_key_share_
+Group
+group
+tls.handshake.extensions_key_share_key_
+Key Exchange
+exchange
+tls.handshake.extensions_key_share_key_
+Key Exchange Length
+exchange_length
+tls.handshake.extensions_key_share_
+Selected Group
+selected_group
+tls.handshake.extensions_length Extensions Length
+tls.handshake.extensions_npn Next Protocol
+tls.handshake.extensions_npn_str_len Protocol string length
+tls.handshake.extensions_padding_data Padding Data
+tls.handshake.extensions_reneg_info Renegotiation info
+tls.handshake.extensions_reneg_info_len Renegotiation info extension length
+tls.handshake.extensions_server_name Server Name
+tls.handshake.extensions_server_name_
+Server Name length
+len
+tls.handshake.extensions_server_name_
+Server Name list length
+list_len
+tls.handshake.extensions_server_name_
+Server Name Type
+type
+tls.handshake.extensions_status_request
+Request Extensions Length
+_exts_len
+tls.handshake.extensions_status_request
+Certificate Status Length
+_len
+tls.handshake.extensions_status_request
+Certificate Status List Length
+_list_len
+Page | 30 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.handshake.extensions_status_request
+Responder ID list Length
+_responder_ids_len
+tls.handshake.extensions_status_request
+Certificate Status Type
+_type
+tls.handshake.extensions_supported_
+Supported Group
+group
+tls.handshake.extensions_supported_
+Supported Groups List
+groups
+tls.handshake.extensions_supported_
+Supported Groups List Length
+groups_length
+tls.handshake.fragment Handshake Fragment
+tls.handshake.fragment.count Handshake Fragment count
+tls.handshake.fragments Reassembled Handshake Fragments
+tls.handshake.hint Hint
+tls.handshake.hint_len Hint Length
+tls.handshake.identity Identity
+tls.handshake.identity_len Identity Length
+tls.handshake.key_arg Key Argument
+tls.handshake.key_arg_length Key Argument Length
+tls.handshake.key_update.request_update Key Update Request
+tls.handshake.length Length
+tls.handshake.max_fragment_length Maximum Fragment Length
+tls.handshake.md5_hash MD5 Hash
+tls.handshake.modulus Modulus
+tls.handshake.modulus_len Modulus Length
+Page | 31 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.handshake.npn_padding Padding
+tls.handshake.npn_padding_len Padding Length
+tls.handshake.npn_selected_protocol Selected Protocol
+tls.handshake.npn_selected_protocol_len Selected Protocol Length
+tls.handshake.ocsp_response_len OCSP Response Length
+tls.handshake.ocsp_response_list_len OCSP Response List Length
+tls.handshake.random Random
+tls.handshake.random_bytes Random Bytes
+tls.handshake.random_time GMT Unix Time
+Reassembled Handshake Message in
+tls.handshake.reassembled_in
+frame
+tls.handshake.server_curve_type Curve Type
+tls.handshake.server_named_curve Named Curve
+tls.handshake.server_point Pubkey
+tls.handshake.server_point_len Pubkey Length
+tls.handshake.session_id Session ID
+tls.handshake.session_id_hit Session ID Hit
+tls.handshake.session_id_length Session ID Length
+tls.handshake.session_id_length.error Session ID length error
+tls.handshake.session_ticket Session Ticket
+tls.handshake.session_ticket_age_add Session Ticket Age Add
+tls.handshake.session_ticket_length Session Ticket Length
+Page | 32 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.handshake.session_ticket_lifetime_
+Session Ticket Lifetime Hint
+hint
+tls.handshake.session_ticket_nonce Session Ticket Nonce
+tls.handshake.session_ticket_nonce_
+Session Ticket Nonce Length
+length
+Responder ID list or Request
+tls.handshake.status_request. Extensions are not implemented,
+undecoded contact Wireshark developers if you
+want this to be supported
+tls.handshake.verify_data Verify Data
+tls.heartbeat_message Heartbeat Message
+tls.heartbeat_message.padding Payload Length
+tls.heartbeat_message.payload Payload Length
+tls.ignored_unknown_record Ignored Unknown Record
+Malformed message, not enough data
+tls.malformed.buffer_too_small
+is available
+tls.malformed.trailing_data Undecoded trailing data is present
+The variable vector length is outside
+tls.malformed.vector_length
+the permitted range
+tls.quic.initial_version Initial Version
+tls.quic.len Parameters Length
+tls.quic.negotiated_version Negotiated Version
+tls.quic.parameter Parameter
+tls.quic.parameter.ack_delay_exponent ack_delay_exponent
+tls.quic.parameter.active_connection_id
+Active Connection ID Limit
+_limit
+Page | 33 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.quic.parameter.idle_timeout idle_timeout
+tls.quic.parameter.initial_max_data initial_max_data
+tls.reassembled.data Reassembled PDU data
+tls.reassembled.length Reassembled PDU length
+tls.reassembled_in Reassembled PDU in frame
+tls.record Record Layer
+tls.record.content_type Content Type
+tls.record.is_escape Is Escape
+tls.record.length Length
+Record fragment length is too small or
+tls.record.length.invalid
+too large
+tls.record.opaque_type Opaque Type
+tls.record.padding_length Padding Length
+tls.record.version Version
+tls.record_size_limit Record Size Limit
+This session reuses previously
+tls.resumed
+negotiated keys (Session resumption)
+tls.sct.sct_extensions Extensions
+tls.sct.sct_extensions_length Extensions length
+tls.sct.sct_length Serialized SCT Length
+tls.sct.sct_logid Log ID
+tls.sct.sct_signature Signature
+Page | 34 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+tls.sct.sct_signature_length Signature Length
+tls.sct.sct_timestamp Timestamp
+tls.sct.sct_version SCT Version
+tls.sct.scts_length Serialized SCT List Length
+tls.segment TLS segment
+tls.segment.count Segment count
+tls.segment.data TLS segment data
+tls.segment.error Reassembling error
+tls.segment.multipletails Multiple tail segments found
+tls.segment.overlap Segment overlap
+tls.segment.overlap.conflict Conflicting data in segment overlap
+tls.segment.toolongfragment Segment too long
+tls.segments Reassembled TLS segments
+tls.unexpected_message Unexpected message
+20. RIPv2 Filters
+Wireshark Filters Description
+rip.auth.passwd Password
+rip.auth.type Authentication type
+rip.auth_data_len Auth Data Len
+rip.authentication_data Authentication Data
+rip.command Command
+Page | 35 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+rip.digest_offset Digest Offset
+rip.family Address Family
+rip.ip IP Address
+rip.key_id Key ID
+rip.metric Metric
+rip.netmask Netmask
+rip.next_hop Next Hop
+rip.route_tag Route Tag
+rip.routing_domain Routing Domain
+rip.seq_num Seq Number
+rip.unknown_address_family Unknown address family
+rip.zero_padding Zero adding
+rip.version Version
+21. OSPF and OSPFv2 Filters
+Wireshark Filters Description
+ospf.advrouter Advertising Router
+ospf.area_id Area ID
+ospf.at OSPF Authentication Trailer
+ospf.at.auth_data Authentication Data
+ospf.at.auth_data_len Authentication Data Length
+ospf.at.auth_type Authentication Type
+Page | 36 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.at.crypto_seq_nbr Cryptographic Sequence Number
+ospf.at.reserved Reserved
+ospf.at.sa_id Security Association Identifier (SA ID)
+ospf.auth.crypt.data Auth Crypt Data
+ospf.auth.crypt.data_length Auth Crypt Data Length
+ospf.auth.crypt.key_id Auth Crypt Key id
+ospf.auth.crypt.seq_nbr Auth Crypt Sequence Number
+ospf.auth.none Auth Data (none)
+ospf.auth.simple Auth Data (Simple)
+ospf.auth.type Auth Type
+ospf.auth.unknown Auth Unknown
+ospf.checksum Checksum
+ospf.db.dd_sequence DD Sequence
+ospf.db.interface_mtu Interface MTU
+ospf.dbd DB Description
+ospf.dbd.i (I) Init
+ospf.dbd.m (M) More
+ospf.dbd.ms (MS) Master
+ospf.dbd.r (R) OOBResync
+ospf.dynhostname Dynamic Hostname
+ospf.header OSPF Header
+Page | 37 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.hello OSPF Hello Packet
+ospf.hello.active_neighbor Active Neighbor
+ospf.hello.backup_designated_router Backup Designated Router
+ospf.hello.designated_router Designated Router
+ospf.hello.hello_interval Hello Interval [sec]
+ospf.hello.interface_id Interface ID
+ospf.hello.network_mask Network Mask
+ospf.hello.router_dead_interval Router Dead Interval [sec]
+ospf.hello.router_priority Router Priority
+ospf.instance_id Instance ID
+ospf.link_state_id Link State ID
+ospf.lls.checksum Checksum
+ospf.lls.data_length LLS Data Length
+ospf.lls.ext.options Options
+ospf.lls.ext.options.lr (LR) LSDB Resynchronization
+ospf.lls.ext.options.rs (RS) Restart Signal
+ospf.ls.metric Metric
+ospf.ls.number_of_lsas Number of LSAs
+ospf.lsa LS Type
+ospf.lsa.age LS Age (seconds)
+ospf.mpls.routerid MPLS/TE Router ID
+Page | 38 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.mpls.shared_risk_link_group Shared Risk Link Group
+ospf.mpls.sonet.sdh SONET/SDH
+ospf.mpls.starting Starting n
+ospf.mpls.switching_type Switching Type
+ospf.mpls.te_metric MPLS/TE Metric
+ospf.mpls.type Type
+ospf.msg Message Type
+ospf.msg.dbdesc Database Description
+ospf.msg.hello Hello
+ospf.msg.lsack Link State Adv Acknowledgement
+ospf.msg.lsreq Link State Adv Request
+ospf.msg.lsupdate Link State Adv Update
+ospf.oif.encoding Encoding
+ospf.oif.local_node_id Local Node ID
+ospf.oif.node_id Node ID
+ospf.oif.remote_node_id Remote Node ID
+ospf.oif.signal_type Signal Type
+ospf.oif.switching_cap Switching Cap
+ospf.oif.tna_addr TNA Addr
+ospf.oif.tna_addr.ipv4 TNA Addr
+ospf.oif.tna_addr.ipv6 TNA Addr
+Page | 39 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.oif.tna_addr_length Addr Length
+ospf.packet_length Packet Length
+ospf.pad_bytes Pad Bytes
+ospf.prefix_length PrefixLength
+ospf.reserved Reserved
+ospf.reserved.not_zero incorrect, should be 0
+ospf.ri.mbz MBZ
+ospf.ri.options RI Options
+ospf.ri.options.ete (ETE) Experimental TE
+ospf.ri.options.grc (GRC) Graceful Restart
+ospf.ri.options.grh (GRH) Graceful Restart Helper
+ospf.ri.options.p2plan (P2PLAN) Point-to-point over LAN
+ospf.ri.options.srs Stub Router Support
+ospf.ri.options.tes (TES) Traffic Engineering
+ospf.tlv.adjsid.flags Flags
+ospf.tlv.adjsid.flags.b (B) Backup Flag
+ospf.tlv.adjsid.flags.g (G) Group Flag
+ospf.tlv.adjsid.flags.p (P) Persistent Flag
+ospf.tlv.adjsid.flags.unknown (*) Unknown Flag
+ospf.tlv.adjsid.flags.v (V) Value/Index Flag
+ospf.tlv.extlink.mt_id Multi-Topology ID
+Page | 40 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.tlv.extlink.nbr Neighbor ID
+ospf.tlv.extlink.subtlv_type TLV Type
+ospf.tlv.extlink.tlv_type TLV Type
+ospf.tlv.extlink.weight Weight
+ospf.tlv.extpfx.af Address Family
+ospf.tlv.extpfx.flags Flags
+ospf.tlv.extpfx.flags.a (A) Attach Flag
+ospf.tlv.extpfx.flags.n (N) Node Flag
+ospf.tlv.extpfx.flags.unknown (*) Unknown Flag
+ospf.tlv.extpfx.routetype Route Type
+ospf.tlv.extpfx.subtlv_type TLV Type
+ospf.tlv.extpfx.tlv_type TLV Type
+ospf.tlv.extpfx_range.flags Flags
+ospf.tlv.extpfx_range.flags.ia (IA) Inter-Area Flag
+ospf.tlv.extpfx_range.flags.unknown (*) Unknown Flag
+ospf.tlv.igp_msd_type MSD Type
+ospf.tlv.igp_msd_value MSD Value
+ospf.tlv.local_interface_id Local Interface ID
+ospf.tlv.pfxsid.flags Flags
+ospf.tlv.pfxsid.flags.e (E) Explicit-Null Flag
+ospf.tlv.pfxsid.flags.l (L) Local/Global Flag
+Page | 41 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.tlv.pfxsid.flags.m (M) Mapping Server Flag
+ospf.tlv.pfxsid.flags.np (NP) No-PHP Flag
+ospf.tlv.pfxsid.flags.unknown (*) Unknown Flag
+ospf.tlv.pfxsid.flags.v (V) Value/Index Flag
+ospf.tlv.preference Preference
+ospf.tlv.range_size Range Size
+ospf.tlv.remote_interface_id Remote Interface ID
+ospf.tlv.remote_ipv4_address Remote IPv4 Address
+ospf.tlv.sid_label SID/Label
+ospf.tlv.sidlabel_range.type TLV Type
+ospf.tlv.unknown Unknown TLV
+ospf.tlv_length TLV Length
+ospf.tlv_type TLV Value
+ospf.tlv_type.opaque TLV Value
+ospf.tlv_value TLV Value
+ospf.unknown_link_subtype Unknown Link sub-TLV
+ospf.unknown_text Text in the Unknown TLV
+ospf.srcrouter Source OSPF Router
+ospf.lsa.asbr Summary LSA (ASBR)
+ospf.lsa.asbr.netmask Netmask
+ospf.lsa.asext AS-External LSA (ASBR)
+Page | 42 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.lsa.asext.extrttag External Route Tag
+ospf.lsa.asext.fwdaddr Forwarding Address
+ospf.lsa.asext.netmask Netmask
+ospf.lsa.asext.type External Type
+ospf.lsa.attr External Attributes LSA
+ospf.lsa.bc_error BC error
+ospf.lsa.chksum Checksum
+ospf.lsa.donotage Do Not Age Flag
+ospf.lsa.id Link State ID
+ospf.lsa.invalid_length Invalid length
+ospf.lsa.length Length
+ospf.lsa.member Group Membership LSA
+ospf.lsa.mpls MPLS Traffic Engineering LSA
+ospf.lsa.network Network LSA
+ospf.lsa.network.attchrtr Attached Router
+ospf.lsa.network.netmask Netmask
+ospf.lsa.nssa NSSA AS-External LSA
+ospf.lsa.number_of_links Number of Links
+ospf.lsa.opaque Opaque LSA
+ospf.lsa.router Router LSA
+ospf.lsa.router.linkdata Link Data
+Page | 43 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.lsa.router.linkid Link ID
+ospf.lsa.router.linktype Link Type
+ospf.lsa.router.metric0 0 Metric
+ospf.lsa.router.nummetrics Number of Metrics
+ospf.lsa.seqnum Sequence Number
+ospf.lsa.summary Summary LSA (IP Network)
+ospf.lsa.tos TOS
+ospf.lsa.tos_missing Blocks missing
+ospf.lsa.unknown_type Unknown LSA Type
+ospf.lsa_sa SR-Algorithm
+ospf.lsid.opaque_id Link State ID Opaque ID
+ospf.lsid_opaque_type Link State ID Opaque Type
+ospf.lsid_te_lsa.instance Link State ID TE-LSA Instance
+ospf.lsid_te_lsa.reserved Link State ID TE-LSA Reserved
+ospf.metric Metric
+ospf.mpls.action Action
+ospf.mpls.bandwidth.type Bandwidth Type
+ospf.mpls.bc BC
+MPLS/DSTE Bandwidth Constraints
+ospf.mpls.bc.model_id
+Model Id
+ospf.mpls.bitmap Bitmap
+ospf.mpls.cs Channel Spacing
+Page | 44 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.mpls.effective No. of effective. Bits
+ospf.mpls.encoding Encoding
+ospf.mpls.grid Grid
+ospf.mpls.group MPLS/TE Group
+ospf.mpls.interface_mtu Interface MTU
+ospf.mpls.length Length
+ospf.mpls.link_max_bw Link Max BW
+ospf.mpls.linkcolor MPLS/TE Link Resource Class/Color
+ospf.mpls.linkid MPLS/TE Link ID
+ospf.mpls.linktype MPLS/TE Link Type
+ospf.mpls.local_addr MPLS/TE Local Interface Address
+ospf.mpls.local_id MPLS/TE Local Interface Index
+ospf.mpls.minimum_lsp_bandwidth Minimum LSP bandwidth
+ospf.mpls.n Starting n
+ospf.mpls.num.labels Num Labels
+ospf.mpls.pri Pri (or TE-Class)
+ospf.mpls.priority Priority
+ospf.mpls.protection_capability Protection Capability
+ospf.mpls.remote_addr MPLS/TE Remote Interface Address
+ospf.mpls.remote_id MPLS/TE Remote Interface Index
+ospf.v2.grace Grace TLV
+Page | 45 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.v2.grace.ip Restart IP
+ospf.v2.grace.period Grace Period
+ospf.v2.grace.reason Restart Reason
+ospf.v2.lls.auth_data Auth Data
+ospf.v2.lls.sequence_number Sequence number
+ospf.v2.options Options
+ospf.v2.options.dc (DC) Demand Circuits
+ospf.v2.options.dn (E) External Routing
+ospf.v2.options.l (L) LLS Data block
+ospf.v2.options.mc (MC) Multicast
+ospf.v2.options.mt (MT) Multi-Topology Routing
+ospf.v2.options.n (N) NSSA
+ospf.v2.options.p (P) Propagate
+ospf.v2.router.lsa.flags Flags
+ospf.v2.router.lsa.flags.b (B) Area border router
+ospf.v2.router.lsa.flags.e (E) AS boundary router
+ospf.v2.router.lsa.flags.n (N) flag
+ospf.v2.router.lsa.flags.v (V) Virtual link endpoint
+ospf.v2.router.lsa.flags.w (W) Wild-card multicast receiver
+Page | 46 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+22. OSPFv3/IP v6 Filters
+Wireshark Filters Description
+ospf.v3.as.external.flags Flags
+ospf.v3.as.external.flags.e (E) External Metric
+ospf.v3.as.external.flags.f (F) Forwarding Address
+ospf.v3.as.external.flags.t (T) External Route Tag
+ospf.v3.address_prefix.ipv4 Address Prefix
+ospf.v3.address_prefix.ipv6 Address Prefix
+ospf.v3.lls.dropped_neighbor Dropped Neighbor
+ospf.v3.lls.drop.tlv Neighbor Drop TLV
+ospf.v3.lls.ext.options Options
+ospf.v3.lls.ext.options.lr (LR) LSDB Resynchronization
+ospf.v3.lls.ext.options.rs (RS) Restart Signal
+Extended Options TLV,
+ospf.v3.lls.willingness.tlv
+Willingness TLV
+ospf.v3.lls.extended_options Extended Options
+ospf.v3.options Options
+ospf.v3.lls.ext.options.tlv Extended Options TLV
+ospf.v3.lls.fsf.tlv Full State For TLV
+ospf.v3.lls.full_state_for Full State For
+ospf.v3.lls.ll_id Local Interface ID
+ospf.v3.lls.neighbor Neighbor
+Page | 47 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.v3.lls.relay.added Relays Added
+ospf.v3.lls.relay.options Options
+ospf.v3.lls.relay.options.a (A) Always
+ospf.v3.lls.relay.options.n (N) Never
+ospf.v3.lls.relay.tlv Active Overlapping Relays TLV
+ospf.v3.lls.request_from Request From
+ospf.v3.lls.rf.tlv Request From TLV
+ospf.v3.lls.state.options Options
+ospf.v3.lls.state.options.a (A) Answer
+ospf.v3.lls.state.options.n (N) Incomplete
+ospf.v3.lls.state.options.r (R) Resuest
+ospf.v3.lls.state.scs SCS Number
+ospf.v3.lls.state.tlv State Check Sequence TLV
+ospf.v3.lls.willingness Willingness
+ospf.v3.lsa LS Type
+ospf.v3.lsa.asext AS-External-LSA
+ospf.v3.lsa.attached_router Attached Router
+ospf.v3.lsa.destination_router_id Destination Router ID
+ospf.v3.lsa.do_not_age Do Not Age
+ospf.v3.lsa.external_route_tag External Route Tag
+ospf.v3.lsa.fc Function Code
+Page | 48 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.v3.lsa.forwarding_address.ipv4 Forwarding Address
+ospf.v3.lsa.forwarding_address.ipv6 Forwarding Address
+ospf.v3.lsa.interface_id Interface ID
+ospf.v3.lsa.interprefix Inter-Area-Prefix-LSA
+ospf.v3.lsa.interrouter Inter-Area-Router-LSA
+ospf.v3.lsa.intraprefix Intra-Area-Prefix-LSA
+ospf.v3.lsa.link Link-LSA
+ospf.v3.lsa.link_local_interface_address.ipv4 Link-local Interface Address
+ospf.v3.lsa.link_local_interface_address.ipv6 Link-local Interface Address
+ospf.v3.lsa.member Group-Membership-LSA
+ospf.v3.lsa.neighbor_interface_id Neighbor Interface ID
+ospf.v3.lsa.neighbor_router_id Neighbor Router ID
+ospf.v3.lsa.network Network-LSA
+ospf.v3.lsa.nssa NSSA-LSA
+ospf.v3.lsa.num_prefixes # prefixes
+Router Information Opaque-
+ospf.v3.lsa.opaque
+LSA
+ospf.v3.lsa.referenced_advertising_router Referenced Advertising Router
+ospf.v3.lsa.referenced_link_state_id Referenced Link State ID
+ospf.v3.lsa.referenced_ls_type Referenced LS type
+ospf.v3.lsa.router Router-LSA
+ospf.v3.lsa.router_priority Router Priority
+Page | 49 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ospf.v3.lsa.s12 Flooding Scope
+ospf.v3.lsa.type Type
+ospf.v3.lsa.u LSA Handling
+ospf.v3.prefix.options PrefixOptions
+ospf.v3.prefix.options.la (LA) Local Address
+ospf.v3.prefix.options.mc (MC) Multicast
+ospf.v3.prefix.options.nu (NU) NoUnicast
+ospf.v3.prefix.options.p (P) Propagate
+ospf.v3.router.lsa.flags Flags
+ospf.v3.router.lsa.flags.b (B) Area border router
+ospf.v3.router.lsa.flags.e (E) AS boundary router
+ospf.v3.router.lsa.flags.v (V) Virtual link endpoint
+(W) Wild-card multicast
+ospf.v3.router.lsa.flags.w
+receiver
+ospf.version Version
+23. Common Filtering Commands
+Wireshark Filters Description
+Filter subnet: display traffic from
+ip.addr == 10.10.50.1/24 the subnet, be its source or
+destination
+tcp.port == 25 Filter by TCP port
+tcp.dstport == 23 Filter by destination TCP port
+Page | 50 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+ip.addr == 10.10.50.1 and Tcp.port == 25 Filter by IP address and port
+http.host == “host name” Filter by URL
+frame.time >= “June 02, 2019 18:04:00” Filter by timestamp
+tcp.flags.syn == 1 or (tcp.seq==1 and
+Filter SYN flag; Filter three-way
+tcp.ack==1 and tcp.len==0 and
+handshake
+tcp.analysis.initial_rtt)
+Filter SYN flag; Detecting SYN
+tcp.flags.syn == 1 and tcp.flags.ack == 0
+Floods
+wlan.fc.type_subtype = 0x08 Wireshark Beacon Filter
+eth.dst == ff:ff:ff:ff:ff:ff Wireshark broadcast filter
+(eth.dst[0] & 1) Wireshark Multicast filter
+ip.host == (hostname) Host name filter
+eth.addr == 00:70:f4:23:18:c4 MAC address filter
+tcp.flags.reset == 1 RST flag filter
+Exclude IP address: remove traffic
+ip.addr != 192.168.0.1
+from and to IP address
+frame contains
+Find files by type
+“(attachment|tar|exe|zip|pdf)”
+tcp contains <Keyword>
+Find traffic based on keyword
+frame contains <Keyword>
+24. Filtering Packets
+Operator Description
+Equal
+eq or ==
+ip.dest == 192.168.1.1
+Not Equal
+ne or !=
+ip.dest != 192.168.1.1
+Page | 51 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+Greater than
+gt or >
+frame.len > 10
+Less than
+lt or <
+frame.len <10
+Greater than or equal
+ge or >=
+frame.len >= 10
+Less than or equal
+le or <=
+frame.len<=10
+25. Logical Operators
+Operators Description
+Logical AND
+and or &&
+All the conditions should match
+Logical OR
+or or || Either all or one of the conditions should
+match
+Logical XOR
+xor or ^^ exclusive alternation – Only one of the two
+conditions should match not both
+Logical NOT
+not or !
+Not equal to
+Substring operator
+[n] […]
+Filter a specific word or text
+26. Default Columns in Packet Capture Output
+Columns Description
+Frame number from the beginning of the packet
+No.
+capture
+Time Seconds from the first frame
+Source address, commonly an IPv4, IPv6 or
+Source (src)
+Ethernet address
+Destination (dst) Destination address
+Page | 52 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+The protocol used in the Ethernet frame, IP packet,
+Protocol
+or TCP segment
+Length Length of the frame in bytes
+27. Display Window Keyboard Shortcuts
+Accelerator Description
+Move between screen elements, e.g. from the
+Tab or Shift+Tab
+toolbars to the packet list to the packet detail
+Alt+→ or Option+→ Move to the next packet in the selection history
+↓ Move to the next packet or detail item
+↑ Move to the previous packet or detail item
+→ In the packet detail, opens the selected tree item
+In the packet detail, opens the selected tree item
+Shift+→
+and all its subtrees
+Move to the next packet, even if the packet list isn’t
+Ctrl+ ↓ or F8
+focused
+Move to the previous packet, even if the packet list
+Ctrl+ ↑ or F7
+isn’t focused
+Ctrl+← In the packet detail, closes all tree items
+Ctrl+→ In the packet detail, opens all tree items
+Move to the next packet of the conversation (TCP,
+Ctrl+.
+UDP or IP)
+Move to the previous packet of the conversation
+Ctrl+,
+(TCP, UDP or IP)
+Backspace In the packet detail, jumps to the parent node
+Return or Enter In the packet detail, toggles the selected tree item
+28. Other Commands
+Commands Description
+Displays packets that match any of
+tftp || irc || bittorrent
+these three protocols.
+frame[100-199] contains "nessus" Frame offset 100-199 contains
+Page | 53 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wireshark Filters Cheat Sheet
+"nessus" in uc/lc
+http.user_agent contains "nmap" Suspected nmap traffic (case sensitive)
+frame matches "join #" IRC Joins
+ftp.request.command=="USER" &&
+Long FTP Username
+tcp.len>50
+Page | 54 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

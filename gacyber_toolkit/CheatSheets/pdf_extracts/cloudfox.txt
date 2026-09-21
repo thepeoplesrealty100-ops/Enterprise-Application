@@ -1,0 +1,142 @@
+Certified Penetration Testing Professional Exam 412-80
+CloudFox Cheat Sheet
+Certified Penetration Testing Professional
+CloudFox Cheat Sheet
+CloudFox
+Source: https://github.com
+CloudFox helps in gaining situational awareness in unfamiliar cloud environments. It is a
+command-line tool designed to find exploitable attack paths in cloud infrastructure. It automates
+the process of discovering cloud assets such as storage buckets, virtual instances, databases, and
+other services, making it easier to uncover potential security vulnerabilities and
+misconfigurations. CloudFox supports multiple cloud environments, including AWS, and Azure,
+allowing users to perform thorough scans and generate detailed reports on their cloud
+infrastructure.
+Syntax
+cloudfox aws --profile [profile-name] all-checks
+Options
+-p, --profile Specify the AWS profile to use.
+-v, --verbosity Set the level of verbosity for output (e.g., -v2).
+--tenant Specify the Azure tenant ID.
+--subscription Specify the Azure subscription ID.
+--organization Specify the AWS organization to enumerate.
+--resource-group Specify the Azure resource group.
+--region Specify the AWS region.
+--output Specify the output format (e.g., JSON, CSV).
+--config Provide a custom configuration file.
+Note: Some options are specific to AWS and others to Azure.
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+CloudFox Cheat Sheet
+CloudFox AWS Commands
+Command Description
+Runs almost all Cloudfox AWS commands with
+cloudfox aws -p cflab all-checks
+default options for the specified profile.
+cloudfox aws --profile cf-exec - Maps all active access key IDs for all users in the
+v2 access-keys specified profile.
+cloudfox aws --profile cf-exec -
+Enumerates S3 buckets in the specified profile.
+v2 buckets
+cloudfox aws --profile cflab -v2 Enumerates CloudFormation stacks in the
+cloudformation specified profile.
+cloudfox aws --profile cflab -v2 Enumerates CodeBuild projects in the specified
+codebuild profile.
+cloudfox aws --profile Enumerates databases (RDS, DynamoDB, etc.) in
+cloudfoxable databases the specified profile.
+cloudfox aws --profile cf-exec - Enumerates container repositories in the specified
+v2 ecr profile.
+cloudfox aws -p cflab ecs-tasks -
+Enumerates ECS tasks in the specified profile.
+v2
+cloudfox aws -p cflab eks -v2 Enumerates EKS clusters in the specified profile.
+Enumerates elastic network interfaces in the
+cloudfox aws -p cflab eni -v2
+specified profile.
+cloudfox aws --profile cf-exec - Enumerates various service endpoints in the
+v2 endpoints specified profile.
+cloudfox aws --profile cf-exec - Enumerates environment variables in the specified
+v2 env-vars profile.
+cloudfox aws --profile cf-exec - Enumerates filesystems (EFS, FSx) in the specified
+v2 filesystems profile.
+cloudfox aws --profile cf-exec - Runs multiple IAM simulator queries in the
+v2 iam-simulator specified profile.
+cloudfox aws -p cflab instances -
+Enumerates EC2 instances in the specified profile.
+v2
+cloudfox aws --profile cf-exec - Provides an inventory of AWS resources in the
+v2 inventory specified profile.
+Enumerates Lambda functions in the specified
+cloudfox aws -p cflab lambda -v2
+profile.
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+CloudFox Cheat Sheet
+cloudfox aws -p cflab network-
+Enumerates network ports in the specified profile.
+ports -v2
+Enumerates AWS Organizations information in the
+cloudfox aws -p cloudfoxable orgs
+specified profile.
+cloudfox aws --profile cf-exec - Lists outbound assumed roles in the specified
+v2 outbound-assumed-roles profile.
+cloudfox aws --profile cf-prod Enumerates IAM permissions in the specified
+permissions -v2 profile.
+Runs Principal Mapper (pmapper) to enumerate
+cloudfox aws -p cflab pmapper -v2 permissions and relationships in the specified
+profile.
+cloudfox aws --profile cf-exec - Enumerates IAM users and roles in the specified
+v2 principals profile.
+cloudfox aws --profile cflab -v2 Enumerates shared resources in the specified
+ram profile.
+cloudfox aws -p cloudfoxable Enumerates resource-based trusts in the specified
+resource-trusts profile.
+cloudfox aws -p cflab role-trusts
+Enumerates role trusts in the specified profile.
+-v2
+cloudfox aws --profile default Enumerates Route53 resources in the specified
+route53 -v2 profile.
+cloudfox aws --profile cf-exec - Enumerates secrets from SecretsManager and
+v2 secrets SSM Parameters in the specified profile.
+Enumerates Simple Notification Service (SNS)
+cloudfox aws -p cflab -v2 sns
+topics in the specified profile.
+Enumerates Simple Queue Service (SQS) queues in
+cloudfox aws -p cflab -v2 sqs
+the specified profile.
+cloudfox aws --profile cflab -v2 Enumerates tags for AWS resources in the
+tags specified profile.
+cloudfox aws --profile cflab Enumerates workloads (EC2, ECS, Lambda, etc.) in
+workloads the specified profile.
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+CloudFox Cheat Sheet
+CloudFox Azure Commands
+Command Description
+./cloudfox azure -h Lists Azure commands
+Displays information on the tenant, subscriptions
+./cloudfox azure whoami and resource groups available to your current
+Azure CLI session
+./cloudfox azure vms --tenant
+Lists all compute instances in the specified tenant.
+11111111-1111-1111-1111-11111111
+./cloudfox azure vms --
+subscription AAAAAAAA-AAAA-AAAA- Lists all instances in the specified subscription.
+AAAA-AAAAAAAA
+./cloudfox azure rbac -- Enumerates Role-Based Access Control (RBAC)
+subscription AAAAAAAA-AAAA-AAAA- roles and assignments in the specified
+AAAA-AAAAAAAA subscription.
+./cloudfox azure rbac --tenant Enumerates RBAC roles and assignments in the
+11111111-1111-1111-1111-11111111 specified tenant.
+./cloudfox az storage --tenant
+Lists all storage accounts in the specified tenant.
+11111111-1111-1111-1111-11111111
+./cloudfox az storage --
+Lists all storage accounts in the specified
+subscription BBBBBBBB-BBBB-BBBB-
+subscription.
+BBBB-BBBBBBBB
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

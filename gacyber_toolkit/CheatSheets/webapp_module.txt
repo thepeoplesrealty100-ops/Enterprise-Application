@@ -1,0 +1,1571 @@
+[Organization Logo]
+[Organization Name]
+[Title of the Report]
+Test 1: Web Application Footprinting and Enumeration Techniques
+[*This section includes various types of techniques that can be used for identifying and gathering essential information about the target web application.]
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Test 2: Techniques for Web Vulnerability Scanning
+[*This section includes different scanning approaches, tools, and techniques used to identify vulnerabilities in web applications.]
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Test 3: Test for Vulnerabilities in Application Deployment and Configuration
+[*This section includes various security checks and techniques performed on the application's deployment and configuration to identify potential misconfigurations and vulnerabilities.]
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Test 4: Techniques to Assess Identity Management, Authentication, and Authorization Mechanisms
+[*This section allows you to create reports for various tests to identify gaps in user registration, verification, account provisioning processes, and access controls within the web application’s identity management systems.]
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Test 5: Evaluate Session Management Security
+[*In this section, you will assess and prepare reports for the target web application's session management mechanisms, which are crucial for maintaining user authentication and preserving session integrity.]
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Test 6: Evaluate Input Validation Mechanisms
+[*This section will allow you to create reports after testing input validation flaws to determine if the application effectively sanitizes and validates inputs before processing.]
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Test 7: Detect and Exploit SQL Injection Vulnerabilities
+[*This section will include various techniques for testing web applications for SQL injection vulnerabilities.]
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Test 8: Techniques for Identifying and Testing Injection Vulnerabilities
+[*This section includes different techniques for testing additional injection attacks, such as XSS, LDAP, SSI, and command injection.]
+Results Analysis: 
+Results Analysis: 
+Test 9: Exploit Improper Error Handling Vulnerabilities
+[*This section includes techniques for testing errors through invalid inputs, malformed requests, and unexpected user actions.]
+Test 10: Identify Weak Cryptography Vulnerabilities
+[*This section includes different techniques for testing web applications for weak encryption algorithms.]
+Test 11: Test for Business Logic Flaws in Web Applications
+[*This section includes techniques for identifying flaws in the business rules, analyzing workflows, and attempting actions that violate logical constraints to reveal vulnerabilities that could lead to unauthorized access, financial abuse, or data manipulation.]
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Test 12: Evaluate Applications for Client-Side Vulnerabilities
+[*This section includes various techniques for testing client-side vulnerabilities that could significantly impact the security of the web application.]
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Results Analysis: 
+Penetration Tester: | 
+Date: |  | Location:
+Test 1.1: Identify Functionality
+Target Organization | 
+URL | 
+Target Web Application | 
+Examined the Core Functionality | Yes | No
+Visible Functionalities | 
+Key Security Mechanisms in an Application | 
+Types of Links Examined (Internal/ External) | 
+Any Approach Followed | 
+Tools/Services Used | 
+Test 1.2: Perform Website Footprinting
+Target Organization | 
+URL | 
+Target Web Application | 
+Background Information | Site title: _____________________________________
+Site rank: _____________________________________
+Date first seen: ________________________________
+Primary language: ______________________________
+Others (If any):
+Hosting History | Web server IP address: _____________________________
+Web server version: ________________________________
+Web server OS: ____________________________________
+Others (If any):
+Network Information | IP address: _____________________________________
+IPv6 address: ___________________________________
+IP geolocation: __________________________________
+Domain registrar: ________________________________
+Organization’s address: ___________________________
+
+Others (If any):
+Site Technology | Server-side: __________________________________________
+Client-side: ___________________________________________
+Client-side scripting frameworks: _________________________
+Content delivery network: ______________________________
+Character encoding: ___________________________________
+HTTP compression: ____________________________________
+SSL/TLS Security: ______________________________________
+Others (If any):
+Tools/Services Used | 
+Test 1.3: Perform Website Enumeration
+Target Organization | 
+Target URL | 
+Target Web Application | 
+Information Revealed | Platform Details: _____________________________________
+CMS: ______________________________________________
+Scripting Technologies Used: ___________________________
+Web Server Software: ________________________________
+IP address: _________________________________________
+Others (If any):
+Approach Followed | 
+Commands Used | 
+Tools/Services Used | 
+AI Tools Used (If any) | [*Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Test 1.4: Analyze the HTML Source Code
+Target Organization | 
+URL | 
+Target Web Application | 
+Important Links and Image Tags in HTML Source Code | 
+Contact Details of Admin/Developer | 
+Websites or Web Servers it Establishes Connections with | 
+External Resources Identified | [*Scripts, APIs, external libraries, etc.]
+Cookies and Security Attributes | [*HttpOnly, Secure, SameSite, etc.]
+Hidden Fields & Exposed Sensitive Data | [*Tokens, authentication parameters, etc.]
+Other Information obtained through HTML Source Code Analysis | [*Input Field Validation, Debugging Code or Comments Identified, Deprecated or Insecure HTML Elements, robots Meta Tag Observations, etc.]
+Approach Followed | 
+Commands Used | 
+Tools/Services Used | 
+Additional Observations & Findings | 
+Test 1.5: Check the HTTP and HTML Processing by the Browser
+Analyzed HTTP and HTTPS Request Headers | 
+HTTP Headers Extracted | [*Server details, scripting environment, OS information, etc.]
+Redirect Paths Identified | 
+Cookies Sent by Remote Site | 
+Headers Sent to the Server | 
+Headers Returned by the Server | 
+Web Servers and their Version | 
+Scripting Environment Used | 
+Operating System Used for Developing and Maintaining the Application | 
+Other Information Obtained from HTTP and HTTPS Headers | 
+Tools/Services Used | 
+Test 1.6: Identify Server-Side Technologies
+HTTP Response Header Analysis | HTTP Headers Extracted | [*Server type, version, OS details, scripting environment, etc.]
+HTTP Response Header Analysis | Accepted Ranges & Request Age | 
+HTTP Response Header Analysis | Proxy Authentication Details | 
+HTTP Response Header Analysis | Content Type & Encoding Details | 
+HTTP Request Header Analysis | Server Name & Version Identified | 
+HTTP Request Header Analysis | Scripting or Coding Environment Detected | 
+HTTP Request Header Analysis | Error Messages Observed | [*Any sensitive information exposed?]
+HTTP Request Header Analysis | HEAD & OPTIONS Request Analysis | 
+URL Extensions Analysis | Detected Extensions & Corresponding Technology | [For example, .php → PHP, .aspx → ASP.NET]
+URL Extensions Analysis | Server Platform Identified | [*Apache, Nginx, IIS, Tomcat, etc.]
+Cookie Examination | Cookies Set by Server | [*PHPSESSID, JSESSIONID, etc.]
+Cookie Examination | Presence of Security Attributes | 
+Cookie Examination | Potentially Sensitive Information in Cookies | 
+Error Message Analysis | Framework or Server Information Exposed? | 
+Error Message Analysis | Presence of Stack Traces or Debugging Information? | 
+Error Message Analysis | Potential Vulnerabilities Indicated by Errors? | 
+AI Tools Used for Detection | 
+Scripts or AI Prompts Used for Automation | 
+Identified Server-Side Technologies (via AI-based reconnaissance) | 
+Other Tools/Services Used | 
+Test 1.7: Perform Web Spidering
+Discovered Elements | Hidden Pages Identified | 
+Discovered Elements | Input Fields & Forms Identified | 
+Discovered Elements | Authentication Mechanisms Discovered | 
+Discovered Elements | Session Handling Observations | 
+Discovered Elements | Client-Side JavaScript Requests/Responses Analyzed | 
+AI-Based Web Spidering | AI Tools Used | [*PentestGPT, Custom AI Scripts, etc.]
+AI-Based Web Spidering | Scripts or Prompts Used for Automation | 
+AI-Based Web Spidering | Extracted Hyperlinks & Saved Output File | [*Web_spider.txt or similar]
+Web Spidering Configuration | Tools/ Services Used | [*Burp Suite, ZAP, Custom Python Script, etc.]
+Web Spidering Configuration | Proxy Configuration Details | [*If applicable, e.g., using ZAP/Burp as a proxy]
+Web Spidering Configuration | JavaScript & Cookie Handling Configuration | [*Enabled/Disabled during spidering]
+Potential Security Risks Identified | 
+Test 1.8: Mirror and Crawl a Website to Identify its Files, Directories, and Folders
+Target Website URL | 
+Local Environment Setup | [*Virtual Machine, Sandbox, etc.]
+Discovered Elements | Hidden/Unlinked Content Identified | 
+Discovered Elements | Mapped Directory Structure | 
+Discovered Elements | Preserved Content for Analysis | 
+Discovered Elements | Client-Side Validations & Form Structures Identified | 
+Discovered Elements | Sensitive Files, Directories, or Folders Exposed | 
+Discovered Elements | Others (If any) | 
+AI-Based Automation & Analysis | AI Tools Used | [*PentestGPT, Custom AI Scripts, etc.]
+AI-Based Automation & Analysis | Scripts or Prompts Used for Automation | 
+AI-Based Automation & Analysis | Saved Mirrored Pages for Offline Analysis | 
+Potential Security Risks Identified | [*Directory traversal, data exposure, etc.]
+Tool/ Services Used | [*wget, HTTrack, Cyotek WebCopy, etc.]
+Test 1.9: Identify the Sitemap of the Target Website
+Target Organization | 
+URL | 
+Target Web Application | 
+Sitemap File of the Target Website | 
+Information collected | 
+Tools/Services Used | 
+Test 1.10: Identify the Restricted Directories that Web Crawlers cannot Find
+Target Organization | 
+URL | 
+Target Web Application | 
+Identified Restricted Directories (robots.txt file) Successfully | Yes | No
+Identified Restricted Directories | 
+Tools/Services Used | 
+Test 1.11: Extract Common Word List from the Target
+Target Organization | 
+URL | 
+Target Web Application | 
+Commands used | 
+Is Common Word List from the Target Generated | Yes | No
+List of words from the 
+target website | 
+Tools/Services Used | 
+AI Tools Used (If any) | [*Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Test 1.12: Extract Metadata and Hidden Information from the Target Website using AI
+Target Website URL | 
+Extraction Approach | Method Used | [*Custom Python Script, AI-generated code, OpenMetadata Extractors, etc.]
+Extraction Approach | Metadata Extracted | [*Title, Description, Keywords, Author, etc.]
+Extraction Approach | Hidden Information Identified | [*Comments, Hidden Fields, Inline Scripts, etc.]
+AI-Based Automation & Analysis | AI Tools Used | [*ChatGPT, PentestGPT, Copilot, etc.]
+AI-Based Automation & Analysis | Scripts or Prompts Used for Automation | 
+AI-Based Automation & Analysis | Extracted Data Saved in Output Files | [*Text, JSON, CSV, etc.]
+Potential Security Risks Identified | [*Misconfigurations, Data Leakage, etc.]
+Additional Observations & Recommendations | 
+Result Analysis | 
+Test 1.13: Test whether the Target Website is Protected using Web Application Firewall (WAF)
+Target URL | 
+Target Web Application | 
+Commands Used | 
+HTTP Headers Indicating WAF Presence | [*Server, X-Security, X-CDN, etc.]
+Response Codes Indicative of WAF Protection | [*403 Forbidden, 406 Not Acceptable, etc.]
+Rate Limiting or IP Blocking Observed? | [*Yes/No, Details]
+Is Target Website Protected using Web Application Firewall (WAF) | Yes | No
+Response received | 
+Tools/Services Used | 
+AI Tools Used for Detection | 
+Custom Payloads Generated for Testing (If any) | [*SQLi, XSS, Command Injection, etc.]
+Scripts or Prompts Used for Automation | 
+Analyzed Responses for Filtering or Blocking | 
+Potential Bypass Techniques Identified | [*Encoding, Payload Modification, Rate Control, etc.]
+Additional Observations & Recommendations | 
+Result Analysis | 
+Test 1.14: Test whether the Target Website is Protected using Load Balancers
+Target URL | 
+Target Web Application | 
+Commands Used | 
+Method Used | [*host, dig, lbd, Nmap, etc.]
+Multiple IPs Identified? | [*Yes/No, List of IPs if found]
+Server & Date Headers Indicating Load Balancing | [*Yes/No, Details]
+Tools/Services Used | 
+AI Tools Used for Detection | 
+Scripts or Prompts Used for Automation | 
+Extracted Load Balancer Information & IP List | 
+Additional Observations & Recommendations | 
+Result Analysis | 
+Test 1.15: Perform HTTP Service Discovery
+Target URL | 
+Target Web Server | 
+Commands Used | 
+Open HTTP Service Ports Identified | 
+Detected Services & Versions | 
+Alternate Web Services Discovered | [*Yes/No, Details]
+Other Information Identified | 
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Potential Exploit Paths | [If any]
+Additional Observations & Recommendations | 
+Result Analysis | 
+Test 1.16: Perform Banner Grabbing to Identify the Target Web Server
+Target Organization | 
+URL | 
+Target Web Application | 
+Target Web Server | 
+Commands Used | 
+Identified Make, 
+Model and Version of the Web Server Software | 
+Identified Vulnerabilities and Exploits | 
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Test 1.17: Test for Default Credentials
+Target Organization | 
+URL | 
+Target Web Application | 
+Target Web Server | 
+Located Overtly Accessible Web Servers with Administrative Interfaces that Run on Different Ports | 
+Default Credentials of Web Servers and Network Devices
+Device Type | Usernames | Passwords
+Tools/Services Used | 
+Test 1.18: Enumerate Webserver Directories
+Target Organization | 
+URL | 
+Target Web Application | 
+Target web server | 
+Commands Used | 
+List of Interesting Files and Folders | 
+Tools/Services Used | 
+Test 1.19: Test for Proxy Functionality
+Target Organization | 
+URL | 
+Target Web Application | 
+Target Web Server | 
+Commands Used | 
+Techniques Used | 
+Does the Target Web Server can Act as a Proxy | Yes | No
+Checked HTTP Requests that Maneuver Web Servers | Yes | No
+Information Retrieved from the Server | 
+Common Port Numbers to which HTTP Requests Connect | 
+Tools/Services Used | 
+Test 1.20: Enumerate WordPress Website
+Target WordPress Website | 
+Commands Used | 
+Information Obtained | [*Users, Themes, Plugins, etc.]
+Detected Misconfigurations | 
+Vulnerabilities Identified | [*SQL Injection, XSS, Brute Force Risks, etc.]
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, ChatGPT, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Test 2.1: Conduct Web Vulnerability Assessment
+Target Organization | 
+URL | 
+Target Web Application | 
+Successfully performed vulnerability scanning | Yes | No
+Vulnerability Identified | Security Risk | Severity Level | Description
+1. | 
+2. | 
+3. | 
+4. | 
+5. | 
+6. | 
+7. | 
+8. | 
+9. | 
+10. | 
+Web Application Vulnerability Scanners Used | 
+AI Tools Used | [*ShellGPT, ChatGPT, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Test 2.2: Perform Web Application Fuzz Testing
+Target Organization | 
+URL | 
+Target Web Application | 
+Is Web Application Fuzz Testing Performed Successfully | Yes | No
+Evidence | [*If any]
+Web Application Vulnerabilities Identified | 
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, PentestGPT, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Test 2.3: Identify Entry Points for User Input
+Target Organization | 
+URL | 
+Target Web Application | 
+Determined User Input fields | 
+URL Queries Used | 
+Identified HTTP Header Parameters that can be Processed as User Inputs | 
+URL Encoding and Encryption Mechanism Used | 
+Vulnerabilities Identified | [*URL Query Vulnerability, GET & POST Method Vulnerability, Cookie Manipulation Vulnerability, etc.]
+Tools/Services Used | 
+Test 2.4: Perform Directory Brute Forcing
+Target Organization | 
+URL | 
+Target Web Application | 
+Identified Directories | 
+Identified Hidden Files | 
+Security Risks Identified | 
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, Microsoft Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Test 3.1: Test Application Platform Configuration
+Target Organization | 
+URL | 
+Target Web Application | 
+Sample Files & Known Directories Identified | [*Default files, installation leftovers, etc.]
+Sensitive HTML Comments Detected | [*Yes/No, Examples if found]
+Server Modules & Permissions Audit | [*Unnecessary APIs, Excessive Privileges, Weak File Permissions, etc.]
+Error Handling Observations | [*Exposure of Stack Traces, Default Error Pages, Debugging Information, etc.]
+Logging Configuration Issues | [*Accessible Logs, Unencrypted Sensitive Data, Logging of Authentication Tokens, etc.]
+Other Security Risks Identified | 
+Tools/Services Used | 
+Test 3.2: Test Handling of File Extensions for Sensitive Information Exposure
+Target Organization | 
+URL | 
+Target Web Application | 
+Sensitive File Extensions Tested | [*.inc, .asa, .config, .bak, .zip, .txt, .java, etc.]
+Identified Exposed Files & Directories | [*Yes/No, Examples if found]
+Script Execution Allowed in Directories? | [*Yes/No, Affected Directories if found]
+Variation in Load-Balanced Servers Identified? | [*Yes/No, Configuration Differences if found]
+File Upload Restrictions Tested | [*Yes/No, Bypass Techniques Used, Results]
+Other Security Risks Identified | 
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, Microsoft Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Test 3.3: Test Backup and Unreferenced Files for Sensitive Information
+Target Organization | 
+URL | 
+Target Web Application | 
+Enumerated Pages & Features | [*Manually or via Spidering Tools]
+Hidden URLs Found in HTML/JavaScript Comments | [*Yes/No, Examples if found]
+Disallowed Paths in robots.txt | [*Yes/No, List of Identified Paths]
+Wordlist-Based Filename Guessing Results | [*Yes/No, Successful Requests if found]
+Public Source Enumeration Results | [*Google Cache, Indexed Hidden Files, etc.]
+Other Security Risks Identified | 
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, Microsoft Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Test 3.4: Test for Dangerous HTTP Methods
+Target Organization | 
+URL | 
+Target Web Application | 
+List of HTTP Request or Dangerous HTTP Methods that Can Be Exploited | 
+Techniques Used | 
+Enabled Web-based Distributed Authoring and Versioning (WebDAV) Methods | Yes | No
+Enabled Web‐based Distributed Authoring and Versioning (WebDAV)
+Methods | 
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, Microsoft Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Test 3.5: Test for Exposed Admin Interfaces
+Target Organization | 
+URL | 
+Target Web Application | 
+Detected Admin Interfaces | [*List of Exposed URLs if found]
+Forced Browsing Results | [*Hidden Directories & Admin Areas Discovered? Yes/No, List if found]
+Authentication Required? | Yes | No
+Exposed Configuration Files or Sensitive Data? | [*Yes/No, Examples if found]
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, Microsoft Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Potential Exploit Paths | [*Admin Panel Access, Weak Authentication, Unprotected Directories, etc.]
+Other Security Risks Identified | 
+Test 3.6: Test RIA Cross Domain Policy
+Target Organization | 
+URL | 
+Target Web Application | 
+Retrieved Policy Files | [*crossdomain.xml, clientaccesspolicy.xml – Yes/No, List of Locations if found]
+Detected Overly Permissive Policies | [*Yes/No, Details of Wildcard () Entries, Unrestricted Domains, etc.]
+Sensitive Data Exposure in Policy Files? | Yes | No
+Potential CSRF or Unauthorized Access Risks Identified? | [*Yes/No, Risk Details]
+Other Security Risks Identified | 
+Tools/Services Used | 
+Test 3.7: Test for Subdomain Takeover
+Target Organization | 
+URL | 
+Target Domain | 
+Identified Subdomains | [*List of Discovered Subdomains]
+DNS Records Analyzed | [*A, CNAME, MX, NS, TXT – Details of Inactive Records if found]
+NXDOMAIN, SERVFAIL, or REFUSED Responses Detected? | Yes | No
+Unclaimed Services Identified? | [*GitHub Pages, AWS S3, Heroku, etc.]
+Attempted Takeover | [*Successful/Unsuccessful, Details of Hijacked Subdomain if applicable]
+Nameserver Expiration or Misconfiguration Found? | [*Yes/No, Risk Details]
+DNS Zone File Availability & Analysis | [*Yes/No, Details of Findings if applicable]
+Tools/Services Used | 
+Test 3.8: Test Segregation in Shared Infrastructures
+Target Organization | 
+URL | 
+Target Environment | [*Cloud Service, Multi-Tenant Hosting, etc.]
+Cross-Tenant Access Attempted? | [*Yes/No, Resources Tested: Databases, Files, APIs, etc.]
+Shared Resource Vulnerabilities Detected? | [*Yes/No, Misconfigured Caching, Storage, Logging Services, etc.]
+Weak IAM or Role Misconfigurations Identified? | Yes | No
+Configuration & Deployment Issues Detected? | [*Yes/No, Firewall Misconfigurations, Open Ports, Weak Security Groups, etc.]
+Potential Exploit Paths | [*Cross-Tenant Data Leaks, Privilege Escalation, Unauthorized Access, etc.]
+Other Security Risks Identified | [*Yes/No, Risk Details]
+Tools/Services Used | 
+Test 4.1: Test User Registration Process
+Target Organization | 
+URL | 
+Target Web Application | 
+Unrestricted Registrations Allowed? | [*Yes/No, Risk of Mass Registration/Bot Abuse?]
+Duplicate Registrations Possible? | [*Yes/No, Can the Same Email/Username Be Reused?]
+Role & Permission Assignment Secure? | [*Yes/No, Can Users Modify Roles During Registration?]
+Identity Verification Required? | [*Yes/No, Email/Phone Verification Implemented?]
+Fake or Forged Identity Data Accepted? | [*Yes/No, Risk of Impersonation?]
+Anti-Bot Mechanisms in Place? | [*CAPTCHA, Honeypot, Other Techniques? Yes/No]
+Rate-Limiting Implemented? | [*Yes/No, Vulnerable to Brute Force/Automated Registrations?]
+Other Security Risks Identified | [*Yes/No, Risk Details]
+Tools/Services Used | 
+Test 4.2: Test Password Quality
+Target Organization | 
+URL | 
+Target Web Application | 
+Password Quality Rules implemented and executed on the Host Environment | Yes | No
+Password Validation Techniques | 
+Tools/Services Used | 
+Test 4.3: Test for Username Enumeration
+Target Organization | 
+URL | 
+Target Web Application | 
+Username Enumeration
+Valid Username | Corresponding Password
+Login Error Message Observations | [*Does the application differentiate between valid and invalid usernames? Yes/No, Details]
+Password Reset Error Message Observations | [*Does it indicate if an email/username exists? Yes/No, Details]
+Response Time Analysis | [*Longer response for valid usernames? Yes/No, Details]
+Username Exposure in Registration Process? | [*Yes/No, Example Messages if found]
+User-Specific URLs Observed? | [*Yes/No, Example URLs if found]
+Account Lockout Policy Implemented? | [*Yes/No, Lockout Threshold if applicable]
+Potential Exploit Paths Identified | [*If any]
+Other Security Risks Identified | [*Verbose Error Messages, Lack of Rate Limiting, User Enumeration via API Responses, etc.]
+Tools/Services Used | 
+Test 4.4: Test Resilience to Password Guessing
+Target Organization | 
+URL | 
+Target Web Application | 
+Techniques Used to Gather Password Lists | 
+Dictionary of all possible passwords | 
+Password Attacks Performed | 
+Approach Followed | 
+Are Attacks Successful? | [*Yes/No, Provide details]
+Evidence Collected | [*If Any]
+Guessed Passwords | 
+Remediation | 
+Tools/Services Used | 
+Test 4.5: Perform Password Brute-forcing
+Target Organization | 
+URL | 
+Target Web Application | 
+Attacks Performed | 
+Approach Followed | 
+Cracking the log-in Passwords Successful | Yes | No
+Evidence Collected | [*If Any]
+Password Brute-forcing
+Valid Username | Corresponding Password
+Remediation | 
+Tools/Services Used | 
+Test 4.6: Perform Authorization Attack
+Target Organization | 
+URL | 
+Target Web Application | 
+Attacks Performed | 
+Approach Followed | 
+Identified Input Fields in Web Application
+Cookies | Query String
+URL | POST Data
+Hidden Tags | HTTP Headers
+Modified Valued Input Fields in HTTP Requests | 
+Are Attacks Successful? | [*Yes/No, Give Details]
+Is the Web Application Vulnerable to Authorization Attack | Yes | No
+Evidence Collected | [*If Any]
+Remediation | 
+Tools/Services Used | 
+Test 4.7: Test with Multiple User Accounts
+Target Organization | 
+URL | 
+Target Web Application | 
+User Roles Tested | [*Admin, Regular User, Guest, etc.]
+Any Attacks Performed? | [*Yes/No, Give Details]
+Are Attacks Successful? | [*Yes/No, Give Details]
+Evidence Collected | [*If Any]
+Privilege Escalation Attempted? | [*Yes/No, Methods Used: Role Manipulation, Token Injection, etc.]
+Unauthorized Admin Actions from Low-Privilege Account? | [*Yes/No, Features Affected]
+Session Management Issues Detected? | [*Session Fixation, Hijacking, Token Reuse, etc.]
+User Data Access Violations Identified? | [*Yes/No, Give Details]
+Access Control Enforcement Consistency? | [*Consistent/Inconsistent, Details of Bypassed Restrictions if found]
+User Data Isolation Verified? | [*Yes/No, Unauthorized Data Access if detected]
+Potential Exploit Paths Found? | [*Yes/No, Give Details]
+Other Security Risks Identified | [*Yes/No, Risk Details]
+Tools/Services Used | 
+Test 4.8: Test with Limited Access
+Target Organization | 
+URL | 
+Target Web Application | 
+Identifiers Associated with Other Users’ Data | 
+Broken Access Controls Identified? | [*Yes/No, Details on Exploitable Endpoints]
+Application Mapping that Uses a Low-Privileged Account | 
+Admin Interfaces or Sensitive URLs Discovered? | [*Yes/No, List if Found]
+Results for Test with Limited Access | 
+Hidden Functions Revealed in HTML Source Code? | [*Yes/No, Details of Hidden Elements Found]
+Consistency of Access Controls Across Endpoints | [*Enforced Properly? Yes/No, Issues Identified]
+Additional Observations & Recommendations | 
+Tools/Services Used | 
+Test 4.9: Test for Insecure Access Control Methods
+Target URL | 
+Target Web Application | 
+HTTP Parameter-Based Access Control Tested? | 
+Parameter Modification Results | [*Privileges Escalated? Yes/No, Example if found: admin=true or access=yes]
+Referer Header Manipulation Tested? | [*Yes/No, Observed Behavior on Spoofed Admin Requests]
+Other Header-Based Access Control Issues Detected? | [*Yes/No, Details]
+Tools/Services Used | 
+Are any AI Tools Used? | [*ShellGPT, ChatGPT, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Potential Exploit Paths | [If any]
+Additional Observations & Recommendations | 
+Result Analysis | 
+Test 5.1: Test Session Token Predictability
+Target Organization | 
+URL | 
+Target Web Application | 
+Guessed Tokens that are Recently Used | 
+Token Type Analyzed | [*Session ID, Cookie Token, Hidden Form Field, etc.]
+Determined Valid Session Tokens from Requests Sent to Session‐Dependent Page | 
+Sequential Token Pattern Observed? | [*Yes/No, Example if found]
+Timestamp-Based Token Detected? | [*Yes/No, Example if found]
+Brute-Force Vulnerability Detected? | [*Yes/No, Token Range Identified if applicable]
+Rate-Limiting Implemented? | [*Yes/No, Bypass Attempt Successful?]
+Predictability of PRNG Detected? | [*Yes/No, Source of Weakness if found]
+Session Hijacking Attempted? | [*Successful/Unsuccessful, Details of Exploit Path]
+Other Identified Vulnerabilities | 
+Tools/Services Used | 
+Test 5.2: Perform Session Token Sniffing
+Target Organization | 
+URL | 
+Target Web Application | 
+Attack Performed? | [*Yes/No, Details]
+Approach Followed | 
+List of Session Cookies Collected | 
+Captured HTTP/HTTPS Traffic? | [*Yes/No, Details of Observed Session Cookies]
+Secure Flag Set or Not | Yes | No
+Session Hijacking Performed | Yes | No
+Session Replay Performed | Yes | No
+MITM ATTACK PERFORMED | Yes | No
+Session Tokens Transmitted Over Insecure Channel? | [*Yes/No, HTTP Instead of HTTPS?]
+HttpOnly Flag on Cookies? | [*Yes/No, Risk of XSS-based Token Theft?]
+Evidence Collected | [*If Any]
+Test results for Session Token Sniffing | 
+Tools/Services Used | 
+Test 5.3: Check for Disclosure of Tokens in Logs
+Target Organization | 
+URL | 
+Target Web Application | 
+Users Authorized to Access Log Function | 
+Cases where the Web Application Transmits Session Tokens in the URL | 
+Logs Analyzed | [*List the Logs]
+Did you Bypass
+the Employed Security Mechanism | Yes | No
+Instances where Session Tokens are transmitted within the URL | 
+API Keys or Authentication Tokens Found? | [*Yes/No, Examples if Found]
+Valid Session Tokens Issued to Users | 
+Logs Capturing Full HTTP Requests or Headers? | [*Yes/No, Details if Applicable]
+Tokens Found in Query Strings or Stack Traces? | [*Yes/No, List of Affected Endpoints if Found]
+Other Sensitive Information Extracted from Session Tokens | 
+Tools/Services Used | 
+Test 5.4: Check Mapping of Tokens to Sessions
+Target Organization | 
+URL | 
+Target Web Application | 
+Does the Application Issues New Session Tokens Each Time by Logging In and Out of the Browsers | Yes | No
+Does the tokens
+Contain components that Include Information Related to the Users | Yes | No
+Modified User‐related Components of the Token | 
+Resulting Token Accepted by the    Application Successfully | Yes | No
+Identified Vulnerabilities | 
+Tools/Services Used | 
+Test 5.5: Test Session Termination
+Target Organization | 
+URL | 
+Target Web Application | 
+Session Expiration Implemented on the Server | Yes | No
+Logout Function Exists | Yes | No
+Logout Function Invalidates the User’s Session on the Server | Yes | No
+Idle Session Timeout Implemented? | [*Yes/No, Time Duration Before Auto Logout if Applicable]
+Session Token Invalidation Tested? | [*Yes/No, Token Changes After Logout? Yes/No]
+Browser Cache & Back Button Issue Identified? | [*Yes/No, Cached Pages Accessible After Logout? Yes/No]
+Replay Attack Tested? | [*Yes/No, Able to Replay Session Requests After Logout? Yes/No]
+Tools/Services Used | 
+Test 5.6: Test for Session Fixation Attack
+Target Organization | 
+URL | 
+Target Web Application | 
+Attack Performed? | 
+Approach Followed | 
+Is the Attack Successful? | □Yes | □No
+Evidence Collected | [*If Any]
+Techniques Used to "Fix" the Session ID Value | 
+Test Results for Session Fixation Attack | 
+Remediation | 
+Tools/Services Used | 
+Test 5.7: Test for Session Hijacking
+Target Organization | 
+URL | 
+Target Web Application | 
+Target User | 
+Attack Performed? | 
+Approach Followed | 
+Is the Attack Successful? | □Yes | □No
+Evidence Collected | [*If Any]
+Hijacked Session | 
+Test Results of Session Hijacking | 
+Remediation | 
+Tools/Services Used | 
+Test 5.8: Check for Cross-Site Request Forgery (XSRF)
+Target Organization | 
+URL | 
+Target Web Application | 
+Methods Used for Transmitting Session Tokens | 
+Key Functionality of the Application | 
+Attack Performed | 
+Techniques Used to Check XSRF Vulnerabilities | 
+Is the Attack Successful? | Yes | No
+Evidence Collected | [*If Any]
+Application Uses AJAX | Yes | No
+Instances for JSON Hijacking Vulnerabilities | 
+Forms & State-Changing Actions Identified? | [*Yes/No, List if applicable]
+CSRF Token Implementation | [*Present? Yes/No, Unique per session? Yes/No, Predictable? Yes/No]
+Request Manipulation Test | [*Token Removed/Modified – Was the request still accepted? Yes/No]
+CSRF Vulnerability via GET Requests? | [*Yes/No, List of Affected Endpoints if applicable]
+CSRF Exploit via HTML/JavaScript Successful? | [*Yes/No, Details if applicable]
+SameSite Cookie Attribute Properly Configured? | [*Strict/Lax/None, Details if applicable]
+Referer/Origin Header Validation Implemented? | [*Yes/No, Details if applicable]
+Other Identified XSRF Vulnerabilities | 
+Tools/Services Used | 
+Test 5.9: Check Cookie Scope
+Target Organization | 
+URL | 
+Target Web Application | 
+Path and Domain Attributes of Set-Cookie Header | 
+Does the App Explicitly Uses Cookie Scope to a Parent Domain or Parent Directory | Parent Domain | Parent Directory
+Domain Names and Paths that Receive the Cookies Issued by the App | 
+Enumerated Cookies | [*Session, Authentication, Sensitive Data Identified? Yes/No, List if found]
+Domain Scope Analysis | [*Broad Domain Scope Detected? Yes/No, Subdomain Access Issues?]
+Path Scope Analysis | [*Cookies Accessible from Unintended Paths? Yes/No, Affected Paths if found]
+Secure Attribute Presence | [*Yes/No, Cookies Transmitted Over HTTP? Yes/No, MITM Exploitable?]
+HttpOnly Attribute Protection | [*Yes/No, XSS Cookie Theft Possible? Yes/No, Evidence if applicable]
+SameSite Attribute Assessment | [*Properly Configured? Yes/No, CSRF Exploit Possible? Yes/No]
+Other Identified Vulnerabilities | 
+Tools/Services Used | 
+Test 5.10: Test Cookie Attacks
+Target Organization | 
+URL | 
+Target Web Application | 
+Attack Performed | 
+Approach Followed | 
+Evidence Collected | [*If Any]
+Code Used to Set the Cookies | 
+Unauthorized Access to Accounts Successful | Yes | No
+Identified Vulnerabilities | 
+Remediation | 
+Tools/Services Used | 
+Test 5.11: Test for Concurrent Sessions
+Target Organization | 
+URL | 
+Target Web Application | 
+Initial Session Creation Successful? | [*Yes/No, Session ID Captured?]
+Multiple Concurrent Sessions Generated? | [*Yes/No, Number of Sessions Created: XX]
+Session Validity Tested with Different Scenarios | 
+Same IP Testing Results | [*Multiple Sessions Allowed? Yes/No, Observations]
+Different IP Testing Results | [*Multiple Sessions Allowed? Yes/No, Observations]
+Different Location Testing Results | [*Geo-Restrictions Applied? Yes/No, Observations]
+Session Expiry & Token Rotation Observed? | [*Yes/No, Weaknesses Detected?]
+Session Hijacking Possible? | [*Yes/No, Exploitable Vulnerabilities Found?]
+Other Identified Vulnerabilities | 
+Tools/Services Used | 
+Test 6.1: Test for URL Parameter Tampering
+Target Organization | 
+URL | 
+Target Web Application | 
+Host Web Server | 
+Modified URL: Access to a Host Web Server Successful | Yes | No
+Added Different Values and Manipulated Different Parts of the Website | Yes | No
+Test Results for Modified URL Parameters of the Website | 
+Tested Directories and File Extensions | Yes | No
+Identified Information from the above Test | 
+Tested Using Different Strings or Characters | Yes | No
+Access to Unauthorized Parts of a Site Successful | Yes | No
+Scripts Sent to the URL | 
+Hidden Files and Other Information Revealed on the Host Server | 
+Manipulated URL of the Host Website | 
+Tools/Services Used | 
+Test 6.2: Test for Hidden Field Parameter Tampering
+Target Organization | 
+URL | 
+Target Web Application | 
+Queries Used | 
+Successfully tested for Hidden Field Parameter Tampering | Yes | No
+Field Values Stored as Hidden Fields in HTML | 
+Manipulated Hidden Fields | 
+Server Accepted Modified Hidden Field Data? | [*Yes/No, Observed Changes in Response?]
+Impact of Tampering | [*Altered Pricing, Unauthorized Access, Logical Flow Manipulation, etc.]
+Tools/Services Used | 
+Results Analysis | 
+Test 6.3: Test for Unrestricted File Upload Vulnerability
+Target Organization | 
+URL | 
+Target Web Application | 
+Target Web Server | 
+Whether the Target Server Allows Unrestricted File Upload | Yes | No
+Validation on Approved File Types or Size is Done at | Server-Side | Client-Side
+Does the Target Application allow Upload of Oversize Files, Files
+Embedded With Virus | Yes | No
+Does the Application Evaluate the Uploaded File through Content in the HTTP Request | Yes | No
+Is Authorization Required for File Upload | Yes | No
+Successful Execution of Uploaded File? | [*Yes/No, Impact if successful]
+Identified Vulnerabilities | 
+Tools/Services Used | 
+Test 6.4: Perform HTTP Response Splitting/CRLF Injection Attack
+Target Organization | 
+URL | 
+Target Web Application | 
+Attack Performed | 
+Approach Followed | 
+CRLF Characters inserted into HTTP Headers | 
+HTTP Response Splitting/CRLF Injection Attack successful | Yes | No
+Evidence Collected | [*If Any]
+List of Vulnerabilities found while performing HTTP Response Splitting | 
+Remediation | 
+Tools/Services Used | 
+AI Tools Used (If any) | [*Gemini, ChatGPT, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Test 6.5: Test for HTTP Parameter Pollution
+Target Organization | 
+URL | 
+Target Web Application | 
+Identified Input Fields Accepting Parameters | [*GET/POST Requests, Forms, etc.]
+Server-Side HPP Test Results | [*Duplicate Parameter Handling: First/Last Value Used, Concatenation, Unexpected Behavior, etc.]
+Three-Step Comparison Analysis | [*List out Observed Differences]
+Client-Side HPP Test Results | [*Duplicate Parameters Reflected in Responses? Yes/No, Observed Behavior in HTML/JS Attributes, Forms, XHR Requests, etc.]
+Potential Exploit Paths | [*Input Validation Bypass, Security Filter Evasion, WAF Bypass, SQL Injection, XSS, etc.]
+Other Identified Vulnerabilities | 
+Tools/Services Used | 
+Test 7.1: Identify the Injection Points
+Target Organization | 
+URL | 
+Target Web Application | 
+Identified List of Entry Points | 
+Tools/Services Used | 
+Test 7.2: Identify the SQL Injectable Entry Points in the HTTP Request
+Target Organization | 
+URL | 
+Target Web Application | 
+Identified List of SQL Injection Points in the HTTP Request | 
+Tools/Services Used | 
+Test 7.3: Entry Points in HTTP Requests
+Target Organization | 
+URL | 
+Target Web Application | 
+Detected GET Request Parameters | [*List of Parameters Extracted from URL Queries]
+Detected POST Request Parameters | [*List of Parameters Extracted from HTTP Body]
+Vulnerabilities Identified in GET Requests? | [*Yes/No, Potential Exploits: Parameter Tampering, SQL Injection, etc.]
+Vulnerabilities Identified in POST Requests? | [*Yes/No, Potential Exploits: CSRF, XSS, Injection Attacks, etc.]
+Observed User-Agent Manipulation Impact | [*Yes/No, Possible Exploits: Bypassing Security Controls, Fingerprinting, etc.]
+Impact of Referer Header Manipulation | [*Yes/No, Exploitable Misconfigurations: Session Fixation, Spoofing, etc.]
+Identified Weak Content-Type Handling? | [*Yes/No, Risk of Bypassing Input Validation, MIME-Type Attacks, etc.]
+Other Vulnerabilities Identified | 
+Tools/Services Used | 
+Test 7.4: Perform Database Fingerprinting
+Target Organization | 
+URL | 
+Target Web Application | 
+List of Inject Codes | 
+Error Generation by Injecting Codes into the Input Fields is Successful | Yes | No
+Information Collected | Database Name:
+Version:
+Users:
+Output Mechanism:
+Database Type:
+User Privilege Level:
+OS Interaction Level:
+Error Messages Info:
+Others:
+Tools/Services Used | 
+Test 7.5: Detect SQL Injection Vulnerabilities by Manipulating a Parameter
+Target Organization | 
+URL | 
+Target Web Application | 
+Values of the Parameter in the URL Field | Original Value | Modified Value | Response Received
+Values of the Parameter in the URL Field | 
+Values of the Parameter in the URL Field | 
+Values of the Parameter in the URL Field | 
+Values of the Parameter in the URL Field | 
+Values of the Parameter in the URL Field | 
+Boolean-Based SQL Injection Detected? | [*Yes/No, Payloads Used]
+Error-Based SQL Injection Detected? | [*Yes/No, Error Messages Observed, Database Information Revealed]
+Time-Based SQL Injection Detected? | [*Yes/No, Response Time Observed, Identified Database Type]
+Exploited Database Type | 
+Login Bypass Successful? | [*Yes/No, Payload Used, Evidence Collected]
+Other Vulnerabilities | 
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, ChatGPT, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Potential Exploit Paths | [*If any]
+Additional Observations & Recommendations | 
+Result Analysis | 
+Test 7.6: Determine the Database Schema using Error-Based SQL Injection
+Target Organization | 
+URL | 
+Target Web Application | 
+Test 1: SQL Injection Vulnerability Check | [*Error Message Returned? Yes/No, Description]
+Test 2: Identified Table Name & First Column | [*Table Name Found? Yes/No, Column Name Found? Yes/No, Error Message Details]
+Test 3: Extracted Additional Column Names | [*Second Column Name Identified? Yes/No, List of Extracted Column Names if found]
+Test 4: Identified Data Types | [*Data Type of Extracted Columns Identified? Yes/No, Details of Findings]
+Extracted Database Name | [*Yes/No, Database Name if found, SQL Query Used]
+Extracted First Database Table Name | [*Yes/No, Table Name if found, SQL Query Used]
+Extracted First Column Name of First Table | [*Yes/No, Column Name if found, SQL Query Used]
+Extracted First Field of First Row (Data) | [*Yes/No, Data Extracted if found, SQL Query Used]
+Other SQL Injection Queries/URLs Used | 
+Other Information Collected | 
+Tools/Services Used | 
+Test 7.7: Determine Privileges, DB Structure, and Column Names
+Target Organization | 
+URL | 
+Target Web Application | 
+Commands Used | 
+Identified User Level Privileges | 
+Identified Admin Level Privileges | 
+Database Structure | Table Name | Column Name | Column Name Type
+Database Structure | 
+Database Structure | 
+Database Structure | 
+Database Structure | 
+Database Structure | Others:
+Enumerated User-Defined Tables | 
+SQL Queries/Commands Used to Enumerate Columns | 
+Enumerated Columns in the Database | 
+Tools/Services Used | 
+Test 7.8: Insert, Update, and Delete Data from Database
+Target Organization | 
+URL | 
+Target Web Application | 
+Commands/Queries Used | 
+Is the data manipulated? | Yes | No
+Database Type Identified | [*MySQL, PostgreSQL, MSSQL, Oracle, etc.]
+Identified Vulnerable Parameters | [*User Input Fields, URL Queries, Headers, etc.]
+Is the data manipulated? | Yes | No
+Insert Query Execution Successful? | Yes | No
+Update Query Execution Successful? | Yes | No
+Delete Query Execution Successful? | Yes | No
+Manipulated Data | 
+Tools/Services Used | 
+Test 7.9: Attempt a DoS Attack using SQL Injection
+Target Organization | 
+URL | 
+Target Web Application | 
+Commands/Queries Used | 
+SQL Injection Payloads Used | [*SLEEP, WAITFOR DELAY, UNION, LIKE, COMPRESS, etc.]
+Performed Denial-of-Service Attack Successfully? | Yes | No
+Techniques/ Approach Used for Performing DoS Attack | 
+Execution Time Delay Observed? | [*Yes/No, Time in Seconds]
+Database Overloaded? | [*Yes/No, Effects on Performance/Availability]
+Wildcard Characters Used for Query Expansion | [*%, [], [^], _, etc.]
+Attempted DROP Query Execution | [*Yes/No, Success/Failure, Impact if successful]
+Database Resiliency Observed? | [*Yes/No, Response to Heavy Queries and DROP Commands]
+Evidence Collected | [*If Any]
+Remediation | 
+Tools/Services Used | 
+Test 7.10: Evade IDS Detection using 'OR 1=1 Equivalents
+Target Organization | 
+URL | 
+Target Web Application | 
+Commands/Queries Used | 
+Hex Equivalent of SQL injection Statements Used | 
+Evaded IDS Successfully? | Yes | No
+IDS/IPS Protection in Place? | Yes | No
+Is IDS Able to Detect the SQL Injection Signatures? | Yes | No
+Response Received | 
+SQL Injection Variants Tested | [*e.g., OR 1=1, OR 'john'='john', OR 7>1, OR 'movies'=N'movies', etc.]
+Evasion Using Hexadecimal Encoding Tested? | [*Yes/No, Examples Used: SELECT @@version, DROP Table, etc.]
+Did IDS Detect Modified Queries? | [*Yes/No, Logs or Alerts Observed]
+Did IDS Detect Hexadecimal Payloads? | [*Yes/No, Logs or Alerts Observed]
+Successful Bypass Techniques Identified | [*Yes/No, Details of Evasion Methods that Worked]
+Tools/Services Used | 
+Test 7.11: Evade IDS Detection using Char Encoding
+Target Organization | 
+URL | 
+Target Web Application | 
+Testing Method Used | [*Char() Function Encoding for SQL Injection]
+Queries Used with Char() function to inject SQL Injection Statements | 
+Successful IDS Evasion Detected? | Yes | No
+Response Received | 
+Encoded Payloads Tested | File Load Injection ("/etc/passwd") | [*Response]
+Encoded Payloads Tested | User Enumeration Injection ("root") | [*Response]
+Encoded Payloads Tested | Wildcard Injection ("%") | [*Response]
+Encoded Payloads Tested | File Existence Check ("n.ext") | [*Response]
+Remediation | 
+Tools/Services Used | 
+Test 7.12: Evade IDS Detection by Manipulating White Spaces
+Target Organization | 
+URL | 
+Target Web Application | 
+Tested White Space Manipulation Techniques | [*Tabs, Carriage Returns, Line Feeds, No Spaces, etc.]
+SQL Injection Payload Variants Used | [*Standard vs. Obfuscated Queries]
+Queries used with Manipulated White Spaces | 
+Evaded IDS Successfully | Yes | No
+IDS Signature Evasion Success Rate | [*% or Number of Successful Evasions vs. Total Attempts]
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Test 7.13: Evade IDS Detection using Inline Comments
+Target Organization | 
+URL | 
+Target Web Application | 
+Queries Used with In-line Comments | 
+SQL Injection Point Identified? | Yes | No
+IDS/IPS Detection Attempted? | Yes | No
+Inline Comment Obfuscation Applied? | Yes | No
+Successful IDS Evasion? | Yes | No
+Alternative Comment-Based Evasion Techniques Used? | [*Breaking SQL Keywords, Nested Comments, etc.]
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Test 7.14: Evade IDS Detection using Obfuscated Code
+Target Organization | 
+URL | 
+Target Web Application | 
+Queries used with Obfuscated Code | 
+IDS/IPS in Place? | [*Yes/No, Type: Network-based, Host-based, etc.]
+SQL Injection Obfuscation Techniques Used | 
+Obfuscation Method Attempted | [*Concatenation, Encryption, Hashing, Character Manipulation, etc.]
+Bypassed Signature Detection of the IDS System Successfully | Yes | No
+Obfuscated Query Variations | [*Examples of Modified Queries Used for Testing]
+Obfuscated Request Variations | [*Examples of Requests Attempted for Signature Bypass]
+IDS Detection Outcome | 
+Other Security Risks Identified | 
+Tools/Services Used | 
+Test 7.15: Bypass Website Authentication using SQL Injection
+Target Organization | 
+URL | 
+Target Web Application | 
+Queries Used to Bypass Website Authentication | 
+SQL Injection Techniques Attempted | [*Sign-in Form Manipulation, UNION-based Injection, MD5 Hash Bypass, etc.]
+Bypassed Website Authentication using SQL Injection Successfully | Yes | No
+SQL Injection Payloads Used | 
+Vulnerable Authentication Fields | [*Username, Password, Token, etc.]
+Error Messages or Debug Information Disclosed? | [*Yes/No, Example if found]
+Evidence Collected | [*If Any]
+Remediation | 
+Tools/Services Used | 
+Test 7.16: Perform a Function-Call Injection Attack
+Target Organization | 
+URL | 
+Target Web Application | 
+Custom or Database Functions Used to Perform SQL Injection | 
+Queries Used to Perform SQL Injection | 
+Function-Call Injection Attempted? | Yes | No
+Scenario 1: Data Extraction Successful? | Yes | No
+Scenario 2: Unauthorized User Creation Possible? | Yes | No
+Approach Followed | 
+Identified Vulnerable Functions | [*e.g., UTL_HTTP.REQUEST, adduser(), Runtime.getRuntime().exec()]
+Database Security Controls Present? | [*Yes/No, Restrictions Observed]
+Evidence Collected | [*If Any]
+Database Information Extracted | 
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Test 7.17: Perform a Buffer Overflow Attack
+Target Organization | 
+URL | 
+Target Web Application | 
+Standard Database Functions that  
+are Liable to Buffer Overflow Attack | 
+Injection Payload Used | [*Example: FROM_TZ function with excessively long input string]
+Performed Buffer Overflow Attack Successfully | Yes | No
+Gained Remote Access to the Operating System using Buffer Overflow | Yes | No
+Approach Followed | 
+Observed Impact | [*Database Disconnection, DoS, Privilege Escalation, etc.]
+Evidence Collected | [*If Any]
+Other Security Risks Identified | [*Unvalidated Input Handling, Weak Database Protections, Unrestricted String Processing, etc.]
+Remediation | 
+Tools/Services Used | 
+Test 7.18: Access System Files and Execute Remote Commands
+Target Organization | 
+URL | 
+Target Web Application | 
+Vulnerability Tested | [*LOAD_FILE(), INTO OUTFILE(), etc.]
+Functions Used to Access System Files | 
+System Commands Executed | 
+LOAD_FILE() Exploitation Attempted? | [*Yes/No, File Accessed: /etc/passwd, Other Sensitive Files]
+INTO OUTFILE() Exploitation Attempted? | [*Yes/No, Web Shell or Malicious File Created?]
+Web Shell Execution Successful? | [*Yes/No, Example URL: http://www.example.com/shell.php?command=wget]
+Remote Command Execution Verified? | [*Yes/No, Commands Executed if applicable]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Information Retrieved from System Files | 
+Remediation | 
+Tools/Services Used | 
+Results Analysis | 
+Test 7.19: Perform Stored Procedure Injection
+Target Organization | 
+URL | 
+Target Web Application | 
+System Commands Executed | 
+Stored Procedures Identified | [*Yes/No, List if found]
+Injection Payloads Used | [*Bypass Authentication, Data Manipulation, etc.]
+Authentication Bypass Successful? | [*Yes/No, Details of Exploit]
+Data Manipulation Possible? | [*Yes/No, Example Queries Executed if found]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Impact of Exploit | [*Unauthorized Access, Data Leakage, Privilege Escalation, etc.]
+Remediation | 
+Tools/Services Used | 
+Results Analysis | 
+Test 7.20: Perform SQL Injection using AI
+Target Organization | 
+Target Web Application | 
+Target URL & Injected Parameter | [*Example: http://testphp.vulnweb.com/listproducts.php?cat=1]
+AI-Based Automation Tools Used for SQL Injection | [*ShellGPT, Custom Prompts, Automated Scripting, etc.]
+Scripts or Prompts Used for Automation | 
+SQL Injection Successful? | [*Yes/No, Details of Exploit]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Potential Security Risks Identified | 
+Remediation | 
+Results Analysis | 
+Test 8.1: Manual Test for XSS Vulnerabilities
+Target Organization | 
+URL | 
+Target Web Application | 
+URLs/Queries Used | 
+URL Parameter XSS Tested? | Yes | No
+Search Field XSS Tested? | Yes | No
+User-Agent Header XSS Tested? | Yes | No
+Filter Evasion Techniques Used? | Yes | No
+DOM-Based XSS Tested? | Yes | No
+Event Handler XSS Exploited? | Yes | No
+Unauthorized Access or Data Theft via XSS? | Yes | No
+List of XSS Vulnerabilities detected | 
+Evidence Collected | 
+Tools/Services Used | 
+Test 8.2: Automated Test for XSS Vulnerabilities
+Target Organization | 
+URL | 
+Target Web Application | 
+Commands Used | 
+Is Automated Test for XSS Vulnerabilities Successful | Yes | No
+List of XSS Vulnerabilities Detected | 
+Evidence Collected | 
+Tools/Services Used | 
+Test 8.3: Test for LDAP Injection
+Target Organization | 
+Target URL | 
+Target Web Application | 
+LDAP Injection Point Identified? | [*Yes/No, Affected Input Fields: Login, Search, etc.]
+Authentication Bypass Successful? | [*Yes/No, Details of Exploit]
+Sensitive Data Extracted via LDAP Injection? | [*Yes/No, Extracted Attributes: Users, Admins, etc.]
+Injection Payloads Used | 
+Approach Followed | 
+Observed Server Response | [*Unauthorized Access, Excessive Data Disclosure, etc.]
+Intercepted Requests & Modifications | [*Example: Burp Suite Intercept Logs, Request Parameters Modified]
+Evidence Collected | [*If Any]
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Results Analysis | 
+Test 8.4: Test for SSI Injection
+Target Organization | 
+Target URL | 
+Target Web Application | 
+Potential SSI Injection Points Identified? | [*Yes/No, Yes/No, List of Pages with .shtml, .stm Extensions, Input Fields, etc.]
+Basic SSI Injection Payloads Executed? | [*Yes/No, Output Observed if Successful]
+Advanced Command Execution Attempts? | [*Yes/No, Commands Used & Results if Successful]
+SSI Injection via HTTP Headers? | [*Yes/No, Headers Tested: Referer, User-Agent, etc.]
+SSI Injection Successful? | [*Yes/No, Give Details]
+Approach Followed | 
+Sensitive Information Disclosed? | [*Directory Listings, System Commands, Server Version, etc.]
+Evidence Collected | [*If Any]
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Results Analysis | 
+Test 8.5: Test for Code Injection
+Target Organization | 
+Target URL | 
+Target Web Application | 
+Testing Approach Used | [*Black Box, Gray Box, Both]
+Identified Input Points | [*Form Fields, URL Parameters, HTTP Headers, etc.]
+Injected Payloads & Results | 
+Server Response Indicators | [*File Listings, User Info, Error Messages, etc.]
+PHP Injection Detected? | [*Yes/No, Give Details]
+ASP Code Injection Detected? | [*Yes/No, Give Details]
+Potential Exploit Paths | 
+Evidence Collected | [*If Any]
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Results Analysis | 
+Test 8.6: Test for File Inclusion
+Target Organization | 
+Target URL | 
+Target Web Application | 
+Potential File Inclusion Points Identified? | [*Yes/No, List of Affected Parameters]
+Local File Inclusion (LFI) Exploitable? | [*Yes/No, Example Payloads Used: ?file=../../etc/passwd, etc.]
+Path Traversal Vulnerability Detected? | [*Yes/No, Give Details]
+Null Byte Injection Successful? | [*Yes/No, Example Payloads Used: /etc/passwd%00]
+Remote File Inclusion (RFI) Vulnerable? | [*Yes/No, Injected External URL & Response Behavior]
+Source Code Analysis for RFI Found Issues? | [*Yes/No, Unvalidated File Inclusion in Scripts?]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Results Analysis | 
+Test 8.7: Test for Command Injection
+Target Organization | 
+Target URL | 
+Target Web Application | 
+Modified URL Parameters Tested? | [*Yes/No, Example Payloads Used: &whoami, ;ls, etc.]
+URL Encoding-Based Payloads Tested? | [*Yes/No, Example Payloads Used: %26cat /proc/version, etc.]
+POST Request Interception & Modification Attempted? | [*Yes/No, Injected Commands: ls /var/www, etc.]
+Response Indicating Command Execution? | [*Yes/No, Extracted Output if applicable]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Results Analysis | 
+Test 8.8: Test for Server-side Template Injection
+Target Organization | 
+Target URL | 
+Target Web Application | 
+Potential SSTI in Plain Text Identified? | [*Yes/No, Tested Expressions: {{3+4}}, ${3+4}, etc.]
+Potential SSTI in Code Context Identified? | [*Yes/No, Observed Output for Injected Expressions: {{/exit}}, etc.]
+Detected Template Engine | [*Jinja2, Thymeleaf, EJS, Velocity, etc.]
+Successful SSTI Exploit? | [*Yes/No, Example Payloads Used]
+Remote Code Execution (RCE) Achieved? | [*Yes/No, Exploit Code & Output if successful]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Results Analysis | 
+Test 8.9: Test for Server-Side Request Forgery
+Target Organization | 
+Target URL | 
+Target Web Application | 
+External Resource Access Tested? | [*Yes/No, Successful Attempts, if any]
+Internal Resource Access Attempted? | [*Yes/No, List of Internal Services/Files Accessed]
+Bypassed Localhost Filters? | [*Yes/No, Techniques Used – Hex, Octal, IPv6, etc.]
+Injection Points Tested | [*GET, POST, Headers, Cookies – Yes/No, List of Identified Vulnerable Parameters]
+Manipulated URL Parsing? | [*Yes/No, Successful Payloads with @, #, etc.]
+File Inclusion Attempted? | [*Yes/No, Examples: /etc/passwd, /var/www/html/config.php]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Other Security Risks Identified | 
+Remediation | 
+Tools/Services Used | 
+Results Analysis | 
+Test 9.1: Exploit Improper Error Handling Vulnerabilities
+Target Organization | 
+URL | 
+Target Web Application | 
+Triggered Errors | 
+Observed HTTP Status Codes | [*404, 403, 500, etc.]
+Exposed Error Messages Identified? | [*Yes/No, Examples if found: Stack Traces, API Exceptions, Database Errors, etc.]
+Application Frameworks & Services Disclosed? | [*Yes/No, Identified Technologies if found: .NET, Flask, Django, etc.]
+Server-Specific Errors Detected? | [*Yes/No, Server Type & Version Disclosed: Apache, Nginx, IIS, etc.]
+Fuzz Testing Performed? | [*Yes/No, Results from Unexpected Inputs: Malformed JSON, Special Characters, Oversized Payloads, etc.]
+Vulnerabilities Identified from Error Messages | 
+Additional Information Gathered about Application Condition | 
+Tools/Services Used | 
+AI Tools Used | [*ShellGPT, ChatGPT, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Extracted Information | 
+Potential Exploit Paths | [*If any]
+Result Analysis | 
+Test 10.1: Check for Insufficient Transport Layer Protection
+Target Organization | 
+URL | 
+Target Web Application | 
+SSL/TLS Configuration Checked? | Yes | No
+Checked for Underprivileged 
+SSL setup | Yes | No
+Sensitive Data Transmitted Over HTTP? | Yes | No
+Certificate Validity & Trust Level | Yes | No
+Are Phishing and MITM Attacks Successful | Yes | No
+HSTS (HTTP Strict Transport Security) Enabled? | Yes | No
+Encryption Protocols Used | [*TLS 1.2, TLS 1.3, Outdated Protocols Detected?]
+Mixed Content Issues Detected? | [*Yes/No, HTTP Resources Loaded on HTTPS Page?]
+Other Identified Vulnerabilities | 
+Tools/Services Used | 
+Result Analysis | 
+Test 10.2: Check for Weak SSL Ciphers
+Target Organization | 
+URL | 
+Target Web Application | 
+Commands Used | 
+Performed SSL Scans and SSL Tests Successfully | Yes | No
+SSL/TLS Services Detected? | Yes | No
+SSL/TLS Certificate Details | [*Issuer, Expiry Date, Weak Signature Algorithms, etc.]
+Identified SSL Services related to Web Applications | 
+Supported Protocols Identified | [*TLS 1.0, TLS 1.1, TLS 1.2, TLS 1.3, SSLv2, SSLv3, etc.]
+List of Ciphers related to Target Web Server | 
+Weak/Insecure Ciphers Detected? | [*Yes/No, List of Weak Ciphers if found]
+Identified Vulnerabilities in SSL Service | 
+Tools/Services Used | 
+Result Analysis | 
+Test 10.3: Check for Weak Encoding Techniques
+Target Organization | 
+URL | 
+Target Web Application | 
+URLs/Queries Used | 
+Encoding Methods Detected | [*Base64, URL Encoding, MD5, Weak Hashing, etc.]
+Sensitive Data Encoded in URL Parameters? | [*Yes/No, Decoded Data if found]
+Sensitive Data Encoded in Cookies/Local Storage? | [*Yes/No, Details if found]
+Hidden Fields Containing Encoded Data? | [*Yes/No, Decoded Data if found]
+Weak Hashing Identified in URL Parameters? | [*Yes/No, Hash Type: MD5, SHA-1, etc.]
+Vulnerabilities in HTTP Response Headers? | [*Yes/No, Misconfigured CSP, Weak Encoding Directives, etc.]
+Other Identified Weak Encoding Techniques | 
+Tools/Services Used | 
+AI Tools Used (If any) | [*Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Results Analysis | 
+Test 10.4: Test for Padding Oracle
+Target Organization | 
+URL | 
+Target Web Application | 
+Encrypted Data Identified? | [*Yes/No, Example Base64-Encoded Values if found]
+Block Cipher Detected? | [*AES, DES, Blowfish, etc., Block Size: 8/16 Bytes]
+Sensitive Data Encoded in Cookies/Local Storage? Bit-Flipping Attack Attempted? | [*Yes/No, Observed Response Variations?]
+Padding Error Messages Observed? | [*Yes/No, Examples: ASP.NET, Java BadPaddingException, etc.]
+Timing Analysis Conducted? | [*Yes/No, Notable Response Time Differences?]
+Vulnerabilities in HTTP Response Headers? | [*Yes/No, Misconfigured CSP, Weak Encoding Directives, etc.]
+Other Vulnerabilities Identified | 
+Tools/Services Used | 
+AI Tools Used (If any) | [*Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Results Analysis | 
+Test 11.1: Test for Logic Flaws
+Target Organization | 
+URL | 
+Target Web Application | 
+Vulnerable Code | 
+Application Features & Workflows Analyzed | [*Multi-step processes, Role-based access controls, etc.]
+Identified Critical Business Functions | [*Payment Processing, User Permissions, Authentication, etc.]
+Concurrency Issues Detected? | [*Yes/No, Example if found]
+Access Control Bypass Attempted? | [*Yes/No, Methods Used: URL Manipulation, API Tampering, etc.]
+Sequence Manipulation Attempts | [*Checkout Skipping, Step Reordering, etc.]
+Session & State Manipulation Tested? | [*Yes/No, Hidden Fields, Session Variables, etc.]
+Price Modification or Unauthorized Transactions Tested? | [*Yes/No, Observations if found]
+Code Review Observations | [*Conditional Branching Errors, Weak Role Validation, etc.]
+Other Vulnerabilities Identified | 
+Tools/Services Used | 
+AI Tools Used (If any) | [*ShellGPT, Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Results Analysis | 
+Test 11.2: Test Multistage Processes
+Target Organization | 
+URL | 
+Target Web Application | 
+Multistage Processes Tested | 
+Sequence of Stages that can be accessed via a series of GET or POST Requests for distinct URLs | 
+Multistage Process that Involves different users Performing Operations on the Same Set of Data | 
+Are Multistage Functions Accessed Out of Sequence? | Yes | No
+Tested Attack Scenarios | [*Skipping Stages, Replaying Requests, Revisiting Stages, etc.]
+Impact of Skipping Stages | [*Variables with Null/Uninitialized Values, Application Errors, etc.]
+Revisiting Earlier Stages | [*Yes/No, Application Behavior Observed]
+Replay Attacks with Another User's Parameters? | [*Successful/Unsuccessful, Details]
+Error Messages or Debug Information Leaked? | [*Yes/No, List of Findings]
+Additional Test Results for Multistage Processes | 
+Potential Exploit Paths | [*Bypassing Process Steps, Gaining Unauthorized Access, Logic Flaws, etc.]
+Security Risks Identified | [*Inconsistent Application States, Improper Validation, Missing Access Controls, etc.]
+Tools/Services Used | 
+Results Analysis | 
+Test 11.3: Test Handling of Incomplete Input
+Target Organization | 
+URL | 
+Target Web Application | 
+Incomplete Form Data Submission Tested? | [*Yes/No, Client-Side & Server-Side Validation Observed?]
+Manipulated Requests Sent? | [*Yes/No, Bypassed Validation? Yes/No, Server Response Observed?]
+Incomplete API Payloads Sent? | [*Yes/No, JSON/XML Fields Omitted, Server Response Code & Error Handling Observed?]
+Error Handling & Debug Output Analysis | [*Yes/No, Stack Traces or Sensitive Data Leaked?]
+Workflow & Logic Impact Tested? | [*Yes/No, Disruptions in Business Logic Identified?]
+Additional Test Results for Handling of Incomplete Input | 
+Security Risks Identified | [*Improper Input Validation, Unhandled Exceptions, Information Disclosure, etc.]
+Tools/Services Used | 
+Results Analysis | 
+Test 11.4: Test Trust Boundaries
+Target Organization | 
+URL | 
+Target Web Application | 
+Functions Tested | 
+Identified Trust Boundaries | [*Client-Server, API-Backend, Third-Party Integrations, etc.]
+Injection Attacks Attempted | [*SQLi, XSS, Command Injection, etc.]
+Does the Application Allows Users to Access Certain Resources Based on their Identity | Yes | No
+Does the Application Allows Users to Access Higher Privileged Functions | Yes | No
+Data Leakage Detected Across Boundaries? | [*Yes/No, Sensitive Information Identified?]
+Improper Input Validation Found? | [*Yes/No, Affected Interfaces/Endpoints]
+Unauthorized API Access Possible? | [*Yes/No, User Roles Tested, Results]
+Session Handling Weaknesses Identified? | [*Session Fixation, Token Reuse, Manipulation, etc.]
+Third-Party API Integration Risks Detected? | [*Insecure Calls, Improper Data Validation, etc.]
+Other Vulnerabilities Identified | 
+Tools/Services Used | 
+Test 11.5: Test Transaction Logic
+Target Organization | 
+URL | 
+Target Web Application | 
+Transaction Flow Mapped? | [*Yes/No, Key Steps Identified: Checkout, Funds Transfer, etc.]
+Checked Application Algorithms for Adjustments Made | Yes | No
+Input Manipulation Tested? | [*Yes/No, Parameters Modified: Price, Quantity, Discounts, etc.]
+Methods of Manipulating the Application's Behavior | 
+Negative Input Handling Issues? | [*Yes/No, Reverse Transactions Allowed?]
+Transaction Limits Tested? | [*Yes/No, Bypass Techniques Used: Small Successive Transactions, etc.]
+Inconsistent Transaction States Identified? | [*Yes/No, Observed Effects: Duplicate Entries, Data Corruption, etc.]
+Dynamic Limit Adjustments Observed? | [*Yes/No, Factors Influencing Adjustments: User Criteria, Behavior, etc.]
+Race Conditions Exploited? | [*Yes/No, Give Details]
+Error Handling & Rollback Mechanisms Assessed? | [*Yes/No, Failures in Rollback Identified?]
+Multi-User Transaction Conflicts Detected? | [*Yes/No, Issues with Concurrent Updates?]
+Test Results for Transaction Logic | 
+Other Security Risks Identified | 
+Tools/Services Used | 
+Test 11.6: Test Payment Functionality
+Target Organization | 
+URL | 
+Target Web Application | 
+Payment Integration Type | [*Third-Party Gateway, IFRAME, Cross-Domain POST, Direct API Call, etc.]
+Quantity Modification Vulnerabilities Identified? | Yes | No
+Price Manipulation Possible? | [*Yes/No, Modified Price Accepted?]
+Hidden Form Fields Editable? | [*Yes/No, List of Modified Fields if applicable]
+Encrypted Transaction Details Tested? | [*Yes/No, Accepted Unencrypted Requests?]
+HMAC Hash Integrity Tested? | [*Yes/No, Successful Hash Tampering?]
+Currency Modification Tested? | [*Yes/No, Undervalued Transactions Accepted?]
+Discount Code Exploits Identified? | [*Guessable Codes, Stacking Discounts, Exposed Codes in Source, etc.]
+Checkout Sequence Manipulation Tested? | [*Yes/No, Skipped Payment and Accessed Success Page?]
+Transaction Processing Fee Exploit Possible? | [*Yes/No, Very Low Payments Accepted?]
+Test Results for Transaction Logic | 
+Other Security Risks Identified | 
+Tools/Services Used | 
+Test 12.1: Identify Client-side Technology
+Target Organization | 
+URL | 
+Target Web Application | 
+Detected Client-Side Technologies | [*HTML5, JavaScript, AJAX, JSON, Cookies, LocalStorage, SessionStorage, etc.]
+Identified Frameworks & Libraries | [*React, Angular, jQuery, Bootstrap, etc.]
+Script & Meta Tag Analysis | [*Detected <script>, <link>, and <meta> references]
+HTTP Headers Analyzed | [*X-Powered-By, Server, Technology Disclosure]
+Cookies & Storage APIs Detected | [*SessionStorage, LocalStorage, IndexedDB, etc.]
+Other Security Risks Identified | 
+Tools/Services Used | 
+AI Tools Used (If any) | [*ShellGPT, Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Test 12.2: Test the Application’s Reliance on Client-Side Validation
+Target Organization | 
+URL | 
+Target Web Application | 
+Does the Application Relies Solely on Client-Side Validation for Securing the web Application | Yes | No
+JavaScript Disabled & Validation Bypassed? | [*Yes/No, Observations]
+HTML Form Manipulation Attempted? | [*Yes/No, Modifications Made: Removing required attributes, changing input types, etc.]
+Direct Invalid Input Submission Results | [*Accepted/Rejected, Server Response Details]
+Intercepted & Modified Request Payload? | [*Yes/No, Observations on Server Behavior]
+Tested with Unexpected Characters or Large Inputs? | [*Yes/No, Any Crashes or Unexpected Behavior?]
+API Endpoint Tested Without Client-Side Validation? | [*Yes/No, Results from Postman/Insomnia Requests]
+Security Headers Enforced? | [*Yes/No, CSP, X-Frame-Options, etc.]
+Server Error Messages Analyzed? | [*Any Indicators of Client-Side Bypass, Sensitive Data Exposure, etc.]
+Potential Exploit Paths | [*Form Manipulation, API Abuse, XSS Injection, etc.]
+Other Security Risks Identified | 
+Tools/Services Used | 
+Test 12.3: Test Client-side Controls over User Input
+Target Organization | 
+URL | 
+Target Web Application | 
+Type of Client-Side Controls Used by Applications | 
+Arbitrary Requests Sent to the Server Successful | Yes | No
+Target Server Response | 
+Exploitable Inputs in the Validation of Client-Side Controls | 
+Bypassed Input Restrictions? | [*Yes/No, Methods Used: Modified Maxlength, Readonly, Disabled Properties, etc.]
+Input Manipulation via Intercepted Requests? | [*Yes/No, Payloads Used, Server Response Behavior]
+Disabled Elements Successfully Manipulated? | [*Yes/No, Example Elements and Outcomes]
+JavaScript-Based Validation Weaknesses Found? | [*Yes/No, Methods Used: Disabling JS, Script Injection, Flow Manipulation, etc.]
+Direct API Testing Results | [*Client-Side Controls Bypassed? Yes/No, API Response Handling]
+Security Headers Implemented? | [*CSP, X-Content-Type-Options, etc.]
+Improper Error Handling Detected? | [*Yes/No, Details on Data Leakage, Validation Gaps, etc.]
+Other Vulnerabilities Identified | 
+Potential Exploit Paths | [*Form Manipulation, API Abuse, Bypassed Input Restrictions, etc.]
+Tools/Services Used | 
+Test 12.4: Check for Frame Injection
+Target Organization | 
+URL | 
+Target Web Application | 
+Support Editing of Frames and Frameset Tags by Host Applications | Yes | No
+Vulnerable Host Site Tampered with URL Parameters | 
+Forged Site that Controls Contents of the Host Site | 
+Presence of X-Frame-Options Header? | [*Yes/No, Value: DENY/SAMEORIGIN/ALLOW-FROM]
+Content Security Policy (CSP) with frame-ancestors? | [*Yes/No, Details if found]
+Successful iframe Injection? | [*Yes/No, If successful, URL of injected iframe]
+Frame Injection via User-Submitted Content? | [*Yes/No, Details if found, Input Sanitization Status]
+Legacy Application Vulnerability Detected? | [*Yes/No, iframe Loading Behavior Observed]
+Clickjacking Protection Implemented? | [*Yes/No, Test Results of Overlay Interaction]
+Other Security Risks Identified | [*Frame Injection, Clickjacking, Lack of CSP or X-Frame-Options, etc.]
+Tools/Services Used | 
+Test 12.5: Test with User Protection via Browser Settings
+Target Organization | 
+URL | 
+Target Web Application | 
+Browser Settings | 
+HTTP Response Headers Analyzed | [*CSP, X-Content-Type-Options, X-Frame-Options – Properly Configured? Yes/No]
+JavaScript Disabled - Application Behavior | [*Bypassed Client-Side Validation? Features Broken?]
+HTTPS Enforcement Tested? | [*HSTS Implemented? HTTP to HTTPS Redirection?]
+SSL Security Verified? | [*SSL Labs Test Results – Secure/Weak?]
+Cookie Security Analysis | [*Secure, HttpOnly, SameSite Attributes Set? Yes/No, Any Manipulation Possible?]
+Pop-up Blocking & Privacy Settings | [*Application Bypasses Pop-up Blocking? Yes/No, Observations?]
+Tracking Protection & Third-Party Script Dependencies | [*Breaks Critical Functionality? Yes/No, Observations?]
+Disabled Cookie Handling - Application Behavior | [*Breaks Session Management? Yes/No, Observations?]
+Other Security Risks Identified | 
+Tools/Services Used | 
+Test 12.6: Test for Client-side Resource Manipulation
+Target Organization | 
+URL | 
+Target Web Application | 
+Identified Injection Points (Sinks) | [*iframe, script src, link href, object data, etc.]
+JavaScript Resource Injection Vulnerability Detected? | [*Yes/No, Affected Elements, Examples if found]
+Confirmed XSS via JavaScript Resource Injection? | [*Yes/No, Malicious URL Example if exploited]
+CORS Exploitation Possible? | [*Yes/No, Affected Requests, Vulnerable Resources]
+Approach Followed | [*List out for the individual tests]
+Potential Exploit Paths | [*XSS, CORS Exploitation, Resource Hijacking, Data Exfiltration, etc.]
+Other Security Risks Identified | 
+Tools/Services Used | 
+Test 12.7: Test WebSockets
+Target Organization | 
+URL | 
+Target Web Application | 
+Identified WebSocket Usage | [*ws:// or wss://, List of WebSocket Endpoints Found]
+Origin Validation Check | [*Allowed Cross-Domain Access? Yes/No, Risk Details]
+Confidentiality & Integrity Check | [*Uses wss://? Yes/No, SSL Weaknesses Found?]
+Authentication Check | [*Weak Authentication Controls? Yes/No, Observed Issues]
+Authorization Check | [*Access Control Bypass Possible? Yes/No, Unauthorized Access Detected?]
+Input Sanitization Testing Results | [*Injection Vulnerabilities Found? Yes/No, Details of Exploitable Inputs]
+Potential Exploit Paths | [*Cross-domain Hijacking, Injection Attacks, Authentication Bypass, etc.]
+Other Security Risks Identified | 
+Tools/Services Used | 

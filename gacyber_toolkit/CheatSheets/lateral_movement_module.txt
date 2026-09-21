@@ -1,0 +1,747 @@
+[Organization’s Logo]
+[Organization’s Name]
+[Organization’s Contact Details]
+[Title of the Report]
+Target Organization:
+Penetration Tester:	
+Date:	
+Location:
+Analyzing Advanced Lateral Movement Techniques 
+[*This section provides an overview of the techniques used for a structured approach to analyzing advanced lateral movement techniques in penetration testing.] 
+Perform Pass the Hash (PtH) Attack
+Test 1.2 Perform Pass the Ticket (PtT) Attack
+Test 1.3 Perform Over Pass the Hash
+Test 1.4 Perform Kerberos Attacks
+Test 1.5 Perform Kerberoasting using ADRecon
+Test 1.6 Exploiting PsExec for Lateral Movement
+Test 1.8 Using PsExec Metasploit Framework for Lateral Movement
+Test 1.9 Impacket PsExec Lateral Movement
+Test 1.10 WMI Lateral Movement
+Test 1.11 WinRM Lateral Movement
+Test 1.12 Metasploit WinRM Lateral Movement
+Test 1.13 Exploit Windows Remote Management (WinRM) for Lateral Movement Using WQL
+Test 1.14 Lateral Movement using Windows Remote Shell (WinRS)
+Test 1.15 Lateral Movement using AI
+Test 1.16 Relay Net-NTLMv2 Hashes
+Test 1.17 Crack RDP Logins
+Test 1.18 Crack SSH Login
+Test 1.19 Crack Passphrase of SSH Private Keys
+Test 1.20 Cracking Password Manager Key Files
+Assessing Advanced Pivoting and Tunneling Techniques
+[*This section provides an overview of the techniques used for Assessing Advanced Pivoting and Tunneling to navigate segmented networks, evade security controls, and extend access beyond the initially compromised system.] 
+Test 2.1 Pivoting with Meterpreter
+Test 2.2 Pivoting over a Netcat Relay
+Test 2.3 Pivoting with ProxyChains
+Test 2.4 Pivoting using Rpivot
+Test 2.5 HTTP Tunneling using Chisel
+Test 2.6 DNS Tunneling with DNScat2
+DNS Tunneling with Iodine
+ICMP Tunneling
+Test 2.9 SSH Tunneling
+SSH Dynamic Port Forwarding
+SSH Port Forwarding with PuTTY
+Test 2.14 Port Forwarding and Tunneling with Plink on Windows
+Test 2.15 Port Forwarding with Netsh
+Port Forwarding using Socat
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+User Account Targeted | 
+Security Controls Bypassed | 
+Method Used to obtain Hashes | 
+Command Used | 
+Extracted Hash | Yes | No
+Verification of Hash | Success | Failure
+Execute PtH Attack Successfully | Yes | No
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Lateral Movement Performed | Yes | No
+Result Obtained
+Target System Access Granted | 
+New Access Level Gained | 
+Commands Executed Post-PtH | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+New Lateral Movement Opportunities Identified | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+User Account Targeted | 
+Security Controls Bypassed | 
+Method Used to Obtain Tickets | 
+Extracted Ticket File | 
+Verification of Ticket | Yes | No
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Lateral Movement Performed | Yes | No
+Target System Access Granted | Yes | No
+List of Target System Access Granted | 
+New Access Level Gained | 
+Commands Executed Post-PtT | 
+Actions Performed (Privilege Escalation, Data Extraction etc.) | 
+New Lateral Movement Opportunities Identified | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+User Account Targeted | 
+Security Controls Bypassed | 
+Method Used to Obtain Hashes | 
+Extracted NTLM Hash | 
+Verification of Hash | Yes | No
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Lateral Movement Performed | Yes | No
+Kerberos Ticket Acquired | Yes | No
+Target System Access Granted | Yes | No
+List of Target System Access Granted | 
+New Access Level Gained | 
+Commands Executed Post-Over-PtH | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+New Lateral Movement Opportunities Identified | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+User Account Targeted | 
+Security Controls Bypassed | 
+Method Used to Obtain Hashes | 
+Extracted Service Ticket Hash | 
+Password Cracked | Yes | No
+Password Extracted | Yes | No
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Extracted Hashes | 
+TGT Generated | Yes | No
+Access Gained | 
+Tools and Commands Used | 
+TGS Generated | Yes | No
+Result Obtained
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Commands used to perform Reconnaissance using ADRecon | 
+Password Extracted | Yes | No
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Identified Service Accounts | 
+Extracted SPNs and Associated Tickets | 
+Extracted Service Ticket Hash | 
+Ticket Format | 
+Password Cracked | Yes | No
+Password Extracted | Yes | No
+Result Obtained
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods Used | 
+Extracted Credentials (Username/Password or NTLM Hash) | 
+Verification of Credentials | Yes | No
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential acquisition Methods Used | 
+Extracted Credentials (Username/Password or NTLM Hash) | 
+Verification of Credentials | Yes | No
+Metasploit Module Used | 
+Metasploit Commands Executed | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Meterpreter Sessions Opened | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods Used | 
+Extracted Credentials (Username/Password or NTLM Hash) | 
+Verification of Credentials | Yes | No
+Impacket PsExec Exploitation Tool | 
+Commands Executed | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods Used | 
+Extracted Credentials (Username/Password or NTLM Hash) | 
+Verification of Credentials | Yes | No
+WMI Lateral Movement Execution
+Tool Used | 
+Commands Executed | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods Used | 
+Extracted Credentials (Username/Password or NTLM Hash) | 
+Verification of Credentials | Yes | No
+WinRM Lateral Movement Execution Tool(s) Used | 
+Commands Executed | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods Used | 
+Extracted Credentials (Username/Password or NTLM Hash) | 
+Verification of Credentials | Yes | No
+Metasploit Module Used | 
+Metasploit Commands Executed | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Meterpreter Sessions Opened | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods Used | 
+Extracted Credentials (Username/Password or NTLM Hash) | 
+Verification of Credentials | Yes | No
+WinRM Lateral Movement Execution using WQL | 
+WQL Query Used for Execution | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods Used | 
+Extracted Credentials (Username/Password or NTLM Hash) | 
+Verification of Credentials | Yes | No
+WinRM Connectivity Test | Success | Fail
+WinRM Connectivity Test Command Used | 
+WinRS Command Used | 
+WQL Query Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Network Enumeration | Yes | No
+Network Enumeration Command Used | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+AI Tools Used | 
+AI Prompts Used | 
+Commands / Scripts Generated by AI | 
+Techniques Suggested by AI for Lateral Movement | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+LLMNR Enabled | Yes | No
+NBT-NS Enabled | Yes | No
+SMB Signing Enforced | Yes | No
+Commands Used | 
+Result Obtained
+Remote Access Gained | 
+Target Services Compromised | SMB
+WMI 
+WinRM | RDP 
+Other (Specify)
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | Yes | No
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods Used for RDP Attack | 
+Commands and Tools Used | 
+Cracking Captured Hashes Command and Tools used | 
+Verification of Credentials | Yes | No
+RDP Access Check Command Used | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | Yes | No
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | Yes | No
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods Used for SSH Attack | 
+Commands and Tools Used | 
+Cracking Captured Hashes Command and Tools used | 
+Verification of Credentials | Yes | No
+SSH Service Check Command Used | 
+Result Obtained
+Remote Access Gained | Yes | No
+Access Level Acquired | 
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | Yes | No
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+User Account Being Targeted | 
+Credential Acquisition Methods | 
+Commands and Tools Used | 
+Extracted SSH Private Key File | 
+Verification of Private Key Protection | Yes | No
+SSH Key Passphrase Cracking | 
+Result Obtained
+Passphrase Cracked | Yes | No
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | Yes | No
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+IP Address Targeted | 
+Commands Used | 
+Hostname | 
+Domain Controller (DC) IP (if applicable) | 
+Target Password Manager | 
+Password Manager Name and Version | 
+Storage Path of Key File | 
+Encryption Algorithm Used | 
+Hashing Algorithm Used | 
+Dictionary Used (If any) | 
+Tool and Commands used | 
+Result Obtained
+Password Cracked | Yes | No
+Extracted Password | 
+Access Level Obtained | 
+New Attack Vectors Identified | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Hostname | 
+Meterpreter Session Opened | Yes | No
+Target IP Address | 
+Access Level Obtained | 
+User Privileges Gained | 
+Method Used for Pivoting | 
+Command Used (keterpreter) | 
+Result  Obtained
+Network Segments Discovered | 
+New Attack Paths Identified | 
+Internal IP Address | 
+Lateral Movement Successful | Yes | No
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Target IP Address | 
+User Privileges Gained | 
+Netcat Installed on Target | Yes | No
+Relay Host IP address | 
+Netcat Listener Command | 
+Relay Established | 
+Result Obtained
+Network Segments Discovered | 
+New Attack Paths Identified | 
+Internal IP Address | 
+Netcat Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Target IP Address | 
+User Privileges Gained | 
+ProxyChains Installed | Yes | No
+Proxy Type Used | 
+Commands Used | 
+Proxy Established | Yes | No
+Result Obtained
+Network Segments Discovered | 
+New Attack Paths Identified | 
+Internal IP Address | 
+ProxyChains Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Target IP Address | 
+User Privileges Gained | 
+Rpivot Installed | Yes | No
+Listener IP & Port | 
+Commands Used | 
+Established Tunnel | Yes | No
+Result Obtained
+Network Segments Discovered | 
+New Attack Paths Identified | 
+Internal IP Address | 
+Rpivot Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+Chisel  Installed | Yes | No
+Listener IP & Port | 
+Chisel Server and Client Commands | 
+Tunnel Type Used | 
+Established Tunnel | Yes | No
+Result Obtained
+Network Segments Discovered | 
+New Attack Paths Identified | 
+Internal IP Address | 
+Chisel Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+DNScat2   Installed | Yes | No
+Listener IP & Port | 
+DNScat2 Server and Client Commands | 
+Tunnel Type Used | 
+Established Tunnel | Yes | No
+Result Obtained
+New Attack Paths Identified | 
+Internal IP Address | 
+DNScat2 Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+Iodine   Installed | Yes | No
+Listener IP & Port | 
+Iodine Server and Client Commands | 
+Tunnel Type Used | 
+Established Tunnel | Yes | No
+Result Obtained
+New Attack Paths Identified | 
+Internal IP Address | 
+DNScat2 Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+ICMP Tunnel Tool  Installed | Yes | No
+Listener IP & Port | 
+ICMP Tunnel Server and Client Commands | 
+Tunnel Type Used | 
+Established Tunnel | Yes | No
+Result Obtained
+New Attack Paths Identified | 
+Internal IP Address | 
+ICMP Tunnel Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+SSH   Installed | Yes | No
+Listener IP & Port | 
+Tunnel Type Used | 
+Local Port Forwarding Command | 
+Remote Port Forwarding Command | 
+Dynamic SOCKS Proxy Command | 
+Established Tunnel | Yes | No
+Result Obtained
+New Attack Paths Identified | 
+Internal IP Address | 
+SSH Tunnel Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+SSH   Installed | Yes | No
+Listener IP & Port | 
+Tunnel Type Used | 
+Dynamic Port Forwarding Command | 
+Remote Port Forwarding Command | 
+Dynamic SOCKS Proxy Command | 
+Established Tunnel | Yes | No
+Result Obtained
+New Attack Paths Identified | 
+Internal IP Address | 
+SSH Tunnel Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+PuTTY   Installed | Yes | No
+Tunnel Type Used | 
+Dynamic Port Forwarding Settings | 
+Remote Port Forwarding Settings | 
+Dynamic Port Forwarding Settings | 
+Established Tunnel | Yes | No
+Result Obtained
+New Attack Paths Identified | 
+Internal IP Address | 
+PuTTY SSH Tunnel Configurations | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+Plink   Installed | Yes | No
+Tunnel Type Used | 
+Dynamic Port Forwarding Command | 
+Remote Port Forwarding Command | 
+Dynamic Port Forwarding Command | 
+Established Tunnel | Yes | No
+Result Obtained
+New Attack Paths Identified | 
+Internal IP Address | 
+Plink Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+Netsh Available | Yes | No
+Port Forwarding Rule Command | 
+Forwarding established | 
+Established Tunnel | Yes | No
+Result Obtained
+New Attack Paths Identified | 
+Internal IP Address | 
+Netsh Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis
+Target System(s) | 
+Target System OS | 
+Exploit Used | 
+Payload Used | 
+Target IP Address | 
+User Privileges Gained | 
+Socat Installed | Yes | No
+Local Port Forwarding Command | 
+Remote Port Forwarding Command | 
+Dynamic Port Forwarding Command | 
+Forwarding established | 
+Established Tunnel | Yes | No
+Result Obtained
+New Attack Paths Identified | 
+Internal IP Address | 
+Socat Command Executed | 
+Lateral Movement Successful | 
+New Privileges Acquired
+New Lateral Movement Opportunities Identified | 
+Privilege Escalation Performed | 
+Actions Performed (Privilege Escalation, Data Extraction, etc.) | 
+Result Analysis

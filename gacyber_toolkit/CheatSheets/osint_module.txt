@@ -1,0 +1,385 @@
+[Organization’s Logo]
+[Organization’s Name]
+[Organization’s Contact Details]
+[Title of the Report]
+Target Organization:
+Penetration Tester:	
+Date:	
+Location:
+Collecting Open-source Intelligence (OSINT) on Target's Domain Name
+[*This section provides an overview of the techniques used to gather intelligence on a target’s domain name, including domain discovery, WHOIS data, IP addresses, email addresses, and publicly accessible services to identify potential security risks.]
+Find Domain and Subdomains of the Target
+Find Similar or Parallel Domain Names
+Perform Whois Lookups
+Find IP Address Block Allocated to the Organization
+Find DNS Records for the Domain
+Perform Reverse Lookups
+Perform DNS Zone Transfer
+Collecting OSINT about Target Organization on the Web
+[*This section provides an analysis of publicly available information on the target organization, detailing its profile, infrastructure, technologies, and web activity to identify potential vulnerabilities and attack surfaces.]
+Perform Web Searches using Advanced Operators
+Find the Geographical Location of a Company
+Identify Type of Network Devices Used in the Organization
+Search for Contact Information, Email Addresses, and Telephone Numbers from Company Website
+Search for Web Page Posting Patterns and Revision Numbers
+Searching Archive.org for Old Information about the Company
+Examine HTML Source Code of Web Pages
+Perform OSINT on Target’s Employees
+[*This section provides insights into publicly available employee information, including roles, email addresses, social media profiles, and professional networks, aiding reconnaissance and social engineering assessments.]
+List Key Employees and their Email Addresses
+Enumerate Key Email Addresses
+List Key Personnel of the Company and Mentions
+Look for Sensitive Information in Email Headers
+Open Source Intelligence (OSINT) using Automation Tools
+[*This section explains the automation tools and frameworks used to streamline OSINT collection and analysis.]
+Automate OSINT Process using Tools/Frameworks
+Document the Result
+[*List the key OSINT findings, successful results, discovered vulnerabilities, and insights to ensure accurate reporting and actionable recommendations.]
+Attack Surface Mapping
+[*This section outlines attack surface mapping techniques, including network scanning, live host discovery, port scanning, and service fingerprinting, to identify potential entry points and security risks.]
+Perform Traceroute Analysis
+Scanning
+Discover Live Hosts
+Perform Port Scanning
+Perform OS Banner Grabbing and Service Fingerprinting
+Map Internal Network
+URLs Tested | 
+Search Engine Used | 
+Found the Domain and Sub-domains of the Target Successfully | Yes | No
+Tools and Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Result Obtained
+Domain Names Identified | 
+Subdomains Identified | 
+Result Analysis
+Target URL | 
+Found the Parallel Domain Names of the Target Successfully | □ Yes                       □ No
+Tools/Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used 
+(if any) | 
+Result Obtained
+Parallel Domains Identified | IP Address | Country | Name Server/ Mail Server
+Result Analysis
+Domain Name | 
+Obtained Whois Data of the Target Successfully | □ Yes                          □ No
+Tools/ Services/ Commands Used | 
+Scripts Used (if any) | 
+AI Prompts Used 
+(if any) | 
+Result
+Registrars Searched | African Network Information Centre (AFRINIC)
+American Registry for Internet Numbers (ARIN)
+Asia-Pacific Network Information Centre (APNIC)
+Latin America and Caribbean Network Information Centre (LACNIC)
+Reseaux IP Europeans Network Coordination Centre (RIPE NCC)
+Any other specify
+Registrant Address | 
+Domain name details | 
+IP address and Network Range | 
+Physical Location | 
+Administrative Contact | 
+Technical Contact | 
+Record Creation Date | 
+Record Expiry Date | 
+Database Last Updated On | 
+Domain Servers | 
+Result Analysis
+URL | 
+Found IP Range Successfully | Yes | No
+IP Registries Used | 
+Whois Databases Used | 
+Result
+IP Range Identified | 
+Tools/Services/ Commands Used | 
+Result Analysis
+URL | 
+Found DNS Records of the Target Successfully | □ Yes                          □ No
+Tools/Services Used | 
+Commands Used | 
+Scripts Used 
+(if any) | 
+AI Tools/Prompts Used (if any) | 
+DNS Records Found
+Name | Class | Type | Data | TTL
+Other information obtained | 
+Result Analysis
+IP Range for Reverse DNS lookup | 
+Performed Reverse DNS Lookup Successfully | Yes | No
+Tools/Commands Used | 
+Result
+Domains/Hostnames Discovered | 
+DNS PTR records found | 
+Other Information Obtained | 
+Result Analysis
+Target URL | 
+Performed DNS Zone Transfer Successfully | Yes | No
+Tools and Commands Used
+Tool Name | [dig, nslookup, dnsrecon, etc.] | Command Executed | 
+Scripts Used  (if any) | 
+AI Tools/Prompts Used 
+(if any) | 
+Result Obtained
+Gathered DNS Information | 
+Identified Host Names | 
+Identified Machine Names | 
+Identified Usernames | 
+Identified IP Addresses | 
+Other Information Found | 
+Result Analysis
+Target URL | 
+Refined Web Searches using Google’s Advanced Operators | Yes | No
+Search Engine Used | 
+Google’s Advanced Operators Used | 
+Queries used to find, filter, and sort Specific Information | 
+Techniques Used | 
+Tools/Commands Used | 
+Scripts Used (if any) | 
+AI Tools/ Prompts Used (if any) | 
+Result
+GHDB Search Query Used | Information Gathered
+Result Analysis
+Target URL | 
+Recovered Maps | Yes | No
+Tools/Commands Used | 
+Result Obtained
+Location of the Organization | 
+GPS coordinates | 
+Neighboring companies and famous landmarks | 
+Result Analysis
+Target URL | 
+Identified Network Devices of the Target Successfully | □ Yes                                       □ No
+Search Engines Used | 
+Tools/Techniques Used | 
+Other Sources Used | [Google, LinkedIn, other Job Portals, etc.]
+Results Obtained
+Company’s Infrastructure in the Organization | Oracle database server
+Cisco routing devices
+Checkpoint firewalls
+Any other specify
+Network Devices Identified | 
+Result Analysis
+Target URL | 
+Obtained Contact Information from the Target Website Successfully | □ Yes                                       □ No
+Tools/Services Used | 
+Results Obtained
+Contact Numbers | 
+Email IDs | 
+Addresses | 
+Company’s Location and Branches | 
+Partner’s Information | 
+News updates and press releases | 
+Links to related or subsidiary sites | 
+Information about products, projects, or services | 
+Result Analysis
+Target URL | 
+Found Web Page Posting Patterns and Revision Numbers Successfully | □ Yes                                       □ No
+Tools/Services Used | 
+Result Obtained
+Page URL | Revision Date | Nature of the Revision
+Any other information found | 
+Result Analysis
+Target URL | 
+Found Old Information about the Target Company Successfully | □ Yes                                       □ No
+Tools/Services Used | 
+Results Obtained
+Page URL | Search Date | Page Found
+ | Yes | No
+ | Yes | No
+ | Yes | No
+ | Yes | No
+ | Yes | No
+ | Yes | No
+ | Yes | No
+ | Yes | No
+ | Yes | No
+ | Yes | No
+Any other information found | 
+Result Analysis
+Target URL | 
+Found Target’s HTML Source Code Successfully | □ Yes                                       □ No
+Tools/Services Used | 
+Results Obtained
+HTML Source | 
+Information Gathered | 
+Result Analysis
+Found the Target’s Key Employees and their Email IDs successfully | □ Yes                                       □ No
+Tools / Services / Commands Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Results Obtained
+Domain Name | Employee Name | Email IDs
+Result Analysis
+Target Domain | 
+Enumerated Target’s Key Email IDs successfully | □ Yes                                       □ No
+Tools/Websites Used | [Pastebin, HaveIBeenPwned, WhatBreach, SimplyEmail, etc.]
+Results Obtained
+Email IDs Discovered | Data Breaches Identified | Other Risks Detected
+1. | 
+2. | 
+3. | 
+4. | 
+Result Analysis
+Identified the Target’s Key Personnel and Mentions Successfully | □ Yes                                       □ No
+Tools/Services Used | [Cylect.io, Spokeo, Intelius, etc.]
+Social Networking Websites Used | [LinkedIn, Facebook, Pinterest, Instagram, etc.]
+AI Tools/Prompts Used | [BRANS24, etc.]
+Results Obtained
+Employee Name | 
+Contact Number | 
+Date of Birth | 
+Email Id | 
+Residential Address | 
+Resumes | 
+Work experience | 
+Completed projects | 
+Promotions | 
+Accomplishments | 
+Photo | □ Yes
+□ No
+Satellite pictures of private residencies | □ Yes
+□ No
+Social Media Mentions/Posts | □ Yes               □ No | Source | 
+Social Media Mentions/Posts | □ Yes               □ No | Source | 
+Social Media Mentions/Posts | □ Yes               □ No | Source | 
+Any other information found | 
+Result Analysis
+Found Sensitive Information in Target’s Email Headers Successfully | □ Yes                                       □ No
+Tools/Techniques Used | 
+Scripts Used (if any) | 
+AI Tools/Prompts Used (if any) | 
+Results Obtained
+Email ID | Recipient’s IP address | Information on browser and operating system | MIME-Version | Geo-location | Device Type
+1. | 
+2. | 
+3. | 
+4. | 
+5. | 
+Any other information found: | 
+Result Analysis
+Is OSINT Efforts automated by using Tools/ Frameworks/Scripts | Yes | No
+Tools/Frameworks/Scripts Used | [Maltego, FSOCIETY, PENTMENU, OSINT Framework, etc.]
+Information Gathered | 
+Findings/Conclusion | 
+Domain Information
+Domain names and subdomains | 
+IP address ranges | 
+DNS records | 
+Zone transfer results | 
+Whois data | 
+Physical location | 
+Infrastructure Details
+Hosting providers and servers | 
+Identified services and open ports | 
+Identified network devices (printers, routers, IoT devices, etc.) | 
+Identified technologies (CMS, web servers, frameworks, etc.) | 
+Employee and Contact Information
+Key personnel (names, roles, and contact details) | 
+Email addresses (personal and professional) | 
+Telephone numbers (personal and professional) | 
+Social media profiles and public posts | 
+News updates and press releases | 
+Latest products, projects, or services | 
+Publicly Accessible Data
+Sensitive files (e.g., backups, configs) accessible on websites | 
+Metadata extracted from public documents or images | 
+Information from forums, blogs, and social media | 
+Historical Data
+Archived website versions (via Wayback Machine) | 
+Historical IP allocations or domain ownership changes | 
+Breach and Leak Information
+Data from breach repositories (e.g., HaveIBeenPwned) | 
+Email IDs, credentials, or sensitive data exposed in public leaks | 
+Target URL/Domain | 
+Conducted Traceroute Successfully | Yes | No
+Tools/Services/Commands Used | 
+Information Extracted after conducting Traceroute
+IP Address | Response Time | Hop | Geolocation
+Any other information found | 
+Is the Network Diagram drawn successfully using Traceroute Analysis | □ Yes                                             □ No
+Result Analysis
+Network Scanned Successfully | □ Yes                                             □ No
+Tools/Services/Commands Used | 
+Scanning Information
+No. | Subnet Scanned | Port | Port State | Service
+Result Analysis
+Identified Active Hosts Successfully | Yes | No
+Tools/Commands Used | [Nmap, Netdiscover, etc.]
+Scripts Used (if any) | [Python, Bash, Ruby]
+AI Tools/Prompts Used (if any) | 
+Host Discovery Information
+Subnet Scanned | Host Up (IP Address) | MAC Address
+Result Analysis
+Conducted Port Scanning Successfully | Yes | No
+Types of Port Scans Performed | Single Port Scan
+Multiple Ports Scan
+All Ports Scan
+Port Range Scan
+Scanning Most Common Ports
+Specific TCP Ports Scan
+All TCP Ports/Full Open Scan
+All UDP Ports Scan
+Open Port Scan
+Half-Open Scan (Stealth Scan)
+Inverse TCP Flag Scan (NULL, FIN, Xmas)
+Maimon Scan
+ACK Flag Probe Scan
+Idle / IPID Header Scan
+TTL-Based Scan
+Window Scan
+SCTP INIT Scan
+SCTP COOKIE-ECHO Scan
+IPv6 Scan
+Any other specify
+Tools/Commands Used | [Nmap, ZMap, Masscan, Metasploit, Angry IP scanner, NetScanTools Pro, etc.]
+Scripts Used (if any) | [Python, Perl, etc.]
+AI Tools/Prompts Used (if any) | 
+Information Gathered through Port Scanning
+No. | IP Address/IP Range Scanned | MAC Address | Port (s) | State (open/closed/filtered) | Service
+1. | 
+2. | 
+3. | 
+4. | 
+5. | 
+6. | 
+7. | 
+8. | 
+9. | 
+10. | 
+11. | 
+12. | 
+13. | 
+14. | 
+15. | 
+16. | 
+17. | 
+18. | 
+19. | 
+20. | 
+Result Analysis
+Identified Target OS and Version Successfully | □ Yes                                             □ No
+Identified Services Successfully | □ Yes                                             □ No
+Tools/Services/Commands Used | [Nmap, p0f, Metasploit, etc.]
+Scripts Used (if any) | [Python, Ruby, Perl, etc.]
+AI Tools/Prompts Used (if any) | 
+Information Gathered through OS Banner Grabbing and Service Fingerprinting
+No. | Target IP Address | OS Name and Version | Port and State | Service
+Result Analysis
+Mapped the Target’s Internal Network Successfully | □ Yes                                             □ No
+Tools/Services Used | [Example: Gliffy]
+Information about the Target’s Internal Network
+List the Network Devices | Discovered | Make and Model
+Hubs | 
+Switches | 
+Servers | 
+Printers | 
+Workstations | 
+Wireless Access Points | 
+Firewalls | 
+Proxy Servers | 
+No. of Client Computers | 
+Others |  | ---------------------------------------
+---------------------------------------
+--------------------------------------
+Result Analysis

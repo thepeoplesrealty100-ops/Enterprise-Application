@@ -1,0 +1,139 @@
+Certified Penetration Testing Professional Exam 412-80
+SharPersist Cheat Sheet
+Certified Penetration Testing Professional
+SharPersist Cheat Sheet
+SharPersist
+Source: https://github.com
+SharPersist is a tool designed to establish and maintain persistence on a target system. It
+leverages various techniques to ensure that malicious payloads or scripts are executed even after
+a system reboot or user logoff. SharPersist provides stealthy and flexible methods to maintain
+access to compromised systems.
+Syntax
+Sharpersist -t <type> -c <command> [options]
+Arguments/Options
+-t Persistence technique
+-c Command to execute
+-a Arguments to command to execute (if applicable)
+-f The file to create/modify
+-k Registry key to create/modify
+-v Registry value to create/modify
+-n Scheduled task name or service name
+-m Method (add, remove, check, list)
+-o Optional add-ons
+-h Help page
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SharPersist Cheat Sheet
+Persistence Techniques (-t)
+Technique Description
+keepass Backdoor KeePass config file
+reg Registry key addition/modification
+schtaskbackdoor Backdoor scheduled task by adding an additional
+action to it
+startupfolder LNK file in startup folder
+tortoisesvn Tortoise SVN hook script
+service Create new Windows service
+schtask Create new scheduled task
+Persistence Methods (-m)
+Method Description
+add Add persistence technique
+remove Remove persistence technique
+check Perform dry-run of persistence technique
+list List current entries for persistence technique
+Optional Add-Ons (-o)
+Add-On Description
+Optional add-on for environment variable
+env
+obfuscation for registry
+hourly Optional add-on for scheduled task frequency
+daily Optional add-on for scheduled task frequency
+logon Optional add-on for scheduled task frequency
+Registry Keys (-k)
+Registry Key Description
+hklmrun HKEY_LOCAL_MACHINE Run
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SharPersist Cheat Sheet
+hklmrunonce HKEY_LOCAL_MACHINE RunOnce
+hklmrunonceex HKEY_LOCAL_MACHINE RunOnceEx
+hkcurun HKEY_CURRENT_USER Run
+hkcurunonce HKEY_CURRENT_USER RunOnce
+logonscript Logon script
+stickynotes Sticky Notes
+userinit Userinit
+Example Commands
+Command Description
+SharPersist -t keepass -c Adds a backdoor to
+"C:\Windows\System32\cmd.exe" -a "/c calc.exe" -f KeePass configuration
+"C:\Users\username\AppData\Roaming\KeePass\KeePass.c file to execute calc.exe
+onfig.xml" -m add via cmd.exe.
+Adds a registry key in
+SharPersist -t reg -c "C:\Windows\System32\cmd.exe" HKEY_CURRENT_USER
+-a "/c calc.exe" -k "hkcurun" -v "Test Stuff" -m add \Run to execute
+calc.exe via cmd.exe.
+Adds a registry key in
+HKEY_CURRENT_USER
+SharPersist -t reg -c "C:\Windows\System32\cmd.exe"
+\Run with
+-a "/c calc.exe" -k "hkcurun" -v "Test Stuff" -m add
+environment variable
+-o env
+obfuscation to execute
+calc.exe via cmd.exe.
+Adds a logon script in
+SharPersist -t reg -c "C:\Windows\System32\cmd.exe"
+the registry to execute
+-a "/c calc.exe" -k "logonscript" -m add
+calc.exe via cmd.exe
+Adds a backdoor
+action to an existing
+SharPersist -t schtaskbackdoor -c
+scheduled task named
+"C:\Windows\System32\cmd.exe" -a "/c calc.exe" -n
+"Something Cool" to
+"Something Cool" -m add
+execute calc.exe via
+cmd.exe.
+Adds a shortcut in the
+SharPersist -t startupfolder -c
+startup folder to
+"C:\Windows\System32\cmd.exe" -a "/c calc.exe" -f
+execute calc.exe via
+"Some File" -m add
+cmd.exe.
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SharPersist Cheat Sheet
+Adds a backdoor to
+SharPersist -t tortoisesvn -c
+Tortoise SVN hook
+"C:\Windows\System32\cmd.exe" -a "/c calc.exe" -m
+script to execute
+add
+calc.exe via cmd.exe.
+Creates a new
+SharPersist -t service -c Windows service
+"C:\Windows\System32\cmd.exe" -a "/c calc.exe" -n named "Some Service"
+"Some Service" -m add to execute calc.exe via
+cmd.exe.
+Creates a new
+scheduled task named
+SharPersist -t schtask -c
+"Some Task" to
+"C:\Windows\System32\cmd.exe" -a "/c echo 123 >>
+execute cmd.exe with
+c:\123.txt" -n "Some Task" -m add
+arguments to append
+"123" to c:\123.txt
+Creates a new
+scheduled task named
+SharPersist -t schtask -c "Some Task" to
+"C:\Windows\System32\cmd.exe" -a "/c echo 123 >> execute cmd.exe with
+c:\123.txt" -n "Some Task" -m add -o hourly arguments to append
+"123" to c:\123.txt
+every hour.
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

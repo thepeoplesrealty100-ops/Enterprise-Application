@@ -1,0 +1,36 @@
+# Aircrack-ng Suite — Quick Reference
+# Source: CPENT module 05/Wireless practice
+# Requires: aircrack-ng suite, monitor-mode capable NIC
+
+## Put interface into monitor mode
+airmon-ng start wlan0
+airmon-ng check kill        # kill interfering processes
+
+## Scan for networks
+airodump-ng wlan0mon
+
+## Capture handshake for a specific AP
+airodump-ng -c <CHANNEL> --bssid <AP_MAC> -w capture_file wlan0mon
+
+## Deauth client to force re-association (capture handshake)
+aireplay-ng --deauth 10 -a <AP_MAC> -c <CLIENT_MAC> wlan0mon
+
+## Crack WPA2 handshake with wordlist
+aircrack-ng -w /usr/share/wordlists/rockyou.txt -b <AP_MAC> capture_file.cap
+
+## WEP crack (IVs collection then crack)
+airodump-ng -c <CH> --bssid <AP_MAC> -w wep_cap wlan0mon
+# wait for 100k+ IVs, then:
+aircrack-ng wep_cap.cap
+
+## Airgraph-ng (visualize client-AP relationships)
+airodump-ng -w dump wlan0mon
+airgraph-ng -i dump-01.csv -o graph.png -g CAPR    # Client-AP relationship
+airgraph-ng -i dump-01.csv -o probes.png -g CPG    # Common probe graph
+
+## Airodump-ng key flags
+# -c  Channel
+# -w  Write output prefix
+# --bssid  Filter by AP MAC
+# --essid  Filter by SSID
+# -t  Encryption filter (WEP|WPA|WPA1|WPA2|TKIP|CCMP)

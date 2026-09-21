@@ -1,0 +1,182 @@
+Certified Penetration Testing Professional Exam 412-80
+Gobuster Cheat Sheet
+Certified Penetration Testing Professional
+Gobuster Cheat Sheet
+Gobuster
+Source: https://github.com
+Gobuster is a Go programming-based directory scanner that allows attackers to perform fast-
+paced enumeration of hidden files and directories of an application. It is a convenient command-
+oriented tool used to brute-force URIs in websites, DNS subdomains, names of the virtual hosts
+on the target server, etc.
+The following table lists the various Gobuster commands and their respective operations:
+1. <dns> Mode Options
+2. <dir> Mode Options
+3. <vhost> Mode Options
+4. <dns> Mode Commands
+5. <dir> Mode Commands
+6. <vhost> Mode Commands
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Gobuster Cheat Sheet
+1. <dns> Mode Options
+Syntax
+gobuster dns [flags]
+Flags
+-d, --domain string Target domain
+-h, --help Help for DNS
+-r, --resolver string Use custom DNS server
+-c, --showcname Display CNAME records
+--showips Display IP addresses
+--timeout duration DNS resolver timeout
+-i,
+Force continued operation when wildcard
+--wildcard
+found
+Global Flags
+-z, --noprogress Do not display progress
+-o, --output string Output file to write results defaults to stdout
+-q, --quiet Do not print banner and other noise
+--threads int Number of concurrent threads, default is 10
+-t,
+Time each thread waits between requests (e.g.
+--delay duration
+1500ms)
+-v, --verbose Enables verbose output
+-w, --wordlist string Path to wordlist
+2. <dir> Mode Options
+Syntax
+gobuster dir [flags]
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Gobuster Cheat Sheet
+Flags
+-f, --addslash Adds to each request
+-c, --cookies string Cookies to use for the requests
+Search for backup files by appending multiple
+-d, --discover-backup
+backup extensions
+-e, --expanded Expanded mode, print full URLs
+-x, --extensions string File extension(s) to search for
+-r, --followredirect Follow redirects
+Specify HTTP headers, -H 'Header1: val1' -H
+-H, --headers stringArray
+'Header2: val2'
+-h, --help Help for dir
+-l, --includelength Include the length of the body in the output
+-k, -- no-tls-validation Skip TLS certificate verification
+-k, --insecuressl Skip SSL certificate verification
+-n, --nostatus Do not print status codes
+-P, --password string Password for basic authentication
+-p, --proxy string Proxy to use for requests [http(s)://host:port]
+-s, --statuscodes string Positive status codes
+--statuscodesblacklist
+Negative status codes
+string
+-b,
+--timeout duration HTTP Timeout
+-u, --url string Target URL
+-a, --useragent string Set the User-Agent string
+-U, --username string Username for Basic Auth
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Gobuster Cheat Sheet
+Force continued operation when wildcard
+--wildcard
+found
+Global Flags
+-z, --noprogress Do not display progress
+-o, --output string Output file to write results to (defaults to stdout)
+-q, --quiet Do not print the banner and other noise
+--threads int Number of concurrent threads, default is 10
+-t,
+--delay duration Time each thread waits between requests
+-v, --verbose Verbose output
+-w, --wordlist string Path to the wordlist
+--no-color Disable color output
+--no-error Do not display errors
+3. <vhost> Mode Options
+Syntax
+gobuster vhost [flags]
+Flags
+-c, --cookies string Cookies used for requests
+-r, --followredirect Follow redirects
+Specify HTTP headers, -H 'Header1: val1' -H
+-H, --headers stringArray
+'Header2: val2'
+-h, --help Help for vhost
+Use the following HTTP method (default
+-m, --method string
+"GET")
+-k, --insecuressl Skip SSL certificate verification
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Gobuster Cheat Sheet
+-k, --no-tls-validation Skip TLS certificate verification
+--password string Password for basic authentication
+-P,
+--timeout duration HTTP Timeout (default 10s)
+-u, --url string Target URL
+-a, --useragent string Set the User-Agent string
+-U, --username string Username for basic authentication
+Global Flags
+-z, --noprogress Do not display progress
+-o, --output string Output file to write results
+-q, --quiet Do not print the banner and other noise
+--threads int Number of concurrent threads
+-t,
+--delay duration Time each thread waits between requests
+-v, --verbose Verbose output
+-w, --wordlist string Path to the wordlist
+--no-color Disable color output
+--no-error Do not display errors
+4. <dns> Mode Commands
+Command Description
+gobuster dns -d <Target Website> Set number of threads to brute-force
+-t 50 -w common-names.txt directories or subdomain names
+gobuster dns -d <Target website>
+Display all the sub-domains
+-w ~/wordlists/subdomains.txt
+gobuster dns -d <Target website> Display IP addresses of the obtained
+-w ~/wordlists/subdomains.txt -i subdomains
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Gobuster Cheat Sheet
+gobuster dns -d <Target
+URL/Domain> -w Detects wildcard DNS
+~/wordlists/subdomains.txt
+gobuster dns -d <Target
+URL/Domain> -w Forces processing of a domain consisting of
+~/wordlists/subdomains.txt -- wildcard entries
+wildcard
+5. <dir> Mode Commands
+Command Description
+gobuster dir -u <Target URL> -c
+'session=123456' -t 50 -w common- Lists out files with specific extensions
+files.txt -x .php,.html
+gobuster dir -u <Target
+URL/Domain> -w Obtains files or directories
+~/wordlists/shortlist.txt
+gobuster dir -u <Target
+URL/Domain> -w Default options with disabled status code
+~/wordlists/shortlist.txt -n
+gobuster dir -u <Target
+URL/Domain> -w Display verbose output
+~/wordlists/shortlist.txt -v
+gobuster dir -u <Target
+URL/Domain> -w Display content length
+~/wordlists/shortlist.txt -l
+gobuster dir -u <Target website> Disable the output of the result status code
+-w ~/wordlists/shortlist.txt -q - with expanded mode looking like ‘grep
+n -e
+mode’
+6. <vhost> Mode Commands
+Command Description
+gobuster vhost -u <Target Display subdomains/virtual hosts obtained
+website> -w common-vhosts.txt from the custom wordlist
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

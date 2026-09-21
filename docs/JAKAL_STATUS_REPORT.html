@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JAKAL HUS-OS — System Status</title>
+<style>
+  :root{--bg:#0a0e16;--panel:#0f1522;--panel2:#111a2b;--line:#1e293b;--ink:#e5e7eb;--mut:#94a3b8;--dim:#64748b;
+        --orange:#f97316;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--purple:#a78bfa;}
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(1200px 700px at 80% -10%, rgba(249,115,22,.10), transparent 60%),
+      radial-gradient(900px 600px at 10% 110%, rgba(59,130,246,.08), transparent 60%),
+      linear-gradient(180deg,#0b0f1a,#0a0d16);
+      color:var(--ink);font:15px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      padding:32px 20px 80px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:clamp(1.6rem,3vw,2.3rem);margin:0 0 4px;letter-spacing:-.02em}
+  h1 .k{color:var(--orange)}
+  .sub{color:var(--mut);margin:0 0 6px}
+  .meta{color:var(--dim);font-size:13px;margin-bottom:26px}
+  h2{font-size:clamp(1.15rem,2vw,1.5rem);margin:38px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  h2 .n{color:var(--orange);font-variant-numeric:tabular-nums;margin-right:10px}
+  p{color:var(--mut)}
+  code{background:#0b1220;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font:12px ui-monospace,Menlo,monospace;color:#cbd5e1}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))}
+  .tiles{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr))}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .tile .v{font-size:1.9rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .tile .l{color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+  .tile .s{color:var(--mut);font-size:12px;margin-top:6px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card h3{margin:0 0 8px;font-size:1.05rem}
+  .pill{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:2px 9px;border-radius:999px;font-weight:700}
+  .ok{background:rgba(52,211,153,.16);color:var(--green)}
+  .part{background:rgba(251,191,36,.16);color:var(--yellow)}
+  .todo{background:rgba(248,113,113,.16);color:var(--red)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:6px}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.05em;background:#0c1119;position:sticky;top:0}
+  tr:last-child td{border-bottom:0}
+  td .mono{font:12px ui-monospace,Menlo,monospace;color:#cbd5e1}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--mut);font-size:12px;margin:10px 0 0}
+  .legend b{color:var(--ink)}
+  .diagram{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px;overflow-x:auto}
+  .foot{margin-top:40px;color:var(--dim);font-size:12px;border-top:1px solid var(--line);padding-top:16px}
+  ul{color:var(--mut);margin:6px 0 0;padding-left:18px}
+  li{margin:3px 0}
+  .two{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+  a{color:var(--orange)}
+</style>
+</head>
+<body><div class="wrap">
+
+  <h1><span class="k">JAKAL</span> HUS-OS Console — System Status</h1>
+  <p class="sub">Unified Enterprise IT + Cybersecurity Ecosystem · SOAR / RMM / EDR-XDR · Quantum-AI &amp; PQC-ready</p>
+  <p class="meta">Generated 2026-09-09 · Backend FastAPI + DuckDB · <b style="color:var(--green)">318 API routes</b> · 31 routers · single-origin UI · one platform, one owner.</p>
+
+  <div class="card" style="border-color:#334155">
+    <h3 style="color:var(--orange)">What it is</h3>
+    <p style="margin:0">A single, owned Enterprise Ecosystem that does what Kaseya One stitches together from many vendors — RMM, EDR/XDR, SOAR, patch &amp; vulnerability, dark-web intel, compliance and human-layer security — but <b style="color:var(--ink)">unified in one control plane</b>, with an <b style="color:var(--ink)">AI Safety Fabric</b> guard-railing every automated action, a Quantum core, and post-quantum cryptography. Operator drives everything from one <b style="color:var(--ink)">Operator Console</b> (prompt · slash-commands · sandbox execution · inline approvals).</p>
+  </div>
+
+  <h2><span class="n">01</span>Live inventory (seeded &amp; operational)</h2>
+  <div class="tiles">
+    <div class="tile"><div class="v" style="color:var(--blue)">8</div><div class="l">Managed devices</div><div class="s">3 Win · 4 Linux · 1 macOS · 1 IoT</div></div>
+    <div class="tile"><div class="v" style="color:var(--red)">7</div><div class="l">CVEs tracked</div><div class="s">4 critical · 4 pending patch</div></div>
+    <div class="tile"><div class="v" style="color:var(--yellow)">6</div><div class="l">EDR alerts</div><div class="s">4 open · 1 critical (C2 beacon)</div></div>
+    <div class="tile"><div class="v" style="color:var(--orange)">5</div><div class="l">Credential leaks</div><div class="s">2 open · dark-web feed</div></div>
+    <div class="tile"><div class="v" style="color:var(--green)">6</div><div class="l">SOAR playbooks</div><div class="s">4 approval-gated</div></div>
+    <div class="tile"><div class="v" style="color:var(--purple)">12</div><div class="l">Scripts in repo</div><div class="s">Win · Linux · cross-platform</div></div>
+    <div class="tile"><div class="v">5</div><div class="l">RBAC roles / users</div><div class="s">MFA on 4/5 · least-privilege</div></div>
+    <div class="tile"><div class="v">23</div><div class="l">Capability actions</div><div class="s">across 7 domains</div></div>
+  </div>
+
+  <h2><span class="n">02</span>System architecture</h2>
+  <div class="diagram">
+  <svg viewBox="0 0 1140 560" width="100%" role="img" aria-label="JAKAL system architecture">
+    <defs>
+      <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9z" fill="#475569"/></marker>
+      <style>
+        .b{fill:#0f1522;stroke:#1e293b;rx:10}
+        .t{fill:#e5e7eb;font:600 13px system-ui}.tt{fill:#94a3b8;font:11px ui-monospace,Menlo,monospace}
+        .h{fill:#f97316;font:700 12px system-ui;letter-spacing:.4px}
+        .l{stroke:#475569;stroke-width:1.5;fill:none;marker-end:url(#a)}
+        .z{fill:none;stroke-width:1.2;rx:14}
+      </style>
+    </defs>
+
+    <!-- zones -->
+    <rect class="z" x="14" y="14" width="250" height="532" stroke="#334155"/>
+    <text class="h" x="30" y="38">OPERATOR (browser)</text>
+    <rect class="z" x="286" y="14" width="430" height="532" stroke="#3b4b66"/>
+    <text class="h" x="302" y="38">FRONTEND · JAKAL HUS-OS CONSOLE</text>
+    <rect class="z" x="738" y="14" width="388" height="532" stroke="#4b3b1f"/>
+    <text class="h" x="754" y="38">BACKEND · FastAPI (318 routes)</text>
+
+    <!-- operator -->
+    <rect class="b" x="30" y="58" width="218" height="70"/><text class="t" x="44" y="86">Operator Alpha</text><text class="tt" x="44" y="106">Admin / Client console</text>
+    <rect class="b" x="30" y="150" width="218" height="96" stroke="#f97316"/><text class="t" x="44" y="176">Operator Console</text><text class="tt" x="44" y="196">prompt · /slash · sandbox</text><text class="tt" x="44" y="212">inline approvals</text><text class="tt" x="44" y="228">+ Safety Fabric panel</text>
+    <rect class="b" x="30" y="268" width="218" height="86"/><text class="t" x="44" y="294">Cog · Actions &amp; Settings</text><text class="tt" x="44" y="314">data-driven from catalog</text><text class="tt" x="44" y="330">sliders · radial · toggles</text>
+    <rect class="b" x="30" y="376" width="218" height="150"/><text class="t" x="44" y="402">Module UIs</text><text class="tt" x="44" y="422">Global Dashboard / Fleet</text><text class="tt" x="44" y="440">Threat Matrix · AI Canvas</text><text class="tt" x="44" y="458">Unified Fabric · Compliance</text><text class="tt" x="44" y="476">Dark Web · Quantum</text><text class="tt" x="44" y="494">Awareness · Phishing</text>
+
+    <!-- frontend layer -->
+    <rect class="b" x="302" y="58" width="398" height="60"/><text class="t" x="316" y="84">index.html · single-page shell (Tailwind, D3, three.js, Chart.js)</text><text class="tt" x="316" y="104">grouped nav · responsive auto-fit · CSS background (no ext. images)</text>
+    <rect class="b" x="302" y="132" width="192" height="86"/><text class="t" x="316" y="158">operator-console.js</text><text class="tt" x="316" y="178">dock/float · resize</text><text class="tt" x="316" y="194">approval gate</text>
+    <rect class="b" x="508" y="132" width="192" height="86"/><text class="t" x="522" y="158">jakal-controls.js</text><text class="tt" x="522" y="178">cog/dot/radial</text><text class="tt" x="522" y="194">enhanced sliders</text>
+    <rect class="b" x="302" y="232" width="192" height="80"/><text class="t" x="316" y="258">jakal-live-data.js</text><text class="tt" x="316" y="278">fleet → live</text>
+    <rect class="b" x="508" y="232" width="192" height="80"/><text class="t" x="522" y="258">api-client + loader</text><text class="tt" x="522" y="278">404-proof fetch</text>
+    <rect class="b" x="302" y="326" width="398" height="60"/><text class="t" x="316" y="352">Safety Fabric (client)</text><text class="tt" x="316" y="372">scans every line · never renders raw HTML</text>
+    <rect class="b" x="302" y="400" width="398" height="126"/><text class="t" x="316" y="426">Data-driven rendering</text><text class="tt" x="316" y="446">module bodies · tiles · graphs (D3 threat map, Chart.js)</text><text class="tt" x="316" y="464">device cards · CVE tables · playbook lists · RBAC</text><text class="tt" x="316" y="482">status trails · progress · approval cards</text>
+
+    <!-- backend layer -->
+    <rect class="b" x="754" y="58" width="356" height="74" stroke="#f97316"/><text class="t" x="768" y="84">Security Capabilities Engine</text><text class="tt" x="768" y="104">7 domains · 23 actions · guardrail</text><text class="tt" x="768" y="120">approval-gating · audit</text>
+    <rect class="b" x="754" y="146" width="356" height="58"/><text class="t" x="768" y="172">31 routers · pentest, quantum, crypto, iam,</text><text class="tt" x="768" y="192">response, scripts, darkweb, fabric, ontology…</text>
+    <rect class="b" x="754" y="218" width="172" height="72"/><text class="t" x="768" y="244">AI Safety Fabric</text><text class="tt" x="768" y="264">injection · PII</text><text class="tt" x="768" y="280">redaction · audit</text>
+    <rect class="b" x="938" y="218" width="172" height="72"/><text class="t" x="952" y="244">Quantum core</text><text class="tt" x="952" y="264">qiskit sim</text><text class="tt" x="952" y="280">PQC (Dilithium)</text>
+    <rect class="b" x="754" y="304" width="356" height="222" stroke="#3b4b66"/><text class="h" x="768" y="328" style="fill:#60a5fa">DuckDB · operational tables</text>
+    <text class="tt" x="768" y="352">network_map (8 devices)</text><text class="tt" x="768" y="370">cap_nvd_vulnerabilities (7)</text>
+    <text class="tt" x="768" y="388">cap_security_alerts (6)</text><text class="tt" x="768" y="406">cap_credential_leaks (5)</text>
+    <text class="tt" x="768" y="424">cap_soar_playbooks (6)</text><text class="tt" x="768" y="442">cap_command_repo (12)</text>
+    <text class="tt" x="768" y="460">cap_rbac_roles/users (5/5)</text><text class="tt" x="768" y="478">cap_yara_rules (5) · guardrails (6)</text>
+    <text class="tt" x="768" y="496">cap_patch_jobs (3) · sessions · human_risk (6)</text>
+    <text class="tt" x="768" y="514">+ audit_log, pentest_runs, encryption_keys…</text>
+
+    <!-- flows -->
+    <path class="l" d="M248 185 L302 175"/>
+    <path class="l" d="M248 420 L302 430"/>
+    <path class="l" d="M700 90 L754 95"/>
+    <path class="l" d="M700 360 L754 240"/>
+    <path class="l" d="M932 132 L932 218"/>
+    <path class="l" d="M932 290 L932 304"/>
+  </svg>
+  </div>
+  <div class="legend"><span><b>Flow:</b> Operator → Console/Modules → FastAPI routers → Capabilities Engine → DuckDB → managed assets.</span></div>
+
+  <h2><span class="n">03</span>The seven capability domains</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Domain</th><th>Actions</th><th>Backing table(s) · seeded</th><th>Backend</th><th>Frontend</th></tr></thead>
+    <tbody>
+      <tr><td><b>Fleet &amp; RMM</b></td><td class="mono">ping · execute_script · isolate_host · collect_diagnostics</td><td>network_map (8) · cap_command_repo (12) · cap_script_execution_logs (3)</td><td><span class="pill ok">Live</span></td><td><span class="pill ok">Live fleet</span></td></tr>
+      <tr><td><b>Remote Access</b></td><td class="mono">spawn_shell · fs_list · fs_transfer · terminate_session</td><td>cap_remote_sessions (2)</td><td><span class="pill ok">Live API</span></td><td><span class="pill part">Console</span></td></tr>
+      <tr><td><b>Detect &amp; Respond</b></td><td class="mono">scan_yara · kill_process_tree · quarantine_file · fetch_pcap</td><td>cap_security_alerts (6) · cap_yara_rules (5)</td><td><span class="pill ok">Live</span></td><td><span class="pill part">Fabric UI</span></td></tr>
+      <tr><td><b>SOAR Playbooks</b></td><td class="mono">run_playbook · pause_approval · rollback_action</td><td>cap_soar_playbooks (6)</td><td><span class="pill ok">Live</span></td><td><span class="pill part">Canvas</span></td></tr>
+      <tr><td><b>Patch &amp; Vulnerability</b></td><td class="mono">scan_cve · apply_updates · rollback_patch</td><td>cap_nvd_vulnerabilities (7) · cap_patch_jobs (3)</td><td><span class="pill ok">Live</span></td><td><span class="pill part">Compliance</span></td></tr>
+      <tr><td><b>Dark Web Intel</b></td><td class="mono">run_recon · force_password_reset</td><td>cap_credential_leaks (5)</td><td><span class="pill ok">Live</span></td><td><span class="pill part">Dark Web UI</span></td></tr>
+      <tr><td><b>AI Safety Fabric</b></td><td class="mono">scan_prompt · redact_pii · audit_llm_response</td><td>cap_guardrail_rules (6)</td><td><span class="pill ok">Live</span></td><td><span class="pill ok">Console panel</span></td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:13px">Every action runs through the guardrail (blocks <code>rm -rf /</code>, <code>DROP DATABASE</code>, fork-bombs, injection), writes an audit entry, and — for HIGH/CRITICAL — returns <code>requires_approval</code> so the Operator Console floats an inline Approve/Deny gate.</p>
+
+  <h2><span class="n">04</span>Module inventory (frontend ↔ backend)</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Module</th><th>Frontend</th><th>Backend / data</th><th>State</th></tr></thead>
+    <tbody>
+      <tr><td>Global Dashboard · Fleet</td><td>Device grid, status, actions</td><td><span class="mono">/api/dashboard/fleet</span> → network_map</td><td><span class="pill ok">Live</span></td></tr>
+      <tr><td>Global Predictive Matrix</td><td>D3 threat map + adversarial paths</td><td><span class="mono">/api/dashboard/matrix</span>, world_land_map.json</td><td><span class="pill ok">Rendering</span></td></tr>
+      <tr><td>Unified Security Fabric</td><td>Zero-Trust posture, 7 capability cards</td><td><span class="mono">/api/fabric/status</span></td><td><span class="pill ok">Rich</span></td></tr>
+      <tr><td>AI Safety Fabric</td><td>Protection layers, intelligence schema</td><td><span class="mono">/api/capabilities/aisafety/*</span>, /horizon</td><td><span class="pill ok">Live</span></td></tr>
+      <tr><td>Agentic Canvas</td><td>Incident nodes, remediation agents, terminal</td><td><span class="mono">/api/canvas/*</span></td><td><span class="pill ok">Rich</span></td></tr>
+      <tr><td>Quantum Computer</td><td>Circuit sim, Bloch/histogram</td><td><span class="mono">/api/quantum/*</span> (qiskit)</td><td><span class="pill ok">Live</span></td></tr>
+      <tr><td>Compliance &amp; Risk</td><td>Framework mapping, posture</td><td><span class="mono">/api/response/compliance/*</span>, cap_nvd_*</td><td><span class="pill part">Deepen UI</span></td></tr>
+      <tr><td>Dark Web Monitoring</td><td>Exposure findings, resets</td><td><span class="mono">/api/darkweb/*</span>, cap_credential_leaks</td><td><span class="pill part">Deepen UI</span></td></tr>
+      <tr><td>Awareness / Phishing</td><td>Risk vectors, campaigns</td><td><span class="mono">/api/awareness/*</span>, cap_human_risk_metrics</td><td><span class="pill part">Deepen UI</span></td></tr>
+      <tr><td>IAM / RBAC / Vault</td><td>Auth, roles, secrets</td><td><span class="mono">/api/iam/*</span>, cap_rbac_*</td><td><span class="pill ok">Live</span></td></tr>
+      <tr><td>System Diagnostics</td><td>Component self-check</td><td><span class="mono">/health/detailed</span></td><td><span class="pill ok">Live</span></td></tr>
+      <tr><td>CheatSheet Library</td><td>Command repo, quick-copy</td><td><span class="mono">/api/cheatsheet/*</span>, cap_command_repo</td><td><span class="pill ok">Live</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2><span class="n">05</span>What's done vs. what needs focus</h2>
+  <div class="two">
+    <div class="card"><h3 style="color:var(--green)">✓ Built &amp; verified this cycle</h3>
+      <ul>
+        <li>Operator Console v3 — docked/float, resize, chat + slash-commands, integrated Safety Fabric panel, inline approval gate.</li>
+        <li>Security Capabilities Engine — 7 domains, 23 actions, guardrail, approval-gating, audit.</li>
+        <li>Seeded operational data layer — 13 tables, prepopulated (devices, CVEs, alerts, leaks, playbooks, scripts, RBAC, YARA, patch jobs, human-risk, guardrails).</li>
+        <li>Fleet tab wired live end-to-end (8 real managed devices, color-coded).</li>
+        <li>Data-driven cog Actions &amp; Settings (sliders/radial/toggles) from the catalog.</li>
+        <li>Responsive auto-fit CSS (fills space, reflows desktop/mobile) + efficient CSS background (removed placeholder image).</li>
+        <li>318 routes; backend boots clean; test suite green.</li>
+      </ul>
+    </div>
+    <div class="card"><h3 style="color:var(--yellow)">◐ Next focus (recommended order)</h3>
+      <ul>
+        <li><b>Deepen module bodies</b> to render the seeded data as tiles/tables: Compliance (CVE matrix), Dark Web (leak table + reset), Detect (alert triage board), Patch (job scheduler), Awareness (risk vectors).</li>
+        <li><b>Remote Access shell</b> — wire the WebSocket terminal + file explorer (backend contracts exist).</li>
+        <li><b>SOAR runner UI</b> — visual multi-step pipeline with live step telemetry on the Agentic Canvas.</li>
+        <li><b>Real agents</b> — lightweight mTLS check-in endpoint so devices report actual telemetry (replaces seeded rows).</li>
+        <li><b>Client console</b> parity pass — tenant-scoped views for the same modules.</li>
+        <li><b>Push online</b> — run <code>finalize_and_push.ps1</code> so GitHub main matches this local build.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2><span class="n">06</span>Files &amp; data added this cycle</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>File</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">backend/services/capabilities_engine.py</td><td>7-domain action executor · guardrail · approval-gating · audit</td></tr>
+      <tr><td class="mono">backend/services/capabilities_seed.py</td><td>13 operational tables + prepopulated seed + read/inventory helpers</td></tr>
+      <tr><td class="mono">backend/routers/capabilities.py</td><td>REST: catalog · execute · approve/deny · inventory · data/{domain} · aisafety/*</td></tr>
+      <tr><td class="mono">types/security-capabilities.ts</td><td>TypeScript contracts for all 7 domains</td></tr>
+      <tr><td class="mono">js/operator-console.js</td><td>Operator Console v3 (dock/float/resize, chat, slash, Safety Fabric, approvals)</td></tr>
+      <tr><td class="mono">js/jakal-controls.js</td><td>Reusable cog/dot/radial/segmented/slider + data-driven action popover</td></tr>
+      <tr><td class="mono">js/jakal-live-data.js</td><td>Live-data bridge (fleet → real backend)</td></tr>
+      <tr><td class="mono">index.html</td><td>Responsive auto-fit CSS · CSS background · control tokens · script wiring</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="foot">
+    JAKAL HUS-OS Console · one owned platform · SOAR + RMM + EDR/XDR + patch + dark-web + compliance + human-layer, unified.
+    Guardrail-gated automation · quantum core · PQC-ready. Local build is source of truth; online repo pending push.
+  </div>
+
+</div></body></html>

@@ -1,0 +1,82 @@
+Certified Penetration Testing Professional Exam 412-80
+SMBeagle Cheat Sheet
+Certified Penetration Testing Professional
+SMBeagle Cheat Sheet
+SMBeagle
+Source: https://github.com
+SMBeagle is a cross-platform (SMB) fileshare auditing tool that hunts out all files it can see in the
+network and reports if the file can be read and/or written. All these findings are streamed out to
+either a CSV file or an elasticsearch host. SMBeagle can scan an entire network to discover all
+accessible SMB shares.
+Syntax
+SMBeagle.exe -e [Target network]
+Options
+-c, --csv-file Outputs results to a CSV file by providing the file path.
+Outputs results to Elasticsearch by providing the
+-e, --elasticsearch-host
+Elasticsearch hostname.
+--elasticsearch-port Specifies a custom port for Elasticsearch if required.
+Enumerates only one file's permissions per directory for
+-f, --fast
+a faster scan.
+Scans the local shares on the machine where SMBeagle is
+-l, --scan-local-shares
+run.
+-D, --disable-network- Disables network discovery, requiring manual
+discovery specification of networks to scan.
+Manually adds a network to scan. Multiple networks can
+-n, --network
+be specified.
+-N, --exclude-network Excludes specified networks from scanning. Multiple
+<network> networks can be specified.
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SMBeagle Cheat Sheet
+-h, --host <host> Manually adds a host to scan.
+-H, --exclude-host <host> Excludes specified hosts from scanning.
+-q, --quiet Disables unnecessary output for a quieter run.
+Excludes shares with the specified name from scanning.
+-S, --exclude-share <share>
+Multiple shares can be specified.
+Only scans shares with the specified name. Multiple
+-s, --share <share>
+shares can be specified.
+-E, --exclude-hidden-shares Excludes hidden shares (shares ending with $).
+-v, --verbose Provides more detailed output during the scan.
+Sets the maximum network size (in CIDR notation) to scan
+-m, --max-network-cidr-size
+for SMB hosts. Default is 20.
+-A, --dont-enumerate-acls Skips the enumeration of file ACLs for a faster scan.
+-d, --domain <domain> Specifies the domain for connecting to SMB.
+Specifies the username for connecting to SMB. This is
+-u, --username <username>
+mandatory on Linux.
+Specifies the password for connecting to SMB. This is
+-p, --password <password>
+mandatory on Linux.
+--help Displays the help screen with all available options.
+--version Displays version information for SMBeagle.
+SMBeagle Commands
+Command Description
+Starts network scanning and directories’
+SMBeagle.exe -e [Target network] enumeration on the hosts present in the target
+network
+SMBeagle.exe -l -c output3.csv Scans the local shares and output to a CSV file
+./SMBeagle.exe -c out.csv -f Output to a CSV file with fast enumeration
+./SMBeagle.exe -n 1.0.0.1/32 Public IP scanning by declaring manually
+Outputs the results of the scan to an Elasticsearch
+SMBeagle -e 127.0.0.1 instance running at the specified IP address
+(127.0.0.1)
+SMBeagle -c out.csv -e 127.0.0.1 Output to Elasticsearch and CSV
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+SMBeagle Cheat Sheet
+SMBeagle -D -e 127.0.0.1 -n Disable network discovery and provide manual
+192.168.12.0/23 192.168.15.0/24 networks
+Skips the enumeration of Access Control Lists
+SMBeagle -A -e 127.0.0.1
+(ACLs) to speed up the scan
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

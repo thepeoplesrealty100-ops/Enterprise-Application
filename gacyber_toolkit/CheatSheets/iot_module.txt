@@ -1,0 +1,505 @@
+[Organization’s Logo]
+[Organization’s Name]
+[Organization’s Contact Details]
+[Title of the Report]
+Target Organization:
+Penetration Tester:	
+Date:	
+Location:
+Planning and Scoping
+[*Describe the planning and scoping phase of IoT penetration testing, including objectives, scope, legal compliance, resource allocation, potential risks, communication, and documentation.]
+Information Gathering and Attack Surface Mapping
+[*This section includes information about the identified IoT devices, their network attributes, enumerated device information, network traffic patterns, packet analysis findings, and mapped attack surfaces.]
+Identify IoT Devices
+Enumerate Device Information
+Perform Network Traffic and Packet Analysis
+Map Attack Surface
+Firmware Analysis
+[*This section details the process of firmware analysis, including extraction, reverse engineering, and vulnerability identification, to uncover potential security flaws in IoT devices.]
+Download and Extract Firmware Image
+Hardware-Based Firmware Extraction
+Reverse Engineering Firmware
+Analyze Firmware for Open-Source Vulnerabilities
+Examine OS-specific Vulnerabilities
+IoT Software Analysis
+[*This section focuses on assessing IoT software for vulnerabilities in application and API.]
+Test IoT Management Interfaces for Common Vulnerabilities
+Identify and Exploit Vulnerabilities
+Test API Calls for Authentication, Authorization, and Data Validation
+Assess Session Handling, Token Management, and Credential Storage
+IoT Network and Protocol Security Testing
+[*This section involves identifying vulnerabilities in communication protocols, analyzing network traffic, and testing for encryption weaknesses and advanced attack techniques.]
+Assess Vulnerabilities in Communication Protocols
+Perform Network Traffic Analysis Between Devices, Gateways, and Servers
+Test for Weak Encryption Protocols
+Explore MITM, Replay, Jamming, and Denial-of-Service (DoS) Attacks
+Post-Exploitation and Persistence Techniques
+[*This section explores post-exploitation techniques, including privilege escalation, persistence, lateral movement, data exfiltration, and evasion tactics within IoT environments.]
+Explore Privilege Escalation Techniques in IoT
+Implement Backdoors (Firmware Backdooring) on IoT Devices for Persistent Access
+Lateral Movement Techniques Within IoT Networks
+Exfiltrate Sensitive Data from IoT Systems
+Evasion Techniques to Avoid Detection Within IoT Environments
+IoT Penetration Testing Summary Table
+Test Objectives
+Security Aspects to Evaluate | [E.g., firmware vulnerabilities, protocol weaknesses, API issues]
+Test Focus | □ Ensure regulatory compliance
+□ Improve overall security posture
+□ Other (Specify)
+Expected Outcomes | 
+Test Scope
+In-Scope Components | [E.g., devices, firmware, APIs, mobile apps, cloud services]
+Out-of-Scope Components | 
+Testing Type | □ Black-Box          □ Gray-Box          □ White-Box
+Geographical/Network Boundaries | [E.g., specific locations or network segments]
+Legal and Ethical Considerations
+Regulatory Focus | [E.g., GDPR, HIPAA compliance, PCI DSS requirements]
+Potential Legal Implications | [E.g., handling sensitive data, privacy laws]
+Obtained Written Consent of Device Owner/Organization? | □ Yes             □ No
+Is a Non-Disclosure Agreement (NDA) Created? | □ Yes             □ No
+Are Stakeholder Signatures Collected? | □ Yes             □ No
+Resource Allocation
+Penetration Testing Team | Name | Role/Designation | Responsibilities
+Penetration Testing Team | 
+Penetration Testing Team | 
+Penetration Testing Team | 
+Penetration Testing Team | 
+Penetration Testing Team | 
+Tools and Frameworks | 
+Testing Environment | [E.g., Isolated test lab, virtualized IoT setup, cloud-integrated setup, sandbox environment, etc.]
+Risk Assessment
+Potential Risks | [E.g., service disruptions or data loss]
+Defined Risk Levels | [E.g., Low, Medium, High, Critical]
+Defined Threshold Levels | 
+Contingency Plans | [E.g., backup processes, rollback procedures]
+Incident Response for System Impact | 
+Communication and Coordination
+Stakeholder Details | Name | Role | Contact
+Stakeholder Details | 
+Stakeholder Details | 
+Stakeholder Details | 
+Stakeholder Details | 
+Deliverables Schedule | Key Deliverables | Expected Delivery Dates
+Deliverables Schedule | 
+Deliverables Schedule | 
+Deliverables Schedule | 
+Deliverables Schedule | 
+Timeline for Updates | 
+Meeting Frequency | □ Daily                    □ Weekly                    □ Bi-Weekly          
+□ Monthly              □ As Needed
+Communication Method | □ Email                    □ Meetings               □ Reports         
+□ Secure Portal      □ Other (Specify)
+Test Result Sharing Format | □ Summary Report                    □ Detailed Report                □ Presentation                           □ Live Demo      
+□ Other (Specify)
+Test Details
+Protocols/Ports Targeted | [e.g., MQTT (1883), mDNS (5353)]
+Scanning Performed | □ Ping Scan           □ OS/Service Scan      □ Complete Scan                           □ Targeted Scan   □ Other (Specify)
+Tools Used | Tool Name | Command/Query/Filter Used
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Scripts Used (If Any) | [e.g., NSE scripts, Python scripts, Bash scripts, etc.]
+AI-Based Tools/Prompts Used (If Any) | 
+Is IoT Device Identification Successful? | □ Yes                             □ No
+Results Obtained
+Device Type | IP Address | MAC Address | Vendor | Open Ports | Services
+Result Analysis
+Test Details
+Techniques Used | □ Banner Grabbing             
+□ SNMP Enumeration        
+□ IoT Default Credential Check
+□ Firmware and Service Enumeration     
+□ Other (Specify)
+Tools Used | Tool Name | Command/Query/Filter Used
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Scripts Used (If Any) | [e.g., NSE scripts, Python scripts, Bash scripts, etc.]
+AI-Based Tools/Prompts Used (If Any) | 
+Is IoT Device Enumeration Successful? | □ Yes                             □ No
+Results Obtained
+IP Address | Device Name | OS Version | Firmware Version | Services | Vulnerabilities Identified
+Result Analysis
+ | Test Details
+Objective | 
+Tools Used | Tool Name | Command/Query/Filter Used
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Scripts Used (If Any) | [e.g., NSE scripts, Python scripts, Bash scripts, etc.]
+AI-Based Tools/Prompts Used (If Any) | 
+Is Network Traffic and Packet Analysis Successful? | □ Yes                             □ No
+ | Results Obtained
+Device Name: | 
+IP Address: | 
+MAC Address: | 
+Communication Protocol: | 
+Port: | 
+Communication Peer: | (e.g., unencrypted traffic, weak authentication) | 
+Type of Data Exchanged: | (e.g., device status, configuration updates) | 
+Data Frequency: | (e.g., high, medium, low) | 
+Packet Size: | 
+Sensitive Data Detected: | (e.g., plain-text credentials, device IDs) | 
+Potential Vulnerabilities: | (e.g., unencrypted traffic, weak authentication) | 
+Result Analysis
+ | Test Details
+Tests Performed | 
+Tools Used | Tool Name | Command/Query/Filter Used
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Scripts Used (If Any) | [e.g., Python scripts, Bash scripts, etc.]
+AI-Based Tools/Prompts Used (If Any) | 
+Is Attack Surface Mapping Successful? | □ Yes                             □ No
+ | Results Obtained
+Device IP | FCC ID | Components | Attack Surface | Criticality | Risks Involved | Attack Vectors | Attack Vector Rating
+ | (e.g., Firmware, Hardware) | (e.g., default credentials, outdated versions) | □Low
+□Medium
+□High | (e.g., Open Ports, Weak Authentication)
+Result Analysis
+Test Details
+Tools Used | Tool Name | Command/Query/Filter Used
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Tools Used | 
+Scripts Used (If Any) | [e.g., Python scripts, Bash scripts, etc.]
+AI-Based Tools/Prompts Used (If Any) | 
+Results Obtained
+Device Name/ID | 
+Firmware Source | 
+Firmware Version | 
+Download Method | □ Direct Download                   □ API
+Is Firmware Download Successful? | □ Yes                                               □ No
+Firmware Download Location | 
+Is Firmware Extraction Successful? | □ Yes                                               □ No
+Location of Firmware Extraction | 
+Embedded File System Identified | [e.g., SquashFS, JFFS2] | 
+Extracted Firmware Components | [e.g., config.xml, libcrypto.so] | 
+File Type | [e.g., configuration file, shared library] | 
+File Content | [e.g., network and user credentials, Encryption functionality] | 
+Potential Vulnerability | 
+Result Analysis
+Test Details
+Processes Involved in Firmware Extraction | □ Identifying Access Points (IoT Communication Buses and Interfaces)
+□ Extracting Firmware from Flash Memory
+□ Analyzing Firmware
+□ Other (Specify)
+Tools Used | 
+Results Obtained
+Device IP | 
+Firmware Version | 
+Access Points Identified? | □ Yes                                               
+□ No
+Identified Interfaces | □ UART                  
+□ SPI                  
+□ JTAG
+Extraction Successful? | □ Yes                                         □ No | □ Yes                                             □ No
+Data Extracted | □ Bootloader Logs                  
+□ Firmware Image                
+□ Memory Dump
+Data Analyzed | □ Configuration Files                  
+□ Executables                
+□ Libraries                                    
+□ Other (Specify)
+Vulnerabilities Identified | 
+Result Analysis
+Test Details
+Processes Involved in Firmware Reverse Engineering | □ Analyzing Firmware File System
+□ Identifying and Extracting Key Binaries for Analysis
+□ Performing Static Analysis of Binaries
+□ Performing Dynamic Analysis of Binaries
+□ Other (Specify)
+Tools/Commands Used | [e.g., mount, find, readelf, Ghidra, IDA Pro, Radare2, strings, QEMU, FirmAE, Firmadyne, Wireshark, strace, ltrace]
+Results Obtained
+Device Name/IP | 
+Firmware Version | 
+Test Successful? | □ Yes                                        □ No | □ Yes                                               □ No
+Mounted File System | [e.g., SquashFS, EXT4] | 
+Key Directories Examined | [e.g., /etc, /bin and /sbin, /home] | 
+Sensitive Files Identified | □ Hardcoded credentials                  
+□ SSH keys                
+□ API keys                                            □ TLS certificates         
+□ Other (Specify)
+Binary Architecture Identified | □ ARM                          
+□ MIPS                   
+□ x86                                            
+□ Other (Specify)
+Extracted Binaries | 
+Critical Sections Analyzed | [e.g., main, strcpy, system, exec] | 
+Vulnerability Patterns Found | 
+Program Behavior Observed | 
+Network Traffic Monitored? | □ Yes                                             □ No
+Sensitive Data in Traffic? | □ Yes                                             □ No
+Sensitive Data Obtained | 
+Is Fuzz Testing Successful? | □ Yes                                             □ No
+Result Analysis
+Test Details
+Tools/Commands Used | [e.g., strings, grep, Binwalk]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+CVE Databases Used | [e.g., VulnDB, Dependency-Check, CVE Search]
+Analysis Successful? | □ Yes                                               □ No
+Vulnerabilities Found? | □ Yes                                               □ No
+Patches Available? | □ Yes                                               □ No
+Results Obtained
+Device Name/ID | Firmware Version | Open-Source Library/Utility Found | Vulnerability Identified | Security Level | Patch Found
+(if any)
+Result Analysis
+Test Details
+Tools/Commands Used | [e.g., Binwalk, strings, grep]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+CVE Databases Used | [e.g., VulnDB, NVD, CWE]
+Security Checklists Used | [e.g., OWASP IoT Top Ten, MITRE CWE]
+Key Files Analyzed | [e.g., /proc/version, firmware headers]
+Analysis Successful? | □ Yes                                               □ No
+Vulnerabilities Identified? | □ Yes                                               □ No
+Patches Available? | □ Yes                                               □ No
+Results Obtained
+Device Name/ID | 
+Firmware Version | 
+OS Type Identified | 
+OS Version | 
+Configuration Issues Found | [e.g., weak passwords, unnecessary services, unconfigured permissions] | 
+Security Gaps in RTOS (if any) | [e.g., missing access controls, improper cryptographic practices] | 
+CVE Identified | 
+Affected Component | 
+Security Level
+(Low/Medium/High/Critical) | 
+Impact | 
+Patch Found (if any) | 
+Result Analysis
+Test Details
+OWASP IoT Vulnerabilities Tested | □ Weak Password Requirements
+□ Insecure Network Services
+□ Insecure Data Transfer and Storage
+□ Privacy Concerns
+□ Other (Specify)
+Authentication Mechanism Tested | □ Brute Force Resilience                □ Default Credentials
+□ Multi-Factor Authentication      □ Other (Specify)
+Tools/Commands Used | [e.g., Burp Suite, OWASP ZAP, Frida, MobSF, Hydra, Nmap, SSL Labs, Wireshark, tcpdump]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Testing Successful? | □ Yes                                               □ No
+Vulnerabilities Found? | □ Yes                                               □ No
+Sensitive Data Exposed? | □ Yes                                               □ No
+Results Obtained
+Device Name | Ports Scanned | Services Tested | Traffic Inspected | Endpoints/Web Interfaces Identified | Vulnerability Identified
+Sensitive Data Obtained (if any) | 
+Result Analysis
+Test Details
+Vulnerability Types Tested | □ Cross-site scripting (XSS)                    □ SQL Injection
+□ Insecure Deserialization                     □ Directory Traversal
+□ File Inclusion                                         □ Other (Specify)
+Tools Used | [e.g., Burp Suite, OWASP ZAP, SQLMap, XSS Hunter]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Testing Successful? | □ Yes                                               □ No
+Vulnerabilities Found? | □ Yes                                               □ No
+Sensitive Data Exposed? | □ Yes                                               □ No
+Results Obtained
+Device Name | Endpoints Tested | Exploited Vulnerabilities | Payloads Injected | Data Exposed | Severity Level (Low/Medium/High)
+Sensitive Data Obtained (if any) | 
+Result Analysis
+API Test Details
+Authentication Test Methods Used | □ Access API without credentials                    
+□ Access API with modified credentials
+□ Access API with modified session tokens                     
+□ Other (Specify)    _________________________________
+Authorization Test Methods Used | □ Validating API actions based on user roles                   
+□ Privilege escalation on restricted endpoints
+□ Unauthorized access using modified role parameters 
+□ Admin-level access with restricted credentials 
+□ Reviewing RBAC/ABAC configurations for role restrictions
+□ Other (Specify)    _________________________________
+Data Validation Test Methods Used | □ Input Validation                    □ Parameter Tampering
+□ Malformed Data                   □ Other (Specify)      __________________________________________________
+Tools Used | [e.g., Postman, Burp Suite, Insomnia]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Authentication Bypass Successful? | □ Yes                                               □ No
+Unauthorized Access Successful? | □ Yes                                               □ No
+Data Validation Weakness Found? | □ Yes                                               □ No
+Results Obtained
+Device Name | API Endpoint Tested | Payload Used (if applicable) | Vulnerability Detected | Vulnerability Type | Security Level
+ | [e.g., /api/login, /api/admin, /api/settings] | [e.g., Authentication Vulnerability, Authorization Vulnerability or Data Validation Vulnerability] | [e.g., Low, Medium, High or Critical]
+Result Analysis
+API Test Details
+Methods Used for Testing Session Handling | □ Session Expiry                    □ Session Invalidation
+□ Session Fixation                 □ Other (Specify)    _________________________________________________
+Methods Used for Testing Token Management | □ Token Expiration                □ Secure Signing Algorithms
+□ Token Tampering               □ Token Reuse 
+□ Other (Specify)    _________________________________
+Methods Used for Testing Credential Storage | □ Verifying Encrypted Credential Storage                    
+□ Identifying Hardcoded Credentials
+□ Checking Sensitive Data Exposure in Responses/Headers                   □ Other (Specify)    _________________________________
+Tools Used | [e.g., Postman, Burp Suite, JWT.io]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Session Handling Testing Successful? | □ Yes                                               □ No
+Token Management Testing Successful? | □ Yes                                               □ No
+Is Credential Storage Testing Successful? | □ Yes                                               □ No
+Sensitive Data Exposed? | □ Yes                                               □ No
+Results Obtained
+Device Name | API Endpoint Tested | Vulnerability Detected | Vulnerability Type | Security Level
+Sensitive Data Obtained (if any) | 
+Result Analysis
+Protocol Test Details
+Protocols Tested | □ Bluetooth                  □ Wi-Fi                          □ Zigbee                □ RFID                            □ Other (Specify)    _____________
+Methods Used for Bluetooth Security Testing | □ Testing BLE communication                    
+□ Attempting brute-force pairing attacks
+□ Attempting replay attack                 
+□ Other (Specify)   _________________________________
+Methods Used for Wi-Fi Security Testing | □ Testing encryption strength                
+□ Analyzing WPA enterprise configurations
+□ Other (Specify)    _________________________________
+Methods Used for Zigbee Security Testing | □ Test for jamming vulnerabilities                    
+□ Verify OTA update security
+□ Test for protocol misconfigurations
+□ Other (Specify)    _________________________________
+Methods Used for RFID Security Testing | □ Test for cloning vulnerabilities                    
+□ Verify encryption in RFID communications
+□ Other (Specify)    _________________________________
+Tools Used | [e.g., hciconfig, hcitool, BLEAH, Aircrack-ng, KillerBee, Proxmark3]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Is Bluetooth Security Testing Successful? | □ Yes                                               □ No
+Is Wi-Fi Security Testing Successful? | □ Yes                                               □ No
+Is Zigbee Security Testing Successful? | □ Yes                                               □ No
+Is RFID Security Testing Successful? | □ Yes                                               □ No
+Results Obtained
+Device Name | Protocol Tested | Test Method | Vulnerability Detected | Security Level
+Result Analysis
+Protocol Test Details
+Protocols Analyzed | □ HTTP/HTTPS                    □ MQTT                          □ CoAP                □ Other (Specify)    _________________________________
+Tools Used | [e.g., Wireshark, tcpdump]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Traffic Capture and Inspection Successful? | □ Yes                                               □ No
+Vulnerabilities Found? | □ Yes                                               □ No
+Sensitive Data Found? | □ Yes                                               □ No
+Results Obtained
+Protocol Tested | Port Monitored | Security Configurations Tested | Vulnerability Detected (if any) | Security Level
+Result Analysis
+Protocol Test Details
+Encryption Standards Tested | □ WEP                       □ WPA                    □ SSL/TLS  
+□ Other (Specify)   ___________________________
+Tools Used | [e.g., sslscan, SSLyze, OpenSSL, testssl.sh, Wireshark]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Testing Successful? | □ Yes                                               □ No
+Weak Encryption Found? | □ Yes                                               □ No
+Results Obtained
+Device Name | Protocol Tested | Protocol Outdated? (Yes/No) | Security Configurations Tested | Vulnerability Detected (if any) | Security Level
+ | [e.g., weak ciphers, missing/improper certificate validation]
+Result Analysis
+Protocol Test Details
+Attacks Simulated | □ MITM Attack                         □ Replay Attack                    □ Jamming Attack                    □ DoS Attack  
+□ Other (Specify)   ___________________________
+Tools Used | [e.g., Ettercap, Bettercap, Wireshark, Scapy, HackRF, hping3, LOIC]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Testing Successful? | □ Yes                                               □ No
+Results Obtained
+Device Name | Attack Performed | Device’s Response to the Attack | Vulnerability Detected (if any) | Security Level
+Result Analysis
+Privilege Escalation Test Details
+Privilege Escalation Techniques Used | □ Default Credentials Testing                       
+□ SUID Binaries and Process Analysis                    
+□ Automated Privilege Escalation Checks 
+□ Other (Specify)   ________________________________
+Tools Used | [e.g., Hydra, Medusa, LinPEAS, ps aux, top]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Testing Successful? | □ Yes                                               □ No
+Privileges Escalated? | □ Yes                                               □ No
+Results Obtained
+Device Name | Technique Used | Test Description | Privilege Escalated? (Yes/No) | Vulnerability Detected (if any) | Security Level
+Result Analysis
+Privilege Escalation Test Details
+Privilege Escalation Techniques Used | □ Firmware Extraction                    □ Reverse Engineering                   
+□ Code Injection                              □ Re-Flashing Device                   
+□ Testing Backdoor Functionality 
+□ Other (Specify)   ________________________________
+Tools Used | [e.g., HxD, FMK, Netcat]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Testing Successful? | □ Yes                                               □ No
+Backdoor Functional? | □ Yes                                               □ No
+Results Obtained
+Device Name | 
+Vulnerability Detected | 
+Injection Points Found | 
+Root Shell Injected? (Yes/No) | 
+Port Used | 
+Startup Scripts Modified 
+(if any) | [e.g., /etc/rc.local, /etc/init.d/] | 
+Reverse Shell Obtained?
+(Yes/No) | 
+Remote Commands Executed | 
+Result Analysis
+Lateral Movement Test Details
+Lateral Movement Techniques Used | □ Network Scanning                      
+□ Weak Authentication Exploitation                  
+□ Trust Relationship Exploitation
+□ Weak Protocols Exploitation
+□ Pivoting Through Compromised Devices
+□ Other (Specify)   ________________________________
+Tools Used | [e.g., Nmap, Hydra, Medusa, ARP spoofing tools, mqtt-spy, ProxyChains]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Lateral Movement Successful? | □ Yes                                               □ No
+Results Obtained
+Device Name/IP | 
+Weak Authentication Credentials Used (if any) | 
+Trusted Devices Exploited (if any) | 
+Weak Protocols Exploited 
+(if any) | 
+Vulnerability Identified | 
+Security Level
+(Low/Medium/High/Critical) | 
+Result Analysis
+Sensitive Data Exfiltration Test Details
+Data Exfiltration Techniques Used | □ Exfiltration from Configuration Files                      
+□ Exfiltration Through Direct File Transfer                  
+□ Exfiltration Through Covert Channels
+□ Cloud-Based Exfiltration
+□ Other (Specify) ____________________________
+Tools Used | [e.g., scp, ftp, Dnscat2, Iodine, Heyoka, AWS CLI]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Sensitive Data Exfiltrated? | □ Yes                                               □ No
+Results Obtained
+Device Name/IP | 
+Exfiltration Method | 
+Configuration Files Used for Exfiltration (if applicable) | (e.g., /etc/shadow, /etc/passwd) | 
+Network Protocols Used for Direct Transfer (if applicable) | [e.g., HTTP, FTP] | 
+Covert Channels Used for Exfiltration (if applicable) | [e.g., DNS, ICMP] | 
+Cloud Servers Compromised for Exfiltration (if applicable) | 
+Sensitive Information Obtained | 
+Result Analysis
+Test Details
+Evasion Techniques Used | □ Obfuscation                      
+□ Timing-Based Exfiltration                 
+□ Using Legitimate Services
+□ Packet Fragmentation
+□ Steganography                      
+□ Disabling Logging                 
+□ Avoid Signature-Based Detection
+□ Utilize Low-Profile Network Traffic
+□ Disable Security Features Temporarily
+□ Other (Specify) ____________________________
+Tools Used | [e.g., Steghide, Metasploit, Base64]
+Scripts Used (if any) | [e.g., Python, Bash, Ruby script]
+AI-Based Tools/Prompts Used (if any) | 
+Testing Successful? | □ Yes                                               □ No
+Results Obtained
+Device Name | Evasion Technique | Evasion Successful? (Yes/No)
+Result Analysis
+Vulnerability ID | Vulnerability Type | Severity | Affected Component | Impact

@@ -1,0 +1,531 @@
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+Certified Penetration Testing Professional
+ShellGPT Cheat Sheet
+ShellGPT
+Source: https://github.com
+ShellGPT is a command-line productivity tool powered by AI large language models (LLM) that
+offers streamlined generation of shell commands, code snippets, documentation, eliminating the
+need for external resources (like Google search). ShellGPT is designed to quickly analyze and
+retrieve information for straightforward requests ranging from technical configurations to
+general knowledge.
+Syntax
+Prompt [PROMPT] The prompt to generate completions for.
+Options
+--help Show options
+--model <TEXT> Large language model to use. [default: gpt-4o]
+--temperature <FLOAT RANGE
+Randomness of generated output. [default: 0.0]
+[0.0<=x<=2.0]>
+--top-p < FLOAT RANGE
+Limits highest probable tokens (words). [default: 1.0]
+[0.0<=x<=1.0]>
+--md or --no-md Prettify markdown output. [default: md]
+--editor Open $EDITOR to provide a prompt. [default: no-editor]
+--cache Cache completion results. [default: cache]
+--version
+Show version
+Assistance Options
+--shell or -s Generate and execute shell commands
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+--interaction or --no-
+Interactive mode for --shell option
+interaction
+--describe-shell or -d Describe a shell command
+--code or -c Generate only code
+--functions or --no-
+Allow function calls
+functions
+Chat Options
+--chat <TEXT> Follow conversation with id, use "temp" for quick session
+--repl <TEXT> Start a REPL (Read–eval–print loop) session
+--show-chat <Chat ID> Show all messages from provided chat id
+--list-chats or -lc List all existing chat ids
+Role Options
+--role <TEXT> S y st em role for GPT model. [default: None]
+--create-role <TEXT> Create role. [default: None]
+--show-role <TEXT> Show role. [default: None]
+--list-roles or -lr L is t r ol e s
+ShellGPT Installation
+pip install shell-gpt
+ShellGPT Commands
+sgpt Prompt Commands Generated
+sgpt --shell
+"<find all json # -> find . -type f -name "*.json"
+files in current # -> [E]xecute, [D]escribe, [A]bort: e
+folder>"
+sgpt -s "update my # -> sudo apt update && sudo apt upgrade -y
+system" # -> [E]xecute, [D]escribe, [A]bort: e
+# -> curl -X POST -H "Content-Type:
+sgpt -s "POST
+application/json" -d '{"a": 1, "b": 2}'
+localhost with" <
+http://localhost
+data.json
+# -> [E]xecute, [D]escribe, [A]bort: e
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+sgpt Prompt Generating code
+for i in range(1, 101):
+if i % 3 == 0 and i % 5 == 0:
+print("FizzBuzz")
+sgpt --code elif i % 3 == 0:
+"solve fizz buzz
+print("Fizz")
+problem using
+python" elif i % 5 == 0:
+print("Buzz")
+else:
+print(i)
+python fizz_buzz.py
+# 1
+sgpt --code
+# 2
+"solve classic
+fizz buzz problem # Fizz
+using Python" >
+# 4
+fizz_buzz.py
+# Buzz
+# ...
+sgpt Prompt Chat Mode
+sgpt --chat
+conversation_1
+# -> I will remember that your favorite number is
+"please remember
+4.
+my favorite
+number: 4"
+sgpt --chat
+conversation_1
+# -> Your favorite number is 4, so if we add 4 to
+"what would be my
+it, the result would be 8.
+favorite number +
+4?"
+ShellGPT Commands Used for Footprinting
+sgpt –chat footprint –shell “Use filetype search
+Footprinting using
+operator to obtain pdf files on the target
+advanced Google hacking
+website eccouncil.org and store the result in the
+techniques
+recon1.txt file”
+VPN Footprinting through sgpt –chat footprint –shell “Use inurl search
+Google Hacking Database operator to obtain the Fortinet VPN login pages”
+Finding a company’s top-
+sgpt –chat footprint –shell “Discover all the
+level Domains (TLDS) and
+subdomains of ‘google.com’ using dig command.”
+sub-domains
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+sgpt --chat footprint --shell “Use theHarvester to
+Harvesting email lists gather email accounts associated with
+using theHarvester 'microsoft.com', limiting results to 200, and
+leveraging 'baidu' as a data source”
+Footprinting through sgpt --chat footprint --shell “Use Sherlock to
+social networking sites gather personal information about 'Sundar Pichai'
+using Sherlock and save the result in recon2.txt”
+sgpt --chat footprint --shell “Install and use
+DNS lookup using
+DNSRecon to perform DNS enumeration on the target
+DNSRecon
+domain www.certifiedhacker.com”
+sgpt --chat footprint --shell “Perform network
+Perform tracerouting on
+tracerouting to discover the routers on the path
+a target using traceroute
+to a target host www.certifiedhacker.com”
+sgpt --chat footprint --shell “Develop a Python
+script which will accept domain name microsoft.com
+Create and run custom
+as input and execute a series of website
+Python script to
+footprinting commands, including DNS lookups,
+automate footprinting
+WHOIS records retrieval, email enumeration, and
+tasks
+more to gather information about the target
+domain”
+ShellGPT Commands Used for Scanning
+Perform network sgpt --chat scan --shell “Use hping3 to perform
+scanning using Hping3 ICMP scanning on the target IP address 10.10.1.11
+tool and stop after 10 iterations”
+Perform ACK scan on
+sgpt --chat scan --shell “Run a hping3 ACK scan on
+target IP address using
+port 80 of target IP 10.10.1.11”
+hping3
+Perform network
+sgpt --chat scan --shell "Scan the target network
+scanning of target
+10.10.1.0/24 for active hosts and place only the
+network and save IP
+IP addresses into a file scan1.txt”
+addresses into a file
+sgpt --chat scan --shell "Run a fast but
+Perform an Nmap scan
+comprehensive nmap scan against scan1.txt with low
+with specific options
+verbosity and write the results to scan2.txt"
+Perform a ping scan using sgpt --chat scan --shell “Use nmap to perform ICMP
+Nmap on the specified IP ECHO ping sweep on the target network
+range 10.10.1.0/24”
+Perform port scanning on sgpt --chat scan --shell “Use nmap to find open
+target IP address ports on target IP 10.10.1.11”
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+Perform stealth scan on a sgpt --chat scan --shell "Perform stealth scan on
+target IP address target IP 10.10.1.11 and display the results"
+Perform XMAS scan on a sgpt --chat scan --shell “Perform an XMAS scan on
+target IP address target IP 10.10.1.11”
+sgpt --chat scan --shell “Use Nmap to scan for
+open ports and services against a list of IP
+Perform scan for open
+addresses in scan1.txt and copy only the port,
+services and ports against
+service and version information with the
+the list of IP addresses
+respective IP address to a new file called
+scan3.txt”
+Discover open ports on a
+sgpt --chat scan --shell “Use Metasploit to
+target system using
+discover open ports on the IP address 10.10.1.22”
+Metasploit
+Perform scanning using
+Nmap for MAC details, sgpt --chat scan --shell “Use Nmap to scan open
+services running and ports, MAC details, services running on open ports
+their versions on a target with their versions on target IP 10.10.1.11”
+IP adddress
+sgpt --chat scan --shell “Use TTL to identify the
+Perform OS discovery
+operating system running on the target IP address
+using TTL
+10.10.1.11”
+sgpt --chat scan --shell “Use Nmap script engine
+Preform OS discovery
+to perform OS discovery on the target IP addresses
+using Nmap script engine
+in scan1.txt”
+sgpt --chat scan --shell “Develop a script which
+Developing the script to will automate network scanning efforts and find
+automate network out live systems, open ports, running services,
+scanning process service versions, etc. on target IP range
+10.10.1.0/24”
+Perform scanning using sgpt --chat scan --shell “To evade an
+IP address decoy IDS/Firewall, use IP address decoy technique to
+technique scan the target IP address 10.10.1.22”
+ShellGPT Commands Used for Enumeration
+Perform automated
+sgpt --shell “Perform NetBIOS enumeration on
+NetBIOS enumeration on
+target IP 10.10.1.11”
+specified target IPs
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+Perform NetBIOS
+enumeration on the sgpt --shell “Get NetBIOS info for IP 10.10.1.11
+target IP 10.10.1.11 and and display the associated names"
+display names
+Perform automated
+NetBIOS enumeration on sgpt --shell “Enumerate NetBIOS on target IP
+the specified target IPs 10.10.1.22 with nmap"
+using Nmap
+Perform SNMP sgpt --chat enum --shell “Perform SNMP enumeration
+enumeration on target IP on target IP 10.10.1.22 using SnmpWalk and display
+using SnmpWalk the result here”
+Perform SNMP sgpt --chat enum --shell “Perform SNMP enumeration
+enumeration on target IP on target IP 10.10.1.22 using nmap and display the
+using Nmap result here"
+Perform SMTP
+sgpt --chat enum --shell “Perform SMTP enumeration
+enumeration on the
+on target IP 10.10.1.19”
+specified target IP
+Perform SMTP
+enumeration tasks on the sgpt --shell "Perform SMTP enumeration on target
+specified target IP using IP 10.10.1.19 with metasploit"
+Metasploit
+Perform DNS sgpt --chat enum --shell "Use Nmap to perform DNS
+enumeration tasks on the Enumeration on target domain
+specified target domain www.certifiedhacker.com"
+Perform DNS cache sgpt --chat enum --shell “Use dig command to
+snooping on the specified perform DNS cache snooping on target domain
+target domain using the www.certifiedhacker.com using recursive method.
+dig command Use DNS server IP as 162.241.216.11"
+sgpt --chat enum --shell "Use dig command to
+Perform DNS cache
+perform DNS cache snooping on the target domain
+snooping using non-
+www.certifiedhacker.com using non-recursive
+recursive method
+method. Use DNS server IP as 162.241.216.11"
+Perform IPsec
+sgpt --shell “Perform IPsec enumeration on target
+enumeration on the
+IP 10.10.1.22 with Nmap"
+target IP address
+Perform scanning on
+sgpt --shell “Scan the target IP 10.10.1.22 for
+target IP for open SMB
+the port using SMB with Nmap”
+ports using Nmap
+Page | 6 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+Create a script to
+sgpt --chat enum --shell “Develop and execute a
+automate the process of
+script which will automate various network
+network enumeration
+enumeration tasks on target IP range 10.10.1.0/24”
+using various Nmap scans
+Perform LDAP
+sgpt --shell "Use nmap script to perform ldap-
+enumeration using Nmap
+brute-force on IP 10.10.1.22"
+script
+Perform FTP sgpt --shell "Use Nmap to perform FTP Enumeration
+enumeration using Nmap on www.certifiedhacker.com"
+ShellGPT Commands Used for Vulnerability Analysis
+To launch Nikto sgpt --chat nikto --shell “Launch nikto to execute
+vulnerability scan on the a scan against the URL www.certifiedhacker.com to
+target website identify potential vulnerabilities”
+Perform vulnerability
+sgpt --shell “Perform vulnerability scan on target
+scanning using Nikto on
+url http://testphp.vulnweb.com with nikto and save
+the target website and
+the results in output.txt.”
+save the results
+Perform vulnerability sgpt --chat vuln --shell “Perform vulnerability
+scan on the target scan on target url http://www.moviescope.com with
+website Nmap”
+Perform vulnerability sgpt --chat vuln --shell “Perform a vulnerability
+scan on the target scan on target url http://testphp.vulnweb.com with
+website using skipfish skipfish”
+Generate Python script Sgpt –chat scancode –code “Create a python script
+automates network to run a fast but comprehensive Nmap scan on the
+scanning and IP addresses in scan1.txt and then execute
+vulnerability assessment vulnerability scanning using nikto against each IP
+address in scan1.txt”
+tasks on the IP addresses
+ShellGPT Commands Used for System Hacking
+Generate a payload using sgpt --shell “Use msfvenom to create a TCP payload
+msfvenom tool with lhost=10.10.1.13 and lport=444"
+To initialize listener on
+sgpt --shell “Use msfconsole to start a listener
+the given LHOST and
+with lhost=10.10.1.13 and lport=444"
+LPORT
+sgpt --shell “Use Hydra to perform SSH-bruteforce
+Perform SSH-bruteforce
+on IP address=10.10.1.9 using username.txt and
+attack on the target
+password.txt files available at location
+machine using Hydra
+/home/attacker/Wordlist"
+Page | 7 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+ShellGPT Commands Used for Steganography
+sgpt --shell “Perform steganography using steghide
+To perform image
+to hide text 'My swiss account number is
+stegnography using
+232343435211113' in cover.jpg image file with
+steghide
+password as '1234'"
+To extract hidden text
+sgpt --shell “Use steghide to extract hidden text
+from the suspicious file
+in cover.jpg"
+using steghide
+ShellGPT Commands Used for Hacking Web Servers
+Perform directory sgpt --shell “Perform a directory traversal on
+traversal on target URL target url https://certifiedhacker.com using
+using gobuster gobuster”
+sgpt --shell "Attempt FTP login on target IP
+Perform FTP brute-force
+10.10.1.11 with hydra using usernames and
+attack using hydra
+passwords file from /home/attacker/Wordlists"
+Perform webserver
+sgpt --shell "Perform webserver footprinting on
+footprinting on target IP
+target IP 10.10.1.22"
+address
+Perform web server sgpt --shell “Perform webserver footprinting on
+footprinting using netcat target IP 10.10.1.22 with netcat
+Perform website sgpt --shell “Mirror the target website
+mirroring using httrack certifiedhacker.com with httrack on desktop”
+ShellGPT Commands Used for Web Application Hacking
+sgpt --shell “Check if the target url
+Detect Web Application
+www.certifiedhacker.com has web application
+Firewall
+firewall”
+sgpt --shell “Check if the target url
+Check for WAF using
+https://www.certifiedhacker.com is protected with
+wafwoof
+web application firewall using wafwoof”
+sgpt --shell "Use load balancing detector on
+Detect load balancers
+target domain yahoo.com.”
+sgpt --chat HWA --shell "Launch whatweb on the
+target website www.moviescope.com to perform
+Identify server-side
+website footprinting. Run a verbose scan and print
+technologies
+the output. Save the results in file
+whatweb_log.txt.”
+Identify web application
+sgpt --shell “Perform the Vulnerability scan on
+vulnerabilities on a target
+the target url www.moviescope.com”
+website
+Page | 8 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+Perform web application sgpt --shell “Perform the Vulnerability scan on
+scanning using Nmap the target url www.moviescope.com using nmap”
+Perform a vulnerability sgpt --shell "Use Sn1per tool and scan the target
+scan on web application url www.moviescope.com for web vulnerabilities and
+using Sn1per tool save result in file scan3.txt”
+Identify files of a web sgpt --shell “Scan the web content of target url
+application www.moviescope.com using Dirb”
+Identify directories in
+sgpt --shell “Scan the web content of target url
+target URL using
+www.moviescope.com using Gobuster"
+Gobuster
+sgpt --shell "Attempt FTP login on target IP
+Perform FTP brute-force
+10.10.1.11 with hydra using usernames and
+attack using hydra
+passwords file from /home/attacker/Wordlists"
+sgpt --chat wah --shell “create and run a custom
+Automate web
+script for web application footprinting and
+application hacking tasks
+vulnerability scanning. The target url is
+with custom scripts
+www.certifiedhacker.com”
+sgpt --chat wah --shell “create and run a custom
+Create a custom Python
+python script for web application footprinting and
+script for web application
+vulnerability scanning. The target url is
+scanning
+www.certifiedhacker.com”
+sgpt --chat wah --shell "create and run a custom
+Create a custom Python python script which will run web application
+script for web application footprinting tasks to gather information and then
+scanning use this information to perform vulnerability
+scanning on target url is www.certifiedhacker.com”
+Perform Web application
+sgpt --shell “Fuzz the target url
+fuzz testing using Wfuzz
+www.moviescope.com using Wfuzz tool”
+tool
+ShellGPT Commands Used for SQL Injection
+Check for possible SQL sgpt –shell “Check for all possible SQL injection
+injection on target url http://testphp.vulnweb.com”
+Scan the target website sgpt --chat sql --shell “Use sqlmap on target url
+for SQL injection http://www.moviescope.com/viewprofile.aspx?id=1
+vulnerability and with cookie value '[cookie value]' and enumerate
+enumerate databases the DBMS databases”
+sgpt --chat sql --shell “Use sqlmap on target url
+Enumerate the databases http://www.moviescope.com/viewprofile.aspx?id=1
+from the target website with cookie value '[cookie value]' and enumerate
+the tables pertaining to moviescope database"
+Page | 9 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+sgpt --chat sql --shell “Use sqlmap on target url
+Retrieve the complete
+http://www.moviescope.com/viewprofile.aspx?id=1
+User_Login table data
+with cookie value '[cookie value]' and retrieve
+from the database
+User_Login table contents from moviescope
+moviescope
+database"
+Sgpt -shell “Perform error based SQL injection on
+target url with parameter as
+http://testphp.vulnweb.com/listproducts.php?cat=1
+and enumerate the tables in acuart database”
+Preform error based SQL
+injection sgpt -shell “Perform error based SQL injection on
+target url
+http://testphp.vulnweb.com/listproducts.php?cat=1
+and if vulnerable enumerate the database and
+enumerate the user table in acuart database”
+sgpt -shell "Check for time-based blind SQL
+injection on target url with parameter as
+http://testphp.vulnweb.com/listproducts.php?cat=1
+and enumerate the database"
+sgpt -shell "Check for time-based blind SQL
+Perform time-based SQL injection on the target URL
+http://testphp.vulnweb.com/listproducts.php?cat=1
+Injection
+and enumerate tables in the acuart database"
+sgpt -shell "Check for time-based blind SQL
+injection on the target URL
+http://testphp.vulnweb.com/listproducts.php?cat=1
+and enumerate users table in acuart database"
+sgpt -shell "Check for UNION-based SQL injection
+on the target URL with parameter as
+http://testphp.vulnweb.com/listproducts.php?cat=1
+and enumerate the database"
+sgpt -shell "Check for UNION-based SQL injection
+Perform UNION based on the target URL with parameter as
+SQL Injection http://testphp.vulnweb.com/listproducts.php?cat=1
+and enumerate tables in acuart database"
+sgpt -shell "Check for UNION-based SQL injection
+on the target URL with parameter as
+http://testphp.vulnweb.com/listproducts.php?cat=1
+and enumerate users table in acuart database"
+Page | 10 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+ShellGPT Cheat Sheet
+ShellGPT Commands Used for Cryptography
+Calculate MD5 value of sgpt --shell "Calculate MD5 hash of text 'My
+the given text Account number is 0234569198'"
+sgpt --shell "Calculate MD5 hash of text 'My
+Perform multi-layer
+Account number is 0234569198' and calculate the
+hashing
+SHA1 hash value of the MD5 value"
+sgpt --chat hash --shell "Calculate CRC32 hash of
+Calculate hash of a file
+the file passwords.txt located at /home/attacker"
+sgpt --shell "Encrypt 'Hello World' text using
+Perform basic encryption base64 algorithm and save the result to Output.txt
+file"
+sgpt --shell "Decrypt the contents of encrypted
+Decrypt the encrypted
+Output.txt file located at /home/attacker using
+data
+base64 algorithm"
+Page | 11 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

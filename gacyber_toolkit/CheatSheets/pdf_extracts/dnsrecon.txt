@@ -1,0 +1,209 @@
+Certified Penetration Testing Professional Exam 412-80
+DNSRecon Cheat Sheet
+Certified Penetration Testing Professional
+DNSRecon Cheat Sheet
+DNSRecon
+Source: https://github.com
+DNSRecon is for performing the reverse DNS lookup on the target host, check NS Records for
+zone transfer, exploit vulnerabilities and obtain network information of a target domain and
+further launch Internet-based attacks, enumerate DNS Records for domains (MX, SOA, NS, A,
+AAAA, SPF, and TXT), perform common SRV record enumeration, Top Level Domain (TLD)
+expansion, check for wildcard resolution, brute Force subdomain and host A and AAAA records
+given a domain and a wordlist, perform a PTR Record lookup for a given IP Range or CIDR, check
+a DNS server cached records for A, AAAA and CNAME Records provided a list of host records in a
+text file to check, enumerate common mDNS records in the local network enumerate hosts and
+subdomains using Google.
+Syntax
+dnsrecon [-h] [-d DOMAIN] [-n NS_SERVER] [-r RANGE] [-D DICTIONARY] [-
+f] [-a] [-s] [-b] [-y] [-k] [-w] [-z] [--threads THREADS] [--lifetime
+LIFETIME] [--tcp] [--db DB] [-x XML] [-c CSV] [-j JSON] [--iw] [--
+disable_check_recursion] [--disable_check_bindversion] [-V] [-v] [-t
+TYPE]
+Arguments
+-h, --help Help message and exit
+-d DOMAIN, --domain DOMAIN Target domain
+-n NS_SERVER, --name_server Domain server to use. If none is given, the SOA of the
+NS_SERVER target will be used
+-n nsserver.com Use a custom name server
+IP range for reverse lookup brute force in formats
+-r RANGE, --range RANGE
+(first-last) or in (range/bitmask)
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+DNSRecon Cheat Sheet
+-D DICTIONARY, --dictionary Dictionary file of subdomain and hostnames to use for
+DICTIONARY brute force.
+Filter out of brute force domain lookup, records that
+-f resolve to the wildcard defined IP address when saving
+records
+-t TYPE, --type TYPE Type of enumeration to perform
+-a AXFR with standard enumeration
+-r Recursively scan subdomains
+Reverse lookup of IPv4 ranges in the SPF record with
+-s
+standard enumeration
+-y Yandex enumeration with standard enumeration
+-T TLD expansion
+-g Google enumeration with standard enumeration
+-b Bing enumeration with standard enumeration
+-k Crt.sh enumeration with standard enumeration
+Deep whois record analysis and reverse lookup of IP
+-w ranges found through Whois when doing a standard
+enumeration
+-z DNSSEC zone walk with standard enumeration
+Number of threads to use in reverse lookups, forward
+--threads THREADS
+lookups, brute force, and SRV record enumeration
+--lifetime LIFETIME Time to wait for a server to respond to a query
+--tcp Use TCP protocol to make queries
+SQLite 3 file to save found records/ save results to SQLite
+--db DB
+database file
+XML file to save found records/ save results to the XML
+-x XML, --xml XML
+file
+-c CSV, --csv CSV Comma-separated value file
+-j JSON, --json JSON JSON file
+-i $file Output discovered IP addresses to a text file
+Continue brute-forcing a domain even if wildcard records
+--iw
+are discovered
+--disable_check_recursion Disables check for recursion on name servers
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+DNSRecon Cheat Sheet
+--disable_check_bindversion Disables check for BIND version on name servers
+-v Enable verbose
+DNSRecon Installation
+aptitude install dnsrecon On Parrot, or:
+git clone https://github.com/darkoperator/dnsrecon.git
+cd dnsrecon
+pip install -r requirements.txt
+sudo apt install dnsrecon
+Output Options
+--db SQLite 3 file
+--xml XML file
+--json JSON file
+--csv CSV file
+DNSRecon Commands
+Command Description
+dnsrecon -r <Target IP range> Reverse DNS lookup on the target host
+dnsrecon -t axfr -d <Target
+DNS zone transfer
+Domain>
+dnsrecon -d <Target Domain> -z Zone enumeration against a target domain
+dnsrecon -d <Target Domain> -a
+./dnsrecon.py -d <Target Domain>
+-a
+or
+Zone transfer
+dnsrecon -d <Target Domain> -t
+axfr
+./dnsrecon.py -d <Target Domain>
+-t axfr
+dnsrecon -r <start Target IP>-
+Reverse Lookup against IP range
+<end Target IP>
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+DNSRecon Cheat Sheet
+./dnsrecon.py -r <start Target
+IP>-<end Target IP>
+./dnsrecon.py -r <Target IP
+range>
+dnsrecon -d <Target Domain> -s
+./dnsrecon.py -d <Target Domain> Reverse Lookup against all ranges in SPF records
+-s
+dnsrecon -d <Target Domain> -D
+<namelist.txt> -t brt
+Domain Brute Force Enumeration
+./dnsrecon.py -d <Target Domain>
+-D <namelist> -t brt
+dnsrecon -d <Target Domain> -D
+/usr/share/wordlists/dnsmap.txt - DNS Brute force
+t std --xml ouput.xml
+dnsrecon -t snoop -n <Server IP>
+-D <namelist.txt>
+Cache Snooping against name servers
+./dnsrecon.py -t snoop -n <Server
+IP> -D <dictionary file>
+dnsrecon -d <Target Domain> Standard Records Enumeration/ enumerate DNS
+./dnsrecon.py -d <Target Domain> record of targeted website
+dnsrecon -d <Target Domain> -t
+Zone Walking
+zonewalk
+dnsrecon -d <Target Domain> -t
+Reverse lookup of a given CIDR or IP range
+rvl
+dnsrecon -d <Target Domain> -t Brute force domains and hosts using a given
+brt -D <Subdomains Dictionary> dictionary
+dnsrecon -d <Target Domain> -t Brute force domains and hosts using a given
+brt -D <Subdomains Dictionary> -- dictionary. Continue brute-forcing a domain even if
+iw wildcard records are discovered
+dnsrecon -d <Target Domain> -t
+SRV records
+srv
+dnsrecon -d <Target Domain> -t
+Test all NS servers for a zone transfer
+axfr
+dnsrecon -d <Target Domain> -t
+Google search for subdomains and hosts
+goo
+dnsrecon -d <Target Domain> -t Remove the TLD of a given domain and test against
+tld all TLDs registered in IANA
+dnsrecon -d <Target Domain> -t
+DNSSEC zone walk using NSEC records
+zonewalk
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+DNSRecon Cheat Sheet
+dnsrecon -d <Target Domain> --db
+Save results in a sqlite file
+<results sqlite File>
+dnsrecon -d demo.com --xml
+Save results in an xml file
+<results xml file>
+dnsrecon -d <Target Domain> -c
+Save results in a csv file
+<results csv file>
+dnsrecon -d <Target Domain> -j
+Save results in a json file
+<results json file>
+dnscan.py -l $domains_file -o Subdomain brute-force of domains listed in a file
+outfile -w $wordlist (one by line)
+dnscan.py -d target.com -o
+Subdomain brute-force of a domain
+outfile -w $wordlist
+dnssearch -domain <Target Domain>
+Dnssearch Subdomain brute-force
+-wordlist $wordlist
+Use Robin Wood’s zonetransfer.me site to
+dnsrecon -d zonetransfer.me
+enumerate and Run a scan
+dnsrecon -d zonetransfer.me -D
+Brute Force scan
+<namelist.txt> -t brt
+dnsrecon -d zonetransfer.me -a Zone Transfer
+dnsrecon -d zonetransfer.me -a --
+Look at SQLite database file
+db ~/Desktop/dnsrecon/dnsrecon-db
+dnsrecon -d zonetransfer.me -a --
+xml ~/Desktop/dnsrecon/dnsrecon- Save the results in XML format
+xml
+dnsrecon -d TARGET -D
+/usr/share/wordlists/dnsmap.txt - DNS Zone Transfers
+t std --xml ouput.xml
+dnsrecon -d <Target IP> -t std -D DNS (reverse) lookups / Enumeration DNS / Brute
+/usr/share/wordlists/dnsmap.txt force subdomains
+$ python dnsrecon.py -n
+ns1.<Target Domain> -d <Target
+DNS enumeration tool
+Domain> -D subdomains-top1mil-
+5000.txt -t brt
+dnsrecon -w DNS Reconnaissance
+Page | 5 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

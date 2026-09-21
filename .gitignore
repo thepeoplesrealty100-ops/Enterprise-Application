@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual envs
+env/
+venv/
+.venv/
+ENV/
+
+# Testing / coverage
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+.hypothesis/
+.mypy_cache/
+
+# IDEs / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Secrets & env (keep examples)
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+**/secrets.json
+*.pem
+*.key
+!*.pub
+
+# Databases & runtime data
+*.db
+*.duckdb
+*.duckdb.wal
+*.sqlite
+*.sqlite3
+/data/
+jakal-data/
+
+# Logs
+logs/
+*.log
+backend/logs/
+jakal-logs/
+
+# Cache / session
+memory/
+session.db*
+url_cache/
+
+# Local clutter (Windows Docker / backups)
+DockerDesktopWSL/
+backups/
+
+# AI agent local state (may contain credentials)
+ai_agent_layer/openhands-state/
+Claude outputs/
+ai_agent_layer/
+venv/
+data/
+logs/
+backups/
+DockerDesktopWSL/
+*.duckdb
+__pycache__/
+.pytest_cache/
+.openhands-state/
+openhands-state/

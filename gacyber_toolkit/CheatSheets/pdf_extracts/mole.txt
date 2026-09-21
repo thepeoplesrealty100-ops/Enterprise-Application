@@ -1,0 +1,158 @@
+Certified Penetration Testing Professional Exam 412-80
+Mole Cheat Sheet
+Certified Penetration Testing Professional
+Mole Cheat Sheet
+Mole
+Source: https://sourceforge.net
+It is a command-line interface SQL Injection exploitation tool. It can detect the injection on the
+site and exploit it, only if a vulnerable URL and a valid string are provided. Mole can be used to
+exploit both union-based and blind Boolean-based injections and supports MySQL, SQL Server,
+and Oracle databases.
+Syntax
+./mole.py [PARAMS]
+Options
+-u <URL> URL that contains an SQLi vulnerability
+-n <NEEDLE> String printed on good queries
+THREADS: The number of threads to run.
+-t <n>
+Default is 4
+-p <PARAM> Sets the GET vulnerable param
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Mole Cheat Sheet
+Mole Commands
+Commands Description
+columns
+Displays the columns of a table from a given
+Syntax: columns <database>
+database and table
+<table>
+cookie Obtains or sets a cookie to be sent in each
+Syntax: cookie <cookie> HTTP request's headers
+dbinfo
+Displays database information
+Syntax: dbinfo
+delay Gets or sets the delay (in seconds) between
+Syntax: delay <delay> requests
+encoding Gets or sets the encoding use to decode the
+Syntax: encoding <encoding> response received.
+exit
+Quit the application
+Syntax: exit
+export Exports the current mole configuration and the
+Syntax: export <format> <file> dumped schema's structures \
+fetch
+Recursively fetches the structure of all schemas
+Syntax: fetch
+or just of the SCHEMA if used with tables
+<schemas|tables|columns>
+find_tables
+Brute force to determine if the TABLES given as
+Syntax: find_tables <SCHEMA>
+parameters are part of the SCHEMA
+<TABLE1> [<TABLE2>, ...]
+find_tables_like
+Syntax: find_tables_like Issue a query to extract all
+<SCHEMA> <FILTER>
+find_users_table Brute force to find tables in SCHEMA that
+Syntax: find_users_table match common names for tables where
+<SCHEMA> usernames are stored
+headers
+Syntax: headers <set|del>
+Sets or removes the given HTTP header
+<HEADER> [VALUE]
+import
+Obtains a previously exported mole
+Syntax: import <TYPE> [<ARG1>,
+configuration and dumped schema's structures
+...]
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Mole Cheat Sheet
+injectable_field Sets or gets the field of the query which will be
+Syntax: injectable_field (GET | used to print the information retrieved when
+POST) <INJECTABLE_FIELD> using a union technique
+method
+Syntax: method (GET|POST
+Sets the method of the request to GET or POST
+<param_post> )
+[injectable_field]
+mode
+Sets the SQL Injection exploitation method
+Syntax: mode <union|blind>
+needle
+Gets or sets the NEEDLE
+Syntax: needle [NEEDLE]
+output
+Sets the output style
+Syntax: output <pretty|plain>
+prefix
+Gets or sets the prefix for each request
+Syntax: prefix [PREFIX]
+qfilter
+Syntax: qfilter <add|config|del> Add or configure or remove query filters
+<FILTER> [ARGS]
+query
+Syntax: query <SCHEMAgt; <TABLE>
+Perform a query to fetch every column given
+COLUMN1[,COLUMN2[,COLUMN3[...]]]
+[where COND]
+readfile Read the FILE from the remote server and print
+Syntax: readfile <FILE> it
+recursive
+Recursively fetches the structure of all schemas
+Syntax: recursive
+or just of the SCHEMA if used with tables
+(schemas|tables <SCHEMA>)
+schemas
+Retrieves the schema of the database
+Syntax: schemas
+suffix
+Gets or sets the suffix for each request
+Syntax: suffix [SUFFIX]
+tables
+Show the table from a given database
+Syntax: tables <database>
+url
+Gets or sets the URL
+Syntax: url [URL [PARAM]]
+usage
+Print the usage for the command COMMAND
+Syntax: usage <COMMAND>
+verbose Sets the verbose mode on and off, each
+Syntax: verbose <on|off> request's parameters will be printed out
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+Mole Cheat Sheet
+vulnerable_param
+Sets or gets the type and name of the
+Syntax: vulnerable_param
+vulnerable parameter to be exploited by The
+<GET|POST|Cookie>
+Mole
+VULNERABLE_PARAM
+auth
+Sets or gets the authentication information
+Syntax: auth <basic>
+used by The Mole in each request
+<USERNAME:PASSWORD>
+follow_redirects Sets or gets the follow redirect flag. If enabled,
+Syntax: follow_redirects The Mole will follow HTTP redirects received
+<on|off> from the server
+Fetches the credentials for the DBMS. Usually
+usercreds requires administrator privileges on the
+database
+requestsender
+Syntax: requestsender Gets or sets the request sending mechanism
+[<httpsender|headsender>]
+responsefilter
+Syntax: responsefilter Adds or removes or configures a response filter
+<add|del|config> <FILTER> [ARGS]
+requestfilter
+Syntax: requestfilter Add or configure or remove a request filter
+<add|del|config> <FILTER> [ARGS]
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

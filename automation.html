@@ -1,0 +1,197 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>JAKAL Automation & Orchestration</title>
+<style>
+:root{--bg:#0a0e15;--panel:#111827;--panel2:#141c28;--panel3:#0e141e;--line:#1f2937;--line2:#2b3648;--ink:#e8ebf0;--ink2:#aeb7c6;--mut:#7c8598;--accent:#f5920b;--good:#34d399;--warn:#f5b23a;--crit:#f26262;--info:#5aa9f2;--purple:#a78bfa;--term:#0a0f16}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;font-size:12.5px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.mono{font-family:"IBM Plex Mono","DejaVu Sans Mono",Consolas,monospace}
+.mhead{display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line2);background:linear-gradient(90deg,#0d1420,#0a0e15)}
+.mhead .t{font-weight:700;font-size:15px}.mhead .t b{color:var(--accent)}
+.mhead .sub{color:var(--mut);font-size:11px}
+.tabs{display:flex;gap:2px;padding:0 12px;background:#0c111a;border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--ink2);padding:10px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.body{flex:1;overflow:hidden;position:relative}
+.pane{position:absolute;inset:0;padding:12px;overflow:auto;display:none}
+.pane.on{display:block}
+/* live execution layout */
+.live-grid{display:grid;grid-template-columns:272px 1fr;gap:11px;height:100%}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}
+.card h3{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);font-family:"IBM Plex Mono",monospace;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;font-family:"IBM Plex Mono",monospace}
+select,input{width:100%;background:#0a0f17;border:1px solid var(--line2);border-radius:7px;padding:7px 9px;color:var(--ink);font-size:12px;font-family:"IBM Plex Mono",monospace}
+.filters{display:flex;gap:5px;margin-bottom:8px}
+.filters button{font-family:"IBM Plex Mono",monospace;font-size:9.5px;padding:3px 8px;border-radius:6px;border:1px solid var(--line2);background:var(--panel2);color:var(--ink2);cursor:pointer}
+.filters button.on{border-color:var(--accent);color:var(--accent)}
+.eplist{display:flex;flex-direction:column;gap:5px;max-height:280px;overflow:auto}
+.ep{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);cursor:pointer}
+.ep.sel{border-color:var(--accent);background:rgba(245,146,11,.08)}
+.osbadge{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
+.os-windows{background:rgba(90,169,242,.16);color:#5aa9f2}.os-macos{background:rgba(230,230,230,.14);color:#e8ebf0}.os-linux{background:rgba(245,178,58,.16);color:#f5b23a}
+.ep .nm{flex:1;min-width:0}.ep .nm .h{font-weight:600;font-size:12px}.ep .nm .d{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--mut)}
+.conn{width:8px;height:8px;border-radius:99px;flex:none}.on-dot{background:var(--good);box-shadow:0 0 6px var(--good)}.off-dot{background:var(--mut)}
+.runbtn{width:100%;background:var(--accent);color:#1a1204;border:0;border-radius:8px;padding:10px;font-weight:700;font-size:12.5px;cursor:pointer;margin-top:9px}
+/* terminal */
+.term-wrap{display:grid;grid-template-columns:186px 1fr;border:1px solid var(--line2);border-radius:11px;overflow:hidden;height:100%;background:var(--term)}
+.term-side{background:#0c1219;border-right:1px solid var(--line);display:flex;flex-direction:column}
+.term-side .sh{padding:9px 11px;font-family:"IBM Plex Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);border-bottom:1px solid var(--line)}
+.mux{padding:7px}
+.mux a{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;color:var(--ink2);font-size:11.5px;cursor:pointer;margin-bottom:3px}
+.mux a.on{background:rgba(245,146,11,.12);color:var(--accent)}
+.mux a .osbadge{width:18px;height:18px;font-size:9px}
+.mux .cnt{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--mut)}
+.term-main{display:flex;flex-direction:column;min-width:0}
+.term-top{display:flex;align-items:center;gap:9px;padding:8px 12px;border-bottom:1px solid var(--line);background:#0c1219}
+.term-top .eid{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--accent)}
+.term-top .st{font-family:"IBM Plex Mono",monospace;font-size:9px;padding:2px 7px;border-radius:99px}
+.st-live{background:rgba(52,211,153,.14);color:var(--good)}.st-hist{background:rgba(124,133,152,.15);color:var(--mut)}
+.term-top .modeseg{margin-left:auto;display:flex;border:1px solid var(--line2);border-radius:7px;overflow:hidden}
+.term-top .modeseg button{background:none;border:0;color:var(--mut);padding:4px 9px;font-size:10px;cursor:pointer;font-family:"IBM Plex Mono",monospace}
+.term-top .modeseg button.on{background:var(--panel2);color:var(--ink)}
+.term-body{flex:1;overflow:auto;padding:11px 13px;font-family:"IBM Plex Mono","DejaVu Sans Mono",monospace;font-size:11.5px;line-height:1.55;background:var(--term)}
+.tl{white-space:pre-wrap;word-break:break-word}
+.tl .stdout{color:#c9d2e0}.tl .stderr{color:#f5a3a3}.tl .pserr{color:#f28b8b}.tl .prompt{color:#5fd39c}.tl .meta{color:#6b7688}
+/* summary grid */
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;padding:12px}
+.sumcard{background:#0c1219;border:1px solid var(--line);border-radius:9px;padding:10px}
+.sumcard .h{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.sumcard .nm{font-weight:600;font-size:11.5px}.sumcard .mono{font-size:9.5px;color:var(--mut)}
+.sumcard .ln{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:#8b94a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-family:"IBM Plex Mono",monospace;font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px}
+.b-run{background:rgba(52,211,153,.14);color:var(--good)}.b-done{background:rgba(124,133,152,.15);color:var(--mut)}.b-err{background:rgba(242,98,98,.14);color:var(--crit)}
+/* library/playbook/task/template lists */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.item .h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.item .h .nm{font-weight:600}.item .desc{color:var(--ink2);font-size:11.5px;margin-bottom:8px}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:9px;padding:2px 7px;border-radius:5px;background:var(--panel2);border:1px solid var(--line2);color:var(--ink2)}
+.item .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mini{font-size:10.5px;font-weight:600;padding:5px 9px;border-radius:6px;border:1px solid var(--line2);background:var(--panel2);color:var(--ink);cursor:pointer}
+.mini.p{background:var(--accent);border-color:var(--accent);color:#1a1204}
+.sw{width:30px;height:16px;border-radius:99px;background:var(--good);position:relative;display:inline-block;cursor:pointer}.sw.off{background:var(--line2)}
+.sw::after{content:"";position:absolute;top:2px;left:16px;width:12px;height:12px;border-radius:99px;background:#fff}.sw.off::after{left:2px;background:var(--mut)}
+.step{display:flex;gap:8px;font-size:11px;color:var(--ink2);padding:3px 0}.step .n{color:var(--accent);font-family:"IBM Plex Mono",monospace}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--good);color:#04231a;padding:9px 15px;border-radius:9px;font-weight:600;font-size:12px;opacity:0;transition:.2s;z-index:50}.toast.show{opacity:1}
+.mhead .embed-hide{}
+body.embed .mhead{display:none}
+body.embed{height:100vh}
+</style></head>
+<body>
+<div class="mhead"><div class="t"><b>Automation</b> &amp; Orchestration</div><span class="sub">Live Remote Execution Engine · cross-platform</span></div>
+<div class="tabs">
+  <button class="on" onclick="tab('live',this)">▸ Live Execution</button>
+  <button onclick="tab('lib',this)">▤ Script Library</button>
+  <button onclick="tab('pb',this)">⚙ Playbooks</button>
+  <button onclick="tab('task',this)">⏲ Tasks</button>
+  <button onclick="tab('tpl',this)">◈ Template Gallery</button>
+</div>
+<div class="body">
+  <!-- LIVE EXECUTION -->
+  <div class="pane on" id="p-live">
+    <div class="live-grid">
+      <div class="card">
+        <h3>◎ Target Picker</h3>
+        <div class="field"><label>Script</label><select id="scriptSel"></select></div>
+        <div class="field"><label>Filter OS</label>
+          <div class="filters" id="osFilter"><button class="on" data-os="all">All</button><button data-os="windows">⊞ Win</button><button data-os="macos"> mac</button><button data-os="linux">🐧 Lin</button></div>
+        </div>
+        <label style="font-size:10px;color:var(--mut);text-transform:uppercase;font-family:'IBM Plex Mono',monospace">Endpoints</label>
+        <div class="eplist" id="epList"></div>
+        <button class="runbtn" onclick="runExec()">▸ Run on <span id="selCount">0</span> targets</button>
+      </div>
+      <div class="term-wrap">
+        <div class="term-side">
+          <div class="sh">Multiplex</div>
+          <div class="mux" id="mux">
+            <a class="on" onclick="muxSel('all',this)">▦ All Devices<span class="cnt" id="muxAll">grid</span></a>
+          </div>
+        </div>
+        <div class="term-main">
+          <div class="term-top">
+            <span class="eid" id="termEid">no execution</span>
+            <span class="st st-live" id="termStatus">● LIVE</span>
+            <div class="modeseg"><button class="on" onclick="setMode('live',this)">Live</button><button onclick="setMode('hist',this)">Historical</button></div>
+          </div>
+          <div class="term-body" id="termBody"><div class="tl"><span class="meta">JAKAL Live Remote Execution — pick a script + targets, then Run. Output streams here over WebSocket (/ws/exec/{id}); past runs replay from the audit log.</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- SCRIPT LIBRARY --><div class="pane" id="p-lib"><div class="grid" id="libGrid"></div></div>
+  <!-- PLAYBOOKS --><div class="pane" id="p-pb"><div class="grid" id="pbGrid"></div></div>
+  <!-- TASKS --><div class="pane" id="p-task"><div class="grid" id="taskGrid"></div></div>
+  <!-- TEMPLATES --><div class="pane" id="p-tpl"><div class="grid" id="tplGrid"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+if(location.search.indexOf('embed=1')>=0)document.body.classList.add('embed');
+var BASE=location.protocol==='file:'?'http://localhost:8000':location.origin;
+var WSB=BASE.replace(/^http/,'ws');
+function j(p,o){o=o||{};var h={Accept:'application/json'};if(o.body)h['Content-Type']='application/json';return fetch(BASE+p,{method:o.method||'GET',headers:h,body:o.body}).then(function(r){return r.text().then(function(t){if(/^\s*<(!doctype|html)/i.test(t))throw new Error('offline');return t?JSON.parse(t):null;});});}
+function say(t){var e=document.getElementById('toast');e.textContent=t;e.classList.add('show');clearTimeout(window._t);window._t=setTimeout(function(){e.classList.remove('show');},1700);}
+function tab(id,btn){document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on');});document.getElementById('p-'+id).classList.add('on');document.querySelectorAll('.tabs button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');}
+var OSICON={windows:'⊞',macos:'',linux:'🐧',cross:'∞'};
+function osBadge(os){return '<span class="osbadge os-'+(os==='macos'?'macos':os==='windows'?'windows':'linux')+'">'+(OSICON[os]||'∞')+'</span>';}
+// sample endpoints (replaced by live /api/agents)
+var ENDPOINTS=[{agent_id:'ep_win_8832',hostname:'WIN-DESK-01',os:'windows',ip:'10.0.0.11',status:'online'},{agent_id:'ep_mac_5521',hostname:'MBP-DESIGN',os:'macos',ip:'10.0.0.24',status:'online'},{agent_id:'ep_linux_1294',hostname:'UBUNTU-DB-02',os:'linux',ip:'10.0.2.15',status:'online'},{agent_id:'ep_win_2210',hostname:'WIN-SRV-DC1',os:'windows',ip:'10.0.0.5',status:'offline'}];
+var SCRIPTS=[],SEL={},osF='all';
+function loadPickers(){
+  j('/api/automation/scripts').then(function(d){SCRIPTS=d.scripts;var s=document.getElementById('scriptSel');s.innerHTML=SCRIPTS.map(function(x){return '<option value="'+x.id+'">'+x.name+' ('+x.os+'/'+x.lang+')</option>';}).join('');}).catch(function(){var s=document.getElementById('scriptSel');s.innerHTML='<option>Clear-WindowsCache.ps1 (windows/powershell)</option><option>apt-security-updates.sh (linux/bash)</option>';});
+  j('/api/agents').then(function(d){if(d&&d.agents&&d.agents.length)ENDPOINTS=d.agents.map(function(a){return {agent_id:a.agent_id,hostname:a.hostname,os:(a.os||'linux').toLowerCase().indexOf('win')>=0?'windows':(a.os||'').toLowerCase().indexOf('mac')>=0||(a.os||'').toLowerCase().indexOf('darwin')>=0?'macos':'linux',ip:a.ip,status:a.status};});renderEps();}).catch(function(){renderEps();});
+}
+function renderEps(){
+  var el=document.getElementById('epList');
+  el.innerHTML=ENDPOINTS.filter(function(e){return osF==='all'||e.os===osF;}).map(function(e){
+    return '<div class="ep '+(SEL[e.agent_id]?'sel':'')+'" onclick="toggleEp(\''+e.agent_id+'\')">'+osBadge(e.os)+
+    '<div class="nm"><div class="h">'+e.hostname+'</div><div class="d">'+e.ip+' · '+e.agent_id+'</div></div>'+
+    '<span class="conn '+(e.status==='online'?'on-dot':'off-dot')+'" title="'+e.status+'"></span></div>';
+  }).join('');
+  document.getElementById('selCount').textContent=Object.keys(SEL).filter(function(k){return SEL[k];}).length;
+}
+function toggleEp(id){SEL[id]=!SEL[id];renderEps();}
+document.getElementById('osFilter').addEventListener('click',function(e){if(e.target.dataset.os){osF=e.target.dataset.os;document.querySelectorAll('#osFilter button').forEach(function(b){b.classList.remove('on');});e.target.classList.add('on');renderEps();}});
+// terminal state
+var FEEDS={},curMux='all',ws=null;
+function termBody(){return document.getElementById('termBody');}
+function appendLine(ep,stream,data){
+  (FEEDS[ep]=FEEDS[ep]||[]).push({stream:stream,data:data});
+  if(!document.querySelector('.mux a[data-ep="'+ep+'"]')){var m=document.getElementById('mux');var a=document.createElement('a');a.dataset.ep=ep;a.onclick=function(){muxSel(ep,a);};var e=ENDPOINTS.find(function(x){return x.agent_id===ep;})||{os:'linux',hostname:ep};a.innerHTML=osBadge(e.os)+'<span>'+(e.hostname||ep)+'</span><span class="cnt">live</span>';m.appendChild(a);}
+  if(curMux==='all')renderSummary(); else if(curMux===ep)renderFeed(ep);
+}
+function cls(s){return s==='stderr'?'stderr':s==='powershell_error'?'pserr':'stdout';}
+function renderFeed(ep){var b=termBody();var lines=(FEEDS[ep]||[]).map(function(l){return '<div class="tl"><span class="'+cls(l.stream)+'">'+esc(l.data)+'</span></div>';}).join('');b.innerHTML=lines||'<div class="tl"><span class="meta">waiting for '+ep+'…</span></div>';b.scrollTop=b.scrollHeight;}
+function renderSummary(){var b=termBody();var eps=Object.keys(FEEDS);if(!eps.length){b.innerHTML='<div class="tl"><span class="meta">No active feeds. Run a script to populate the grid.</span></div>';return;}
+  b.innerHTML='<div class="sumgrid">'+eps.map(function(ep){var e=ENDPOINTS.find(function(x){return x.agent_id===ep;})||{os:'linux',hostname:ep};var last=(FEEDS[ep].slice(-3)).map(function(l){return '<div class="ln">'+esc(l.data.replace(/\r?\n/g,' '))+'</div>';}).join('');var done=FEEDS[ep].some(function(l){return /exit code/.test(l.data);});return '<div class="sumcard"><div class="h">'+osBadge(e.os)+'<span class="nm">'+(e.hostname||ep)+'</span><span class="badge '+(done?'b-done':'b-run')+'" style="margin-left:auto">'+(done?'DONE':'RUN')+'</span></div>'+last+'</div>';}).join('')+'</div>';}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function muxSel(t,el){curMux=t;document.querySelectorAll('.mux a').forEach(function(a){a.classList.remove('on');});el.classList.add('on');if(t==='all')renderSummary();else renderFeed(t);}
+function setMode(m,btn){document.querySelectorAll('.modeseg button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');var s=document.getElementById('termStatus');if(m==='hist'){s.className='st st-hist';s.textContent='● HISTORICAL';loadHistoryPicker();}else{s.className='st st-live';s.textContent='● LIVE';}}
+function runExec(){
+  var targets=Object.keys(SEL).filter(function(k){return SEL[k];});
+  if(!targets.length){say('Select at least one endpoint');return;}
+  var sid=document.getElementById('scriptSel').value;
+  FEEDS={};curMux='all';document.querySelectorAll('.mux a[data-ep]').forEach(function(a){a.remove();});
+  j('/api/exec/run',{method:'POST',body:JSON.stringify({script_id:sid,target_endpoint_ids:targets})}).then(function(r){
+    document.getElementById('termEid').textContent=r.execution_id;
+    say('Execution '+r.execution_id+' dispatched to '+targets.length+' target(s)');
+    openWs(r.execution_id);
+  }).catch(function(){say('Backend offline — showing demo stream');demoStream(targets);});
+}
+function openWs(eid){
+  try{if(ws)ws.close();ws=new WebSocket(WSB+'/ws/exec/'+eid);
+    ws.onmessage=function(ev){var m=JSON.parse(ev.data);if(m.type==='AGENT_STREAM_DATA')appendLine(m.endpointId,m.streamType,m.data);};
+    ws.onerror=function(){};}catch(e){}
+}
+function loadHistoryPicker(){j('/api/exec').then(function(d){if(d.executions&&d.executions.length){var e=d.executions[0];j('/api/exec/'+e.execution_id).then(function(h){document.getElementById('termEid').textContent=h.execution.execution_id;FEEDS={};h.logs.forEach(function(l){appendLine(l.endpoint_id,l.stream_type,l.chunk);});});}}).catch(function(){});}
+// demo stream (file:// with no backend, for preview)
+function demoStream(targets){var lines={windows:['PS C:\\> Clear-WindowsCache.ps1','Removing item: C:\\Windows\\Temp\\* ... Success.','Cleared 214 files (1.2 GB).','[exit code 0]'],linux:['jakal-agent@ubuntu:~$ apt-get update -y','Reading package lists... Done','12 upgraded, 0 newly installed.','[exit code 0]'],macos:['jakal-agent@mac ~ % system_profiler SPApplicationsDataType','Collecting application inventory...','142 applications found.','[exit code 0]']};
+  (targets.length?targets:ENDPOINTS.slice(0,3).map(function(e){return e.agent_id;})).forEach(function(ep,i){var e=ENDPOINTS.find(function(x){return x.agent_id===ep;})||{os:'linux'};var L=lines[e.os]||lines.linux;L.forEach(function(ln,k){setTimeout(function(){appendLine(ep,'stdout',ln+'\n');},(k+1)*350+i*120);});});
+  document.getElementById('termEid').textContent='exec_demo01';
+}
+// other tabs
+function loadLib(){j('/api/automation/scripts').then(function(d){document.getElementById('libGrid').innerHTML=d.scripts.map(function(s){return '<div class="item"><div class="h">'+osBadge(s.os)+'<span class="nm">'+s.name+'</span></div><div class="desc">'+s.description+'</div><div class="btns" style="margin-bottom:8px"><span class="chip">'+s.os+'</span><span class="chip">'+s.lang+'</span><span class="chip">'+s.category+'</span></div><div class="btns"><button class="mini p" onclick="say(\'Loaded '+s.name+' into Target Picker\')">▸ Run</button><button class="mini" onclick="say(\'Viewing '+s.name+'\')">View</button><button class="mini" onclick="say(\'Cloned '+s.name+'\')">Clone</button></div></div>';}).join('');}).catch(function(){});}
+function loadPb(){j('/api/automation/playbooks').then(function(d){document.getElementById('pbGrid').innerHTML=d.playbooks.map(function(p){return '<div class="item"><div class="h"><span class="nm">'+p.name+'</span><span class="chip" style="margin-left:auto;color:var(--warn)">'+p.risk+'</span></div><div class="desc mono" style="font-size:10.5px;color:var(--mut)">trigger: '+p.trigger+'</div>'+p.steps.map(function(st,i){return '<div class="step"><span class="n">'+(i+1)+'</span>'+st+'</div>';}).join('')+'<div class="btns" style="margin-top:8px"><button class="mini p" onclick="say(\'Playbook armed\')">▸ Enable</button><button class="mini" onclick="say(\'Editing flow\')">Edit</button></div></div>';}).join('');}).catch(function(){});}
+function loadTask(){j('/api/automation/tasks').then(function(d){document.getElementById('taskGrid').innerHTML=d.tasks.map(function(t){return '<div class="item"><div class="h"><span class="nm">'+t.name+'</span><span class="sw '+(t.status==='enabled'?'':'off')+'" style="margin-left:auto" onclick="this.classList.toggle(\'off\');say(\'Task toggled\')"></span></div><div class="desc mono" style="font-size:10.5px">'+t.schedule+'</div><div class="btns"><span class="chip">'+t.script_id+'</span><span class="chip">'+t.targets+'</span></div></div>';}).join('');}).catch(function(){});}
+function loadTpl(){j('/api/automation/templates').then(function(d){document.getElementById('tplGrid').innerHTML=d.templates.map(function(t){return '<div class="item"><div class="h">'+osBadge(t.os)+'<span class="nm">'+t.name+'</span><span class="chip" style="margin-left:auto">blueprint</span></div><div class="desc">'+t.description+'</div><div class="btns"><button class="mini p" onclick="say(\'Copied '+t.name+' to your library\')">⧉ Copy to customize</button></div></div>';}).join('');}).catch(function(){});}
+loadPickers();loadLib();loadPb();loadTask();loadTpl();renderEps();
+</script>
+</body></html>

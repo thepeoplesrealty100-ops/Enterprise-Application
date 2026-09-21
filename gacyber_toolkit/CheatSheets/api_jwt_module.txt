@@ -1,0 +1,743 @@
+[Organization Logo]
+[Organization Name]
+[Title of the Report]
+Test 1: Techniques and Tools to Perform API Reconnaissance
+[*This section includes various techniques for gathering essential information from the target API during penetration testing, mainly focusing on reconnaissance, route discovery, endpoint discovery, and identifying API structure and underlying technologies.]
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Test 2: Test APIs for Authentication and Authorization Vulnerabilities
+[*This section includes techniques for testing API authentication and authorization, which includes identifying broken authentication through brute-forcing and password reset tests.]
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Test 3: Evaluate the security of JSON Web Tokens (JWT)
+[*This section includes different techniques for testing JWTs for security issues by identifying their usage, decoding tokens, checking for weak signing keys, and attempting privilege escalation via claim manipulation.]
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Test 4: Test APIs for Input Validation and Injection Vulnerabilities
+[*This section includes various API input validation and injection testing techniques, focusing on identifying vulnerabilities arising from improper handling of user inputs.]
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Test 5: Test APIs for Security Misconfiguration Vulnerabilities
+[*This section includes different techniques for identifying API security misconfigurations and vulnerabilities through comprehensive testing.]
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Test 6: Test APIs for Rate Limiting and Denial of Service (DoS) Attacks
+[*This section focuses on penetration testing for API vulnerabilities related to rate limiting and denial of service (DoS) attacks and then documenting the obtained results in a clear report format.]
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Test 7: Test APIs for Security of GraphQL implementations
+[*This section includes techniques for testing GraphQL APIs by assessing their schema, functionality, and resilience to common vulnerabilities.]
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Test 8: Test APIs for Business Logic Flaws and Session Management
+[*This section includes techniques for identifying API vulnerabilities related to business logic flaws and session management issues.]
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Results Analysis:
+Penetration Tester: | 
+Date: |  | Location:
+Test 1.1: API Reconnaissance
+Target Organization | 
+URL | 
+Target API | [*Base URL / Endpoint]
+Tools/Services Used | 
+Intercepted API Traffic? | Yes | No
+Captured API Endpoints | 
+API Request & Response Analysis | [*Observed Data Types, Headers, Authentication Mechanisms, etc.]
+Identified Hidden or Unreferenced APIs? | [*Yes/No, List if Found]
+Parameter Manipulation & Fuzzing Results | [*Successful Modifications, Server Responses, Errors, etc.]
+Security Risks Identified | [*Unprotected Endpoints, Weak Authentication, Information Disclosure, etc.]
+Potential Exploit Paths | [*API Injection, Data Exposure, Rate-Limiting Bypass, etc.]
+AI Tools Used (If any) | [*ShellGPT, Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Test 1.2: Extract API Routes
+Target Organization | 
+URL | 
+Target API | [*Base URL / Endpoint]
+Tools/Services Used | 
+Extracted API Routes | [*Yes/No, List out if applicable]
+Is API Documentation Available? | [*Yes/No, Source: OpenAPI, Swagger, Postman Collection, etc.]
+Wordlist Generated? | [*Yes/No, File Name if applicable: wordlist.txt, etc.]
+Identified API Route Patterns | [*Module Structure, Versioning, Common Naming Conventions, etc.]
+Undocumented or Hidden Endpoints Found? | [*Yes/No, List if applicable]
+Potential Security Risks Identified | [*Unprotected Endpoints, Weak Authentication, Information Disclosure, etc.]
+Wordlist Used for Fuzzing? | [*Yes/No, Give details]
+Other Security Vulnerabilities Identified | [*Exposed API Endpoints, Weak Authentication, Sensitive Data Exposure, etc.]
+AI Tools Used (If any) | [*ShellGPT, Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Test 1.3: Discover API Endpoints
+Target Organization | 
+URL | 
+Target API | [*Base URL / Endpoint]
+Tools/Services Used | 
+Wordlist Used for Discovery | [*Path to Wordlist, Custom Wordlists, etc.]
+Authentication Method Used | [*API Key, Token, Basic Auth, None, etc.]
+GET Method Scan Results | [*Accessible Endpoints, Status Codes, Notes]
+POST Method Scan Results | [*Discovered Endpoints, Required Data Formats, Status Codes]
+PUT & DELETE Method Scan Results | [*Endpoints Supporting Resource Modification, Status Codes, Notes]
+Identified Hidden or Undocumented API Endpoints? | [*Yes/No, List if found]
+Potential Misconfigurations Detected | [*Improper Access Controls, Insecure Methods, etc.]
+Other Security Vulnerabilities Identified | [*Exposed Endpoints, Weak Authentication, Data Manipulation Risks, etc.]
+Additional Observations & Recommendations | 
+Test 1.4: Enumerate API’s Structure
+Target Organization | 
+URL | 
+Target API Endpoints | 
+Tools/Services Used | 
+Wordlist Used | [*routes.kite, dirsearch.txt, custom wordlist, etc.]
+Scanning Method Used | [*Single Target, Multiple Targets, Depth-Based Enumeration, etc.]
+Enumerated API Paths | [*List of Discovered Endpoints if found]
+Depth Level of Enumeration | [*Depth 0, Depth 1, Depth 2, etc.]
+Brute-Forced Endpoints? | [*Yes/No, Results if applicable]
+Ignored Length Response? | [*Yes/No, Filtered Responses]
+Potential Exploit Paths Identified | [*Sensitive API Endpoints, Unauthenticated Access, Hidden Admin APIs, etc.]
+Other Security Vulnerabilities Identified | [*Exposed Endpoints, Unauthenticated APIs, Sensitive Data Disclosure, etc.]
+Additional Observations & Recommendations | 
+Test 1.5: Identify API Functionality
+Target Organization | 
+URL | 
+Target API | [*Base URL & Endpoints Tested]
+Tools/Services Used | 
+HTTP Methods Tested | [*GET, POST, PUT, DELETE, etc.]
+API Parameters & Input Handling Tested? | [*Yes/No, List if applicable]
+Authentication Mechanism | [*API Keys, OAuth, JWT, etc.]
+Automated Test Scripts Executed? | [*Yes/No, Examples if used]
+Response Validation & Status Codes Observed? | [*200, 400, 403, 500, etc.]
+Unexpected API Responses or Errors Detected? | [*Yes/No, Details if found]
+Rate Limiting & Throttling Observed? | [*Yes/No, Any Bypass Found?]
+Other Security Vulnerabilities Identified | [*Weak Authentication, Improper Access Controls, Data Integrity Issues, etc.]
+Additional Observations & Recommendations | 
+Test 1.6: Discover API Technologies
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Detected Web Server | [*NGINX, Apache, IIS, etc.]
+Programming Language Used | [*Python, JavaScript, PHP, etc.]
+CDN & Caching Mechanisms Identified | [*Cloudflare, Varnish, Akamai, etc.]
+Detected Database Technology | [*MongoDB, MySQL, PostgreSQL, etc.]
+Correlated Technology Findings with Known Vulnerabilities | [*Yes/No, Identified Risks if found]
+Cross-Checked Results with Other Tools? | [*Yes/No, Give Details]
+Potential Exploit Paths Identified | [*Insecure Defaults, Misconfigurations, Version-Specific Vulnerabilities, etc.]
+Other Security Vulnerabilities Identified | 
+AI Tools Used (If any) | [*ShellGPT, Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Test 2.1: Test API for Broken Authentication
+Target Organization | 
+URL | 
+Target API | 
+Tools/Services Used | 
+Authentication Method Tested | [*Basic Auth, OAuth, JWT, API Key, etc.]
+Brute Force Attack Feasibility | [*Rate Limiting Enforced? Yes/No, Query Batching Allowed? Yes/No]
+Rate Limit Bypass Successful? | [*Yes/No, Number of Requests Processed in a Single Batch]
+Password Reset Misconfigurations Detected? | [*Yes/No, Password Confirmation Required?]
+Token Hijacking Risk Identified? | [*Yes/No, Give Details]
+Privilege Escalation Possible? | [*Yes/No, Impact Assessment]
+Session Management Weaknesses | [*Token Reuse Allowed? Expiry Configurations? etc.]
+Other Security Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 2.2: Test API for OAuth Weaknesses
+Target Organization | 
+URL | 
+Target API | 
+Tools/Services Used | 
+Detected Deprecated Grant Types | [*ROPC, Implicit Flow, etc.]
+OAuth Flows Identified via URL Parameters | [*Implicit, Authorization Code, PKCE, etc.]
+Misconfigured OAuth Flows | [*Authorization Code without PKCE, Improper Token Handling, etc.]
+Public Client OAuth Flow Issues | [*Authorization Code without PKCE, Improper Token Storage, etc.]
+Confidential Client OAuth Flow Issues | [*Improper Grant Type Usage, Weak Client Credentials, etc.]
+Token Exposure via URLs or Headers | [*Yes/No, List if Any]
+Referer Header & External Resource Leaks Detected? | [*Yes/No, Details if found]
+Other Security Vulnerabilities Identified | 
+AI Tools Used (If any) | [*ShellGPT, Gemini, Copilot, Custom Scripts, etc.]
+Scripts or Prompts Used for Automation | 
+Additional Observations & Recommendations | 
+Test 2.3: Test API for Object-level Permissions (BOLA)
+Target Organization | 
+URL | 
+Tools/Services Used | 
+Tested API Endpoints | [*List of API routes tested for BOLA issues]
+Scenario 1: Unauthorized Data Access | [*Testing API for Unauthorized Read Access]
+Method Used | [*Direct Object Reference (IDOR), Path Manipulation, etc.]
+Successful? | [*Yes/No, Private Data Exposed?]
+Example Exploit Request | [*Modified API Request to Access Other Users’ Data]
+Scenario 2: Unauthorized Object Deletion | [*Testing API for Unauthorized Write/Delete Access]
+Method Used | [*ID Manipulation in API Requests, Forced Execution, etc.]
+Successful? | [*Yes/No, Unauthorized Deletion Allowed?]
+Example Exploit Request | [*Modified API Request for Unauthorized Deletion]
+Response Analysis | [*Status Codes, Error Messages, Unexpected API Behavior]
+Potential Exploit Paths Identified | [*Data Theft, Account Takeover, Unauthorized Object Deletion, etc.]
+Additional Observations & Recommendations | 
+Test 2.4: Test API for Broken Function Level Authorization
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Test Scenario | [*Unauthorized Invite Creation, Unauthorized Admin Access, etc.]
+API Request Attempted | [*Method & Endpoint – For example, POST /api/invites/new, GET /api/admin/v1/users/all]
+Modified Request Sent | [*Yes/No, Details of Altered Parameters, Headers, Payloads, etc.]
+Expected Response | [*Access Denied, Unauthorized, Proper Error Message, etc.]
+Actual Response | [*Access Granted? Data Exposed? Role Escalation Achieved?]
+Successful Exploitation? | [*Yes/No, Details of Unauthorized Access Achieved]
+Approach Followed | 
+Evidence Collected | 
+Response Analysis | [*Status Codes, Error Messages, Unexpected API Behavior]
+Potential Exploit Paths Identified | [*Privilege Escalation, Unauthorized Data Access, Bypassing Role-Based Access Controls, etc.]
+Additional Observations & Recommendations | 
+Test 3.1: Test for JWT Issues
+Target Organization | 
+URL | 
+Target API | 
+Tools/Services Used | 
+JWT Identified in | [*Headers, Cookies, Local Storage, etc.]
+Decoded JWT Information | [*Header, Payload, Signature Details]
+Algorithm Used | [*HS256, RS256, None, etc.]
+Sensitive Data Exposure in Payload? | [*Yes/No, List of Exposed Claims if found]
+Weak Signing Key Detected? | [*Yes/No, Brute-Force Results if tested]
+Privilege Escalation Vulnerability? | [*Yes/No, Modified Token Accepted?]
+Token Replay Attack Feasibility? | [*Yes/No, Token Expiry & Validation Details]
+Lack of Proper Claim Validation? | [*Yes/No, Bypassed Claims if found]
+Potential Exploit Paths Identified | [*Privilege Escalation, Unauthorized Data Access, Bypassing Role-Based Access Controls, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 3.2: Test JWT for Algorithm Confusion Attack
+Target Organization | 
+URL | 
+Target Web Application | 
+Tools/Services Used | 
+JWT Algorithm Tested | [*HS256, RS256, etc.]
+Retrieved Public Key from Server? | [*Yes/No, Endpoint: /jwks.json, /well-known/jwks.json, Derived using tools?]
+Public Key Format Matching | [*Converted to X.509 PEM? Yes/No, Any mismatches?]
+Modified JWT Payload | [*Yes/No, List of Exposed Claims if found]
+Updated alg Parameter in JWT Header? | [*Yes/No, Changed to HS256, RS256, etc.]
+Signed JWT using Public Key as Secret Key? | [*Yes/No, Successful Signature?]
+Server Response to Modified JWT | [*Accepted/Rejected, Any errors or authentication bypass detected?]
+Potential Exploit Paths Identified | [*Authentication Bypass, Privilege Escalation, Token Forgery, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 3.3: Test JWT for Shared Private Key Vulnerabilities
+Target Organization | 
+URL | 
+Target Applications Tested | 
+Tools/Services Used | 
+Valid JWT Acquired? | [*Yes/No, Application Name]
+Decoded JWT Claims & Headers | [*Algorithm, User ID, Role, etc.]
+Private Key Sharing Detected? | [*Yes/No, Evidence if applicable]
+JWT Reuse Attempted on Another Application? | [*Yes/No, Application Name & Endpoint Tested]
+Response from Second Application | [*Accepted/Rejected, HTTP Response Code, Evidence if applicable]
+Potential Exploit Paths Identified | [*Cross-Application Token Reuse, Account Takeover, Unauthorized Access, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 3.4: Test JWT for Billion Hashes Attack
+Target Organization | 
+URL | 
+Target Web Application | 
+Tools/Services Used | 
+JWT Algorithm Identified | [*HS256, RS256, ES512, etc.]
+Complex Payload Constructed? | [*Yes/No, Example Structure if applicable]
+JWT Crafted Using | [*Python jwt.encode, Custom Script, etc.]
+Payload Size & Complexity Increased? | [*Yes/No, Steps Taken]
+Server Response Observations | [*Delays, Errors, Crashes, Timeouts, etc.]
+Server Resource Utilization Measured? | [*Yes/No, CPU & Memory Impact Observed?]
+Potential Exploit Paths Identified | [*DoS, Performance Degradation, Server Overload, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 4.1: Test API for SQL Injection Vulnerabilities
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Injection Type Tested | [*Boolean-Based, Error-Based, Time-Based, Blind, etc.]
+SQL Injection via URL Parameter? | [*Yes/No, Payloads Used, Response Details]
+SQL Injection via Request Headers? | [*Yes/No, Headers Tested, Server Response]
+SQL Injection via Request Body? | [*Yes/No, POST/PUT Data Manipulation Attempted, Results]
+SQL Injection via Cookies? | [*Yes/No, Modified Session/Input Data, Impact Observed]
+Unauthorized Data Extraction Successful? | [*Yes/No, Example Query: OR 1=1, Data Retrieved?]
+Data Tampering & Destructive Query Execution? | [*Yes/No, Example Payload: DELETE FROM products WHERE 1=1, Impact Observed?]
+OS Command Injection Attempted? | [*Yes/No, Example Payload: ls /etc/passwd, Response Details]
+Potential Exploit Paths Identified | [*Unauthorized Data Access, Database Manipulation, Service Disruption, etc.]
+Approach Followed | 
+Evidence Collected | 
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 4.2: Test API for NoSQL Injection Vulnerabilities
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Tested Input Fields | [*Query Parameters, Request Bodies, Headers, etc.]
+Initial Numeric Input Test | 
+Error Message Observed? | [*Yes/No, Example if found]
+NoSQL Injection Payloads Tested | [*List of Payloads: $where, $ne, Boolean-based, etc.]
+Responses to Injection Attempts | [*422 Unprocessable Entity, 200 OK, etc.]
+Exploitation Attempt Successful? | [*Yes/No, Details of Successful Payload if applicable]
+Bypassed Validation Mechanism? | [*Yes/No, Example: $ne Operator Used to Skip Validation]
+Approach Followed | 
+Evidence Collected | 
+Potential Exploit Paths Identified | [*Bypassing Authentication, Privilege Escalation, Data Extraction, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 4.3: Test API for XML External Entity (XXE) Injection
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Endpoints Accepting XML Identified? | [*Yes/No, List of Vulnerable Endpoints if found]
+Content-Type Header Inspection | [*application/xml, text/xml, etc.]
+Malicious XML Payload Injected? | [*Yes/No, Details of Payload Used]
+Response Behavior Observed | [*Sensitive Data Leak, Unauthorized File Access, etc.]
+External Resource Fetching Successful? | [*Yes/No, Details of External Requests Made]
+Denial of Service (DoS) Attempt | [*Yes/No, Server Crash or Instability Observed?]
+Key Indicators of XXE Vulnerability | [*Sensitive File Disclosure, Unauthorized Data Access, External Requests, Server Instability, etc.]
+Approach Followed | 
+Evidence Collected | 
+Potential Exploit Paths Identified | [*File Disclosure, Outbound Network Requests, DoS Attacks, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 4.4: Test API for Cross-site Scripting (XSS)
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Payload Injected | [*Example: <script>alert('XSS!');</script>]
+Injection Method | [*API Request, User Profile Form, Direct URL Manipulation, etc.]
+API Response Behavior | [*Does the API return the injected payload? Yes/No]
+Output Encoding Present? | [*HTML Entity Encoding, JavaScript Escaping, etc.]
+Reflected in Web Application? | [*Yes/No, If yes, execution details]
+Persistent Across Sessions? | [*Yes/No, If yes, impact details]
+Stored in a Database? | [*Yes/No, Details if applicable]
+Approach Followed | 
+Evidence Collected | 
+Potential Exploit Paths Identified | [*User Profile Viewing, Comment Sections, API Responses in Web UI, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 4.5: Test API for WS HTTP GET Parameters/REST Attacks
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Response Format Observed | [*JSON, XML, HTML, Plaintext, etc.]
+Data Fields Exposed | [*Account Numbers, User IDs, Balances, Messages, etc.]
+Parameter Manipulation Attempted? | [*Yes/No, Examples Used]
+Oversized Input or Special Characters Tested? | [*Yes/No, Server Response Observed]
+SQL Injection Payloads Attempted? | [*Yes/No, Example Used, Server Response]
+Unexpected Server Behavior Identified? | [*Errors, Stack Traces, Unauthorized Data Access, etc.]
+Authentication & Authorization Issues Found? | [*Yes/No, Details if applicable]
+Approach Followed | 
+Evidence Collected | 
+Potential Exploit Paths Identified | [*Parameter Tampering, Injection Attacks, Unauthorized Data Access, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 4.6: Test API for WS Replay Attacks
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Captured API Request | [*Method, Headers, Payload, Identifiable Tokens]
+Replay Test Performed? | [*Yes/No, Details of Replayed Request]
+Server Response to Replayed Request | [*Accepted/Rejected, Response Code, Behavior Observed]
+Modified Timestamp or Nonce Value | [*Accepted/Rejected, Server Validation Status]
+Presence of Anti-Replay Mechanisms | [*Nonce Validation, Timestamp Validation, Digital Signatures – Yes/No, Effectiveness]
+Automation of Replay Attacks | [*Postman, SoapUI, JMeter – Yes/No, Results Observed]
+Simulated Multiple User Replays | [*JMeter Used? Yes/No, Server Handling of Identical Requests]
+Approach Followed | 
+Evidence Collected | 
+Potential Exploit Paths Identified | [*Session Hijacking, Unauthorized Transactions, Data Manipulation, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 4.7: Test API for Secure Token Transmission (HTTPS/TLS)
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Intercepted Token Transmission? | [*Yes/No, HTTP or HTTPS Used?]
+TLS Configuration Issues Identified? | [*Yes/No, Weak Ciphers, Outdated Protocols, Missing Certificates, etc.]
+Tokens Hardcoded in Headers or Query Strings? | [*Yes/No, Examples if found]
+Token Exposure via Man-in-the-Middle (MITM) Attack? | [*Yes/No, Give details if successful.]
+Replay Attack Feasibility | [*Yes/No, Were Tokens Accepted Without Validation?]
+Secure Token Storage Validated? | [*Yes/No, Secure & HttpOnly Flags Set in Cookies?]
+Tokens Logged in Plaintext? | [*Yes/No, Log Analysis Results from Splunk/Manual Review]
+Approach Followed | 
+Evidence Collected | 
+AI-Based Automation for Secure Transmission Testing | [*List AI tools used]
+Scripts or Prompts Used for Automation | 
+Potential Exploit Paths Identified | [*Session Hijacking, Unauthorized Transactions, Data Manipulation, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 5.1: Test via Fuzzing API Inputs
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Wordlists Used | [*SecLists, Custom Wordlists, Common Payloads, etc.]
+Fuzzing Method Applied | [*Credential Brute Force, Injection Testing, Error-Based Fuzzing, etc.]
+Authentication Bypass Tested? | [*Yes/No, List of Tested Payloads if applicable]
+Injection Vulnerabilities Identified? | [*SQLi, XSS, Command Injection, etc.]
+Detected Weak Input Validation? | [*Yes/No, Example Requests if applicable]
+Response Code Analysis | [*200, 403, 500, Custom Error Messages, etc.]
+Successful Payloads Identified? | [*Yes/No, List if found]
+Potential Exploit Paths Identified | [*Credential Enumeration, Authentication Bypass, Injection Attacks, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 5.2: Perform API Vulnerability Scanning
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Scanning Method Used | [*Automated Scan, Manual Exploration, AI-Based Scan, etc.]
+Authentication Mechanism Tested? | [*Yes/No, Weaknesses Found: Broken Authentication, JWT Tampering, etc.]
+Authorization Issues Identified? | [*Yes/No, Weaknesses Found: IDOR, Privilege Escalation, etc.]
+Injection Vulnerabilities Found? | [*SQLi, Command Injection, XML External Entity (XXE), etc.]
+Improper Input Validation Detected? | [*Yes/No, Unvalidated Parameters, Unsanitized Data, etc.]
+Insecure Data Transmission Issues? | [*Yes/No, HTTP Instead of HTTPS, Weak TLS Versions, etc.]
+API Rate Limiting & DoS Protections Tested? | [*Yes/No, Results if tested]
+Exposed Sensitive Information? | [*Tokens, API Keys, Debug Data, Stack Traces, etc.]
+AI-Based Automation for API Scanning | [*List AI tools used]
+Scripts or Prompts Used for Automation | 
+Potential Exploit Paths Identified | [*Broken Auth, Injection Attacks, API Misconfigurations, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 5.3: Test for Unsafe Consumption of APIs
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Test Scenario 1: SQL Injection through External Data Integration
+Injected Payload | [*Example Payload Used]
+API Data Handling Behavior | [*Stored Directly? Sanitized?]
+SQL Injection Successful? | [*Yes/No, Exploit Details]
+Test Scenario 2: Redirect-based Data Leakage
+API Request Tested | [*POST/GET with Third-Party Data]
+Third-Party Redirect Exploited? | [*Yes/No, Data Exfiltrated?]
+API Response Handling Observed | [*Blind Redirect? Secure Handling?]
+Test Scenario 3: Malicious Input via Repository Name
+Injected Repository Name | [*Example: '; DROP DATABASE; --]
+API Processing Behavior | [*Executed as Code? Sanitized?]
+Impact Observed | [*Data Manipulation, Unauthorized Query Execution, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 5.4: Test API for Unrestricted Resource Consumption
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Test Scenario 1: Third-Party Service Abuse
+Rate Limiting Implemented? | [*Yes/No, Observations]
+Excessive Requests Allowed? | [*Yes/No, Number of Requests Sent, Response Behavior]
+Financial Impact on Third-Party Services | [*Estimated Cost Escalation if Applicable]
+Test Scenario 2: Memory Exhaustion via Batched Requests
+Maximum Allowed Operations Per Batch? | [*Limit Enforced? Yes/No]
+Memory Exhaustion Observed? | [*Yes/No, Impact on Server Performance]
+Server Response to Large Batched Requests? | [*Processed, Throttled, or Crashed?]
+Test Scenario 3: Cache Service Exploitation
+File Size Restrictions Applied? | [*Yes/No, Maximum File Size Allowed]
+Excessive Bandwidth Usage Observed? | [*Yes/No, Increase in Consumption %]
+Cache Service Abused for Large File Requests? | [*Yes/No, Potential Financial Impact]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 5.5: Test API for Cross-Origin Resource Sharing (CORS) Misconfigurations
+Target Organization | 
+URL | 
+Target API/ Service | 
+Tools/Services Used | 
+CORS Headers Identified | [*Access-Control-Allow-Origin, Access-Control-Allow-Credentials, etc.]
+Test Scenarios | [*List out the Scenarios, For example, Insecure Use of Specific Origins, Overly Permissive Credentials, etc.]
+Tested Request Details | [*Endpoint, Method, Headers Used]
+Response Analysis | [*Headers Returned, Data Exposed, Potential Vulnerability]
+Exploitable Behavior Detected? | [*Yes/No, Impact]
+Potential Exploit Paths | [*Data Theft, XSS, Credential Hijacking, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 5.6: Test API Logs for Vulnerabilities
+Target Organization | 
+URL | 
+Target API | 
+Tools/Services Used | 
+HTTP Methods Tested | [*GET, POST, PUT, DELETE, PATCH – Any Unauthorized Access Found?]
+Endpoints Analyzed | [*List of Critical API Endpoints Tested]
+Sensitive Data Exposure Detected? | [*API Keys, Tokens, User Credentials Logged in Plaintext?]
+Time Consumed Analysis | [*Unusual Processing Times, Potential DoS Vulnerability?]
+Abnormal Status Codes Observed? | [*401 Unauthorized, 500 Internal Server Error, etc.]
+Logging of Security Tokens & Headers? | [*Authorization, Session Tokens Exposed?]
+Potential Exploit Paths | [*Broken Access Control, Token Leakage, DoS, Data Exposure, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 5.7: Test for Web Services Probing Attacks
+Target Organization | 
+URL | 
+Target Web Service | 
+Tools/Services Used | 
+WSDL Document Obtained? | [*Yes/No, URL if found]
+Service Functions & Parameters Mapped? | [*Yes/No, Key Functions Identified if applicable]
+SOAP Requests Crafted & Sent? | [*Yes/No, Example Payloads if applicable]
+Injection Payloads Tested | [*SQLi, XSS, Command Injection, etc.]
+Errors or Unexpected Behavior Observed? | [*Yes/No, Example Error Messages if applicable]
+Unauthorized Access Attempted? | [*Yes/No, Data/Functions Accessed if applicable]
+Sensitive Data Exposure Identified? | [*Broken Access Control, Token Leakage, DoS, Data Exposure, etc.]
+Potential Exploit Paths | [*SQL Injection, Unauthorized Data Access, Broken Authentication, etc.]
+Other Vulnerabilities Identified | 
+Additional Observations & Recommendations | 
+Test 5.8: Test for Suspicious SOAP Attachments
+Target Organization | 
+URL | 
+Target Web Service | 
+Tools/Services Used | 
+Is SOAP Request Interception Successful? | [*Yes/No, Details if applicable]
+Modified Attachment Payloads Tested | [*Base64-Encoded Payloads, Executable Files, Scripts, etc.]
+Oversized/Corrupted Attachments Tested? | [*Yes/No, Response Behavior Observed]
+Unexpected File Formats Tested? | [*.exe, .php, .zip, etc.]
+Mismatched Content-Type Manipulation | [*Yes/No, Example Used: application/octet-stream, etc.]
+File Inclusion Payloads Injected? | [*Yes/No, Example Used: ../../../../../etc/passwd]
+Server Response Analysis | [*Errors, Debug Information, Unhandled Exceptions, etc.]
+Observed Application Behavior | [*Crashes, Unauthorized Access, Data Leakage, etc.]
+Potential Exploit Paths | [*Code Execution, Privilege Escalation, Sensitive Data Exposure, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 6.1: Test API for Throttling and Rate Limiting Attacks
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Baseline API Response | [*Latency, Status Code, Response Data Validation]
+Rate Limit Threshold Identified? | [*Yes/No, Requests Per Second Allowed Before Limiting]
+Behavior with Sequential Requests | [*Handled Gracefully, Blocked, Delayed Response, etc.]
+Behavior with Requests from Multiple IPs | [*Rate Limit Applied Per IP, Bypassed via Rotation, etc.]
+Behavior with Requests from Multiple Authentication Tokens | [*Rate Limit Applied Per Token, Bypassed via Token Cycling, etc.]
+Behavior with Requests Using Different User-Agent Headers | [*Different Response Based on User-Agent, Rate Limits Applied/Bypassed]
+Error Messages Observed | [*Rate-Limited Status Codes: 429, 403, Custom API Errors, etc.]
+Observed Application Behavior | [*Crashes, Unauthorized Access, Data Leakage, etc.]
+Potential Exploit Paths | [*Rate-Limited Status Codes: 429, 403, Custom API Errors, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 6.2: Bypass Rate Limits via IP Rotation
+Target Organization | 
+URL | 
+Target API/Host | 
+Tools/Services Used | 
+Initial Testing Without IP Rotation | [*Same IP Detected? Yes/No, Rate Limit Triggered? Yes/No]
+IP Rotation Configuration | [*Method Used: Proxy, VPN, TOR, etc.]
+Verification of IP Rotation | [*Different IPs Observed? Yes/No, Verification Method: ifconfig.co, API Logs, etc.]
+Rate Limit Bypassed? | [*Yes/No, Number of Requests Before Blocked Without Rotation vs. With Rotation]
+Approach Followed | 
+Evidence Collected | 
+Remediation | 
+Observed API Response Changes | [*Block Mechanism Triggered? Captcha, 403, Temporary Ban, etc.]
+Potential Exploit Paths | [*API Abuse, Brute-Forcing, Enumeration, DoS, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 6.3: Test API for XML Bombs (Billion Laughs Attack)
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Malicious XML Payload Used | [*Yes/No, File Name if used: bomb.xml, soap_bomb.xml, etc.]
+API Method Tested | [*POST, PUT, FILE UPLOAD, etc.]
+Server Response to Attack | [*500 Internal Server Error, Server Crash, Increased CPU Usage, etc.]
+SOAP-Based Web Service Tested? | [*Yes/No, Observed Behavior if tested]
+XML File Upload Tested? | [*Yes/No, System Response if tested: Hang, Crash, Timeout, etc.]
+Rate Limiting or Mitigations in Place? | [*Yes/No, Any Restrictions Observed?]
+Approach Followed | 
+Evidence Collected | 
+Remediation | 
+Potential Exploit Paths | [*Denial of Service, Server Crash, Resource Exhaustion, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 7.1: Test for GraphQL Issues
+Target Organization | 
+URL | 
+Target GraphQL Endpoint | 
+Tools/Services Used | 
+Test Category | Test Description | Details | Tool Used
+Introspection Query Testing | 
+Authorization Testing | 
+SQL Injection Testing | 
+Cross-Site Scripting (XSS) Testing | 
+Denial of Service (DoS) Testing | 
+Batching Attack Testing | 
+Error Message Analysis | 
+Underlying API Exposure | 
+Other Security Risks Identified | 
+Approach Followed | 
+Evidence Collected | [*If Any]
+Remediation | 
+Additional Observations & Recommendations | 
+Test 7.2: Test GraphQL for LDAP Injection
+Target Organization | 
+URL | 
+Target GraphQL API | 
+Tools/Services Used | 
+Injection Query Attempted | [*Wildcard Injection, Logical Operators, Advanced LDAP Filters, etc.]
+Wildcard Injection Successful? | [*Yes/No, Retrieved All Users?]
+Logical Operators Bypass Successful? | [*Yes/No, Data Scope Manipulation Observed?]
+Advanced LDAP Query Results | [*Yes/No, Exposed Additional Attributes or Hidden Records?]
+Authentication Bypass Attempted? | [*Yes/No, Retrieved Admin or Restricted Data?]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Remediation | 
+Potential Exploit Paths | [*Unintended Data Exposure, Privilege Escalation, Authentication Bypass, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 7.3: Test GraphQL for Log Spoofing
+Target Organization | 
+URL | 
+Target Web Application | 
+Tools/Services Used | 
+Valid Query/Mutation Test | [*Operation Name Appears in Logs Correctly? Yes/No, Observations]
+Modified Operation Name Test | [*Logs Reflect Modified/Misleading Name? Yes/No, Example]
+Custom Operation Name Injection | [*Unexpected Names Logged? Yes/No, Example]
+Malicious String Injection | [*Log Stores Harmful Strings? Yes/No, Observations]
+Log Sanitization & Input Validation Tested? | [*Yes/No, Details on Log Handling]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Remediation | 
+Potential Exploit Paths | [*Log Manipulation, False Audit Trails, XSS in Logs, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 7.4: Test GraphQL for Command Injection
+Target Organization | 
+URL | 
+Target GraphQL Endpoint | 
+Tools/Services Used | 
+Injection Points Identified | [*Dynamic Fields, Variables, User-Provided Inputs]
+GraphQL Query Used for Testing | [*Example Query, Injection Location]
+Payloads Tested | [*For Example, 2; ls -la, 1; rm -rf /, etc.]
+Server Response Analysis | [*Execution Confirmation, Stack Traces, Error Messages, etc.]
+Potential Exploit Paths | [*Code Execution, System Command Execution, Data Exfiltration, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 8.1: Test API for Unrestricted Access to Sensitive Business Flows
+Target Organization | 
+URL | 
+Target API Endpoint | [*For example, /api/purchase, /api/reservations/create, etc.]
+Tools/Services Used | 
+Test Scenario 1: Product Purchase Flow Abuse
+API Request Tested | [*For example, POST /api/purchase]
+Rate Limiting Implemented? | [*Yes/No, Observations]
+Anti-Automation Controls Present? | [*Yes/No, Captcha, IP-Based Restrictions, etc.]
+Response Behavior on Automated Requests | [*Allowed/Blocked, Status Codes, etc.]
+Exploit Success Criteria | [*Stock Manipulation, Unrestricted Bulk Purchases, etc.]
+Test Scenario 2: Booking API Abuse
+API Request Tested | [*For example, POST /api/reservations/create]
+User Intent Verification Present? | [*Yes/No, Observations]
+Rate Limiting on Reservations? | [*Yes/No, Limit Observed if Any]
+Impact of Repeated Requests | [*Multiple Confirmed Bookings, Unauthorized Reservations, etc.]
+API Response Behavior on Automated Requests | [*Allowed/Blocked, Status Codes, etc.]
+Potential Exploit Paths | [*Mass Reservations, Product Hoarding, API Abuse, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 8.2: Test API for Workflows’ Circumvention
+Target Organization | 
+URL | 
+Tools/Services Used | 
+API Endpoints Tested | [*List of Relevant API Calls Tested]
+Scenario Tested | [*Loyalty Points Abuse, Content Validation Bypass, etc.]
+Request Manipulation Techniques Used | [*Reordering, Interruption, Modification, etc.]
+Observed Workflow Flaws | [*Unauthorized Actions, Data Manipulation, Lack of Rollback, etc.]
+Rollback or Validation Failure? | [*Yes/No, Describe API Behavior]
+Impact of the Vulnerability | [*Privilege Escalation, Business Logic Abuse, etc.]
+Potential Exploit Paths | [*Unauthorized Transactions, Bypassed Validations, Data Tampering, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 8.3: Test API for Session Fixation Vulnerabilities
+Target Organization | 
+URL | 
+Target API Endpoint | 
+Tools/Services Used | 
+Initial HTTP Request Made? | [*Yes/No, API Endpoint Tested]
+Session Cookie Captured? | [*Yes/No, Captured Cookie Value if applicable]
+Authentication Request Sent with Captured Cookie? | [*Yes/No, Login API Endpoint Tested]
+Response Received After Authentication? | [*Yes/No, Server Response Headers if applicable]
+New Session ID Issued After Login? | [*Yes/No, New Session Cookie Captured if applicable]
+Is session Fixation Vulnerability Confirmed? | [*Yes/No, Evidence if found]
+Potential Exploit Paths | [*Session Hijacking, Privilege Escalation, Unauthorized Access, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 8.4: Test API for Improper Session Termination
+Target Organization | 
+URL | 
+Target API | 
+Tools/Services Used | 
+Logout API Endpoint Identified? | [*Yes/No, Endpoint: /api/logout or equivalent]
+Session Invalidated After Logout? | [*Yes/No, Response Code: Expected 200 OK → Follow-up request 401 Unauthorized]
+Session Reuse After Logout? | [*Yes/No, is API still accessible with the old session cookie?]
+Server-Side Session Termination Verified? | [*Yes/No, Can the session be reused after logout?]
+Session Timeout Handling | [*Yes/No, Timeout Duration, Expected vs. Observed Behavior]
+SSO Session Termination | [*Yes/No, Logging out from the app terminates SSO session?]
+Token Expiry & Revocation Tested? | [*Yes/No, Can revoked tokens still access the API?]
+Session Persistence After API Restart? | [*Yes/No, Are sessions invalidated upon server restart?]
+Potential Exploit Paths | [*Session Hijacking, Token Reuse, Unauthorized Access, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 8.5: Test API for Session-related Information Disclosure
+Target Organization | 
+URL | 
+Target API Endpoint | [*URL/Path Tested]
+Tools/Services Used | 
+Type of Request Sent | [*GET, POST, PUT, DELETE, etc.]
+Malicious or Invalid Request Used | [*Example Request Payload]
+API Response Code | [*200, 400, 401, 403, 500, etc.]
+Sensitive Session Data Exposed? | [*Yes/No, Details if Found]
+Information Disclosed | [*Session Token, Expiry Status, User Details, etc.]
+Potential Exploit Paths | [*Session Hijacking, Token Reuse, Authentication Bypass, etc.]
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 8.6: Test API for Cross-site Request Forgery (CSRF)
+Target Organization | 
+URL | 
+Target API Endpoint | [*URL/Path Tested]
+Tools/Services Used | 
+Session Cookie Automatically Included? | [*Yes/No, Cookie Name if Found]
+CSRF Protection Mechanisms Detected? | [*CSRF Token, SameSite Cookie Attribute, Referer/Origin Header Validation, etc.]
+Test Methodology | [*Intercept Requests, Modify Requests, Craft Malicious Forms, etc.]
+Malicious CSRF Request Executed? | [*Yes/No, Details of Payload Used]
+Response from API | [*Accepted, Rejected, Unauthorized, etc.]
+Session Hijacking or Unauthorized Actions Possible? | [*Yes/No, Actions that Could Be Performed if Yes]
+Potential Exploit Paths | [*Privilege Escalation, Unauthorized Transactions, Data Manipulation, etc.]
+AI-Based Automation for CSRF Testing | [*List the AI Tools Used for the Test]
+Scripts or Prompts Used for Automation | 
+Other Security Risks Identified | 
+Additional Observations & Recommendations | 
+Test 8.7: Test API for Session Hijacking
+Target Organization | 
+URL | 
+Target API Endpoint | [*URL/Path Tested]
+Tools/Services Used | 
+Session Cookies or Tokens Captured | [*SESSION_ID, AUTH_TOKEN, etc.]
+Secure Attributes Enforced? | [*Yes/No, Details of Missing Secure Flags: Secure, HttpOnly, SameSite, etc.]
+Tested Session Expiry & Regeneration | [*Yes/No, Findings if session persists after logout or reuse]
+Hijacking Attempt Using Stolen Session Tokens | [*Successful/Unsuccessful, Details if applicable]
+Approach Followed | 
+Evidence Collected | [*If Any]
+Impact of Session Hijackings | [*Data Exposure, Unauthorized Access, Privilege Escalation, etc.]
+Other Security Risks Identified | 
+Remediation | 
+Additional Observations & Recommendations | 

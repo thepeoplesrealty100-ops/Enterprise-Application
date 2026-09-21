@@ -1,0 +1,48 @@
+# Shodan — Query Reference
+# Source: CPENT cheat sheet (Shodan) + shodan_dorks.txt
+
+## Basic filters
+hostname:example.com                  # by hostname
+org:"Example Corp"                    # by organisation
+net:192.168.1.0/24                    # by CIDR
+country:US                            # by country code
+city:"New York"                       # by city
+port:22                               # by port
+os:"Windows Server 2016"              # by OS string
+
+## Service/product filters
+product:nginx
+product:"Apache httpd"
+product:"Microsoft IIS"
+product:OpenSSH
+product:MySQL
+
+## Vulnerability filters (requires Shodan account)
+vuln:CVE-2021-44228                   # Log4Shell exposure
+vuln:CVE-2019-0708                    # BlueKeep
+vuln:CVE-2017-0144                    # EternalBlue / MS17-010
+
+## Common device queries
+title:"Router Login"
+title:"Network Camera"
+title:"Webcam"
+title:"DVR Login"
+html:"Cisco IOS"
+html:"default password"
+banner:"SSH-2.0-OpenSSH"
+
+## ICS / SCADA
+port:502                              # Modbus
+port:102                              # Siemens S7
+port:44818                            # EtherNet/IP
+tag:ics
+
+## Compound queries
+org:"Example Corp" port:3389          # RDP exposed by org
+hostname:*.example.com port:443       # HTTPS subdomains
+
+## shodan CLI
+shodan init <API_KEY>
+shodan search 'org:"Example Corp" port:22'
+shodan host 192.168.1.1
+shodan download --limit 1000 results.json.gz 'apache port:80'

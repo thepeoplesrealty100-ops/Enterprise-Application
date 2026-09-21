@@ -1,0 +1,168 @@
+Certified Penetration Testing Professional Exam 412-80
+AWS CLI Cheat Sheet
+Certified Penetration Testing Professional
+AWS CLI Cheat Sheet
+AWS CLI
+The AWS Command Line Interface (AWS CLI) is an open-source tool that enables you to interact
+with AWS services using commands in your command-line shell. With minimal configuration, the
+AWS CLI enables you to start running commands that implement functionality equivalent to that
+provided by the browser-based AWS Management Console from the command prompt in your
+favorite terminal program.
+1. AWS CLI Options
+2. AWS CLI Credential Options
+3. AWS CLI Commands
+1. AWS CLI Options
+Syntax
+aws [options] <command> <subcommand> [parameters]
+Options
+--debug (boolean) Turn on debug logging
+Override command's default URL with the given
+--endpoint-url (string)
+URL
+AWS CLI uses SSL when communicating with AWS
+--no-verify-ssl (boolean)
+services
+--no-paginate (boolean) Disable automatic pagination
+Formatting style for command output (Jason, text,
+--output (string)
+or table)
+Page | 1 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+AWS CLI Cheat Sheet
+A JMESPath query to use in filtering the response
+--query (string)
+data
+--profile (string) Use a specific profile from your credential file
+--region (string) Region to use
+--version Display the version of this tool
+--color (string) Turn on/off the color output
+--no-sign-request (boolean) Do not sign requests
+The CA certificate bundle to use when verifying SSL
+--ca-bundle (string)
+certificates
+--cli-read-timeout (int) The maximum socket read time in seconds
+--cli-connect-timeout (int) The maximum socket connect time in seconds
+2. AWS CLI Credential Options
+Options
+access_key AWS Access Key
+secret_key AWS Secret Key
+token AWS Token (temp credentials)
+metadata_service_timeout EC2 metadata creds timeout
+metadata_service_num_attempts EC2 metadata creds retry count
+3. AWS CLI Commands
+Command Description
+aws s3 mb s3://bucket-name Create an S3 bucket
+aws s3api list-objects --bucket Display list of key names and their sizes in an S3
+b --query Contents[].[Key,Size] bucket
+aws s3 ls --profile my_profile Retrieve all the buckets available for the account
+aws s3 cp myvideo.mp4
+Upload a file to Amazon S3 bucket
+s3://mybucket/
+aws s3 sync s3://bucket-name
+Synchronize and download all the data stored in
+/home/user/localstash/targetclo
+the buckets
+ud/ --profile my_profile
+aws sts get-caller-identity --
+To check the AWS set up
+profile my_profile
+Page | 2 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+AWS CLI Cheat Sheet
+Display a list of all instances (running, and not
+aws ec2 describe-instances
+running)
+aws ec2 run-instances \
+--image-id ami-f0e7d19a \
+--instance-type t2.micro \ Create a new instance
+--security-group-ids sg-
+0000 \
+--dry-run
+aws ec2 terminate-instances \
+--instance-ids To stop an instance
+<instance_id>
+aws ec2 describe-instances --
+query \
+Display a list of all EC2 instances and include
+'Reservations[].Instances[].[In
+their Instance ID, State Name, and their Name
+stanceId,State.Name,Tags[?Key==
+`Name`] | [0].Value]'
+aws iam list-users --query
+Display a list of IAM usernames
+Users[].UserName
+aws iam create-group --group-
+To create a new IAM group
+name MyIamGroup
+aws iam create-user --user-name
+To add a new IAM user
+MyUser
+aws iam create-login-profile --
+user-name MyUser --password
+Setting an initial password for IAM user
+My!User1Login8P@ssword --
+password-reset-required
+aws s3 rb s3://bucket-name --
+Remove an S3 bucket and all its contents
+force
+aws s3api get-bucket-location -
+Get the location of an S3 bucket
+-bucket bucket-name
+aws ec2 start-instances --
+Start a stopped EC2 instance
+instance-ids <instance_id>
+aws ec2 stop-instances --
+Stop a running EC2 instance
+instance-ids <instance_id>
+aws ec2 reboot-instances --
+Reboot an EC2 instance
+instance-ids <instance_id>
+aws ec2 describe-security-
+Display all security groups
+groups
+aws ec2 create-security-group -
+-group-name MySecurityGroup -- Create a new security group
+description "My security group"
+Page | 3 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.
+Certified Penetration Testing Professional Exam 412-80
+AWS CLI Cheat Sheet
+aws ec2 authorize-security-
+group-ingress --group-id sg-
+Add an inbound rule to a security group
+0000 --protocol tcp --port 22 -
+-cidr 0.0.0.0/0
+aws iam attach-user-policy --
+user-name MyUser --policy-arn
+Attach a policy to a user
+arn:aws:iam::aws:policy/Adminis
+tratorAccess
+aws iam list-attached-user-
+List all the policies attached to a user
+policies --user-name MyUser
+aws rds describe-db-instances List all the RDS instances
+aws cloudwatch describe-alarms List all the CloudWatch alarms
+aws cloudwatch put-metric-alarm
+--alarm-name
+"Default_Test_Alarm3" --
+alarmdescription "The default
+example alarm" --namespace "CW
+EXAMPLE METRICS" --
+metric-name Default_Test --
+statistic Average --period 60 - Create a CloudWatch alarm
+-evaluation-periods 3
+--threshold 50 --comparison-
+operator
+GreaterThanOrEqualToThreshold -
+-dimensions
+Name=key1,Value=value1
+Name=key2,Value=value2
+aws lambda list-functions List all the Lambda functions
+aws dynamodb list-tables List all the DynamoDB tables
+aws dynamodb scan --table-name
+Scan a DynamoDB table
+my-table
+Page | 4 Certified Penetration Testing Professional Copyright © by EC-Council
+All Rights Reserved. Reproduction is Strictly Prohibited.

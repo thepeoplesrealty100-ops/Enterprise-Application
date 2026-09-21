@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I {} basename {})",
+      "WebFetch(domain:thepeoplesrealty100-ops.github.io)",
+      "Bash(python -c \"import fastapi, duckdb, qiskit; print\\('✓ Core dependencies present'\\)\")",
+      "Bash(./venv/Scripts/python.exe --version)",
+      "Bash(./venv/Scripts/python.exe -c \"import fastapi, duckdb; print\\('✓ FastAPI and DuckDB present'\\)\")",
+      "Bash(..\\\\venv\\\\Scripts\\\\python.exe -m pip install -r requirements.txt --quiet)",
+      "Bash(/d/LocalAgentHub/Enterprise-Application/venv/Scripts/python.exe -m pip install -q -r requirements.txt)",
+      "Bash(cat)",
+      "Read(//tmp/**)",
+      "Bash(/d/LocalAgentHub/Enterprise-Application/venv/Scripts/python.exe -c \"import fastapi; import duckdb; import qiskit; print\\('✓ All dependencies available'\\)\")",
+      "Bash(/d/LocalAgentHub/Enterprise-Application/venv/Scripts/python.exe -m uvicorn app:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(/d/LocalAgentHub/Enterprise-Application/venv/Scripts/python.exe -c ' *)",
+      "Bash(/d/LocalAgentHub/Enterprise-Application/venv/Scripts/python.exe -m pip install -q psutil)",
+      "Bash(/d/LocalAgentHub/Enterprise-Application/venv/Scripts/python.exe -c \"import psutil; print\\('psutil', psutil.__version__\\)\")",
+      "Bash(/d/LocalAgentHub/Enterprise-Application/venv/Scripts/python.exe -m pip install fastapi==0.110.0)"
+    ]
+  }
+}
