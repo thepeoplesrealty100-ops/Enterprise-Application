@@ -685,6 +685,23 @@ class DuckDBManager:
         )
         """)
 
+        # Org-level compliance posture (HIPAA allowed regions, SOC2 critical
+        # service hosts, PCI-DSS CDE hosts, etc. -- see
+        # security_agents/compliance_constraints.py for the shape). This is
+        # NOT global_security_settings above -- that table is deliberately
+        # a derived, read-only mirror of other tables (see its comment),
+        # with no independent write path. Compliance posture is genuinely
+        # operator-configured input, so it gets its own single-row table
+        # with real get/set methods below.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS org_compliance_posture (
+            config_id    VARCHAR PRIMARY KEY DEFAULT 'default',
+            posture_json VARCHAR NOT NULL DEFAULT '{}',
+            updated_by   VARCHAR,
+            updated_at   TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
         c.execute("""
         CREATE TABLE IF NOT EXISTS quantum_orbital_comms (
             comm_id                 VARCHAR PRIMARY KEY,
@@ -3101,9 +3118,81 @@ class DuckDBManager:
         cols = [d[0] for d in self.conn.description]
         return dict(zip(cols, row))
 
+    def get_org_compliance_posture(self, config_id: str = "default") -> Dict[str, Any]:
+        """
+        HIPAA/SOC2/PCI-DSS posture consumed by
+        security_agents/compliance_constraints.py — frameworks list,
+        hipaa_allowed_regions, soc2_critical_service_hosts,
+        pci_dss_cde_hosts. Returns {} if never configured (compliance
+        checks against an empty posture simply find nothing to violate,
+        same fallback the callers already assumed).
+        """
+        row = self.conn.execute(
+            "SELECT posture_json FROM org_compliance_posture WHERE config_id = ?", (config_id,)
+        ).fetchone()
+        if not row:
+            return {}
+        try:
+            return json.loads(row[0])
+        except (TypeError, ValueError):
+            return {}
+
+    def set_org_compliance_posture(self, posture: Dict[str, Any], updated_by: str = "system",
+                                    config_id: str = "default") -> Dict[str, Any]:
+        exists = self.conn.execute(
+            "SELECT 1 FROM org_compliance_posture WHERE config_id = ?", (config_id,)
+        ).fetchone()
+        if exists:
+            self.conn.execute(
+                "UPDATE org_compliance_posture SET posture_json = ?, updated_by = ?, updated_at = now() "
+                "WHERE config_id = ?",
+                (json.dumps(posture), updated_by, config_id),
+            )
+        else:
+            self.conn.execute(
+                "INSERT INTO org_compliance_posture (config_id, posture_json, updated_by) VALUES (?, ?, ?)",
+                (config_id, json.dumps(posture), updated_by),
+            )
+        self.conn.commit()
+        return self.get_org_compliance_posture(config_id)
+
     # ======================================================================
     # v2.4 — Q'AIP Logic & Quantum Orchestration
     # ======================================================================
+
+    def record_quantum_job(self, job_id: str, circuit_name: str, backend: str,
+                            shots: int, result: Dict[str, Any], status: str) -> None:
+        """
+        Durable mirror of routers/quantum.py's QuantumEngine.store_result(),
+        which only kept an in-process dict (job_cache) -- job history was
+        lost on restart and unqueryable via SQL despite the quantum_jobs
+        table existing in this schema for exactly this purpose. The
+        in-memory cache stays the fast-path read; this is the fallback for
+        anything (a restart, or a different QuantumEngine instance --
+        routers/pentest.py constructs its own, separate from this router's)
+        that doesn't have it.
+        """
+        completed_at = datetime.now(timezone.utc) if status in ("completed", "error") else None
+        self.conn.execute(
+            """
+            INSERT INTO quantum_jobs
+                (job_id, circuit_name, backend, shots, result, status, completed_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (job_id, circuit_name, backend, shots, json.dumps(result, default=str), status, completed_at),
+        )
+        self.conn.commit()
+
+    def get_quantum_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT result FROM quantum_jobs WHERE job_id = ?", (job_id,)
+        ).fetchone()
+        if not row:
+            return None
+        try:
+            return json.loads(row[0])
+        except (TypeError, ValueError):
+            return None
 
     def log_orbital_comm(self, record: Dict[str, Any]) -> str:
         """Required: comm_id, event_type. Optional: computational_agent_id,

@@ -36,15 +36,18 @@ router = APIRouter(prefix="/quantum", tags=["quantum"])
 try:
     from config import get_config
     from quantum_engine import QuantumEngine, QISKIT_AVAILABLE
+    from database import get_db_manager
 
     _config = get_config()
     _quantum = QuantumEngine(_config)
+    _db = get_db_manager()
     _READY = True
     _ERR: Optional[str] = None
 except Exception as exc:  # noqa: BLE001
     _READY = False
     _ERR = str(exc)
     _quantum = None
+    _db = None
     QISKIT_AVAILABLE = False  # type: ignore
 
 
@@ -82,6 +85,15 @@ async def submit_quantum_job(req: QuantumJobRequest):
     _require()
     result = _quantum.run_circuit(req.circuit, req.shots, req.backend)
     job_id = _quantum.store_result(result)
+    try:
+        _db.record_quantum_job(
+            job_id, req.circuit, result.get("backend", req.backend), req.shots,
+            result, result.get("status", "unknown"),
+        )
+    except Exception as e:
+        # Durability is a bonus on top of the in-memory cache above, which
+        # already has the result -- never fail the request over this.
+        logger.warning("Failed to persist quantum job %s to quantum_jobs: %s", job_id, e)
     qaip_inference_id = None
     if result.get("status") == "completed":
         qaip_inference_id = _link_finished_job_to_audit_trail(job_id, req, result)
@@ -125,6 +137,12 @@ def _link_finished_job_to_audit_trail(
 async def get_quantum_job(job_id: str):
     _require()
     result = _quantum.retrieve_result(job_id)
+    if result is None:
+        # Not in this process's in-memory cache -- fall back to the
+        # durable record (a restart since submission, or a job submitted
+        # against a different QuantumEngine instance, e.g. pentest.py's
+        # own separate one).
+        result = _db.get_quantum_job(job_id)
     if result is None:
         raise HTTPException(status_code=404, detail="job not found")
     return result
