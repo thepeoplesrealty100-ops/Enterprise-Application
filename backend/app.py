@@ -648,6 +648,33 @@ async def serve_integration_js():
     return FileResponse(path, media_type="application/javascript")
 
 
+@app.get("/gacyber_toolkit/cheatsheet_data.json")
+async def serve_cheatsheet_data():
+    """
+    The CheatSheet Library page (index.html) fetches this static JSON
+    directly (not through the /api/cheatsheet router) to render its search
+    grid. One explicit file route, same pattern as /integration.js above --
+    gacyber_toolkit/ is not mounted as a directory, since it also holds the
+    actual pentest scripts and reference material that back payloads/
+    script_catalog.py and shouldn't be served over HTTP wholesale.
+
+    Resolved via script_catalog.py's own _find_toolkit_root(), not
+    _FRONTEND -- in Docker, FRONTEND_DIR is /app/frontend but
+    gacyber_toolkit/ is copied to the sibling path /app/gacyber_toolkit
+    (see Dockerfile), so _FRONTEND/"gacyber_toolkit" would look in the
+    wrong place. This is the one function in the codebase that already
+    correctly locates gacyber_toolkit/ across both layouts.
+    """
+    from payloads.script_catalog import _find_toolkit_root
+    toolkit_root = _find_toolkit_root()
+    if toolkit_root is None:
+        raise HTTPException(status_code=404, detail="gacyber_toolkit not found")
+    path = toolkit_root / "cheatsheet_data.json"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="cheatsheet_data.json not found")
+    return FileResponse(path, media_type="application/json")
+
+
 # ============================================================================
 # OpenAPI Schema (Phase 5 - Comprehensive Documentation)
 # ============================================================================
@@ -667,18 +694,22 @@ app.openapi_schema = custom_openapi(app)
 # _FRONTEND is now the repo root, that would publish the full backend
 # source tree, git history/config, and any local .env a developer happens
 # to have sitting in backend/ (gitignored, but this mount doesn't know
-# that). index.html only references three local assets --
-# ./js/api-client.js, ./js/integration-loader.js, ./integration.js (every
-# other asset it loads is from a CDN) -- so only the specific `js/`
-# subdirectory is mounted, plus the one explicit /integration.js route
+# that). index.html's local (non-CDN) assets are ./integration.js, three
+# files under ./js/ (operator-console.js, jakal-controls.js,
+# jakal-live-data.js), ./world_land_map.json, and
+# ./gacyber_toolkit/cheatsheet_data.json -- so only the specific `js/`
+# subdirectory is mounted here, plus the explicit single-file routes
 # above; nothing else under the repo root is served.
+# (js/api-client.js and js/integration-loader.js used to live in this
+# same js/ directory -- deleted as dead code, never instantiated despite
+# being <script>-loaded; see index.html's own history.)
 _FRONTEND_JS = _FRONTEND / "js"
 if _FRONTEND_JS.is_dir():
     app.mount("/js", StaticFiles(directory=str(_FRONTEND_JS)), name="frontend-js")
     logger.info("Frontend JS assets mounted from %s", _FRONTEND_JS)
 else:
-    logger.warning("Frontend js/ directory missing at %s — js/api-client.js and "
-                    "js/integration-loader.js will not be served", _FRONTEND_JS)
+    logger.warning("Frontend js/ directory missing at %s — operator-console.js, "
+                    "jakal-controls.js and jakal-live-data.js will not be served", _FRONTEND_JS)
 
 
 # ============================================================================

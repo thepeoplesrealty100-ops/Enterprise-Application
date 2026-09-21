@@ -1,20 +1,14 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# JAKAL — multi-stage image
-#   Stage 1 builds the v3.0 React "Response Console" (frontend/) into static
-#   assets. Stage 2 is the FastAPI backend, which serves those assets at
-#   /console. Previously the Dockerfile copied only index.html + integration.js
-#   and never ran the Vite build, so `docker compose up` came up WITHOUT the
-#   Response Console (the backend logged "Response Console build missing at
-#   frontend/dist"). This stage fixes that.
-# ─────────────────────────────────────────────────────────────────────────────
-FROM node:22-slim AS console
-WORKDIR /fe
-# Install deps against the lockfile first (better layer caching)
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
-COPY frontend/ ./
-RUN npm run build          # → /fe/dist
-
+# JAKAL — single-stage image (FastAPI backend + the vanilla-JS operator UI)
+#
+# A "Response Console" build stage (Node/Vite, served at /console) used to
+# live here. Removed: frontend/ on this branch has no package.json or
+# package-lock.json for it to build from -- COPY frontend/package.json
+# would fail a fresh `docker build` outright -- and nothing in app.py
+# mounts /console or reads /app/frontend/dist, so even a successful build
+# of that stage would produce an asset nothing ever serves. If that
+# console is revived later, restore this stage deliberately alongside the
+# app.py route that serves it, not as a side effect of an unrelated fix.
 # ─────────────────────────────────────────────────────────────────────────────
 FROM python:3.11-slim
 
@@ -41,12 +35,9 @@ COPY backend/ /app/backend/
 COPY gacyber_toolkit/ /app/gacyber_toolkit/
 
 # Frontend (served by FastAPI at / so UI + API share one origin — no CORS pain)
-COPY index.html integration.js /app/frontend/
+COPY index.html integration.js world_land_map.json /app/frontend/
 RUN mkdir -p /app/frontend/gacyber_toolkit \
     && cp -a /app/gacyber_toolkit/. /app/frontend/gacyber_toolkit/ 2>/dev/null || true
-
-# v3.0 Response Console — built React SPA from stage 1, served at /console
-COPY --from=console /fe/dist /app/frontend/dist
 
 RUN mkdir -p /app/data /app/logs /app/backups
 
