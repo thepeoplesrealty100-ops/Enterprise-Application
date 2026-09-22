@@ -246,6 +246,33 @@ async def test_frontend_serves_ui_without_exposing_repo_source(client):
         assert resp.status_code == 404, f"{sensitive_path} should not be servable, got {resp.status_code}"
 
 
+@pytest.mark.asyncio
+async def test_frontend_js_directory_assets_are_actually_servable(client):
+    """
+    Positive counterpart to the negative-path assertions above: the three
+    real files under js/ (operator-console.js, jakal-controls.js,
+    jakal-live-data.js -- 596 lines total: an operator console with
+    slash-commands and an inline approval gate, a per-module
+    actions/settings popover, and a fetch bridge that swaps the mock
+    fleet array for real /api/dashboard/fleet data) must actually be
+    servable, not merely "not 404 for the deleted dead files."
+
+    This test runs against the checked-out source tree, where js/
+    already exists on disk, so it cannot catch a packaging bug where a
+    Docker image's COPY step omits the directory entirely -- exactly
+    what happened here: app.py's /js mount code was always correct, but
+    the image never had a js/ directory to mount, so it silently logged
+    "Frontend js/ directory missing" and index.html loaded with all
+    three of those features absent, undetected by this suite. That class
+    of bug is only caught by actually building the image (or running it)
+    and requesting these paths, which is exactly how it was found here.
+    """
+    for name in ("operator-console.js", "jakal-controls.js", "jakal-live-data.js"):
+        resp = await client.get(f"/js/{name}")
+        assert resp.status_code == 200, f"/js/{name} should be servable, got {resp.status_code}"
+        assert "javascript" in resp.headers.get("content-type", "") or len(resp.text) > 0
+
+
 def test_locked_connection_description_is_correct_after_chained_and_separate_access(tmp_path):
     """Covers both usage patterns in this codebase: chained
     (execute(...).fetchall()) and separate-statement (execute(...); later

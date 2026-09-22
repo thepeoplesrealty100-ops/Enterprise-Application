@@ -29,6 +29,7 @@ services:
       - ./index.html:/app/frontend/index.html:ro
       - ./integration.js:/app/frontend/integration.js:ro
       - ./world_land_map.json:/app/frontend/world_land_map.json:ro
+      - ./js:/app/frontend/js:ro
     networks:
       - jakal_network
     restart: unless-stopped
