@@ -4100,6 +4100,19 @@
 
     </script>
 
+    <!-- Operator console, reusable controls, and live-data bridge (js/) --
+         restored 2026-09-21: index.html was swapped to the xialot lineage
+         in PR #6 without its own <script src="./js/..."> tags, so these
+         3 files (596 lines: an operator console with slash-commands and
+         an inline approval gate, a per-module actions/settings popover,
+         and a fetch bridge that swaps the mock fleet array for real
+         /api/dashboard/fleet data) were served by app.py but never
+         loaded by any page. Order does not matter -- each self-inits on
+         DOMContentLoaded. -->
+    <script src="./js/operator-console.js"></script>
+    <script src="./js/jakal-controls.js"></script>
+    <script src="./js/jakal-live-data.js"></script>
+
     <!-- JAKAL backend integration: live telemetry SSE + button wiring.
          Skipped on GitHub Pages (static demo) - only runs against a live backend. -->
     <script type="module">

@@ -36,6 +36,11 @@ COPY gacyber_toolkit/ /app/gacyber_toolkit/
 
 # Frontend (served by FastAPI at / so UI + API share one origin — no CORS pain)
 COPY index.html integration.js world_land_map.json /app/frontend/
+# app.py mounts /js from FRONTEND_DIR/js specifically (operator-console.js,
+# jakal-controls.js, jakal-live-data.js) -- this line was previously
+# missing, so that directory never existed in the image and app.py logged
+# "Frontend js/ directory missing" and served none of those three files.
+COPY js/ /app/frontend/js/
 RUN mkdir -p /app/frontend/gacyber_toolkit \
     && cp -a /app/gacyber_toolkit/. /app/frontend/gacyber_toolkit/ 2>/dev/null || true
 
