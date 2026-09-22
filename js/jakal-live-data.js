@@ -51,6 +51,12 @@
       var rows = (r && (r.data || r.devices || r.fleet)) || [];
       if (!rows.length) return;
       window.globalDashboardState.devices = rows.map(mapDevice);
+      // Distinct from __jkFleetSynced (set the moment a sync is merely
+      // *attempted*, in hook() below, before this promise resolves).
+      // index.html's fleet summary banner checks this one specifically so
+      // it only claims "Live from ..." once real devices have actually
+      // replaced the mock array -- not just once a fetch was tried.
+      window.__jkFleetLive = true;
       // Re-render the fleet tab if it is currently visible.
       try {
         if (window.switchDashboardTab && document.getElementById("device-list-table")) {

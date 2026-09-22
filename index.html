@@ -767,7 +767,18 @@
             
             // Post-render initialization for specific pages
             if(pageKey === 'admin_global_dashboard') {
-                window.switchDashboardTab(currentDashboardTab, false); // Load the last active tab
+                // Regression fix: doRender was false here, so
+                // switchDashboardTab only set the active tab's CSS class
+                // and never actually called content.innerHTML = render*(),
+                // leaving the Global Dashboard's content pane completely
+                // empty on every fresh page load (confirmed live -- the
+                // Global Fleet tab showed as active with zero rendered
+                // content until a tab was clicked by hand). Nothing else in
+                // the load path provides that missing render: js/jakal-
+                // live-data.js's own refresh even checks for
+                // #device-list-table before re-rendering, so it silently
+                // no-ops against the empty pane instead of fixing it.
+                window.switchDashboardTab(currentDashboardTab, true); // Load the last active tab
             }
             if(pageKey === 'admin_automation_controls') startAxiomEdgeSimulation();
             if(pageKey === 'admin_cognitive_load_monitor') startCognitiveMonitor();
@@ -2865,7 +2876,14 @@
             selectedDeviceId: null,
             clientFilter: 'All'
         };
-        
+        // js/jakal-live-data.js is a classic (non-module) script, so it can
+        // only reach this module-scoped `let` through window -- without this
+        // line its `if (!window.globalDashboardState) return;` guard always
+        // hit, meaning the real /api/dashboard/fleet sync had silently never
+        // once run; the dashboard always fell back to the 7-device mock
+        // above with no visible indication that live sync wasn't happening.
+        window.globalDashboardState = globalDashboardState;
+
         function renderGlobalAdminDashboard() {
             return `
                  <h2 class="text-3xl font-extrabold text-white mb-6">Global Dashboard</h2>
@@ -2924,35 +2942,70 @@
         
         function renderDeviceFleetTab() {
             return `
-                <div class="dashboard-tab-content grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
-                    <!-- Left Column: Device & User Fleet -->
-                    <div class="lg:col-span-3 card p-4 rounded-xl flex flex-col h-full">
-                        <div class="flex-shrink-0 flex justify-between items-center mb-3">
-                            <h3 class="text-lg font-bold text-primary-color">Global Device & User Fleet</h3>
-                            <select id="client-filter-select" onchange="window.updateClientFilter(this.value)" class="bg-gray-800 border border-border-color rounded-md px-3 py-1 text-sm focus:ring-primary-color focus:border-primary-color">
-                                <option value="All">All Clients</option>
-                                <option value="Beta Corp">Beta Corp</option>
-                                <option value="Alpha Inc">Alpha Inc</option>
-                                <option value="Gamma LLC">Gamma LLC</option>
-                            </select>
+                <div class="dashboard-tab-content flex flex-col h-full gap-4">
+                    <div id="fleet-summary-banner" class="flex-shrink-0"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-1 min-h-0">
+                        <!-- Left Column: Device & User Fleet -->
+                        <div class="lg:col-span-3 card p-4 rounded-xl flex flex-col h-full min-h-0">
+                            <div class="flex-shrink-0 flex justify-between items-center mb-3">
+                                <h3 class="text-lg font-bold text-primary-color">Global Device & User Fleet</h3>
+                                <select id="client-filter-select" onchange="window.updateClientFilter(this.value)" class="bg-gray-800 border border-border-color rounded-md px-3 py-1 text-sm focus:ring-primary-color focus:border-primary-color">
+                                    <option value="All">All Clients</option>
+                                    <option value="Beta Corp">Beta Corp</option>
+                                    <option value="Alpha Inc">Alpha Inc</option>
+                                    <option value="Gamma LLC">Gamma LLC</option>
+                                </select>
+                            </div>
+                            <div id="device-list-table" class="flex-1 overflow-y-auto scrollbar-style pr-2 min-h-0">
+                                <!-- Device Table injected by JS -->
+                            </div>
                         </div>
-                        <div id="device-list-table" class="flex-1 overflow-y-auto scrollbar-style pr-2">
-                            <!-- Device Table injected by JS -->
-                        </div>
-                    </div>
 
-                    <!-- Middle Column: Live Threats & Details -->
-                    <div class="lg:col-span-2 card p-4 rounded-xl flex flex-col h-full">
-                         <div id="device-details-pane" class="flex-1">
-                             <div class="h-full flex flex-col items-center justify-center text-center text-gray-500">
-                                 <i data-lucide="mouse-pointer-square" class="w-12 h-12 mb-4"></i>
-                                 <h4 class="text-lg font-semibold">Select a Device</h4>
-                                 <p class="text-sm">Select an action from the device table to view details.</p>
+                        <!-- Middle Column: Live Threats & Details -->
+                        <div class="lg:col-span-2 card p-4 rounded-xl flex flex-col h-full min-h-0">
+                             <div id="device-details-pane" class="flex-1 min-h-0 overflow-y-auto scrollbar-style">
+                                 <div class="h-full flex flex-col items-center justify-center text-center text-gray-500">
+                                     <i data-lucide="mouse-pointer-square" class="w-12 h-12 mb-4"></i>
+                                     <h4 class="text-lg font-semibold">Select a Device</h4>
+                                     <p class="text-sm">Select an action from the device table to view details.</p>
+                                 </div>
                              </div>
-                         </div>
+                        </div>
                     </div>
                 </div>
             `;
+        }
+
+        // RocketCyber/Datto-style device-count summary banner. Counts are
+        // always derived from globalDashboardState.devices at render time --
+        // never hardcoded -- so this reflects real /api/dashboard/fleet data
+        // once js/jakal-live-data.js has synced it, and an honestly-labeled
+        // demo count before that sync completes or if the backend is offline.
+        function renderFleetSummaryBanner() {
+            const el = document.getElementById('fleet-summary-banner');
+            if (!el) return;
+            const devices = globalDashboardState.devices || [];
+            const counts = { Healthy: 0, Warning: 0, Critical: 0 };
+            devices.forEach(d => { counts[d.status] = (counts[d.status] || 0) + 1; });
+            const isLive = window.__jkFleetLive === true;
+            const tile = (icon, color, value, label) => `
+                <div class="flex items-center gap-3 bg-gray-800/60 rounded-xl px-5 py-3 flex-1 min-w-[140px]">
+                    <i data-lucide="${icon}" class="w-8 h-8 flex-shrink-0 text-${color}"></i>
+                    <div>
+                        <div class="text-2xl font-bold text-white leading-none">${value}</div>
+                        <div class="text-xs text-gray-400 mt-1">${label}</div>
+                    </div>
+                </div>`;
+            el.innerHTML = `
+                <div class="flex flex-wrap gap-3 items-stretch">
+                    ${tile('monitor-check', 'emerald-400', counts.Healthy, 'Healthy')}
+                    ${tile('monitor-x', 'yellow-400', counts.Warning, 'Warning')}
+                    ${tile('shield-alert', 'red-400', counts.Critical, 'Critical')}
+                    ${tile('server', 'blue-400', devices.length, 'Total Managed')}
+                </div>
+                <p class="text-xs text-gray-500 mt-2">${isLive ? 'Live from /api/dashboard/fleet' : 'Demo data — connect a backend and open this tab to sync real devices'}</p>
+            `;
+            safeCreateIcons();
         }
         
         window.updateClientFilter = (client) => {
@@ -2961,10 +3014,11 @@
         }
 
         function renderDeviceFleetTable() {
+            renderFleetSummaryBanner();
             const tableEl = document.getElementById('device-list-table');
             if(!tableEl) return;
-            
-            const filteredDevices = globalDashboardState.devices.filter(d => 
+
+            const filteredDevices = globalDashboardState.devices.filter(d =>
                 globalDashboardState.clientFilter === 'All' || d.client === globalDashboardState.clientFilter
             );
             
@@ -3074,6 +3128,14 @@
         function startGlobalDashboardSimulations() {
             renderDeviceFleetTable();
             const interval = setInterval(() => {
+                // js/jakal-live-data.js has synced real devices from
+                // /api/dashboard/fleet -- this loop's randomized status
+                // flips exist only to make the demo/offline view feel
+                // alive, and must never mutate genuine fleet data.
+                // __jkFleetLive (not __jkFleetSynced, which just means a
+                // sync was *attempted*) is set only once real data has
+                // actually replaced the mock array.
+                if (window.__jkFleetLive) return;
                 const randomDevice = globalDashboardState.devices[Math.floor(Math.random() * globalDashboardState.devices.length)];
                 const oldStatus = randomDevice.status;
                 
