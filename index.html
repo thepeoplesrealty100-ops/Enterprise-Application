@@ -1134,188 +1134,389 @@
                 `;
         }
         
-        function renderAutomationControls() {
-            const rules = [
-                { name: 'Suspicious Login Tier I', trigger: 'Impossible Travel', action: 'Contact User -> Reset Pass', active: true, source: 'AI Generated' },
-                { name: 'Phishing Attempt Quarantine', trigger: 'Email Scan Flag', action: 'Sandbox URL & Quarantine', active: true, source: 'Manual' },
-                { name: 'Data Exfiltration Block', trigger: 'High-Volume Outbound', action: 'Throttle & Alert SOC', active: true, source: 'Manual' },
-                { name: 'New Device Onboarding', trigger: 'New Device Detected', action: 'Scan -> Enroll -> Apply Policy', active: false, source: 'AI Generated' }
-            ];
-            return `
-                <div class="space-y-6">
-                    <div class="card p-6 rounded-xl">
-                        <h3 class="text-xl font-semibold text-purple-400 mb-4 flex items-center">
-                            <i data-lucide="git-commit-vertical" class="w-6 h-6 mr-3"></i> Axiom Edge: Autonomous AI Lifecycle
-                        </h3>
-                        <p class="text-sm text-gray-400 mb-6">Autonomous MLOps for edge sensor networks. The system researches, builds, tests, and deploys AI model updates across the entire Kubernetes lifecycle, ensuring continuous improvement and adaptation to new data and technologies.</p>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Lifecycle -->
-                            <div class="md:col-span-2">
-                                <h4 class="text-lg font-semibold text-white mb-3">Live Deployment Pipeline</h4>
-                                <div id="k8s-lifecycle" class="flex items-center justify-between p-4 bg-gray-900 rounded-lg">
-                                    <!-- Stages will be injected by JS -->
-                                </div>
-                                <div class="mt-4 p-3 bg-gray-900/70 rounded-lg">
-                                    <p id="axiom-edge-status" class="font-mono text-sm text-yellow-400">STATUS: Monitoring sensor data for drift...</p>
-                                </div>
-                            </div>
-                            <!-- Controls and Info -->
-                            <div>
-                                <h4 class="text-lg font-semibold text-white mb-3">Controls & Status</h4>
-                                <div class="space-y-2">
-                                    ${renderMetricPill('', 'Deployed Model', 'AnomalyDetect-v3.2.1', 'primary-color')}
-                                    ${renderMetricPill('', 'Cloud Nodes', '1,280 / 1,300', 'green-400')}
-                                    ${renderMetricPill('', 'Physical Nodes', '0 / 50', 'gray-400')}
-                                    <button onclick="window.showAppModal('Deployment', 'Deploying model to physical edge sensor array...')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm flex items-center justify-center">
-                                        <i data-lucide="move-3d" class="w-4 h-4 mr-2"></i>Deploy to Physical Sensors
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+        // ══════════════════════════════════════════════════════════════════
+        // Automation & Orchestration — Live Execution / Script Library /
+        // Playbooks / Tasks / Template Gallery. Real backend throughout:
+        // backend/routers/automation.py (scripts, playbooks, tasks,
+        // templates -- real seeded content, real DB), backend/routers/
+        // fleet_agent.py (real registered endpoint agents), backend/
+        // routers/remote_exec.py (real queued execution + WebSocket live
+        // streaming). Replaces the "Axiom Edge" content that used to sit
+        // behind this same nav slot -- a fully hardcoded MLOps-for-edge-
+        // sensors simulation (fake node counts, a canned optimizer log,
+        // playbook toggles that only ever showed a modal) with no backend
+        // behind any of it. Nav slot and icon unchanged; the content is now
+        // real.
+        // ══════════════════════════════════════════════════════════════════
 
-                        <div class="mt-6">
-                            <h4 class="text-lg font-semibold text-white mb-3">Autonomous Optimizer Log</h4>
-                            <div id="axiom-optimizer-log" class="h-40 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg"></div>
-                        </div>
+        let automationState = { tab: 'live_exec', ws: null, execTargets: [], agents: [], scripts: [] };
+
+        function renderAutomationControls() {
+            return `
+                <div class="flex flex-col h-full">
+                    <div class="flex border-b border-border-color mb-4 flex-wrap">
+                        <button onclick="window.switchAutomationTab('live_exec')" id="auto-tab-live_exec" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="terminal" class="w-4 h-4 mr-2 inline"></i>Live Execution
+                        </button>
+                        <button onclick="window.switchAutomationTab('scripts')" id="auto-tab-scripts" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="file-code-2" class="w-4 h-4 mr-2 inline"></i>Script Library
+                        </button>
+                        <button onclick="window.switchAutomationTab('playbooks')" id="auto-tab-playbooks" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="workflow" class="w-4 h-4 mr-2 inline"></i>Playbooks
+                        </button>
+                        <button onclick="window.switchAutomationTab('tasks')" id="auto-tab-tasks" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="clock" class="w-4 h-4 mr-2 inline"></i>Tasks
+                        </button>
+                        <button onclick="window.switchAutomationTab('templates')" id="auto-tab-templates" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="layout-template" class="w-4 h-4 mr-2 inline"></i>Template Gallery
+                        </button>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 card p-4 rounded-xl">
-                            <h3 class="text-lg font-bold text-primary-color mb-3">Automation Playbooks</h3>
-                             <div class="space-y-3">
-                            ${rules.map((rule, index) => `
-                                <div class="p-3 bg-gray-900/70 rounded-lg">
-                                    <div class="flex justify-between items-center">
-                                        <span class="font-semibold text-white">${rule.name}</span>
-                                        <div class="flex items-center space-x-4">
-                                            <span class="text-xs px-2 py-1 rounded-full ${rule.source === 'AI Generated' ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-500/20 text-gray-300'}">${rule.source}</span>
-                                            <label class="inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" value="" class="sr-only peer" ${rule.active ? 'checked' : ''} onchange="window.showAppModal('Playbook Updated', 'Playbook ${index + 1} has been ' + (this.checked ? 'ENABLED' : 'DISABLED') + '.')">
-                                            <div class="relative w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-primary-color peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-color"></div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-1"><span class="font-semibold">Trigger:</span> ${rule.trigger} -> <span class="font-semibold">Action:</span> ${rule.action}</p>
-                                </div>
+                    <div id="automation-content-area" class="flex-1 min-h-0"></div>
+                </div>
+            `;
+        }
+
+        window.switchAutomationTab = (tab) => {
+            automationState.tab = tab;
+            document.querySelectorAll('#automation-content-area').length; // no-op guard
+            document.querySelectorAll('[id^="auto-tab-"]').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`auto-tab-${tab}`);
+            if (btn) btn.classList.add('active');
+            const area = document.getElementById('automation-content-area');
+            if (!area) return;
+            if (automationState.ws && tab !== 'live_exec') { try { automationState.ws.close(); } catch (e) {} automationState.ws = null; }
+            if (tab === 'live_exec') { area.innerHTML = renderLiveExecutionTab(); startLiveExecutionTab(); }
+            if (tab === 'scripts') { area.innerHTML = renderScriptLibraryTab(); loadScriptLibrary(); }
+            if (tab === 'playbooks') { area.innerHTML = renderPlaybooksTab(); loadAutomationPlaybooks(); }
+            if (tab === 'tasks') { area.innerHTML = renderTasksTab(); loadAutomationTasks(); }
+            if (tab === 'templates') { area.innerHTML = renderTemplateGalleryTab(); loadTemplateGallery(); }
+            safeCreateIcons();
+        };
+
+        function startAxiomEdgeSimulation() {
+            // Entry point kept: loadPage()'s admin_automation_controls hook
+            // calls this by name. It now just boots the tab strip above.
+            window.switchAutomationTab(automationState.tab || 'live_exec');
+        }
+
+        // ── Live Execution ───────────────────────────────────────────────
+
+        function renderLiveExecutionTab() {
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+                    <div class="card p-4 rounded-xl flex flex-col min-h-0">
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Script</h4>
+                        <select id="live-exec-script" class="w-full bg-gray-800 p-2 rounded-md border border-border-color text-sm mb-3">
+                            <option>Loading scripts…</option>
+                        </select>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Filter OS</h4>
+                        <div id="live-exec-os-filter" class="flex flex-wrap gap-1 mb-3">
+                            ${['all', 'windows', 'macos', 'linux', 'cross'].map(o => `
+                                <button data-os="${o}" onclick="window.setLiveExecOsFilter('${o}')"
+                                    class="live-exec-os-btn px-2 py-1 text-xs rounded border border-border-color ${o === 'all' ? 'bg-primary-color text-white' : 'text-gray-400'}">${o}</button>
                             `).join('')}
-                            </div>
-                             <button class="w-full mt-4 py-2 bg-purple-600 text-white rounded-lg text-sm flex items-center justify-center hover:bg-purple-700">
-                                <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>AIP: Generate New Playbook
-                            </button>
                         </div>
-                        <div class="card p-4 rounded-xl">
-                            <h3 class="text-lg font-bold text-primary-color mb-3">Live Automation Event Log</h3>
-                            <div id="automation-log" class="h-full overflow-y-auto text-sm bg-gray-900 rounded-lg p-2 scrollbar-style">
-                                ${generateLogEntry('Automation Control module online.', 'green-500', 'lucide-power')}
-                                ${generateLogEntry('Playbook "Phishing Attempt Quarantine" triggered for user@client.com.', 'yellow-500', 'lucide-shield-alert')}
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Endpoints</h4>
+                        <div id="live-exec-endpoints" class="flex-1 overflow-y-auto scrollbar-style space-y-1 min-h-0">
+                            <p class="text-xs text-gray-500 italic">Loading agents…</p>
+                        </div>
+                        <button id="live-exec-run-btn" onclick="window.runLiveExecution()" class="w-full mt-3 py-2 bg-primary-color text-white rounded-lg text-sm font-semibold flex items-center justify-center">
+                            <i data-lucide="play" class="w-4 h-4 mr-2"></i>Run on <span id="live-exec-target-count">0</span> target(s)
+                        </button>
+                    </div>
+                    <div class="lg:col-span-3 card p-4 rounded-xl flex flex-col min-h-0">
+                        <div class="flex items-center justify-between mb-2 flex-shrink-0">
+                            <div class="flex items-center gap-2">
+                                <span id="live-exec-status" class="text-xs text-gray-500">no execution</span>
+                                <span id="live-exec-ws-badge" class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400">idle</span>
                             </div>
+                            <div class="flex gap-2">
+                                <button onclick="window.loadLiveExecHistory()" class="text-xs px-2 py-1 rounded border border-border-color text-gray-400 hover:text-white">Historical</button>
+                            </div>
+                        </div>
+                        <div id="live-exec-output" class="flex-1 overflow-y-auto scrollbar-style bg-gray-900 rounded-lg p-3 font-mono text-xs text-gray-300 min-h-0">
+                            <p class="text-gray-500">JAKAL Live Remote Execution -- pick a script + endpoint(s), then Run.
+                            Output streams here over a real WebSocket (/ws/exec/&#123;id&#125;); past runs replay from the audit log via "Historical".</p>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        function startAxiomEdgeSimulation() {
-            const lifecycleContainer = document.getElementById('k8s-lifecycle');
-            const statusEl = document.getElementById('axiom-edge-status');
-            const optimizerLog = document.getElementById('axiom-optimizer-log');
+        window.setLiveExecOsFilter = (os) => {
+            document.querySelectorAll('.live-exec-os-btn').forEach(b => {
+                b.classList.toggle('bg-primary-color', b.dataset.os === os);
+                b.classList.toggle('text-white', b.dataset.os === os);
+                b.classList.toggle('text-gray-400', b.dataset.os !== os);
+            });
+            renderLiveExecEndpoints(os);
+        };
 
-            if (!lifecycleContainer || !statusEl || !optimizerLog) return;
+        function renderLiveExecEndpoints(osFilter = 'all') {
+            const el = document.getElementById('live-exec-endpoints');
+            if (!el) return;
+            const agents = automationState.agents.filter(a => osFilter === 'all' || a.os === osFilter);
+            if (!agents.length) {
+                el.innerHTML = `<p class="text-xs text-gray-500 italic">No ${osFilter === 'all' ? '' : osFilter + ' '}endpoints registered.
+                    Run <code class="text-gray-400">python agent/jakal_agent.py --server ${window.location.origin}</code> on a real machine to enroll one.</p>`;
+                return;
+            }
+            el.innerHTML = agents.map(a => `
+                <label class="flex items-center gap-2 p-2 bg-gray-800/60 rounded-md cursor-pointer hover:bg-gray-800">
+                    <input type="checkbox" class="live-exec-target-cb" value="${a.agent_id}" onchange="window.updateLiveExecTargetCount()">
+                    <span class="w-2 h-2 rounded-full flex-shrink-0 ${a.status === 'online' ? 'bg-emerald-400' : 'bg-gray-500'}"></span>
+                    <span class="flex-1 min-w-0">
+                        <div class="text-xs font-semibold text-white truncate">${escapeHtml(a.hostname)}</div>
+                        <div class="text-xs text-gray-500 truncate">${escapeHtml(a.ip || '')} &middot; ${escapeHtml(a.agent_id)}</div>
+                    </span>
+                </label>
+            `).join('');
+        }
 
-            const stages = [
-                { key: 'data-ingest', label: 'Data Ingest', icon: 'database' },
-                { key: 'build-train', label: 'Build/Train', icon: 'hammer' },
-                { key: 'sec-scan', label: 'Security Scan', icon: 'scan-search' },
-                { key: 'deploy', label: 'Deploy', icon: 'send' },
-                { key: 'monitor', label: 'Monitor', icon: 'activity' },
-            ];
+        window.updateLiveExecTargetCount = () => {
+            const n = document.querySelectorAll('.live-exec-target-cb:checked').length;
+            const el = document.getElementById('live-exec-target-count');
+            if (el) el.textContent = n;
+        };
 
-            const optimizerLogs = [
-                "Researching new tensor processing architectures for efficiency gains.",
-                "Found efficiency gain with 'Federated Learning v2'. Proposing model upgrade.",
-                "Initiating automated build for 'AnomalyDetector-v3.2.2'.",
-                "Self-healing: Restarting failed pod on edge-node-734.",
-                "Analyzing public CVEs for potential impact on container base images.",
-                "Pre-fetching next-gen CUDA drivers for sandbox testing."
-            ];
+        async function startLiveExecutionTab() {
+            const scriptSel = document.getElementById('live-exec-script');
+            try {
+                const r = await api('/api/automation/scripts');
+                automationState.scripts = r.scripts || [];
+                scriptSel.innerHTML = automationState.scripts.length
+                    ? automationState.scripts.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.os)}/${escapeHtml(s.lang)})</option>`).join('')
+                    : '<option disabled>No scripts in library</option>';
+            } catch (e) {
+                scriptSel.innerHTML = `<option disabled>Failed to load: ${escapeHtml(e.message)}</option>`;
+            }
+            try {
+                const r = await api('/api/agents');
+                automationState.agents = r.agents || [];
+            } catch (e) {
+                automationState.agents = [];
+            }
+            renderLiveExecEndpoints('all');
+        }
 
-            let currentStage = 4; // Start at monitor
-            let logIndex = 0;
+        window.runLiveExecution = async () => {
+            const scriptSel = document.getElementById('live-exec-script');
+            const scriptId = scriptSel.value;
+            const targets = Array.from(document.querySelectorAll('.live-exec-target-cb:checked')).map(cb => cb.value);
+            const outputEl = document.getElementById('live-exec-output');
+            const statusEl = document.getElementById('live-exec-status');
+            const badgeEl = document.getElementById('live-exec-ws-badge');
+            if (!scriptId) { window.showAppModal('Error', 'Select a script first.'); return; }
+            if (!targets.length) { window.showAppModal('Error', 'Select at least one endpoint.'); return; }
 
-            const renderLifecycle = () => {
-                lifecycleContainer.innerHTML = stages.map((stage, index) => {
-                    let statusClass = 'text-gray-500';
-                    let statusIcon = 'circle-dashed';
-                    if (index < currentStage) {
-                        statusClass = 'text-green-500';
-                        statusIcon = 'check-circle-2';
-                    } else if (index === currentStage) {
-                        statusClass = 'text-yellow-500 animate-pulse';
-                        statusIcon = 'loader';
+            const script = automationState.scripts.find(s => s.id === scriptId);
+            outputEl.innerHTML = `<p class="text-gray-500">Queuing ${escapeHtml(script ? script.name : scriptId)} on ${targets.length} target(s)…</p>`;
+
+            try {
+                const r = await api('/api/exec/run', {
+                    method: 'POST',
+                    body: JSON.stringify({ script_id: scriptId, target_endpoint_ids: targets, operator: 'operator' }),
+                });
+                statusEl.textContent = `execution ${r.execution_id}`;
+                outputEl.innerHTML = `<p class="text-gray-500">Queued as ${escapeHtml(r.execution_id)}. Waiting for agent output…</p>`;
+                window.connectLiveExecWs(r.execution_id, badgeEl, outputEl);
+            } catch (e) {
+                outputEl.innerHTML += `<p class="text-red-400">Failed to queue: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.connectLiveExecWs = (executionId, badgeEl, outputEl) => {
+            if (automationState.ws) { try { automationState.ws.close(); } catch (e) {} }
+            const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${proto}//${window.location.host}/ws/exec/${executionId}`);
+            automationState.ws = ws;
+            badgeEl.textContent = 'connecting'; badgeEl.className = 'text-xs px-2 py-0.5 rounded-full bg-yellow-700 text-yellow-200';
+            ws.onopen = () => { badgeEl.textContent = 'live'; badgeEl.className = 'text-xs px-2 py-0.5 rounded-full bg-emerald-700 text-emerald-200'; };
+            ws.onclose = () => { badgeEl.textContent = 'closed'; badgeEl.className = 'text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400'; };
+            ws.onerror = () => { badgeEl.textContent = 'error'; badgeEl.className = 'text-xs px-2 py-0.5 rounded-full bg-red-700 text-red-200'; };
+            ws.onmessage = (ev) => {
+                let msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
+                if (msg.type === 'REPLAY_DONE') return;
+                if (msg.type === 'AGENT_STREAM_DATA') {
+                    if (msg.data) {
+                        const isErr = msg.streamType === 'stderr' || msg.streamType === 'powershell_error';
+                        const row = document.createElement('div');
+                        row.className = isErr ? 'text-red-400' : 'text-gray-200';
+                        row.textContent = `[${escapeHtml(msg.endpointId)}] ${msg.data}`;
+                        outputEl.appendChild(row);
+                        outputEl.scrollTop = outputEl.scrollHeight;
                     }
-                    
-                    let connector = index < stages.length - 1 ? `<div class="w-full h-px bg-gray-700 self-center mb-6 hidden sm:block"></div>` : '';
+                    if (msg.done) {
+                        const row = document.createElement('p');
+                        row.className = 'text-emerald-400 mt-2';
+                        row.textContent = `[${escapeHtml(msg.endpointId)}] execution finished.`;
+                        outputEl.appendChild(row);
+                        outputEl.scrollTop = outputEl.scrollHeight;
+                    }
+                }
+            };
+        };
 
-                    return `
-                        <div class="flex-1 flex flex-col sm:flex-row items-center">
-                            <div class="flex flex-col items-center text-center w-24 ${statusClass}">
-                                <i data-lucide="${statusIcon}" class="w-8 h-8 ${index === currentStage ? 'animate-spin' : ''}"></i>
-                                <span class="text-xs font-semibold mt-2">${stage.label}</span>
-                            </div>
-                            ${connector}
+        window.loadLiveExecHistory = async () => {
+            const outputEl = document.getElementById('live-exec-output');
+            try {
+                const r = await api('/api/exec?limit=20');
+                const runs = r.executions || [];
+                if (!runs.length) { outputEl.innerHTML = '<p class="text-gray-500">No past executions yet.</p>'; return; }
+                outputEl.innerHTML = runs.map(e => `
+                    <div class="mb-2 pb-2 border-b border-gray-800">
+                        <span class="text-white">${escapeHtml(e.execution_id)}</span> &middot;
+                        <span class="text-gray-400">${escapeHtml(e.script_name)}</span> &middot;
+                        <span class="${e.status === 'completed' ? 'text-emerald-400' : 'text-yellow-400'}">${escapeHtml(e.status)}</span>
+                        &middot; <span class="text-gray-500">${e.targets.length} target(s)</span>
+                        &middot; <button class="text-gray-400 hover:text-white underline" onclick="window.replayExec('${e.execution_id}')">view output</button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                outputEl.innerHTML = `<p class="text-red-400">Failed to load history: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.replayExec = async (executionId) => {
+            const outputEl = document.getElementById('live-exec-output');
+            try {
+                const r = await api(`/api/exec/${executionId}`);
+                if (!r.ok) { outputEl.innerHTML = `<p class="text-red-400">${escapeHtml(r.error || 'not found')}</p>`; return; }
+                outputEl.innerHTML = (r.logs || []).map(l => {
+                    const isErr = l.stream_type === 'stderr' || l.stream_type === 'powershell_error';
+                    return `<div class="${isErr ? 'text-red-400' : 'text-gray-200'}">[${escapeHtml(l.endpoint_id)}] ${escapeHtml(l.chunk)}</div>`;
+                }).join('') || '<p class="text-gray-500">No output recorded for this run.</p>';
+            } catch (e) {
+                outputEl.innerHTML = `<p class="text-red-400">${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        // ── Script Library ───────────────────────────────────────────────
+
+        function renderScriptLibraryTab() {
+            return `<div id="script-library-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">Loading…</div>`;
+        }
+
+        async function loadScriptLibrary() {
+            const el = document.getElementById('script-library-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/automation/scripts');
+                const scripts = r.scripts || [];
+                el.innerHTML = scripts.length ? scripts.map(s => `
+                    <div class="card p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-1">
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(s.name)}</h4>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">${escapeHtml(s.os)}</span>
                         </div>
-                    `;
-                }).join('');
-                safeCreateIcons();
-            };
+                        <p class="text-xs text-gray-400 mb-2">${escapeHtml(s.description || '')}</p>
+                        <div class="flex items-center justify-between text-xs text-gray-500">
+                            <span>${escapeHtml(s.lang)} &middot; ${escapeHtml(s.category)}</span>
+                            <button onclick="window.switchAutomationTab('live_exec'); setTimeout(() => { const sel = document.getElementById('live-exec-script'); if (sel) sel.value = '${s.id}'; }, 300)"
+                                class="text-primary-color hover:underline">Run in Live Execution &rarr;</button>
+                        </div>
+                    </div>
+                `).join('') : '<p class="text-gray-500 italic">No scripts in the library.</p>';
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load: ${escapeHtml(e.message)}</p>`;
+            }
+        }
 
-            const runCycle = () => {
-                currentStage = (currentStage + 1) % (stages.length + 1); // +1 to have a 'done' state
-                
-                if (currentStage < stages.length) {
-                    statusEl.textContent = `STATUS: [${stages[currentStage].label}] - Processing new data batch...`;
-                } else {
-                    statusEl.textContent = 'STATUS: Monitoring sensor data for drift...';
-                    currentStage = 4; // Reset to monitor
-                }
-                
-                renderLifecycle();
+        // ── Playbooks ─────────────────────────────────────────────────────
 
-                // If cycle is complete, wait before starting a new one
-                if (currentStage >= stages.length - 1) { // -1 because monitor is the last stage
-                     // stay in monitor
-                } else {
-                    setTimeout(runCycle, 3000); // 3s per stage
-                }
-            };
-            
-            // Initial render
-            renderLifecycle();
-            optimizerLog.innerHTML += generateLogEntry("Axiom Edge Optimizer Initialized.", 'green-500', 'lucide-power');
-            safeCreateIcons();
+        function renderPlaybooksTab() {
+            return `<div id="automation-playbooks-list" class="space-y-3">Loading…</div>`;
+        }
 
-            // Start optimizer log updates
-            const logInterval = setInterval(() => {
-                if (document.getElementById('axiom-optimizer-log')) {
-                    optimizerLog.innerHTML += generateLogEntry(optimizerLogs[logIndex % optimizerLogs.length], 'purple-400', 'lucide-cpu');
-                    optimizerLog.scrollTop = optimizerLog.scrollHeight;
-                    safeCreateIcons();
-                    logIndex++;
-                }
-            }, 7000);
-            activeIntervals.push(logInterval);
+        async function loadAutomationPlaybooks() {
+            const el = document.getElementById('automation-playbooks-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/automation/playbooks');
+                const playbooks = r.playbooks || [];
+                const riskColor = { critical: 'red-500', high: 'orange-400', medium: 'yellow-400', low: 'blue-400' };
+                el.innerHTML = playbooks.length ? playbooks.map(p => `
+                    <div class="card p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(p.name)}</h4>
+                            <span class="text-xs font-bold text-${riskColor[p.risk] || 'gray-400'}">${escapeHtml((p.risk || '').toUpperCase())}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">Trigger: <code class="text-gray-400">${escapeHtml(p.trigger)}</code></p>
+                        <ol class="text-xs text-gray-400 list-decimal list-inside space-y-0.5">
+                            ${(p.steps || []).map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+                        </ol>
+                    </div>
+                `).join('') : '<p class="text-gray-500 italic">No playbooks defined.</p>';
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load: ${escapeHtml(e.message)}</p>`;
+            }
+        }
 
-            // After a delay, trigger a new cycle
-            setTimeout(() => {
-                const logEl = document.getElementById('axiom-optimizer-log');
-                if(logEl) {
-                    logEl.innerHTML += generateLogEntry("Model drift detected. Initiating upgrade cycle.", 'yellow-400', 'lucide-git-commit-vertical');
-                    logEl.scrollTop = logEl.scrollHeight;
-                    safeCreateIcons();
-                }
-                currentStage = -1; // Ready to start from beginning
-                runCycle();
-            }, 5000);
+        // ── Tasks ─────────────────────────────────────────────────────────
+
+        function renderTasksTab() {
+            return `<div id="automation-tasks-list" class="space-y-2">Loading…</div>`;
+        }
+
+        async function loadAutomationTasks() {
+            const el = document.getElementById('automation-tasks-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/automation/tasks');
+                const tasks = r.tasks || [];
+                el.innerHTML = tasks.length ? tasks.map(t => `
+                    <div class="card p-3 rounded-lg flex items-center justify-between">
+                        <div>
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(t.name)}</h4>
+                            <p class="text-xs text-gray-500">${escapeHtml(t.schedule)} &middot; ${escapeHtml(t.targets)} &middot; script <code>${escapeHtml(t.script_id)}</code></p>
+                        </div>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" ${t.status === 'enabled' ? 'checked' : ''}
+                                onchange="window.toggleAutomationTask('${t.id}', this.checked)">
+                            <div class="relative w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-color"></div>
+                        </label>
+                    </div>
+                `).join('') : '<p class="text-gray-500 italic">No scheduled tasks.</p>';
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load: ${escapeHtml(e.message)}</p>`;
+            }
+        }
+
+        window.toggleAutomationTask = async (taskId, enabled) => {
+            try {
+                await api(`/api/automation/tasks/${taskId}/toggle`, {
+                    method: 'POST', body: JSON.stringify({ status: enabled ? 'enabled' : 'paused' }),
+                });
+            } catch (e) {
+                window.showAppModal('Error', e.message);
+                loadAutomationTasks();
+            }
+        };
+
+        // ── Template Gallery ──────────────────────────────────────────────
+
+        function renderTemplateGalleryTab() {
+            return `<div id="automation-templates-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">Loading…</div>`;
+        }
+
+        async function loadTemplateGallery() {
+            const el = document.getElementById('automation-templates-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/automation/templates');
+                const templates = r.templates || [];
+                el.innerHTML = templates.length ? templates.map(t => `
+                    <div class="card p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-1">
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(t.name)}</h4>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">${escapeHtml(t.os)}</span>
+                        </div>
+                        <p class="text-xs text-gray-400">${escapeHtml(t.description)}</p>
+                    </div>
+                `).join('') : '<p class="text-gray-500 italic">No templates available.</p>';
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load: ${escapeHtml(e.message)}</p>`;
+            }
         }
 
         function renderOntologyHub() {

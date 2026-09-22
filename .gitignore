@@ -1,3 +1,7 @@
+# jakal_agent.py's persisted identity (agent_id + agent_key) -- local to
+# whichever machine it's run on, never something to share or commit.
+agent/.jakal_agent_state.json
+
 # Python
 __pycache__/
 *.py[cod]

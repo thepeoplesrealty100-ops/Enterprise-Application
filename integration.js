@@ -23,19 +23,16 @@ export function cardStyle() {
   return 'background:rgba(31,41,55,.92);border:1px solid #374151;border-radius:12px;padding:14px;margin:12px 0';
 }
 
+// Telemetry lives inside the Live Ops drawer (ensureOpsDrawer(), below),
+// not as its own floating box. It used to be a permanent
+// position:fixed panel appended straight to <body> -- always on top of
+// every module, un-closeable, un-movable, indistinguishable from a
+// browser devtools overlay left open by mistake. Opening/closing Live
+// Ops now opens/closes this along with it; nothing renders until the
+// operator asks to see it.
 function ensureConsole() {
-  let c = el('telemetry-console');
-  if (c) return c;
-  c = document.createElement('div');
-  c.id = 'telemetry-console';
-  c.style.cssText = [
-    'position:fixed', 'right:12px', 'bottom:40px', 'z-index:9998',
-    'width:min(420px,92vw)', 'max-height:220px', 'overflow:auto',
-    'padding:10px', 'background:rgba(17,24,39,.92)', 'border:1px solid #374151',
-    'border-radius:10px', 'font:11px/1.4 ui-monospace,monospace', 'color:#d1d5db'
-  ].join(';');
-  document.body.appendChild(c);
-  return c;
+  ensureOpsDrawer();
+  return el('telemetry-console');
 }
 
 export function updateTelemetryConsole(text, colorClass = 'text-gray-300') {
@@ -120,7 +117,15 @@ function ensureOpsDrawer() {
       <button type="button" data-ops-tab="response" class="ops-tab" style="${btnStyle('#374151')}">Response</button>
       <button type="button" data-ops-tab="scripts" class="ops-tab" style="${btnStyle('#374151')}">Scripts</button>
     </div>
-    <div id="jakal-ops-body" style="flex:1;overflow:auto;padding:12px"></div>
+    <div id="jakal-ops-body" style="flex:1;overflow:auto;padding:12px;min-height:0"></div>
+    <div style="border-top:1px solid #374151;flex-shrink:0">
+      <div style="padding:6px 12px;display:flex;align-items:center;gap:8px">
+        <strong style="color:#9ca3af;font-size:11px;flex:1">TELEMETRY</strong>
+        <button type="button" id="jakal-telemetry-toggle" style="${btnStyle()}">Hide</button>
+      </div>
+      <div id="telemetry-console" style="height:140px;overflow:auto;padding:0 12px 10px;
+        font:11px/1.4 ui-monospace,monospace;color:#d1d5db"></div>
+    </div>
   `;
   document.body.appendChild(d);
   el('jakal-ops-close').onclick = () => toggleOpsDrawer(false);
@@ -131,6 +136,13 @@ function ensureOpsDrawer() {
       refreshOpsTab();
     };
   });
+  el('jakal-telemetry-toggle').onclick = () => {
+    const c = el('telemetry-console');
+    const btn = el('jakal-telemetry-toggle');
+    const hidden = c.style.display === 'none';
+    c.style.display = hidden ? 'block' : 'none';
+    btn.textContent = hidden ? 'Hide' : 'Show';
+  };
   window.__opsTab = 'reports';
 }
 
