@@ -59,7 +59,34 @@ email-validator>=2.1.0  # required by pydantic's EmailStr (iam.py, awareness.py)
 # router) at startup.
 aiohttp>=3.9.0
 
+# ── WebSocket transport (routers/remote_exec.py's Live Remote Execution
+#    Engine: /ws/exec/{execution_id}) ─────────────────────────────────────────
+# uvicorn has no ASGI WebSocket protocol implementation of its own -- without
+# one of these installed it silently falls back to HTTP-only and every
+# websocket handshake gets treated as a plain HTTP request that matches no
+# route, returning a completely generic {"detail":"Not Found"} 404 with
+# regular security headers attached (indistinguishable from a genuinely
+# missing/mistyped route). Confirmed missing here: this backend has never
+# once been able to open a WebSocket connection in any environment where
+# only this file governed the install, so remote_exec.py's live-streamed
+# terminal -- otherwise fully real, hub + (now, see agent/jakal_agent.py)
+# spoke -- had never once actually streamed anything.
+websockets>=12.0
+
 # ── Testing ──────────────────────────────────────────────────────────────────
 pytest>=8.0.0
 pytest-asyncio>=0.23.0
-httpx>=0.27.0          # async test client for FastAPI
+# httpx 0.28 removed the `app=` shortcut httpx.Client used to build an ASGI
+# transport internally (now requires an explicit
+# transport=httpx.ASGITransport(app=...)). fastapi==0.110.0 pulls in
+# starlette==0.36.3, whose TestClient was written against the pre-0.28
+# behavior -- with unpinned httpx>=0.27.0 alone, a fresh install pulls
+# current httpx (0.28+) and every starlette.testclient.TestClient(...)
+# construction (this suite's only way to test WebSocket routes -- see
+# test_remote_exec_websocket.py; httpx.AsyncClient/ASGITransport, used
+# everywhere else in this suite, has no WebSocket support at all) fails
+# with "Client.__init__() got an unexpected keyword argument 'app'" before
+# a single test using it can run. Same bug class as the anthropic pin
+# above: an unpinned transitive dependency drifted past what this
+# fastapi/starlette version was actually built against.
+httpx>=0.27.0,<0.28    # async test client for FastAPI; TestClient needs <0.28 (see above)
