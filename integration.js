@@ -15,11 +15,11 @@ function el(id) {
   return document.getElementById(id);
 }
 
-function btnStyle(bg = '#1f2937') {
+export function btnStyle(bg = '#1f2937') {
   return `cursor:pointer;border:1px solid #4b5563;background:${bg};color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600`;
 }
 
-function cardStyle() {
+export function cardStyle() {
   return 'background:rgba(31,41,55,.92);border:1px solid #374151;border-radius:12px;padding:14px;margin:12px 0';
 }
 
@@ -163,22 +163,22 @@ async function refreshOpsTab() {
   }
 }
 
-function escapeHtml(s) {
+export function escapeHtml(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function authToken() {
+export function authToken() {
   try { return sessionStorage.getItem('jakal_token') || ''; } catch { return ''; }
 }
 
-function setAuthToken(token) {
+export function setAuthToken(token) {
   try {
     if (token) sessionStorage.setItem('jakal_token', token);
     else sessionStorage.removeItem('jakal_token');
   } catch { /* sessionStorage unavailable (private mode etc.) — token just won't persist */ }
 }
 
-async function api(path, options = {}) {
+export async function api(path, options = {}) {
   const url = `${BACKEND_BASE}${path}`;
   const token = authToken();
   const res = await fetch(url, {
