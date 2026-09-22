@@ -400,6 +400,7 @@
     </div>
 
     <script type="module">
+        import { api, authToken, setAuthToken, cardStyle, btnStyle, escapeHtml } from './integration.js';
         let chartInstances = {};
         let activeIntervals = [];
         let animationFrameId = null;
@@ -611,7 +612,11 @@
             { key: 'admin_dark_web', icon: 'scan-search', label: 'Dark Web Monitoring', category: 'Risk & Compliance' },
             { key: 'admin_security_training', icon: 'graduation-cap', label: 'Awareness Training', category: 'Human Layer Security' },
             { key: 'admin_phishing_sim', icon: 'fish', label: 'Phishing Campaigns', category: 'Human Layer Security' },
-            { key: 'admin_cheatsheet_library', icon: 'book-open-check', label: 'CheatSheet Library', category: 'GACyber Toolkit' }
+            { key: 'admin_cheatsheet_library', icon: 'book-open-check', label: 'CheatSheet Library', category: 'GACyber Toolkit' },
+            { key: 'admin_soar', icon: 'workflow', label: 'SOAR Playbooks', category: 'Security Operations' },
+            { key: 'admin_vulnerabilities', icon: 'bug', label: 'Vulnerabilities', category: 'Security Operations' },
+            { key: 'admin_integrations', icon: 'plug', label: 'Integrations', category: 'Security Operations' },
+            { key: 'admin_audit_trail', icon: 'file-clock', label: 'Audit Trail', category: 'Security Operations' }
         ];
 
         const clientNavLinks = [
@@ -656,6 +661,10 @@
             admin_security_training: { title: "Security Awareness Training", html: () => renderSecurityTraining() },
             admin_phishing_sim: { title: "Phishing Campaigns", html: () => renderPhishingSim() },
             admin_cheatsheet_library: { title: "CheatSheet Library", html: () => renderCheatsheetLibrary() },
+            admin_soar: { title: "SOAR Playbooks", html: () => renderSoarPlaybooks() },
+            admin_vulnerabilities: { title: "Vulnerability Management", html: () => renderVulnerabilityManagement() },
+            admin_integrations: { title: "Integrations", html: () => renderIntegrationsVault() },
+            admin_audit_trail: { title: "Audit Trail", html: () => renderAuditTrail() },
 
             // CLIENT PORTAL (ORIGINAL)
             client_global_dashboard: { title: "Client Global Dashboard", html: () => renderGlobalClientDashboard() },
@@ -770,6 +779,10 @@
             if (pageKey === 'admin_investigation_canvas') startInvestigationCanvas();
             // Horizon Inits
             if (pageKey === 'admin_horizon_agentic') startHorizonAgenticCanvas();
+            if (pageKey === 'admin_soar') startSoarPlaybooks();
+            if (pageKey === 'admin_vulnerabilities') startVulnerabilityManagement();
+            if (pageKey === 'admin_integrations') startIntegrationsVault();
+            if (pageKey === 'admin_audit_trail') startAuditTrail();
 
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.querySelector(`.nav-link[data-page="${pageKey}"]`);
@@ -4047,6 +4060,407 @@
                 _loadCsData().then(() => window.filterCheatsheets());
             }
         };
+
+
+        // =========================================================================
+        // SECURITY OPERATIONS — SOAR, Vulnerabilities, Integrations, Audit Trail
+        // Real backend-wired modules (no fixture data). Added 2026-09-22: these
+        // backends (routers/soar.py, routers/vulnerability_management.py,
+        // routers/integrations.py, routers/iam.py's audit log) had zero frontend
+        // surface anywhere in this dashboard despite being fully real.
+        // =========================================================================
+
+        function renderSoarPlaybooks() {
+            return `
+                <div class="space-y-6">
+                    <div class="card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold text-white mb-1">Auto-Triage an Indicator</h3>
+                        <p class="text-sm text-gray-400 mb-4">Runs the real SOAR chain: live threat-intel enrichment &rarr; decision &rarr; staged containment (if malicious) &rarr; ticket.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input id="soar-indicator" placeholder="IP, domain, URL, or hash" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm md:col-span-2">
+                            <input id="soar-agent-id" placeholder="Endpoint agent_id (optional)" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm">
+                        </div>
+                        <label class="flex items-center mt-3 text-xs text-gray-400">
+                            <input id="soar-auto-contain" type="checkbox" class="mr-2">
+                            Auto-approve containment if malicious (otherwise stages for approval)
+                        </label>
+                        <button id="soar-run-btn" onclick="window.runSoarTriage()" class="w-full mt-4 bg-primary-color text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center">
+                            <i data-lucide="workflow" class="w-4 h-4 mr-2"></i>Run Auto-Triage
+                        </button>
+                        <div id="soar-result" class="hidden mt-4 bg-gray-900 rounded-lg p-3 text-sm scrollbar-style overflow-y-auto" style="max-height:260px"></div>
+                    </div>
+
+                    <div class="card p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-white">Recent Tickets</h3>
+                            <button onclick="window.loadSoarTickets()" class="text-xs text-gray-400 hover:text-white flex items-center"><i data-lucide="refresh-cw" class="w-3 h-3 mr-1"></i>Refresh</button>
+                        </div>
+                        <div id="soar-tickets-list" class="text-sm text-gray-400">Loading…</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function _soarSeverityColor(verdict) {
+            if (verdict === 'malicious') return 'red-500';
+            if (verdict === 'suspicious') return 'yellow-500';
+            return 'emerald-500';
+        }
+
+        window.loadSoarTickets = async () => {
+            const el = document.getElementById('soar-tickets-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/soar/tickets?limit=50');
+                const tickets = r.tickets || [];
+                if (!tickets.length) {
+                    el.innerHTML = '<p class="text-gray-500 italic">No tickets yet — run an auto-triage above to create one.</p>';
+                    return;
+                }
+                el.innerHTML = `
+                    <div class="overflow-x-auto scrollbar-style">
+                    <table class="w-full text-left text-xs">
+                        <thead><tr class="text-gray-500 uppercase border-b border-border-color">
+                            <th class="py-2 pr-3">Ticket</th><th class="py-2 pr-3">Indicator</th>
+                            <th class="py-2 pr-3">Verdict</th><th class="py-2 pr-3">Status</th><th class="py-2">Created</th>
+                        </tr></thead>
+                        <tbody>
+                        ${tickets.map(t => `
+                            <tr class="border-b border-border-color/50">
+                                <td class="py-2 pr-3 font-mono">${escapeHtml(t.ticket_id)}</td>
+                                <td class="py-2 pr-3">${escapeHtml(t.indicator)}</td>
+                                <td class="py-2 pr-3"><span class="text-${_soarSeverityColor(t.verdict)} font-semibold">${escapeHtml(t.verdict || 'unknown')}</span></td>
+                                <td class="py-2 pr-3">${escapeHtml(t.status)}</td>
+                                <td class="py-2 text-gray-500">${new Date(t.created_at).toLocaleString()}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    </div>
+                `;
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load tickets: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.runSoarTriage = async () => {
+            const indicator = document.getElementById('soar-indicator').value.trim();
+            const agentId = document.getElementById('soar-agent-id').value.trim();
+            const autoContain = document.getElementById('soar-auto-contain').checked;
+            const btn = document.getElementById('soar-run-btn');
+            const resultEl = document.getElementById('soar-result');
+            if (!indicator) { window.showAppModal('Error', 'Enter an indicator (IP, domain, URL, or hash) first.'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Running chain…';
+            safeCreateIcons();
+            resultEl.classList.add('hidden');
+
+            try {
+                const r = await api('/api/soar/auto-triage', {
+                    method: 'POST',
+                    body: JSON.stringify({ indicator, agent_id: agentId || undefined, auto_contain: autoContain }),
+                });
+                resultEl.innerHTML = `
+                    <p class="mb-2"><span class="text-gray-500">Verdict:</span> <span class="text-${_soarSeverityColor(r.verdict)} font-bold">${escapeHtml(r.verdict)}</span> &middot; <span class="text-gray-500">Ticket:</span> <span class="font-mono">${escapeHtml(r.ticket_id)}</span></p>
+                    ${r.chain.map(s => `<p class="text-gray-400 mb-1">&rarr; <span class="text-white">${escapeHtml(s.step)}</span> (${escapeHtml(s.action)}): ${escapeHtml(JSON.stringify(s.result))}</p>`).join('')}
+                `;
+                resultEl.classList.remove('hidden');
+                window.loadSoarTickets();
+            } catch (e) {
+                resultEl.innerHTML = `<p class="text-red-400">Auto-triage failed: ${escapeHtml(e.message)}</p>`;
+                resultEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="workflow" class="w-4 h-4 mr-2"></i>Run Auto-Triage';
+                safeCreateIcons();
+            }
+        };
+
+        function startSoarPlaybooks() {
+            window.loadSoarTickets();
+        }
+
+        // ── Vulnerability Management ────────────────────────────────────────────
+
+        function renderVulnerabilityManagement() {
+            return `
+                <div class="space-y-6">
+                    <div class="card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold text-white mb-4">Vulnerability Posture</h3>
+                        <div id="vulnman-severity-pills" class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            ${renderMetricPill('vulnman-pill-critical', 'Critical', '…', 'red-500')}
+                            ${renderMetricPill('vulnman-pill-high', 'High', '…', 'orange-500')}
+                            ${renderMetricPill('vulnman-pill-medium', 'Medium', '…', 'yellow-500')}
+                            ${renderMetricPill('vulnman-pill-low', 'Low', '…', 'blue-400')}
+                            ${renderMetricPill('vulnman-pill-total', 'Total known', '…', 'white')}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-3">Source: live NVD scans persisted to vuln_db. Run a scan below to populate this.</p>
+                    </div>
+
+                    <div class="card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold text-white mb-1">Run a Real NVD Scan</h3>
+                        <p class="text-sm text-gray-400 mb-4">Select discovered devices; targets are derived from their OS fingerprint and versioned services, then queried live against NVD. NVD's public rate limit paces this at roughly 6&ndash;7 seconds per product, so this runs in the background.</p>
+                        <select id="vulnman-device-select" multiple class="w-full bg-gray-800 p-2 rounded-md border border-border-color text-sm mb-3" style="height:120px">
+                            <option disabled>Loading devices…</option>
+                        </select>
+                        <button id="vulnman-scan-btn" onclick="window.startVulnScan()" class="w-full bg-primary-color text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center">
+                            <i data-lucide="radar" class="w-4 h-4 mr-2"></i>Scan Selected Devices
+                        </button>
+                        <div id="vulnman-scan-progress" class="hidden mt-4"></div>
+                    </div>
+
+                    <div class="card p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-white">Known CVEs</h3>
+                            <button onclick="window.loadVulnCves()" class="text-xs text-gray-400 hover:text-white flex items-center"><i data-lucide="refresh-cw" class="w-3 h-3 mr-1"></i>Refresh</button>
+                        </div>
+                        <div id="vulnman-cve-list" class="text-sm text-gray-400 max-h-96 overflow-y-auto scrollbar-style">Loading…</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function _cvssColor(score) {
+            if (score >= 9) return 'red-500';
+            if (score >= 7) return 'orange-500';
+            if (score >= 4) return 'yellow-500';
+            return 'blue-400';
+        }
+
+        window.loadVulnCves = async () => {
+            const listEl = document.getElementById('vulnman-cve-list');
+            if (!listEl) return;
+            try {
+                const r = await api('/api/vulnerabilities/cves?limit=200');
+                const vulns = r.vulnerabilities || [];
+                const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+                vulns.forEach(v => { if (counts[v.severity] !== undefined) counts[v.severity]++; });
+                const setPill = (id, val) => { const e = document.getElementById(id); if (e) e.querySelector('span:last-child').textContent = val; };
+                setPill('vulnman-pill-critical', counts.CRITICAL);
+                setPill('vulnman-pill-high', counts.HIGH);
+                setPill('vulnman-pill-medium', counts.MEDIUM);
+                setPill('vulnman-pill-low', counts.LOW);
+                setPill('vulnman-pill-total', vulns.length);
+
+                if (!vulns.length) {
+                    listEl.innerHTML = '<p class="text-gray-500 italic">No CVEs recorded yet — run a scan above.</p>';
+                    return;
+                }
+                listEl.innerHTML = vulns.map(v => `
+                    <div class="p-3 bg-gray-900 rounded-lg mb-2 flex items-start justify-between">
+                        <div>
+                            <p class="font-mono text-white text-xs">${escapeHtml(v.vuln_id)}</p>
+                            <p class="text-gray-400 text-xs mt-1">${escapeHtml((v.description || '').slice(0, 160))}</p>
+                        </div>
+                        <span class="text-${_cvssColor(v.cvss_score || 0)} font-bold text-sm ml-3 flex-shrink-0">${v.cvss_score != null ? v.cvss_score.toFixed(1) : '—'}</span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                listEl.innerHTML = `<p class="text-red-400">Failed to load CVEs: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.loadVulnDevices = async () => {
+            const sel = document.getElementById('vulnman-device-select');
+            if (!sel) return;
+            try {
+                const r = await api('/api/fleet/devices?limit=200');
+                const devices = r.devices || [];
+                sel.innerHTML = devices.length
+                    ? devices.map(d => `<option value="${d.device_id}">${escapeHtml(d.hostname || d.ip_address || d.device_id)} — ${escapeHtml(d.os_fingerprint || 'unknown OS')}</option>`).join('')
+                    : '<option disabled>No devices discovered yet</option>';
+            } catch (e) {
+                sel.innerHTML = `<option disabled>Failed to load devices: ${escapeHtml(e.message)}</option>`;
+            }
+        };
+
+        window.startVulnScan = async () => {
+            const sel = document.getElementById('vulnman-device-select');
+            const ids = Array.from(sel.selectedOptions).map(o => o.value);
+            const btn = document.getElementById('vulnman-scan-btn');
+            const progressEl = document.getElementById('vulnman-scan-progress');
+            if (!ids.length) { window.showAppModal('Error', 'Select at least one device to scan.'); return; }
+
+            btn.disabled = true;
+            progressEl.classList.remove('hidden');
+            progressEl.innerHTML = '<p class="text-gray-400 text-sm">Deriving scan targets…</p>';
+
+            try {
+                const start = await api('/api/vulnerabilities/scan/immediate', {
+                    method: 'POST', body: JSON.stringify({ device_ids: ids }),
+                });
+                const scanId = start.scan_id;
+                progressEl.innerHTML = `<p class="text-gray-400 text-sm mb-2">Scanning ${start.targets_total} target(s): ${start.targets.map(t => escapeHtml(t.name + ' ' + t.version)).join(', ')}</p><div class="w-full bg-gray-800 rounded-full h-3"><div id="vulnman-progress-bar" class="bg-primary-color h-3 rounded-full transition-all" style="width:0%"></div></div><p id="vulnman-progress-text" class="text-xs text-gray-500 mt-1">0%</p>`;
+
+                const poll = async () => {
+                    const p = await api(`/api/vulnerabilities/scan/${scanId}/progress`);
+                    const bar = document.getElementById('vulnman-progress-bar');
+                    const text = document.getElementById('vulnman-progress-text');
+                    if (bar) bar.style.width = `${p.progress_percentage}%`;
+                    if (text) text.textContent = `${p.progress_percentage}% — ${p.findings_so_far} finding(s) so far (${p.critical} critical, ${p.high} high)`;
+                    if (p.status === 'completed' || p.status === 'failed') {
+                        if (p.status === 'failed') progressEl.innerHTML += `<p class="text-red-400 text-sm mt-2">Scan failed: ${escapeHtml(p.error || 'unknown error')}</p>`;
+                        else progressEl.innerHTML += `<p class="text-emerald-400 text-sm mt-2">Scan complete.</p>`;
+                        window.loadVulnCves();
+                        return;
+                    }
+                    setTimeout(poll, 2000);
+                };
+                poll();
+            } catch (e) {
+                progressEl.innerHTML = `<p class="text-red-400">Scan failed to start: ${escapeHtml(e.message)}</p>`;
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        function startVulnerabilityManagement() {
+            window.loadVulnCves();
+            window.loadVulnDevices();
+        }
+
+        // ── Integrations Vault ──────────────────────────────────────────────────
+
+        function renderIntegrationsVault() {
+            return `
+                <div class="card p-6 rounded-xl">
+                    <h3 class="text-xl font-semibold text-white mb-1">Integration Keys</h3>
+                    <p class="text-sm text-gray-400 mb-4">Keys are encrypted at rest (AES-256-GCM) and never returned once saved &mdash; only whether each provider is configured.</p>
+                    <div id="intvault-provider-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">Loading…</div>
+                </div>
+            `;
+        }
+
+        window.loadIntegrationsStatus = async () => {
+            const el = document.getElementById('intvault-provider-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/integrations/status');
+                const providers = r.integrations || [];
+                el.innerHTML = providers.map(p => `
+                    <div class="bg-gray-800/60 rounded-lg p-4 border border-border-color">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(p.label)}</h4>
+                            <span class="text-xs px-2 py-1 rounded-full ${p.configured ? 'bg-emerald-900 text-emerald-400' : 'bg-gray-700 text-gray-400'}">${p.configured ? ('configured' + (p.source === 'env' ? ' (env)' : '')) : 'not configured'}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">${escapeHtml(p.kind)} &middot; free tier: ${escapeHtml(p.free)}</p>
+                        <div class="flex gap-2">
+                            <input type="password" id="intvault-input-${p.provider}" placeholder="${escapeHtml(p.secret_label)}" class="flex-1 bg-gray-900 p-2 rounded-md border border-border-color text-xs">
+                            <button onclick="window.saveIntegrationKey('${p.provider}')" class="bg-primary-color text-white px-3 py-1 rounded-md text-xs font-semibold">Save</button>
+                        </div>
+                        <div class="flex gap-3 mt-2 text-xs">
+                            <button onclick="window.testIntegration('${p.provider}')" class="text-gray-400 hover:text-white">Test connection</button>
+                            ${p.configured && p.source === 'vault' ? `<button onclick="window.deleteIntegrationKey('${p.provider}')" class="text-red-400 hover:text-red-300">Remove</button>` : ''}
+                            ${p.docs ? `<a href="${p.docs}" target="_blank" class="text-gray-500 hover:text-gray-300">Get a key &rarr;</a>` : ''}
+                        </div>
+                        <p id="intvault-msg-${p.provider}" class="text-xs mt-2"></p>
+                    </div>
+                `).join('');
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load integrations: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.saveIntegrationKey = async (provider) => {
+            const input = document.getElementById(`intvault-input-${provider}`);
+            const msg = document.getElementById(`intvault-msg-${provider}`);
+            const secret = input.value.trim();
+            if (!secret) { msg.textContent = 'Enter a value first.'; msg.className = 'text-xs mt-2 text-red-400'; return; }
+            try {
+                await api('/api/integrations/key', { method: 'POST', body: JSON.stringify({ provider, secret }) });
+                msg.textContent = 'Saved.'; msg.className = 'text-xs mt-2 text-emerald-400';
+                input.value = '';
+                window.loadIntegrationsStatus();
+            } catch (e) {
+                msg.textContent = e.message; msg.className = 'text-xs mt-2 text-red-400';
+            }
+        };
+
+        window.deleteIntegrationKey = async (provider) => {
+            try {
+                await api(`/api/integrations/key/${provider}`, { method: 'DELETE' });
+                window.loadIntegrationsStatus();
+            } catch (e) {
+                window.showAppModal('Error', e.message);
+            }
+        };
+
+        window.testIntegration = async (provider) => {
+            const msg = document.getElementById(`intvault-msg-${provider}`);
+            msg.textContent = 'Testing…'; msg.className = 'text-xs mt-2 text-gray-400';
+            try {
+                const r = await api(`/api/integrations/test/${provider}`, { method: 'POST' });
+                msg.textContent = r.message || r.status;
+                msg.className = `text-xs mt-2 ${r.ok ? 'text-emerald-400' : 'text-yellow-400'}`;
+            } catch (e) {
+                msg.textContent = e.message; msg.className = 'text-xs mt-2 text-red-400';
+            }
+        };
+
+        function startIntegrationsVault() {
+            window.loadIntegrationsStatus();
+        }
+
+        // ── Audit Trail ──────────────────────────────────────────────────────────
+
+        function renderAuditTrail() {
+            return `
+                <div class="card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-white">Audit Trail</h3>
+                        <button onclick="window.loadAuditTrail()" class="text-xs text-gray-400 hover:text-white flex items-center"><i data-lucide="refresh-cw" class="w-3 h-3 mr-1"></i>Refresh</button>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-4">Every authenticated action recorded by the IAM layer &mdash; who did what, and when.</p>
+                    <div id="audit-trail-list" class="text-sm text-gray-400 max-h-[32rem] overflow-y-auto scrollbar-style">Loading…</div>
+                </div>
+            `;
+        }
+
+        window.loadAuditTrail = async () => {
+            const el = document.getElementById('audit-trail-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/iam/audit/log?limit=200');
+                const entries = r.entries || r || [];
+                const list = Array.isArray(entries) ? entries : [];
+                if (!list.length) {
+                    el.innerHTML = '<p class="text-gray-500 italic">No audit entries yet.</p>';
+                    return;
+                }
+                el.innerHTML = `
+                    <div class="overflow-x-auto scrollbar-style">
+                    <table class="w-full text-left text-xs">
+                        <thead><tr class="text-gray-500 uppercase border-b border-border-color">
+                            <th class="py-2 pr-3">Time</th><th class="py-2 pr-3">Actor</th>
+                            <th class="py-2 pr-3">Action</th><th class="py-2 pr-3">Outcome</th><th class="py-2">Detail</th>
+                        </tr></thead>
+                        <tbody>
+                        ${list.map(a => `
+                            <tr class="border-b border-border-color/50">
+                                <td class="py-2 pr-3 text-gray-500">${a.timestamp ? new Date(a.timestamp).toLocaleString() : '—'}</td>
+                                <td class="py-2 pr-3">${escapeHtml(a.actor_label || a.actor_user_id || 'system')}</td>
+                                <td class="py-2 pr-3 font-mono">${escapeHtml(a.action || '')}</td>
+                                <td class="py-2 pr-3"><span class="${a.outcome === 'success' ? 'text-emerald-400' : a.outcome === 'denied' ? 'text-yellow-400' : 'text-red-400'}">${escapeHtml(a.outcome || '')}</span></td>
+                                <td class="py-2 text-gray-500">${escapeHtml(typeof a.detail === 'string' ? a.detail : JSON.stringify(a.detail || {}))}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    </div>
+                `;
+            } catch (e) {
+                if (e.status === 401) {
+                    el.innerHTML = '<p class="text-yellow-400">Sign in required to view the audit trail. Go to <b>Global Settings &amp; Security</b> to sign in.</p>';
+                } else if (e.status === 403) {
+                    el.innerHTML = '<p class="text-yellow-400">Your account does not have the <code>audit:read</code> permission.</p>';
+                } else {
+                    el.innerHTML = `<p class="text-red-400">Failed to load audit trail: ${escapeHtml(e.message)}</p>`;
+                }
+            }
+        };
+
+        function startAuditTrail() {
+            window.loadAuditTrail();
+        }
 
     </script>
 
