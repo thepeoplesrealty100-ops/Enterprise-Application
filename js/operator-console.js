@@ -133,6 +133,21 @@
     "/clear": "Clear the console",
   };
 
+  // Prepopulated, one-click versions of the commands an operator reaches
+  // for most often -- so using the console doesn't require memorizing
+  // slash-command syntax first. Deliberately only read-only/informational
+  // commands here (no /isolate, no /run against an arbitrary action_id):
+  // anything that stages an approval or takes a destructive action stays
+  // typed, on purpose, so a misclick can't trigger one.
+  var QUICK_ACTIONS = [
+    { label: "Status", cmd: "/status" },
+    { label: "Fleet", cmd: "/fleet" },
+    { label: "Capabilities", cmd: "/caps" },
+    { label: "Scan demo target", cmd: "/scan " + DEMO_TARGET },
+    { label: "Quantum (bell state)", cmd: "/quantum bell_state 512" },
+    { label: "Help", cmd: "/help" },
+  ];
+
   function parseKV(args) { var o = {}; args.forEach(function (a) { var i = a.indexOf("="); if (i > 0) { var k = a.slice(0, i), v = a.slice(i + 1); if (/^\d+$/.test(v)) v = parseInt(v, 10); else if (v === "true") v = true; else if (v === "false") v = false; o[k] = v; } }); return o; }
 
   function execCapability(actionId, payload) {
@@ -202,6 +217,17 @@
   function nn() { return null; }
 
   // ── Shell: dock/float, move, resize, minimize/expand ─────────────────────
+  // clampPx: a saved absolute left/top (from a previous drag, possibly on a
+  // larger screen or before the window was resized) can sit entirely off
+  // today's viewport with no way back -- reproduced directly: bottom
+  // computed to a large negative px, the whole console below the fold,
+  // un-clickable, indistinguishable from "gone" (see op-reset-pos below for
+  // the other half of this fix -- a visible way back even if some other
+  // edge case still slips past this clamp).
+  function clampPx(val, viewportSize, boxSize) {
+    var n = parseFloat(val); if (isNaN(n)) return null;
+    return Math.max(0, Math.min(n, Math.max(0, viewportSize - boxSize))) + "px";
+  }
   function applyDock() {
     var w = el("op-console"); if (!w) return;
     if (st.docked) {
@@ -210,13 +236,35 @@
       el("op-body").style.maxHeight = "min(42vh,340px)";
     } else {
       w.style.right = "auto"; w.style.width = "min(560px,94vw)";
-      var s = load(); if (s.left && s.left !== "auto") { w.style.left = s.left; w.style.top = s.top || "90px"; w.style.bottom = "auto"; } else { w.style.left = "auto"; w.style.right = "12px"; w.style.bottom = "12px"; }
+      var s = load();
+      if (s.left && s.left !== "auto") {
+        // offsetWidth/Height reflect the box's last-known size, which is
+        // exactly what was used to compute left/top at save time -- good
+        // enough to clamp against even before this frame's own layout runs.
+        w.style.left = clampPx(s.left, window.innerWidth, w.offsetWidth || 560) || "auto";
+        w.style.top = clampPx(s.top || "90px", window.innerHeight, w.offsetHeight || 260) || "90px";
+        w.style.bottom = "auto";
+      } else {
+        w.style.left = "auto"; w.style.right = "12px"; w.style.bottom = "12px";
+      }
       el("op-side").style.display = "none";
       el("op-body").style.maxHeight = "min(46vh,380px)";
     }
     el("op-dock").textContent = st.docked ? "⤢ float" : "⤓ dock";
     save({ docked: st.docked, collapsed: st.collapsed, left: w.style.left, top: w.style.top });
   }
+  // Permanent escape hatch: whatever else goes wrong with a saved position,
+  // this always puts the console back in a place the operator can see it.
+  function resetPosition() {
+    st.docked = true;
+    try { localStorage.removeItem(LS); } catch (e) {}
+    st.collapsed = false;
+    applyDock();
+    var body = el("op-body"); if (body) body.style.display = "flex";
+    var b = el("op-min"); if (b) b.textContent = "▾";
+  }
+  window.JAKAL = window.JAKAL || {};
+  window.JAKAL.resetConsolePosition = resetPosition;
   function toggleCollapse(force) {
     st.collapsed = force != null ? force : !st.collapsed;
     var body = el("op-body"); if (body) body.style.display = st.collapsed ? "none" : "flex";
@@ -252,11 +300,13 @@
         '<span style="flex:1"></span>' +
         '<span class="op-hint" style="font-size:11px;color:#64748b;margin-right:6px">Prompt, slash-commands, sandbox execution</span>' +
         '<button type="button" id="op-dock" title="Dock / float" style="' + btn() + '">⤢ float</button>' +
+        '<button type="button" id="op-reset-pos" title="Reset position (if the console ever ends up off-screen)" style="' + btn() + '">⌖ reset</button>' +
         '<button type="button" id="op-clear" title="Clear" style="' + btn() + '">🗑</button>' +
         '<button type="button" id="op-min" title="Minimize / expand" style="' + btn() + '">▾</button>' +
       '</div>' +
       '<div id="op-body" style="display:flex;max-height:min(42vh,340px)">' +
         '<div style="flex:1;display:flex;flex-direction:column;min-width:0">' +
+          '<div id="op-quick" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid #1e293b;background:#0b1220"></div>' +
           '<div id="op-out" style="flex:1;overflow:auto;padding:12px 16px;min-height:120px"></div>' +
           '<form id="op-form" style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #1e293b;background:#0b1220">' +
             '<input id="op-input" autocomplete="off" spellcheck="false" placeholder="Ask, or /help   /isolate HOST   /scan" style="flex:1;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e5e7eb;padding:9px 12px;font:inherit;outline:none" />' +
@@ -274,7 +324,15 @@
       '</div>';
     document.body.appendChild(wrap);
     el("op-dock").onclick = toggleDock;
+    el("op-reset-pos").onclick = resetPosition;
     el("op-min").onclick = function () { toggleCollapse(); };
+    var quick = el("op-quick");
+    QUICK_ACTIONS.forEach(function (a) {
+      var b = mk("button", btn("#1e293b") + ";white-space:nowrap", null);
+      b.type = "button"; b.textContent = a.label; b.title = a.cmd;
+      b.onclick = function () { st.history.push(a.cmd); st.histIdx = st.history.length; run(a.cmd); };
+      quick.appendChild(b);
+    });
     var clr = function () { el("op-out").innerHTML = ""; system(); };
     el("op-clear").onclick = clr; el("op-trash").onclick = clr;
     el("op-form").onsubmit = function (e) { e.preventDefault(); var inp = el("op-input"), cmd = inp.value.trim(); if (!cmd) return; inp.value = ""; st.history.push(cmd); st.histIdx = st.history.length; run(cmd); };
