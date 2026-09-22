@@ -453,6 +453,31 @@ class DuckDBManager:
         )
         """)
 
+        # Vulnerability scan jobs. NVD's keyless rate limit is 5 requests
+        # per 30s (services/nvd_scanner.py spaces them ~6.5s apart), so a
+        # scan of even a handful of products takes far longer than an HTTP
+        # request should. Scans therefore run in the background and report
+        # real progress from this table -- targets_done/targets_total are
+        # counted as each product actually completes, not estimated.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS vuln_scan_jobs (
+            scan_id        VARCHAR PRIMARY KEY,
+            status         VARCHAR NOT NULL DEFAULT 'queued', -- queued|running|completed|failed
+            requested_by   VARCHAR,
+            device_ids     VARCHAR DEFAULT '[]',   -- JSON array of network_map ids
+            targets        VARCHAR DEFAULT '[]',   -- JSON: resolved {name,version,device_id,source}
+            targets_total  INTEGER DEFAULT 0,
+            targets_done   INTEGER DEFAULT 0,
+            findings_total INTEGER DEFAULT 0,
+            critical_count INTEGER DEFAULT 0,
+            high_count     INTEGER DEFAULT 0,
+            results        VARCHAR DEFAULT '[]',   -- JSON: per-product nvd_scan results
+            error          VARCHAR,
+            started_at     TIMESTAMPTZ DEFAULT now(),
+            completed_at   TIMESTAMPTZ
+        )
+        """)
+
         # Threat intelligence — IOCs, TTPs, threat actors
         c.execute("""
         CREATE TABLE IF NOT EXISTS threat_intel (
@@ -2262,6 +2287,72 @@ class DuckDBManager:
             d["tags"] = json.loads(d.get("tags") or "[]")
             result.append(d)
         return result
+
+    # ======================================================================
+    # Vulnerability scan jobs
+    # ======================================================================
+
+    def create_vuln_scan_job(self, scan_id: str, requested_by: str,
+                              device_ids: List[Any], targets: List[Dict[str, Any]]) -> str:
+        self.conn.execute(
+            """INSERT INTO vuln_scan_jobs
+               (scan_id, status, requested_by, device_ids, targets, targets_total)
+               VALUES (?, 'queued', ?, ?, ?, ?)""",
+            (scan_id, requested_by, json.dumps([str(d) for d in device_ids]),
+             json.dumps(targets), len(targets)),
+        )
+        self.conn.commit()
+        return scan_id
+
+    def mark_vuln_scan_running(self, scan_id: str) -> None:
+        self.conn.execute(
+            "UPDATE vuln_scan_jobs SET status = 'running' WHERE scan_id = ?", (scan_id,)
+        )
+        self.conn.commit()
+
+    def advance_vuln_scan(self, scan_id: str, targets_done: int, findings_total: int,
+                           critical_count: int, high_count: int) -> None:
+        """Called after each product completes, so progress is observed, not estimated."""
+        self.conn.execute(
+            """UPDATE vuln_scan_jobs
+               SET targets_done = ?, findings_total = ?, critical_count = ?, high_count = ?
+               WHERE scan_id = ?""",
+            (targets_done, findings_total, critical_count, high_count, scan_id),
+        )
+        self.conn.commit()
+
+    def finish_vuln_scan(self, scan_id: str, results: List[Dict[str, Any]],
+                          error: Optional[str] = None) -> None:
+        self.conn.execute(
+            """UPDATE vuln_scan_jobs
+               SET status = ?, results = ?, error = ?, completed_at = now()
+               WHERE scan_id = ?""",
+            ("failed" if error else "completed", json.dumps(results, default=str), error, scan_id),
+        )
+        self.conn.commit()
+
+    def get_vuln_scan_job(self, scan_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM vuln_scan_jobs WHERE scan_id = ?", (scan_id,)
+        ).fetchone()
+        if not row:
+            return None
+        d = dict(zip([c[0] for c in self.conn.description], row))
+        for f in ("device_ids", "targets", "results"):
+            try:
+                d[f] = json.loads(d.get(f) or "[]")
+            except (TypeError, ValueError):
+                d[f] = []
+        return d
+
+    def list_vuln_scan_jobs(self, limit: int = 50) -> List[Dict[str, Any]]:
+        rows = self.conn.execute(
+            """SELECT scan_id, status, requested_by, targets_total, targets_done,
+                      findings_total, critical_count, high_count, started_at, completed_at
+               FROM vuln_scan_jobs ORDER BY started_at DESC LIMIT ?""", (limit,)
+        ).fetchall()
+        cols = [c[0] for c in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
 
     # ======================================================================
     # v2.1 — Vulnerability Database
