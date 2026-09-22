@@ -130,7 +130,7 @@ ENVIRONMENT=development
 # Claude LLM (REQUIRED - add your API key)
 LLM_ENGINE=claude
 CLAUDE_API_KEY=${CLAUDE_KEY_VALUE}
-CLAUDE_MODEL=claude-3-5-sonnet-20241022
+CLAUDE_MODEL=claude-sonnet-5
 
 # Encryption key wrapping (auto-generated locally — do not share/commit)
 JAKAL_MASTER_KEY=${MASTER_KEY_VALUE}
@@ -139,8 +139,11 @@ JAKAL_MASTER_KEY=${MASTER_KEY_VALUE}
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3
 
-# Database
-DUCKDB_PATH=./jakal.duckdb
+# Database. Relative to backend/ (where uvicorn is started from), so this
+# resolves to the repo-root data/ directory created above -- the same place
+# docker-compose bind-mounts. Without the ../ the file lands loose inside
+# backend/ and is missed by the backups/ workflow.
+DUCKDB_PATH=../data/jakal.duckdb
 
 # Security Tools
 NMAP_TIMEOUT=120
@@ -206,11 +209,14 @@ echo "════════════════════════�
 echo ""
 echo "🚀 START THE APPLICATION:"
 echo ""
-echo "   cd $REPO_DIR"
-echo "   source venv/bin/activate"
-echo "   python3 -m uvicorn backend.app:app --reload --host 0.0.0.0 --port 8000"
+echo "   cd $REPO_DIR/backend"
+echo "   source ../venv/bin/activate"
+echo "   python3 -m uvicorn app:app --reload --host 0.0.0.0 --port 8000"
 echo ""
-echo "   Then visit: http://localhost:8000/docs"
+echo "   (Run from backend/ — the backend's imports are flat, so"
+echo "    'uvicorn backend.app:app' from the repo root does not work.)"
+echo ""
+echo "   Then visit: http://localhost:8000 (dashboard) or /docs (API)"
 echo ""
 echo "════════════════════════════════════════════════════════════════"
 echo ""
