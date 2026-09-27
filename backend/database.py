@@ -1456,6 +1456,27 @@ class DuckDBManager:
         )
         """)
 
+        # ── Self-correcting agent workflow runs (backend/agents/, mcp_server.py) ──
+        # Tracks autonomous patch/threat-hunt workflow invocations triggered from
+        # the UI or an external MCP client via routers/agent_workflows.py.
+        # Same UPDATE-by-run_id shape as energy_logic_executions above -- no
+        # secondary index needed.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS agent_workflow_runs (
+            run_id            VARCHAR PRIMARY KEY,
+            workflow          VARCHAR NOT NULL,   -- autonomous_patch | threat_hunter
+            operator_id       VARCHAR NOT NULL,   -- real actor, from the Bearer token
+            target            VARCHAR,
+            parameters_json   VARCHAR DEFAULT '{}',
+            status            VARCHAR NOT NULL DEFAULT 'queued',   -- queued | running | completed | failed
+            attempts          INTEGER NOT NULL DEFAULT 0,
+            result_json       VARCHAR DEFAULT '{}',
+            error             VARCHAR,
+            created_at        TIMESTAMPTZ DEFAULT now(),
+            completed_at      TIMESTAMPTZ
+        )
+        """)
+
         self.conn.commit()
         logger.info("Schema v3.0 initialized at %s", self.db_path)
 
@@ -1716,6 +1737,27 @@ class DuckDBManager:
         self.conn.commit()
         return True
 
+    def tenant_name_map(self) -> Dict[str, str]:
+        """{tenant_id: tenant_name} for every real tenant -- lets a caller
+        resolve the "tenant:<id>" tag on a network_map/agent_endpoints row
+        (see tenant_id_from_tags/count_devices_for_tenant) into a
+        human-readable client name with one query instead of one per
+        device."""
+        return {o["tenant_id"]: o["tenant_name"] for o in self.list_organizations()}
+
+    @staticmethod
+    def tenant_id_from_tags(tags: Optional[List[Any]]) -> Optional[str]:
+        """Extracts the tenant id from a device's "tenant:<id>" tag, if any
+        such tag is present. This is the one real, DB-backed source of
+        per-device client/tenant attribution this platform has (see the
+        organizations table and count_devices_for_tenant); it is deliberately
+        used in place of any UI-side heuristic based on other tags."""
+        for tag in tags or []:
+            s = str(tag)
+            if s.startswith("tenant:"):
+                return s[len("tenant:"):]
+        return None
+
     def count_devices_for_tenant(self, tenant_id: str) -> int:
         """Counts network_map + agent_endpoints rows tagged "tenant:<id>".
         Tag-based rather than a schema column -- see the organizations
@@ -1927,6 +1969,54 @@ class DuckDBManager:
         except Exception:
             d["results"] = []
         return d
+
+    # Self-correcting agent workflow run helpers (routers/agent_workflows.py)
+    def create_agent_workflow_run(self, run_id: str, workflow: str, operator_id: str,
+                                   target: Optional[str], parameters: Optional[Dict[str, Any]]) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO agent_workflow_runs
+                (run_id, workflow, operator_id, target, parameters_json, status)
+            VALUES (?, ?, ?, ?, ?, 'queued')
+            """,
+            (run_id, workflow, operator_id, target, json.dumps(parameters or {}, default=str)),
+        )
+        self.conn.commit()
+
+    def update_agent_workflow_run(self, run_id: str, status: str, attempts: int = 0,
+                                   result: Optional[Dict[str, Any]] = None,
+                                   error: Optional[str] = None) -> None:
+        self.conn.execute(
+            """
+            UPDATE agent_workflow_runs
+            SET status = ?, attempts = ?, result_json = ?, error = ?, completed_at = now()
+            WHERE run_id = ?
+            """,
+            (status, attempts, json.dumps(result or {}, default=str), error, run_id),
+        )
+        self.conn.commit()
+
+    def get_agent_workflow_run(self, run_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM agent_workflow_runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        d = dict(zip(cols, row))
+        for key in ("parameters_json", "result_json"):
+            try:
+                d[key.replace("_json", "")] = json.loads(d.get(key) or "{}")
+            except Exception:
+                d[key.replace("_json", "")] = {}
+        return d
+
+    def list_agent_workflow_runs(self, limit: int = 50) -> List[Dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT * FROM agent_workflow_runs ORDER BY created_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
 
     def create_maya_session(self, payload_id: str, operator_id: str,
                              tzolkin: str, haab: str, challenge_token: str,

@@ -48,24 +48,33 @@ def _schema_suffix(json_schema: Dict[str, Any]) -> str:
 
 def generate(system_prompt: str, user_prompt: str,
              json_schema: Optional[Dict[str, Any]] = None,
-             temperature: float = 0.5, max_tokens: int = 1024) -> Dict[str, Any]:
+             temperature: float = 0.5, max_tokens: int = 1024,
+             engine: Optional[str] = None) -> Dict[str, Any]:
     """
     Returns {"text": str} normally, or {"text": str, "json": dict|None}
     when json_schema is given -- json is None if the model's response
     didn't parse as clean JSON (surfaced, not silently coerced).
 
+    `engine`, when given ("claude" or "ollama"), overrides config.LLM_ENGINE
+    for this call only -- lets a caller honor a per-request/UI-selected
+    provider without changing the server-wide default.
+
     Raises LLMUnavailable if the configured backend can't serve this
-    request at all (no key, package missing, connection refused).
+    request at all (no key, package missing, connection refused), or if
+    `engine` is an unrecognized value.
     """
     cfg = _get_config()
     sys_prompt = system_prompt + (_schema_suffix(json_schema) if json_schema else "")
+    active_engine = (engine or cfg.LLM_ENGINE or "claude").lower()
 
-    if cfg.LLM_ENGINE == "claude":
+    if active_engine == "claude":
         text = _call_claude(cfg, sys_prompt, user_prompt, temperature, max_tokens)
-    else:
+    elif active_engine == "ollama":
         text = _call_ollama(cfg, sys_prompt, user_prompt, temperature)
+    else:
+        raise LLMUnavailable(f"Unknown LLM engine '{active_engine}' (expected 'claude' or 'ollama')")
 
-    result: Dict[str, Any] = {"text": text}
+    result: Dict[str, Any] = {"text": text, "engine": active_engine}
     if json_schema is not None:
         try:
             result["json"] = json.loads(text)

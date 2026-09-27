@@ -93,6 +93,9 @@ from .vulnscan import router as vulnscan_router
 from .automation import router as automation_router
 from .remote_exec import router as remote_exec_router, ws_router as exec_ws_router
 from .settings_dev import router as settings_dev_router
+from .agent_workflows import router as agent_workflows_router
+from .report_builder import router as report_builder_router
+from .rfp import router as rfp_router
 
 __all__ = [
     "pentest_router",
@@ -141,4 +144,7 @@ __all__ = [
     "remote_exec_router",
     "exec_ws_router",
     "settings_dev_router",
+    "agent_workflows_router",
+    "report_builder_router",
+    "rfp_router",
 ]

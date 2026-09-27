@@ -90,7 +90,7 @@ class PolicyRequest(BaseModel):
 
 @router.get("/dashboard/fleet")
 async def get_device_fleet(
-    client: Optional[str] = Query(None),
+    client: Optional[str] = Query(None, description="Filter by real MSP tenant id or name -- see GET /api/fleet/clients"),
     status: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -98,26 +98,49 @@ async def get_device_fleet(
     """
     Get global device & user fleet with filtering.
     Returns paginated device list with current status, risk level, last seen, etc.
+
+    `client` resolves against real MSP tenant attribution -- the
+    "tenant:<id>" tag on a network_map row (see database.py's
+    tenant_id_from_tags/tenant_name_map and count_devices_for_tenant) -- and
+    accepts either a tenant_id or its display name. The previous version of
+    this filter joined against a `pentest_runs.client_name` column that does
+    not exist on that table (pentest_runs has no client_name field at all),
+    so it would have raised a SQL error the first time any caller actually
+    passed `client`.
     """
     from database import get_db_manager
     db = get_db_manager()
-    
+
     try:
-        # Build query
+        tenant_names = db.tenant_name_map()  # {tenant_id: tenant_name}, real orgs only
+        available_clients = [
+            {"tenant_id": tid, "client_name": name} for tid, name in tenant_names.items()
+        ]
+
         where_parts = []
         params = []
-        
+
         if client:
-            where_parts.append("pentest_id IN (SELECT id FROM pentest_runs WHERE client_name = ?)")
-            params.append(client)
-        
+            name_to_id = {name: tid for tid, name in tenant_names.items()}
+            tenant_id = client if client in tenant_names else name_to_id.get(client)
+            if tenant_id is None:
+                # Unknown client -- an honestly-empty page, not a silently
+                # ignored filter or a SQL error.
+                return {
+                    "data": [],
+                    "pagination": {"page": page, "per_page": per_page, "total": 0, "pages": 0},
+                    "available_clients": available_clients,
+                }
+            where_parts.append("tags LIKE ?")
+            params.append(f"%tenant:{tenant_id}%")
+
         where_clause = " AND ".join(where_parts) if where_parts else "1=1"
         offset = (page - 1) * per_page
-        
+
         # Query devices from network_map table
         rows = db.query(
             f"""
-            SELECT id, hostname, ip_address, os_fingerprint, mac_address, 
+            SELECT id, hostname, ip_address, os_fingerprint, mac_address,
                    risk_score, tags, discovered_at
             FROM network_map
             WHERE {where_clause}
@@ -125,16 +148,18 @@ async def get_device_fleet(
             """,
             params + [per_page, offset]
         )
-        
+
         # Get count
         count_rows = db.query(
             f"SELECT COUNT(*) FROM network_map WHERE {where_clause}",
             params
         )
         total = count_rows[0][0] if count_rows else 0
-        
+
         devices = []
         for row in (rows or []):
+            tags = json.loads(row[6]) if row[6] else []
+            tenant_id = db.tenant_id_from_tags(tags) if isinstance(tags, list) else None
             devices.append({
                 "id": row[0],
                 "name": row[1] or "Unknown",
@@ -142,10 +167,12 @@ async def get_device_fleet(
                 "os": row[3],
                 "mac": row[4],
                 "risk": float(row[5] or 0),
-                "tags": json.loads(row[6]) if row[6] else [],
+                "tags": tags,
                 "discovered": row[7],
+                "client_tenant_id": tenant_id,
+                "client": tenant_names.get(tenant_id) if tenant_id else None,
             })
-        
+
         return {
             "data": devices,
             "pagination": {
@@ -154,6 +181,7 @@ async def get_device_fleet(
                 "total": total,
                 "pages": (total + per_page - 1) // per_page,
             },
+            "available_clients": available_clients,
         }
     except Exception as e:
         logger.error(f"Error fetching device fleet: {e}")

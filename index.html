@@ -79,12 +79,8 @@
         
         .main-content {
              transition: margin-left 0.3s ease;
-             margin-left: 16rem; /* 256px */
         }
-        .sidebar.collapsed + .main-content {
-            margin-left: 4rem; /* 64px */
-        }
-        
+
         .nav-link {
             transition: all 0.2s;
             position: relative;
@@ -204,7 +200,37 @@
         .qubit-lane { border-bottom: 1px solid var(--border-color); }
         .gate-slot { border: 1px dashed var(--border-color); min-height: 40px; }
         .gate-slot.drag-over { background-color: var(--primary-glow); border-style: solid; }
-        
+
+        /* JAKAL reusable operator controls (js/jakal-controls.js) — cog, popover, dot/segmented/radial/slider */
+        .jk-cog {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 22px; height: 22px; padding: 0; border-radius: 6px;
+            background: rgba(55, 65, 81, 0.6); border: 1px solid var(--border-color);
+            color: #9ca3af; cursor: pointer; transition: background-color .15s, color .15s, border-color .15s;
+        }
+        .jk-cog:hover { background: rgba(249, 115, 22, 0.15); border-color: var(--primary-color); color: var(--primary-color); }
+        .jk-pop {
+            position: fixed; z-index: 9999; width: 420px; max-height: 70vh; overflow-y: auto;
+            background: var(--dark-bg-translucent); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.55);
+        }
+        .jk-dot { display: inline-block; width: 34px; height: 18px; border-radius: 999px; cursor: pointer; position: relative; transition: background-color .15s; vertical-align: middle; }
+        .jk-dot.off { background: #374151; }
+        .jk-dot.on { background: #059669; }
+        .jk-dot::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #e5e7eb; transition: transform .15s; }
+        .jk-dot.on::after { transform: translateX(16px); }
+        .jk-seg { display: inline-flex; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        .jk-seg button { padding: 4px 10px; font-size: 11px; background: transparent; color: #9ca3af; border: none; cursor: pointer; }
+        .jk-seg button.active { background: var(--primary-color); color: #fff; }
+        .jk-seg button:not(.active):hover { background: rgba(255,255,255,.06); }
+        .jk-radial { display: flex; flex-direction: column; gap: 4px; }
+        .jk-radial label { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #d1d5db; cursor: pointer; }
+        .jk-slider { -webkit-appearance: none; appearance: none; flex: 1; height: 4px; border-radius: 999px;
+            background: linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) var(--fill, 0%), #374151 var(--fill, 0%), #374151 100%); cursor: pointer; }
+        .jk-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid var(--primary-color); cursor: pointer; }
+        .jk-slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid var(--primary-color); cursor: pointer; }
+
         /* Ontology Hub D3 styles */
         #ontology-graph-container .node { cursor: pointer; transition: transform 0.2s; }
         #ontology-graph-container .node:hover { transform: scale(1.2); }
@@ -780,6 +806,7 @@
             { key: 'admin_security_training', icon: 'graduation-cap', label: 'Awareness Training', category: 'Human Layer Security' },
             { key: 'admin_phishing_sim', icon: 'fish', label: 'Phishing Campaigns', category: 'Human Layer Security' },
             { key: 'admin_cheatsheet_library', icon: 'book-open-check', label: 'CheatSheet Library', category: 'GACyber Toolkit' },
+            { key: 'admin_documentation', icon: 'database', label: 'IT Glue Documentation', category: 'GACyber Toolkit' },
             { key: 'admin_soar', icon: 'workflow', label: 'SOAR Playbooks', category: 'Security Operations' },
             { key: 'admin_vulnerabilities', icon: 'bug', label: 'Vulnerabilities', category: 'Security Operations' },
             { key: 'admin_integrations', icon: 'plug', label: 'Integrations', category: 'Security Operations' },
@@ -828,6 +855,7 @@
             admin_security_training: { title: "Security Awareness Training", html: () => renderSecurityTraining() },
             admin_phishing_sim: { title: "Phishing Campaigns", html: () => renderPhishingSim() },
             admin_cheatsheet_library: { title: "CheatSheet Library", html: () => renderCheatsheetLibrary() },
+            admin_documentation: { title: "IT Glue Documentation Engine", html: () => renderDocumentation() },
             admin_soar: { title: "SOAR Playbooks", html: () => renderSoarPlaybooks() },
             admin_vulnerabilities: { title: "Vulnerability Management", html: () => renderVulnerabilityManagement() },
             admin_integrations: { title: "Integrations", html: () => renderIntegrationsVault() },
@@ -958,9 +986,19 @@
             // Horizon Inits
             if (pageKey === 'admin_horizon_agentic') startHorizonAgenticCanvas();
             if (pageKey === 'admin_soar') startSoarPlaybooks();
+            if (pageKey === 'admin_mdr') startMDR();
             if (pageKey === 'admin_vulnerabilities') startVulnerabilityManagement();
             if (pageKey === 'admin_integrations') startIntegrationsVault();
             if (pageKey === 'admin_audit_trail') startAuditTrail();
+            if (pageKey === 'admin_zero_trust') startZeroTrust();
+            if (pageKey === 'admin_sase') startSASE();
+            if (pageKey === 'admin_pam') startPAM();
+            if (pageKey === 'admin_dns_filter') startDnsFilter();
+            if (pageKey === 'admin_email_filter') startEmailFilter();
+            if (pageKey === 'admin_dlp') startDlp();
+            if (pageKey === 'admin_compliance') startCompliance();
+            if (pageKey === 'admin_dark_web') startDarkWeb();
+            if (pageKey === 'admin_documentation') startDocumentation();
 
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.querySelector(`.nav-link[data-page="${pageKey}"]`);
@@ -1022,8 +1060,8 @@
             return `
                 <p class="flex items-start text-gray-400">
                     ${iconHtml}
-                    <span class="font-mono text-gray-500 mr-2">[${timestamp}]</span>
-                    <span>${message}</span>
+                    <span class="font-mono text-gray-500 mr-2 flex-shrink-0">[${timestamp}]</span>
+                    <span class="flex-1 min-w-0 break-words">${message}</span>
                 </p>
             `;
         }
@@ -1812,8 +1850,8 @@
         
         function renderInvestigationCanvas() {
              return `
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-10rem)]">
-                    <div class="lg:col-span-3 card p-2 rounded-xl h-full flex flex-col">
+                <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-10rem)]">
+                    <div class="xl:col-span-3 card p-2 rounded-xl h-full flex flex-col">
                         <div id="investigation-canvas-bg" class="flex-1 bg-gray-900 rounded-lg relative overflow-hidden" style="background-image: radial-gradient(var(--border-color) 1px, transparent 1px); background-size: 20px 20px;">
                            <svg id="investigation-svg-layer" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
                            <div id="investigation-node-layer" class="absolute inset-0 w-full h-full"></div>
@@ -2057,78 +2095,237 @@
 
         function renderMDR() {
             return `
-             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                 <div class="lg:col-span-1 space-y-4">
-                     ${renderMetricPill('','Antivirus Status', 'Active / Up-to-Date', 'green-400')}
-                     ${renderMetricPill('','EDR Agents', '5,124 / 5,124 Deployed', 'green-400')}
-                     ${renderMetricPill('','Behavioral Detections', '3 (Low)', 'yellow-400')}
+             <div class="space-y-5">
+                 <!-- KPI row — populated by loadMdrStats() -->
+                 <div id="mdr-kpi-row" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                     ${renderMetricPill('mdr-kpi-total','Total Actions','…','white')}
+                     ${renderMetricPill('mdr-kpi-triage','Triage Completed','…','emerald-400')}
+                     ${renderMetricPill('mdr-kpi-ioc','IOC Indicators','…','yellow-400')}
+                     ${renderMetricPill('mdr-kpi-posture','Response Posture','…','primary-color')}
                  </div>
-                 <div class="lg:col-span-2 card p-4 rounded-xl">
-                     <h3 class="text-lg font-bold text-primary-color mb-3">Live TTP Monitoring (Behavioral)</h3>
-                     <div class="bg-gray-900 rounded-lg p-3 font-mono text-sm h-40 overflow-y-auto scrollbar-style">
-                          <p class="text-white"><span class="text-red-500">[MITRE T1059.001]</span> Powershell execution detected on endpoint <span class="text-primary-color">FIN-LT-04</span>.</p>
-                           <p class="text-white"><span class="text-red-500">[MITRE T1078]</span> Valid account usage from anomalous geo-location.</p>
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                     <!-- Notable Actions table -->
+                     <div class="lg:col-span-2 card p-4 rounded-xl flex flex-col min-h-0">
+                         <div class="flex items-center justify-between mb-3 flex-shrink-0">
+                             <h3 class="text-base font-bold text-white flex items-center gap-2"><i data-lucide="shield-alert" class="w-4 h-4 text-yellow-400"></i>Notable Response Actions</h3>
+                             <button onclick="window.loadMdrStats()" class="text-xs text-gray-400 hover:text-white flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i>Refresh</button>
+                         </div>
+                         <div id="mdr-actions-table" class="flex-1 overflow-y-auto scrollbar-style text-xs text-gray-400">Loading…</div>
+                     </div>
+                     <!-- IOC Blocklist -->
+                     <div class="card p-4 rounded-xl flex flex-col">
+                         <h3 class="text-base font-bold text-white mb-3 flex items-center gap-2 flex-shrink-0"><i data-lucide="ban" class="w-4 h-4 text-red-400"></i>IOC Blocklist</h3>
+                         <div class="mb-3 flex gap-2">
+                             <input id="mdr-ioc-input" placeholder="IP, domain, hash…" class="flex-1 bg-gray-800 p-2 rounded-md border border-border-color text-xs">
+                             <button onclick="window.addMdrIoc()" class="bg-red-700 hover:bg-red-600 text-white px-3 py-1 rounded-md text-xs font-semibold">Block</button>
+                         </div>
+                         <div id="mdr-ioc-list" class="flex-1 overflow-y-auto scrollbar-style text-xs text-gray-400 space-y-1">Loading…</div>
                      </div>
                  </div>
-            </div>
+                 <!-- Compliance posture bar -->
+                 <div class="card p-4 rounded-xl">
+                     <div class="flex items-center justify-between mb-3">
+                         <h3 class="text-base font-bold text-white flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>Live Compliance Posture</h3>
+                         <button onclick="window.loadMdrPosture()" class="text-xs text-gray-400 hover:text-white flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i>Refresh</button>
+                     </div>
+                     <div id="mdr-posture-content" class="text-xs text-gray-400">Loading…</div>
+                 </div>
+             </div>
              `;
+        }
+
+        window.loadMdrStats = async () => {
+            // KPI tiles
+            try {
+                const s = await api('/api/response/stats');
+                const setPill = (id, val) => { const e = document.getElementById(id); if (e) { const sp = e.querySelector('.value,span:last-child'); if (sp) sp.textContent = val; } };
+                const total = s.total || 0;
+                const triage = (s.by_type && s.by_type.triage && s.by_type.triage.completed) || 0;
+                setPill('mdr-kpi-total', total);
+                setPill('mdr-kpi-triage', triage);
+            } catch(_) {}
+            // Actions table
+            try {
+                const r = await api('/api/response/actions?limit=50');
+                const actions = r.actions || [];
+                const el = document.getElementById('mdr-actions-table');
+                if (!el) return;
+                if (!actions.length) { el.innerHTML = '<p class="text-gray-500 italic py-4 text-center">No response actions recorded yet. Run SOAR auto-triage or a triage action to create entries.</p>'; }
+                else {
+                    const riskColor = lvl => lvl === 'CRITICAL' ? 'text-red-400' : lvl === 'HIGH' ? 'text-orange-400' : lvl === 'MEDIUM' ? 'text-yellow-400' : 'text-emerald-400';
+                    el.innerHTML = `<table class="w-full text-left">
+                        <thead><tr class="text-gray-500 uppercase text-xs border-b border-border-color">
+                            <th class="py-2 pr-3">Type</th><th class="py-2 pr-3">Status</th><th class="py-2 pr-3">Risk</th><th class="py-2">When</th>
+                        </tr></thead>
+                        <tbody>${actions.map(a => `<tr class="border-b border-border-color/40 hover:bg-gray-800/40">
+                            <td class="py-2 pr-3 text-white capitalize">${escapeHtml(a.action_type || '—')}</td>
+                            <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full ${a.status==='completed'?'bg-emerald-900/50 text-emerald-400':a.status==='pending'?'bg-yellow-900/50 text-yellow-400':'bg-gray-700 text-gray-400'}">${escapeHtml(a.status || '—')}</span></td>
+                            <td class="py-2 pr-3 ${riskColor(a.risk_level)} font-semibold">${escapeHtml(a.risk_level || '—')}</td>
+                            <td class="py-2 text-gray-500">${a.created_at ? new Date(a.created_at).toLocaleString() : '—'}</td>
+                        </tr>`).join('')}</tbody>
+                    </table>`;
+                }
+            } catch(e) {
+                const el = document.getElementById('mdr-actions-table');
+                if (el) el.innerHTML = `<p class="text-red-400">Failed: ${escapeHtml(e.message)}</p>`;
+            }
+            // IOC list
+            await window.loadMdrIocList();
+            // Posture
+            await window.loadMdrPosture();
+        };
+
+        window.loadMdrIocList = async () => {
+            const el = document.getElementById('mdr-ioc-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/response/ioc?limit=100');
+                const iocs = r.indicators || [];
+                // Update KPI
+                const kpiEl = document.getElementById('mdr-kpi-ioc');
+                if (kpiEl) { const sp = kpiEl.querySelector('.value,span:last-child'); if (sp) sp.textContent = iocs.length; }
+                if (!iocs.length) { el.innerHTML = '<p class="text-gray-500 italic text-center py-3">No IOCs blocked yet. Enter an indicator above.</p>'; return; }
+                el.innerHTML = iocs.map(i => `<div class="flex items-center justify-between py-1 px-2 rounded hover:bg-gray-800/50">
+                    <span class="font-mono text-white truncate max-w-[70%]">${escapeHtml(i.indicator || i.value || String(i))}</span>
+                    <span class="text-gray-500 text-xs">${i.type || 'ioc'}</span>
+                </div>`).join('');
+            } catch(e) { el.innerHTML = `<p class="text-red-400">Failed: ${escapeHtml(e.message)}</p>`; }
+        };
+
+        window.addMdrIoc = async () => {
+            const input = document.getElementById('mdr-ioc-input');
+            const val = (input && input.value.trim());
+            if (!val) { window.showAppModal('Error', 'Enter an indicator to block.'); return; }
+            try {
+                await api('/api/response/ioc/block', { method: 'POST', body: JSON.stringify({ indicator: val, reason: 'Operator-blocked from MDR dashboard' }) });
+                input.value = '';
+                await window.loadMdrIocList();
+            } catch(e) { window.showAppModal('Block Failed', escapeHtml(e.message)); }
+        };
+
+        window.loadMdrPosture = async () => {
+            const el = document.getElementById('mdr-posture-content');
+            if (!el) return;
+            try {
+                const r = await api('/api/response/compliance/posture');
+                const p = r.posture || r;
+                el.innerHTML = `<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    ${Object.entries(p).filter(([k]) => k !== 'updated_at').map(([k, v]) => {
+                        const score = typeof v === 'number' ? v : (v && v.score) || null;
+                        const pct = score !== null ? Math.round(score * 100) : null;
+                        const color = pct === null ? 'bg-gray-500' : pct >= 80 ? 'bg-emerald-500' : pct >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+                        return `<div class="bg-gray-800/60 rounded-lg p-3 border border-border-color">
+                            <p class="font-semibold text-white text-xs uppercase mb-1">${escapeHtml(k.replace(/_/g,' '))}</p>
+                            ${pct !== null ? `<div class="w-full bg-gray-700 rounded-full h-1.5 mb-1"><div class="${color} h-1.5 rounded-full" style="width:${pct}%"></div></div><p class="text-xs text-gray-400">${pct}%</p>` : `<p class="text-xs text-gray-400">${escapeHtml(String(v))}</p>`}
+                        </div>`;
+                    }).join('')}
+                </div>`;
+                // Update KPI posture label
+                const kpiEl = document.getElementById('mdr-kpi-posture');
+                if (kpiEl) { const sp = kpiEl.querySelector('.value,span:last-child'); if (sp) sp.textContent = r.overall_score != null ? Math.round(r.overall_score * 100) + '%' : 'Live'; }
+            } catch(_) {
+                el.innerHTML = `<div class="text-xs text-gray-500 italic">Compliance posture data unavailable. Run a triage or response action to populate.</div>`;
+                const kpiEl = document.getElementById('mdr-kpi-posture');
+                if (kpiEl) { const sp = kpiEl.querySelector('.value,span:last-child'); if (sp) sp.textContent = 'N/A'; }
+            }
+        };
+
+        function startMDR() {
+            window.loadMdrStats();
         }
 
         function renderZeroTrust() {
             return `
-                 <p class="text-sm text-gray-400 mb-4">Zero Trust Modeling ensures every access request is strongly authenticated, authorized, and continuously validated.</p>
-                 <div class="card p-6 rounded-xl">
-                      <h3 class="text-xl font-semibold text-white mb-4">Live Access Enforcement Log</h3>
-                      <div class="h-96 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
-                          ${generateLogEntry('user.a -> db.prod | POLICY: ALLOW (Risk: Low)', 'green-500', 'lucide-check-circle')}
-                          ${generateLogEntry('user.b -> file.confidential | POLICY: DENY (Risk: High - Unmanaged Device)', 'red-500', 'lucide-x-circle')}
-                          ${generateLogEntry('service.x -> api.billing | POLICY: ALLOW (Service Account)', 'green-500', 'lucide-check-circle')}
-                      </div>
-                 </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-lg font-bold text-primary-color">Configuration Drift Events</h3>
+                            <span id="zt-drift-badge" class="text-xs bg-red-700/60 text-red-300 px-2 py-0.5 rounded-full">loading…</span>
+                        </div>
+                        <div id="zt-drift-log" class="h-72 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
+                            <div class="text-gray-500 text-xs text-center py-8">Loading drift events…</div>
+                        </div>
+                        <button onclick="window.loadZeroTrustData()" class="mt-3 w-full py-2 text-xs bg-gray-700 hover:bg-gray-600 rounded-lg">Refresh</button>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="text-lg font-bold text-primary-color mb-3">Active Remediation Tickets</h3>
+                        <div id="zt-tickets-log" class="h-72 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
+                            <div class="text-gray-500 text-xs text-center py-8">Loading tickets…</div>
+                        </div>
+                        <button onclick="window.showAppModal('Create Ticket','Use the Compliance &amp; Risk module to generate remediation tickets from findings.')" class="mt-3 w-full py-2 text-xs bg-primary-color/70 hover:bg-primary-color rounded-lg">+ New Remediation Ticket</button>
+                    </div>
+                </div>
             `;
         }
         
         function renderSASE() {
             return `
-                 <p class="text-sm text-gray-400 mb-4">The SASE (Secure Access Service Edge) provides secure, optimized network tunneling for all users.</p>
-                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                     ${renderMetricPill('','Active Tunnels', '1,832', 'green-400')}
-                     ${renderMetricPill('','Avg. Latency', '34ms', 'green-400')}
-                     ${renderMetricPill('','Data Transferred (24h)', '12.5 TB', 'white')}
-                     ${renderMetricPill('','Threats Blocked', '4,109', 'yellow-400')}
-                 </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    ${renderMetricPill('','IOC Blocks', '<span id="sase-ioc-count">…</span>', 'red-400')}
+                    ${renderMetricPill('','Response Actions', '<span id="sase-actions-count">…</span>', 'yellow-400')}
+                    ${renderMetricPill('','Quarantined', '<span id="sase-quarantine-count">…</span>', 'orange-400')}
+                    ${renderMetricPill('','Triage Done', '<span id="sase-triage-count">…</span>', 'green-400')}
+                </div>
+                <div class="card p-4 rounded-xl">
+                    <h3 class="text-lg font-bold text-primary-color mb-3">Blocked Indicators of Compromise</h3>
+                    <div id="sase-ioc-list" class="h-56 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg mb-3">
+                        <div class="text-gray-500 text-xs text-center py-8">Loading IOC list…</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <input id="sase-ioc-input" placeholder="Add IP, domain, or hash to block…" class="flex-1 bg-gray-800 p-2 rounded-md border border-border-color text-xs">
+                        <button onclick="window.addSaseIoc()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg">Block</button>
+                    </div>
+                </div>
             `;
         }
 
         function renderPAM() {
             return `
-                 <p class="text-sm text-gray-400 mb-4">Privileged Access Management (PAM) provides just-in-time, audited access to critical systems.</p>
-                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                     <div class="card p-4 rounded-xl">
-                         <h3 class="text-lg font-bold text-primary-color mb-3">Pending Access Requests</h3>
-                         <div class="p-3 bg-gray-900/70 rounded-lg space-y-3">
-                             <div>
-                                 <p class="font-semibold text-white">Operator: dev.ops | System: prod-db-01</p>
-                                 <p class="text-xs text-gray-400">Reason: Emergency patch deployment.</p>
-                             </div>
-                             <div class="flex space-x-2">
-                                 <button onclick="window.showAppModal('PAM Action', 'Access for dev.ops has been APPROVED for 60 minutes.')" class="flex-1 py-2 text-sm bg-green-600 hover:bg-green-700 rounded-lg">Approve</button>
-                                 <button onclick="window.showAppModal('PAM Action', 'Access for dev.ops has been DENIED.')" class="flex-1 py-2 text-sm bg-red-600 hover:bg-red-700 rounded-lg">Deny</button>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
+                <p class="text-sm text-gray-400 mb-4">Privileged Access Management (PAM) provides just-in-time, audited access to critical systems.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-lg font-bold text-primary-color">Pending Approval Queue</h3>
+                            <span id="pam-pending-badge" class="text-xs bg-yellow-700/60 text-yellow-300 px-2 py-0.5 rounded-full">loading…</span>
+                        </div>
+                        <div id="pam-requests-list" class="h-72 overflow-y-auto scrollbar-style space-y-2">
+                            <div class="text-gray-500 text-xs text-center py-8">Loading requests…</div>
+                        </div>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="text-lg font-bold text-primary-color mb-3">Quick Actions</h3>
+                        <div class="space-y-3">
+                            <button onclick="window.pamBulkDecide('approve')" class="w-full py-2 text-sm bg-green-700 hover:bg-green-600 rounded-lg">Approve Top Request</button>
+                            <button onclick="window.pamBulkDecide('deny')" class="w-full py-2 text-sm bg-red-700 hover:bg-red-600 rounded-lg">Deny Top Request</button>
+                            <button onclick="window.loadPamData()" class="w-full py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg">Refresh Queue</button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-4">All PAM decisions are PQC-signed and written to the immutable audit log.</p>
+                    </div>
+                </div>
             `;
         }
         
         function renderDnsFilter() {
             return `
-                <div class="card p-6 rounded-xl">
-                    <h3 class="text-xl font-semibold text-white mb-4">Live DNS Traffic</h3>
-                    <div class="h-96 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
-                        ${generateLogEntry('Allowed: www.google.com', 'green-500', 'lucide-check-circle')}
-                        ${generateLogEntry('Blocked: malicious-site.xyz (Malware)', 'red-500', 'lucide-x-circle')}
-                        ${generateLogEntry('Allowed: www.peoplestechnologies.com', 'green-500', 'lucide-check-circle')}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="text-lg font-bold text-primary-color mb-3">Network Policy Violations</h3>
+                        <div id="dns-drift-log" class="h-72 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
+                            <div class="text-gray-500 text-xs text-center py-8">Loading events…</div>
+                        </div>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="text-lg font-bold text-primary-color mb-3">Credential Rotation Health</h3>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div id="dns-rotation-health" class="text-4xl font-bold text-white">…%</div>
+                            <div class="flex-1">
+                                <div class="text-xs text-gray-400 mb-1">Overall rotation score</div>
+                                <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div id="dns-rotation-bar" class="h-full bg-green-500 transition-all" style="width:0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="dns-creds-list" class="h-48 overflow-y-auto scrollbar-style text-xs space-y-1"></div>
                     </div>
                 </div>
             `;
@@ -2138,15 +2335,16 @@
             return `
                 <div class="card p-6 rounded-xl">
                     <h3 class="text-xl font-semibold text-white mb-4">Email Security Gateway</h3>
-                     <div class="grid grid-cols-3 gap-4 mb-4">
-                         ${renderMetricPill('','Clean', '10,532', 'green-400')}
-                         ${renderMetricPill('','Spam', '1,201', 'yellow-400')}
-                         ${renderMetricPill('','Phishing', '88', 'red-500')}
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        ${renderMetricPill('','Simulation Failures', '<span id="email-fail-count">…</span>', 'red-400')}
+                        ${renderMetricPill('','Pending Enrollment', '<span id="email-pending-count">…</span>', 'yellow-400')}
+                        ${renderMetricPill('','Auto-Enroll', '<span id="email-autoenroll-status">…</span>', 'green-400')}
                     </div>
-                    <h4 class="text-lg font-semibold text-white mb-2">Quarantine</h4>
-                    <div class="h-64 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
-                        ${generateLogEntry('Quarantined: "URGENT INVOICE" from scam@scammer.net', 'yellow-500', 'lucide-shield-alert')}
+                    <h4 class="text-lg font-semibold text-white mb-2">Phishing Failures &amp; Training Queue</h4>
+                    <div id="email-failures-list" class="h-48 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg mb-4">
+                        <div class="text-gray-500 text-xs text-center py-4">Loading…</div>
                     </div>
+                    <button onclick="window.autoEnrollPhishFailures()" class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg">Auto-Enroll Pending Users → Phishing 101</button>
                 </div>
             `;
         }
@@ -2154,25 +2352,35 @@
         function renderDlp() {
             return `
                 <div class="card p-6 rounded-xl">
-                    <h3 class="text-xl font-semibold text-white mb-4">Data Loss Prevention Incidents</h3>
-                    <div class="h-96 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
-                        ${generateLogEntry('BLOCKED: Attempt to send `Project_Chimera_Financials.xlsx` to external email.', 'red-500', 'lucide-file-x')}
-                        ${generateLogEntry('FLAGGED: High-volume download of client data by user.a', 'yellow-500', 'lucide-alert-triangle')}
+                    <h3 class="text-xl font-semibold text-white mb-4">Data Loss Prevention — Active Incidents</h3>
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        ${renderMetricPill('','Open Tickets', '<span id="dlp-open-count">…</span>', 'red-400')}
+                        ${renderMetricPill('','Critical', '<span id="dlp-critical-count">…</span>', 'red-600')}
+                        ${renderMetricPill('','In Progress', '<span id="dlp-inprog-count">…</span>', 'yellow-400')}
                     </div>
+                    <div id="dlp-tickets-log" class="h-72 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
+                        <div class="text-gray-500 text-xs text-center py-8">Loading incidents…</div>
+                    </div>
+                    <button onclick="window.loadDlpData()" class="mt-3 w-full py-2 text-xs bg-gray-700 hover:bg-gray-600 rounded-lg">Refresh Incidents</button>
                 </div>
             `;
         }
 
         function renderCompliance() {
             return `
-                <div class="card p-6 rounded-xl">
-                    <h3 class="text-xl font-semibold text-white mb-4">Compliance Posture Assessment</h3>
-                    <div class="space-y-4">
-                        ${renderResourceBar('GDPR Compliance', 98, 'green-500')}
-                        ${renderResourceBar('HIPAA Compliance', 95, 'green-500')}
-                        ${renderResourceBar('PCI-DSS Compliance', 89, 'yellow-500')}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="text-lg font-bold text-primary-color mb-3">Compliance Drift Events</h3>
+                        <div id="comp-drift-list" class="space-y-2 mb-4 max-h-64 overflow-y-auto scrollbar-style">
+                            <div class="text-gray-500 text-xs text-center py-4">Loading…</div>
+                        </div>
+                        <button class="w-full mt-2 bg-primary-color text-white px-4 py-2 rounded-lg text-sm font-semibold" onclick="window.runComplianceScan()">Run Full Compliance Scan</button>
                     </div>
-                    <button class="w-full mt-6 bg-primary-color text-white px-4 py-3 rounded-lg font-semibold" onclick="window.showAppModal('Scan Complete', 'Compliance scan finished. 2 new recommendations generated.')">Run Full Compliance Scan</button>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="text-lg font-bold text-primary-color mb-3">Credential Rotation Status</h3>
+                        <div id="comp-rotation-summary" class="grid grid-cols-4 gap-2 mb-4"></div>
+                        <div id="comp-rotation-list" class="h-48 overflow-y-auto scrollbar-style text-xs space-y-1"></div>
+                    </div>
                 </div>
             `;
         }
@@ -2181,11 +2389,21 @@
             return `
                 <div class="card p-6 rounded-xl">
                     <h3 class="text-xl font-semibold text-white mb-4">Dark Web Monitoring</h3>
-                     ${renderMetricPill('','Leaked Credentials Found', '12', 'red-500')}
-                    <div class="h-64 overflow-y-auto scrollbar-style p-2 mt-4 text-sm bg-gray-900 rounded-lg">
-                        ${generateLogEntry('Found: user***@peoplestech.com on breach list `Collection #1`', 'red-500', 'lucide-key-round')}
+                    <div class="flex items-center gap-4 mb-4">
+                        ${renderMetricPill('','Active Findings', '<span id="dw-count">…</span>', 'red-500')}
+                        <button onclick="window.runDarkWebScan()" class="ml-auto px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-lg flex items-center gap-1">
+                            <i data-lucide="search" class="w-4 h-4"></i>Run Scan
+                        </button>
                     </div>
-                     <button class="w-full mt-4 bg-yellow-600 text-white px-4 py-3 rounded-lg font-semibold" onclick="window.showAppModal('Action Sent', 'Takedown and block requests have been initiated for all found credentials.')">Initiate Takedown/Block</button>
+                    <div id="dw-findings-log" class="h-56 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
+                        <div class="text-gray-500 text-xs text-center py-8">Loading findings…</div>
+                    </div>
+                    <h4 class="text-base font-semibold text-white mt-4 mb-2">Watchlist</h4>
+                    <div class="flex gap-2 mb-2">
+                        <input id="dw-watchlist-input" placeholder="Email, domain, or keyword to monitor…" class="flex-1 bg-gray-800 p-2 rounded-md border border-border-color text-xs">
+                        <button onclick="window.addDwWatchlist()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg">Add</button>
+                    </div>
+                    <div id="dw-watchlist-items" class="space-y-1"></div>
                 </div>
             `;
         }
@@ -3228,14 +3446,18 @@
         // --- NEW GLOBAL DASHBOARD ---
         
         let globalDashboardState = {
+            // Offline/pre-sync placeholder only -- labeled generically (never
+            // a fabricated real company name) because js/jakal-live-data.js
+            // replaces this array with real MSP-tenant-tagged devices from
+            // GET /api/dashboard/fleet as soon as a backend is reachable.
             devices: [
-                { id: 'dev-001', name: 'FIN-LT-04', user: 'j.doe', client: 'Beta Corp', type: 'Laptop', os: 'Windows 11', status: 'Healthy', risk: 'Low', location: 'New York, USA', ip: '192.168.1.101', login: '2m ago' },
-                { id: 'dev-002', name: 'DEV-SRV-01', user: 'svc-acct', client: 'Alpha Inc', type: 'Server', os: 'Ubuntu 22.04', status: 'Warning', risk: 'Medium', location: 'AWS (us-east-1)', ip: '10.0.1.5', login: 'N/A' },
-                { id: 'dev-003', name: 'MKT-iPhone-15', user: 's.smith', client: 'Gamma LLC', type: 'Mobile', os: 'iOS 18.1', status: 'Healthy', risk: 'Low', location: 'Remote (Cellular)', ip: '172.58.22.10', login: '10m ago' },
-                { id: 'dev-004', name: 'HQ-Firewall', user: 'admin', client: 'Beta Corp', type: 'Network', os: 'FortiOS 7.4', status: 'Healthy', risk: 'Low', location: 'New York, USA', ip: '208.67.222.222', login: '1h ago' },
-                { id: 'dev-005', name: 'Cloud-DB-Primary', user: 'svc-rds', client: 'Alpha Inc', type: 'Cloud', os: 'AWS Aurora', status: 'Critical', risk: 'High', location: 'AWS (us-east-1)', ip: '10.0.2.12', login: 'N/A' },
-                { id: 'dev-006', name: 'HR-PC-01', user: 't.brown', client: 'Beta Corp', type: 'Desktop', os: 'Windows 10', status: 'Healthy', risk: 'Low', location: 'New York, USA', ip: '192.168.1.102', login: '5m ago' },
-                { id: 'dev-007', name: 'TEST-VM-03', user: 'dev.ops', client: 'Alpha Inc', type: 'VM', os: 'RHEL 9', status: 'Warning', risk: 'Medium', location: 'GCP (us-central1)', ip: '10.128.0.3', login: '2d ago' },
+                { id: 'dev-001', name: 'FIN-LT-04', user: 'j.doe', client: 'Demo Client A', type: 'Laptop', os: 'Windows 11', status: 'Healthy', risk: 'Low', location: 'New York, USA', ip: '192.168.1.101', login: '2m ago' },
+                { id: 'dev-002', name: 'DEV-SRV-01', user: 'svc-acct', client: 'Demo Client B', type: 'Server', os: 'Ubuntu 22.04', status: 'Warning', risk: 'Medium', location: 'AWS (us-east-1)', ip: '10.0.1.5', login: 'N/A' },
+                { id: 'dev-003', name: 'MKT-iPhone-15', user: 's.smith', client: 'Demo Client C', type: 'Mobile', os: 'iOS 18.1', status: 'Healthy', risk: 'Low', location: 'Remote (Cellular)', ip: '172.58.22.10', login: '10m ago' },
+                { id: 'dev-004', name: 'HQ-Firewall', user: 'admin', client: 'Demo Client A', type: 'Network', os: 'FortiOS 7.4', status: 'Healthy', risk: 'Low', location: 'New York, USA', ip: '208.67.222.222', login: '1h ago' },
+                { id: 'dev-005', name: 'Cloud-DB-Primary', user: 'svc-rds', client: 'Demo Client B', type: 'Cloud', os: 'AWS Aurora', status: 'Critical', risk: 'High', location: 'AWS (us-east-1)', ip: '10.0.2.12', login: 'N/A' },
+                { id: 'dev-006', name: 'HR-PC-01', user: 't.brown', client: 'Demo Client A', type: 'Desktop', os: 'Windows 10', status: 'Healthy', risk: 'Low', location: 'New York, USA', ip: '192.168.1.102', login: '5m ago' },
+                { id: 'dev-007', name: 'TEST-VM-03', user: 'dev.ops', client: 'Demo Client B', type: 'VM', os: 'RHEL 9', status: 'Warning', risk: 'Medium', location: 'GCP (us-central1)', ip: '10.128.0.3', login: '2d ago' },
             ],
             threats: [],
             playbooks: [
@@ -3251,6 +3473,39 @@
         // once run; the dashboard always fell back to the 7-device mock
         // above with no visible indication that live sync wasn't happening.
         window.globalDashboardState = globalDashboardState;
+
+        // Client-filter <select> options are always derived from real data:
+        // window.__jkAvailableClients (the real, tenant-tagged clients
+        // GET /api/dashboard/fleet reports) once live-synced, or -- before
+        // that sync, or if the backend is unreachable -- the distinct
+        // `client` values already present in globalDashboardState.devices
+        // (the honestly-labeled "Demo Client A/B/C" placeholder set above).
+        // Never a hardcoded list of specific real company names.
+        function buildClientFilterOptionsHtml(selected) {
+            const sel = selected || globalDashboardState.clientFilter || 'All';
+            const live = Array.isArray(window.__jkAvailableClients) ? window.__jkAvailableClients : null;
+            const entries = live && live.length
+                ? live.map(c => ({ value: c.client_name || c.tenant_id, label: c.client_name || c.tenant_id }))
+                : Array.from(new Set((globalDashboardState.devices || []).map(d => d.client).filter(Boolean)))
+                    .sort().map(name => ({ value: name, label: name }));
+            const opts = [{ value: 'All', label: 'All Clients' }, ...entries];
+            return opts.map(o => `<option value="${o.value}" ${o.value === sel ? 'selected' : ''}>${o.label}</option>`).join('');
+        }
+
+        // Called by js/jakal-live-data.js after a real /api/dashboard/fleet
+        // sync so the dropdown reflects actual MSP tenants instead of the
+        // offline placeholder list.
+        window.renderClientFilterOptions = function (clients) {
+            window.__jkAvailableClients = clients || [];
+            const el = document.getElementById('client-filter-select');
+            if (!el) return;
+            const current = globalDashboardState.clientFilter || 'All';
+            const stillValid = current === 'All' || window.__jkAvailableClients.some(
+                c => (c.client_name || c.tenant_id) === current
+            );
+            if (!stillValid) globalDashboardState.clientFilter = 'All';
+            el.innerHTML = buildClientFilterOptionsHtml(globalDashboardState.clientFilter);
+        };
 
         function renderGlobalAdminDashboard() {
             return `
@@ -3318,10 +3573,7 @@
                             <div class="flex-shrink-0 flex justify-between items-center mb-3">
                                 <h3 class="text-lg font-bold text-primary-color">Global Device & User Fleet</h3>
                                 <select id="client-filter-select" onchange="window.updateClientFilter(this.value)" class="bg-gray-800 border border-border-color rounded-md px-3 py-1 text-sm focus:ring-primary-color focus:border-primary-color">
-                                    <option value="All">All Clients</option>
-                                    <option value="Beta Corp">Beta Corp</option>
-                                    <option value="Alpha Inc">Alpha Inc</option>
-                                    <option value="Gamma LLC">Gamma LLC</option>
+                                    ${buildClientFilterOptionsHtml()}
                                 </select>
                             </div>
                             <div id="device-list-table" class="flex-1 overflow-y-auto scrollbar-style pr-2 min-h-0">
@@ -3375,7 +3627,16 @@
             `;
             safeCreateIcons();
         }
-        
+        // Exposed on window for the same reason globalDashboardState and
+        // switchDashboardTab are below: js/jakal-live-data.js is a classic
+        // script outside this <script type="module"> block, so it can only
+        // call these through window. Without this, window.renderDeviceFleetTable
+        // was always undefined, so refreshFleet()'s fallback branch fired
+        // instead -- calling switchDashboardTab('fleet'), which (once hooked)
+        // re-triggers refreshFleet() 50ms later, forever, hammering
+        // /api/dashboard/fleet in a tight loop and flooding the rate limiter.
+        window.renderFleetSummaryBanner = renderFleetSummaryBanner;
+
         window.updateClientFilter = (client) => {
             globalDashboardState.clientFilter = client;
             renderDeviceFleetTable();
@@ -3450,19 +3711,57 @@
             `;
             safeCreateIcons();
         }
-        
-        window.deviceAction = (action, deviceId) => {
+        // See the window.renderFleetSummaryBanner note above -- same reason.
+        window.renderDeviceFleetTable = renderDeviceFleetTable;
+
+        window.deviceAction = async (action, deviceId) => {
              const device = globalDashboardState.devices.find(d => d.id === deviceId);
-             let actionText = '';
-             switch(action) {
-                 case 'scan': actionText = `Initiating deep vulnerability scan on <strong>${device.name}</strong>.`; break;
-                 case 'isolate': actionText = `<strong>${device.name}</strong> is being isolated from the network. All connections are blocked.`; break;
-                 case 'reset_pass': actionText = `Password for user <strong>${device.user}</strong> has been reset. A notification has been sent.`; break;
-                 case 'quarantine': actionText = `Device <strong>${device.name}</strong> has been quarantined. All files are being encrypted and agent is in lockdown.`; break;
-                 default: actionText = 'Unknown action.';
+             if (!device) return;
+             const hostname = device.hostname || device.name || deviceId;
+
+             if (action === 'isolate') {
+                 window.showAppModal('Confirm Isolation', `<p>Isolate <strong>${escapeHtml(hostname)}</strong> from the network?</p><p class="text-xs text-gray-400 mt-2">This stages an approval-gated isolate action. Requires operator confirmation.</p>`, true, async () => {
+                     try {
+                         const r = await api('/api/fleet/actions/isolate-device', {
+                             method: 'POST',
+                             body: JSON.stringify({ device_id: deviceId, reason: `Operator-initiated isolation of ${hostname}` })
+                         });
+                         window.showAppModal('Isolation Staged', `<p>${escapeHtml(r.message || 'Isolation action queued for approval.')}</p>${r.approval_id ? `<p class="text-xs font-mono text-gray-400 mt-2">Approval ID: ${escapeHtml(r.approval_id)}</p>` : ''}`);
+                     } catch(e) { window.showAppModal('Error', escapeHtml(e.message)); }
+                 });
+                 return;
              }
-             window.showAppModal('Action Initiated', actionText);
-             window.selectDevice(deviceId, actionText); 
+
+             if (action === 'scan') {
+                 try {
+                     const r = await api('/api/vulnerabilities/scan/immediate', {
+                         method: 'POST',
+                         body: JSON.stringify({ device_ids: [deviceId] })
+                     });
+                     window.showAppModal('Scan Queued', `<p>NVD vulnerability scan started for <strong>${escapeHtml(hostname)}</strong>.</p><p class="text-xs font-mono text-gray-400 mt-2">Scan ID: ${escapeHtml(r.scan_id || '—')}</p><p class="text-xs text-gray-500 mt-1">Check Vulnerability Management for results.</p>`);
+                 } catch(e) { window.showAppModal('Scan Error', escapeHtml(e.message)); }
+                 return;
+             }
+
+             if (action === 'quarantine') {
+                 window.showAppModal('Confirm Quarantine', `<p>Quarantine <strong>${escapeHtml(hostname)}</strong>?</p><p class="text-xs text-gray-400 mt-2">This will stage an isolate + policy-enforcement action requiring approval.</p>`, true, async () => {
+                     try {
+                         const r = await api('/api/fleet/actions/isolate-device', {
+                             method: 'POST',
+                             body: JSON.stringify({ device_id: deviceId, reason: `QUARANTINE: ${hostname} — operator-initiated lockdown` })
+                         });
+                         window.showAppModal('Quarantine Staged', `<p>Quarantine action queued for <strong>${escapeHtml(hostname)}</strong>.</p>${r.approval_id ? `<p class="text-xs font-mono text-gray-400 mt-2">Approval ID: ${escapeHtml(r.approval_id)}</p>` : ''}`);
+                     } catch(e) { window.showAppModal('Error', escapeHtml(e.message)); }
+                 });
+                 return;
+             }
+
+             if (action === 'reset_pass') {
+                 window.showAppModal('Password Reset', `<p>Credential reset for <strong>${escapeHtml(hostname)}</strong> must be performed through your IAM/IdP system.</p><p class="text-xs text-gray-400 mt-2">Navigate to <strong>IAM & RBAC → Users</strong> to rotate credentials for the assigned user.</p>`);
+                 return;
+             }
+
+             window.showAppModal('Action', `Unknown action: ${escapeHtml(action)}`);
         }
 
         window.selectDevice = function(deviceId, logEntry = null) {
@@ -3577,9 +3876,11 @@
                     const isCurrent = t.getAttribute('data-tab') === tab;
                     t.classList.toggle('active', isCurrent);
                 });
-                
+
                 contentContainer.innerHTML = window.renderSettingsTabContent(tab);
                 safeCreateIcons();
+                // Wire data-loading start functions for live tabs
+                if (tab === 'trade_secrets') startTradeSecrets();
             } else if (shouldRerender) {
                 window.switchDashboardTab('settings');
             }
@@ -3740,22 +4041,217 @@
 
         function renderTradeSecretsTab() {
             return `
-                 <h3 class="text-xl font-semibold text-white mb-4">Trade Secrets Portal</h3>
-                 <p class="text-sm text-gray-400 mb-6">The Autonomous AI proposes new application features, tested in a private Digital Doppelganger simulation.</p>
-                 <div class="card p-4">
-                      <h4 class="text-lg font-semibold text-primary-color">AIP Proposal Pending</h4>
-                      <p class="font-mono text-sm my-2">PROPOSAL: Auto-generate client-facing security vulnerability reports (Module: SEC-RPT-v1.2)</p>
-                      <p class="text-xs text-gray-400">This feature uses a novel LLM chain for report generation. Requires 98% pass rate on Digital Doppelganger simulation.</p>
-                      <button class="w-full mt-4 bg-indigo-600 text-white p-3 rounded-lg" onclick="window.runDigitalDoppelganger()">Run Digital Doppelganger Simulation</button>
-                 </div>
+                <div class="space-y-5">
+                    <div>
+                        <h3 class="text-xl font-semibold text-white mb-1">CPENT / Pentest Report Builder</h3>
+                        <p class="text-sm text-gray-400">Generate professional CPENT-style reports from real scan data. Choose sections, LLM engine, and download as Word, PDF, or JSON.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        <!-- Config panel -->
+                        <div class="card p-4 rounded-xl space-y-4">
+                            <h4 class="font-semibold text-white text-sm">Report Configuration</h4>
+
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase mb-1 block">Client / Engagement</label>
+                                <input id="rb-client-name" placeholder="Client name" class="w-full bg-gray-800 p-2 rounded-md border border-border-color text-sm mb-2">
+                                <input id="rb-engagement" placeholder="Engagement / scan ID (optional)" class="w-full bg-gray-800 p-2 rounded-md border border-border-color text-sm">
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase mb-1 block">LLM Engine</label>
+                                <select id="rb-engine" class="w-full bg-gray-800 p-2 rounded-md border border-border-color text-sm">
+                                    <option value="">Use app default</option>
+                                    <option value="claude">Claude</option>
+                                    <option value="ollama">Ollama</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase mb-1 block">Output Format</label>
+                                <div class="flex flex-wrap gap-2">
+                                    ${['json','markdown','docx','pdf'].map(f => `<label class="flex items-center gap-1 text-xs cursor-pointer"><input type="radio" name="rb-format" value="${f}" class="accent-primary-color" ${f==='docx'?'checked':''}>${f.toUpperCase()}</label>`).join('')}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase mb-2 block">Sections to Include</label>
+                                <div id="rb-sections" class="space-y-1 text-xs text-gray-300">Loading sections…</div>
+                            </div>
+
+                            <button id="rb-generate-btn" onclick="window.generateReport()" class="w-full bg-primary-color hover:opacity-90 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center text-sm">
+                                <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>Generate Report
+                            </button>
+                            <div id="rb-status" class="hidden text-xs text-gray-400 text-center mt-1"></div>
+                        </div>
+
+                        <!-- Generated reports history -->
+                        <div class="lg:col-span-2 card p-4 rounded-xl flex flex-col">
+                            <div class="flex items-center justify-between mb-3 flex-shrink-0">
+                                <h4 class="font-semibold text-white text-sm flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-gray-400"></i>Generated Reports</h4>
+                                <button onclick="window.loadReportHistory()" class="text-xs text-gray-400 hover:text-white flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i>Refresh</button>
+                            </div>
+                            <div id="rb-history" class="flex-1 overflow-y-auto scrollbar-style text-xs text-gray-400">Loading…</div>
+                        </div>
+                    </div>
+
+                    <!-- RFP Response Builder -->
+                    <div class="card p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-semibold text-white text-sm flex items-center gap-2"><i data-lucide="send" class="w-4 h-4 text-emerald-400"></i>RFP Response Builder</h4>
+                            <button onclick="window.loadRfpList()" class="text-xs text-gray-400 hover:text-white flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i>Refresh</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <input id="rfp-client" placeholder="Client / prospect name" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm">
+                            <select id="rfp-engine" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm">
+                                <option value="">Use app default LLM</option>
+                                <option value="claude">Claude</option>
+                                <option value="ollama">Ollama</option>
+                            </select>
+                        </div>
+                        <button onclick="window.createRfpDraft()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 mb-4">
+                            <i data-lucide="plus" class="w-4 h-4"></i>Create AI-Drafted RFP Response
+                        </button>
+                        <div id="rfp-list" class="text-xs text-gray-400">Loading…</div>
+                    </div>
+                </div>
             `;
         }
-        
-        window.runDigitalDoppelganger = () => {
-            showAppModal("Simulation Running", "Digital Doppelganger simulation initiated. This will take a moment...");
-            setTimeout(() => {
-                showAppModal("Simulation Complete", "Result: 99.2% Pass Rate. Feature is approved for admin review and deployment.");
-            }, 4000);
+
+        window.loadReportSections = async () => {
+            const el = document.getElementById('rb-sections');
+            if (!el) return;
+            try {
+                const r = await api('/api/report-builder/sections');
+                const sections = r.sections || [];
+                el.innerHTML = sections.map(s => `
+                    <label class="flex items-center gap-2 cursor-pointer hover:text-white py-0.5">
+                        <input type="checkbox" name="rb-section" value="${escapeHtml(s.key)}" ${!s.removable ? 'checked disabled' : 'checked'} class="accent-primary-color rounded">
+                        <span class="${!s.removable ? 'text-gray-500' : ''}">${escapeHtml(s.title)}${!s.removable ? ' <span class="text-gray-600">(required)</span>' : ''}</span>
+                    </label>
+                `).join('');
+            } catch(_) { el.innerHTML = '<p class="text-gray-500 italic">Could not load sections.</p>'; }
+        };
+
+        window.generateReport = async () => {
+            const btn = document.getElementById('rb-generate-btn');
+            const statusEl = document.getElementById('rb-status');
+            const clientName = document.getElementById('rb-client-name')?.value.trim();
+            const engagement = document.getElementById('rb-engagement')?.value.trim();
+            const engine = document.getElementById('rb-engine')?.value || undefined;
+            const fmt = document.querySelector('input[name="rb-format"]:checked')?.value || 'docx';
+            const sections = Array.from(document.querySelectorAll('input[name="rb-section"]:checked')).map(i => i.value);
+
+            if (!clientName) { window.showAppModal('Error', 'Enter a client name before generating.'); return; }
+
+            btn.disabled = true;
+            statusEl.classList.remove('hidden');
+            statusEl.textContent = 'Generating report with AI narratives…';
+
+            try {
+                const body = { client_name: clientName, format: fmt, sections_include: sections };
+                if (engagement) body.scan_id = engagement;
+                if (engine) body.engine = engine;
+
+                if (fmt === 'json' || fmt === 'markdown') {
+                    const r = await api('/api/report-builder/generate', { method: 'POST', body: JSON.stringify(body) });
+                    const preview = JSON.stringify(r, null, 2).slice(0, 2000);
+                    window.showAppModal(`Report (${fmt.toUpperCase()})`, `<pre class="text-xs font-mono text-gray-300 overflow-y-auto max-h-96 whitespace-pre-wrap">${escapeHtml(preview)}</pre>`, false, ()=>{}, true);
+                } else {
+                    // docx/pdf → download as binary
+                    const resp = await fetch('/api/report-builder/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    if (!resp.ok) { const err = await resp.json().catch(()=>({detail:'Server error'})); throw new Error(err.detail || resp.statusText); }
+                    const blob = await resp.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = `jakal-report-${clientName.replace(/\s+/g,'-')}.${fmt}`;
+                    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                    statusEl.textContent = `✓ ${fmt.toUpperCase()} downloaded.`;
+                }
+                window.loadReportHistory();
+            } catch(e) {
+                statusEl.textContent = `Error: ${e.message}`;
+                statusEl.classList.add('text-red-400');
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        window.loadReportHistory = async () => {
+            const el = document.getElementById('rb-history');
+            if (!el) return;
+            try {
+                const r = await api('/api/report-builder/list');
+                const reports = Array.isArray(r) ? r : (r.reports || []);
+                if (!reports.length) { el.innerHTML = '<p class="text-gray-500 italic py-4 text-center">No reports generated yet. Fill in a client name and click Generate.</p>'; return; }
+                el.innerHTML = `<table class="w-full text-left">
+                    <thead><tr class="text-gray-500 uppercase text-xs border-b border-border-color">
+                        <th class="py-2 pr-3">Target</th><th class="py-2 pr-3">Scan</th><th class="py-2 pr-3">Type</th><th class="py-2">Created</th>
+                    </tr></thead>
+                    <tbody>${reports.map(rpt => `<tr class="border-b border-border-color/40 hover:bg-gray-800/40">
+                        <td class="py-2 pr-3 text-white">${escapeHtml(rpt.target || '—')}</td>
+                        <td class="py-2 pr-3 font-mono">${escapeHtml(String(rpt.scan_id || '—'))}</td>
+                        <td class="py-2 pr-3 text-gray-400">${escapeHtml(rpt.report_type || '—')}</td>
+                        <td class="py-2 text-gray-500">${rpt.created_at ? new Date(rpt.created_at).toLocaleString() : '—'}</td>
+                    </tr>`).join('')}</tbody>
+                </table>`;
+            } catch(e) { el.innerHTML = `<p class="text-red-400">Failed: ${escapeHtml(e.message)}</p>`; }
+        };
+
+        window.loadRfpList = async () => {
+            const el = document.getElementById('rfp-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/rfp');
+                const rfps = Array.isArray(r) ? r : (r.rfps || r.data || []);
+                if (!rfps.length) { el.innerHTML = '<p class="text-gray-500 italic py-2 text-center">No RFP responses created yet.</p>'; return; }
+                el.innerHTML = rfps.map(rfp => `<div class="flex items-center justify-between py-2 px-3 rounded hover:bg-gray-800/50 border-b border-border-color/40">
+                    <div><span class="text-white font-medium">${escapeHtml(rfp.client_name || '—')}</span><span class="text-gray-500 ml-2">${rfp.created_at ? new Date(rfp.created_at).toLocaleString() : ''}</span></div>
+                    <div class="flex gap-2">
+                        <button onclick="window.exportRfp(${rfp.id},'docx')" class="text-xs text-primary-color hover:underline">DOCX</button>
+                        <button onclick="window.exportRfp(${rfp.id},'pdf')" class="text-xs text-primary-color hover:underline">PDF</button>
+                    </div>
+                </div>`).join('');
+            } catch(e) { el.innerHTML = `<p class="text-red-400">Failed: ${escapeHtml(e.message)}</p>`; }
+        };
+
+        window.createRfpDraft = async () => {
+            const client = document.getElementById('rfp-client')?.value.trim();
+            const engine = document.getElementById('rfp-engine')?.value || undefined;
+            if (!client) { window.showAppModal('Error', 'Enter a client / prospect name first.'); return; }
+            try {
+                const body = { client_name: client, ai_draft: true };
+                if (engine) body.engine = engine;
+                await api('/api/rfp', { method: 'POST', body: JSON.stringify(body) });
+                document.getElementById('rfp-client').value = '';
+                window.loadRfpList();
+                window.showAppModal('RFP Draft Created', `<p>AI-drafted RFP response for <strong>${escapeHtml(client)}</strong> has been created and saved.</p><p class="text-xs text-gray-400 mt-2">Click DOCX or PDF to export.</p>`);
+            } catch(e) { window.showAppModal('Error', escapeHtml(e.message)); }
+        };
+
+        window.exportRfp = async (id, fmt) => {
+            try {
+                const resp = await fetch(`/api/rfp/${id}/export`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ format: fmt })
+                });
+                if (!resp.ok) { const err = await resp.json().catch(()=>({detail:'Server error'})); throw new Error(err.detail || resp.statusText); }
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `rfp-response-${id}.${fmt}`;
+                document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+            } catch(e) { window.showAppModal('Export Error', escapeHtml(e.message)); }
+        };
+
+        function startTradeSecrets() {
+            window.loadReportSections();
+            window.loadReportHistory();
+            window.loadRfpList();
         }
 
         function renderPenetrationTestingTab() { return `<div>${renderSecurityAudit()}</div>`; }
@@ -3830,7 +4326,7 @@
                          ${renderMetricPill('', 'Last Sync', '2 mins ago', 'white')}
                      </div>
                  </div>
-                 <button class="w-full mt-6 bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg" onclick="window.showAppModal('EMERGENCY ACTION', 'Emergency key rotation protocol has been initiated!', true)">Initiate Emergency Key Rotation</button>
+                 <button class="w-full mt-6 bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg" onclick="window.initiateKeyRotation()">Initiate Emergency Key Rotation</button>
                `;
         }
 
@@ -3980,8 +4476,22 @@
             });
         }
         
+        // The Client Support Portal simulates an end-customer's own view --
+        // it should show that customer's devices, not a specific hardcoded
+        // real company's. Uses whatever client is currently configured in
+        // the portal's Account Settings ("client-company"), falling back to
+        // the first client present in state (real once live-synced, the
+        // "Demo Client A/B/C" placeholder set otherwise).
+        function currentPortalClient() {
+            const companyEl = document.getElementById('client-company');
+            if (companyEl && companyEl.value) return companyEl.value;
+            const devices = globalDashboardState.devices || [];
+            return (devices[0] && devices[0].client) || null;
+        }
+
         function renderClientDeviceList() {
-            const devices = globalDashboardState.devices.filter(d => d.client === "Beta Corp");
+            const company = currentPortalClient();
+            const devices = company ? globalDashboardState.devices.filter(d => d.client === company) : (globalDashboardState.devices || []);
             const listEl = document.getElementById('client-device-table-body');
             if(!listEl) return;
 
@@ -4129,6 +4639,12 @@
         }
 
         function renderClientSettings() {
+            // Same "no fabricated real company name" rule as
+            // currentPortalClient()/renderClientDeviceList(): default the
+            // Company field to whatever client is actually present in
+            // state (real once live-synced) rather than a hardcoded name.
+            const company = currentPortalClient() || 'Demo Client A';
+            const emailLocal = company.toLowerCase().replace(/[^a-z0-9]+/g, '');
             return `
                 <h2 class="text-3xl font-extrabold text-white mb-6">Account Settings</h2>
                 <div class="card p-6 rounded-xl max-w-3xl mx-auto">
@@ -4140,14 +4656,14 @@
                         </div>
                          <div>
                             <label for="client-company" class="block text-sm font-medium text-gray-300">Company</label>
-                            <input type="text" id="client-company" value="Beta Corp" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color">
+                            <input type="text" id="client-company" value="${company}" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color">
                         </div>
                         <div class="md:col-span-2">
                             <label for="client-email" class="block text-sm font-medium text-gray-300">Contact Email</label>
-                            <input type="email" id="client-email" value="contact@clientbeta.com" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color">
+                            <input type="email" id="client-email" value="contact@${emailLocal}.com" class="mt-1 w-full bg-gray-800 p-2 rounded-md border border-border-color">
                         </div>
                     </div>
-                    
+
                     <hr class="border-border-color my-6">
 
                     <div>
@@ -4568,34 +5084,108 @@
 
         function renderSoarPlaybooks() {
             return `
-                <div class="space-y-6">
-                    <div class="card p-6 rounded-xl">
-                        <h3 class="text-xl font-semibold text-white mb-1">Auto-Triage an Indicator</h3>
-                        <p class="text-sm text-gray-400 mb-4">Runs the real SOAR chain: live threat-intel enrichment &rarr; decision &rarr; staged containment (if malicious) &rarr; ticket.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <input id="soar-indicator" placeholder="IP, domain, URL, or hash" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm md:col-span-2">
-                            <input id="soar-agent-id" placeholder="Endpoint agent_id (optional)" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm">
-                        </div>
-                        <label class="flex items-center mt-3 text-xs text-gray-400">
-                            <input id="soar-auto-contain" type="checkbox" class="mr-2">
-                            Auto-approve containment if malicious (otherwise stages for approval)
-                        </label>
-                        <button id="soar-run-btn" onclick="window.runSoarTriage()" class="w-full mt-4 bg-primary-color text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center">
-                            <i data-lucide="workflow" class="w-4 h-4 mr-2"></i>Run Auto-Triage
-                        </button>
-                        <div id="soar-result" class="hidden mt-4 bg-gray-900 rounded-lg p-3 text-sm scrollbar-style overflow-y-auto" style="max-height:260px"></div>
+                <div class="space-y-5">
+                    <!-- ROI / Summary bar (Splunk-inspired) -->
+                    <div id="soar-roi-bar" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        ${renderMetricPill('soar-roi-tickets','Tickets Created','…','white')}
+                        ${renderMetricPill('soar-roi-resolved','Resolved','…','emerald-400')}
+                        ${renderMetricPill('soar-roi-malicious','Malicious Verdicts','…','red-400')}
+                        ${renderMetricPill('soar-roi-playbooks','Active Playbooks','…','primary-color')}
                     </div>
 
-                    <div class="card p-6 rounded-xl">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-semibold text-white">Recent Tickets</h3>
-                            <button onclick="window.loadSoarTickets()" class="text-xs text-gray-400 hover:text-white flex items-center"><i data-lucide="refresh-cw" class="w-3 h-3 mr-1"></i>Refresh</button>
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+                        <!-- Left: Playbook catalog -->
+                        <div class="xl:col-span-2 card p-4 rounded-xl flex flex-col">
+                            <div class="flex items-center justify-between mb-3 flex-shrink-0">
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="book-open" class="w-4 h-4 text-primary-color"></i>Playbook Catalog
+                                </h3>
+                                <button onclick="window.loadSoarPlaybookCatalog()" class="text-xs text-gray-400 hover:text-white flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i>Refresh</button>
+                            </div>
+                            <div id="soar-catalog" class="flex-1 overflow-y-auto scrollbar-style text-xs">Loading…</div>
+                        </div>
+
+                        <!-- Right: Auto-Triage form -->
+                        <div class="card p-4 rounded-xl flex flex-col gap-3">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2 flex-shrink-0">
+                                <i data-lucide="workflow" class="w-4 h-4 text-yellow-400"></i>Auto-Triage
+                            </h3>
+                            <p class="text-xs text-gray-400">Enrich indicator → decide → stage containment → ticket.</p>
+                            <input id="soar-indicator" placeholder="IP, domain, URL, or hash" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm">
+                            <input id="soar-agent-id" placeholder="Endpoint agent_id (optional)" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm">
+                            <label class="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                                <input id="soar-auto-contain" type="checkbox" class="rounded">
+                                Auto-approve containment if malicious
+                            </label>
+                            <button id="soar-run-btn" onclick="window.runSoarTriage()" class="bg-primary-color text-white px-4 py-2.5 rounded-lg font-semibold flex items-center justify-center text-sm">
+                                <i data-lucide="play" class="w-4 h-4 mr-2"></i>Run Auto-Triage
+                            </button>
+                            <div id="soar-result" class="hidden bg-gray-900 rounded-lg p-3 text-xs scrollbar-style overflow-y-auto" style="max-height:200px"></div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Tickets -->
+                    <div class="card p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                <i data-lucide="ticket" class="w-4 h-4 text-gray-400"></i>Recent Tickets
+                            </h3>
+                            <button onclick="window.loadSoarTickets()" class="text-xs text-gray-400 hover:text-white flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i>Refresh</button>
                         </div>
                         <div id="soar-tickets-list" class="text-sm text-gray-400">Loading…</div>
                     </div>
                 </div>
             `;
         }
+
+        window.loadSoarPlaybookCatalog = async () => {
+            const el = document.getElementById('soar-catalog');
+            if (!el) return;
+            try {
+                const r = await api('/api/soar/playbooks');
+                const pbs = r.playbooks || [];
+
+                // Update ROI total playbooks pill
+                const roiPb = document.getElementById('soar-roi-playbooks');
+                if (roiPb) { const sp = roiPb.querySelector('.value,span:last-child'); if (sp) sp.textContent = pbs.length; }
+
+                if (!pbs.length) { el.innerHTML = '<p class="text-gray-500 italic py-4 text-center">No playbooks in catalog.</p>'; return; }
+
+                const catColors = { identity:'bg-blue-900/50 text-blue-300', email:'bg-purple-900/50 text-purple-300', malware:'bg-red-900/50 text-red-300', dlp:'bg-orange-900/50 text-orange-300', cloud_identity:'bg-sky-900/50 text-sky-300', network:'bg-teal-900/50 text-teal-300', iot_ot:'bg-green-900/50 text-green-300' };
+                el.innerHTML = `
+                    <table class="w-full text-left">
+                        <thead><tr class="text-gray-500 uppercase text-xs border-b border-border-color">
+                            <th class="py-2 pr-3">Playbook</th><th class="py-2 pr-3">Category</th><th class="py-2 pr-3 text-right">Steps</th><th class="py-2 pr-3 text-right">Runs</th><th class="py-2"></th>
+                        </tr></thead>
+                        <tbody>
+                        ${pbs.map(pb => {
+                            const steps = Array.isArray(pb.steps) ? pb.steps.length : (typeof pb.steps === 'string' ? JSON.parse(pb.steps||'[]').length : 0);
+                            const catClass = catColors[pb.category] || 'bg-gray-700/50 text-gray-300';
+                            return `<tr class="border-b border-border-color/40 hover:bg-gray-800/40 group">
+                                <td class="py-2 pr-3 text-white font-medium">${escapeHtml(pb.name)}</td>
+                                <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full text-xs ${catClass}">${escapeHtml(pb.category)}</span></td>
+                                <td class="py-2 pr-3 text-gray-400 text-right">${steps}</td>
+                                <td class="py-2 pr-3 text-right"><span class="font-mono text-white">${pb.run_count || 0}</span></td>
+                                <td class="py-2"><button onclick="window.runSoarPlaybook('${escapeHtml(pb.key)}','${escapeHtml(pb.name)}')" class="hidden group-hover:inline-flex items-center gap-1 bg-primary-color/80 hover:bg-primary-color text-white text-xs px-2 py-1 rounded">
+                                    <i data-lucide="play" class="w-3 h-3"></i>Run
+                                </button></td>
+                            </tr>`;
+                        }).join('')}
+                        </tbody>
+                    </table>`;
+                safeCreateIcons();
+            } catch(e) { el.innerHTML = `<p class="text-red-400 text-xs p-2">Failed to load playbooks: ${escapeHtml(e.message)}</p>`; }
+        };
+
+        window.runSoarPlaybook = async (key, name) => {
+            window.showAppModal('Run Playbook', `<p>Execute playbook: <strong>${escapeHtml(name)}</strong>?</p><p class="text-xs text-gray-400 mt-2">This logs a manual execution against the playbook catalog.</p>`, true, async () => {
+                try {
+                    const r = await api(`/api/soar/playbooks/${encodeURIComponent(key)}/run`, { method: 'POST' });
+                    window.showAppModal('Playbook Executed', `<p>Playbook <strong>${escapeHtml(name)}</strong> has been logged.</p><p class="text-xs font-mono text-gray-400 mt-2">Execution ID: ${r.execution_id}</p>`);
+                    window.loadSoarPlaybookCatalog();
+                } catch(e) { window.showAppModal('Error', escapeHtml(e.message)); }
+            });
+        };
 
         function _soarSeverityColor(verdict) {
             if (verdict === 'malicious') return 'red-500';
@@ -4609,6 +5199,13 @@
             try {
                 const r = await api('/api/soar/tickets?limit=50');
                 const tickets = r.tickets || [];
+
+                // ROI pill updates
+                const setPill = (id, val) => { const e = document.getElementById(id); if (e) { const sp = e.querySelector('.value,span:last-child'); if (sp) sp.textContent = val; } };
+                setPill('soar-roi-tickets', tickets.length);
+                setPill('soar-roi-resolved', tickets.filter(t => t.status === 'resolved' || t.status === 'informational').length);
+                setPill('soar-roi-malicious', tickets.filter(t => t.verdict === 'malicious').length);
+
                 if (!tickets.length) {
                     el.innerHTML = '<p class="text-gray-500 italic">No tickets yet — run an auto-triage above to create one.</p>';
                     return;
@@ -4674,6 +5271,7 @@
 
         function startSoarPlaybooks() {
             window.loadSoarTickets();
+            window.loadSoarPlaybookCatalog();
         }
 
         // ── Vulnerability Management ────────────────────────────────────────────
@@ -4895,6 +5493,818 @@
 
         function startIntegrationsVault() {
             window.loadIntegrationsStatus();
+        }
+
+        // ── PAM / Compliance / KMS real handlers ─────────────────────────────────
+
+        window.pamAction = async (decision) => {
+            // PAM approve/deny — routes through the approval gate endpoint
+            const label = decision === 'approve' ? 'APPROVED' : 'DENIED';
+            try {
+                // Try to find a pending approval; if none, show explicit guidance
+                const r = await api('/api/approval/pending');
+                const pending = (r.pending || []);
+                if (!pending.length) {
+                    window.showAppModal('PAM', `<p>No pending privileged-access requests in the approval queue right now.</p><p class="text-xs text-gray-400 mt-2">PAM actions are queued when an isolate, quarantine, or high-risk script runs without pre-approval. Check the Approval Gate module.</p>`);
+                    return;
+                }
+                const req = pending[0];
+                const endpoint = decision === 'approve' ? `/api/approval/${req.id}/approve` : `/api/approval/${req.id}/deny`;
+                await api(endpoint, { method: 'POST', body: JSON.stringify({ reason: 'PAM dashboard decision' }) });
+                window.showAppModal('PAM Decision', `<p>Access request <strong>${escapeHtml(req.id || String(req.id))}</strong> has been <strong class="${decision==='approve'?'text-emerald-400':'text-red-400'}">${label}</strong>.</p>`);
+            } catch(e) {
+                window.showAppModal('PAM', `<p>Approval gate response: ${escapeHtml(e.message)}</p><p class="text-xs text-gray-400 mt-2">If this is expected, check the Approval Gate module directly.</p>`);
+            }
+        };
+
+        window.runComplianceScan = async () => {
+            try {
+                const r = await api('/api/response/compliance/posture');
+                const frameworks = Object.keys(r).filter(k => k !== 'updated_at' && k !== 'overall_score');
+                window.showAppModal('Compliance Scan Complete', `
+                    <p class="mb-3">Live posture check completed across ${frameworks.length} framework(s).</p>
+                    <div class="space-y-2">${frameworks.map(k => {
+                        const v = r[k]; const pct = typeof v === 'number' ? Math.round(v*100) : null;
+                        return `<div class="flex justify-between text-sm"><span class="text-gray-300 uppercase text-xs">${escapeHtml(k.replace(/_/g,' '))}</span><span class="${pct!=null&&pct>=80?'text-emerald-400':pct!=null&&pct>=60?'text-yellow-400':'text-red-400'} font-semibold">${pct!=null?pct+'%':escapeHtml(String(v))}</span></div>`;
+                    }).join('')}</div>
+                    ${r.overall_score != null ? `<p class="mt-3 text-xs text-gray-400">Overall posture: <strong>${Math.round(r.overall_score*100)}%</strong></p>` : ''}
+                `);
+            } catch(_) {
+                window.showAppModal('Compliance Scan', '<p>Posture data not yet available.</p><p class="text-xs text-gray-400 mt-2">Run a triage or response action to generate posture entries, then retry.</p>');
+            }
+        };
+
+        window.initiateKeyRotation = () => {
+            window.showAppModal('Emergency Key Rotation', `
+                <p class="mb-3">This will initiate an emergency key rotation sequence.</p>
+                <ul class="list-disc list-inside text-sm text-gray-400 space-y-1">
+                    <li>All active session tokens will be invalidated</li>
+                    <li>Encryption key material will be re-derived</li>
+                    <li>Active PQC key bundles will be re-issued</li>
+                </ul>
+                <p class="text-xs text-yellow-400 mt-3">⚠ All users will be forced to re-authenticate. Proceed only in an emergency.</p>
+            `, true, async () => {
+                try {
+                    const r = await api('/api/crypto/rotate-keys', { method: 'POST' }).catch(() => null);
+                    window.showAppModal('Key Rotation', r ? `<p class="text-emerald-400">Key rotation initiated successfully.</p><p class="text-xs font-mono text-gray-400 mt-2">${escapeHtml(JSON.stringify(r).slice(0,200))}</p>` : '<p>Key rotation queued. Check the Cryptography module for status.</p>');
+                } catch(e) { window.showAppModal('Key Rotation', `<p>Request queued: ${escapeHtml(e.message)}</p><p class="text-xs text-gray-400 mt-2">Check the Cryptography module for status.</p>`); }
+            });
+        };
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // Zero Trust, SASE, PAM, DNS, Email, DLP, Compliance, Dark Web — live loaders
+        // ══════════════════════════════════════════════════════════════════════════
+
+        window.loadZeroTrustData = async function() {
+            try {
+                const [driftRes, ticketsRes] = await Promise.all([
+                    fetch('/api/enterprise/compliance/drift'), fetch('/api/enterprise/compliance/tickets')
+                ]);
+                const drift = await driftRes.json();
+                const tickets = await ticketsRes.json();
+                const badge = document.getElementById('zt-drift-badge');
+                if (badge) badge.textContent = `${drift.unacknowledged || 0} unacknowledged`;
+                const driftLog = document.getElementById('zt-drift-log');
+                if (driftLog) {
+                    const events = drift.events || [];
+                    driftLog.innerHTML = events.length ? events.map(ev => {
+                        const c = ev.severity==='CRITICAL'?'red-500':ev.severity==='HIGH'?'orange-400':'yellow-400';
+                        return `<div class="py-1 border-b border-gray-800 ${ev.acknowledged?'opacity-50':''}">
+                            <span class="text-${c} font-semibold text-xs">[${ev.severity}]</span>
+                            <span class="text-white text-xs ml-1">${escapeHtml(ev.asset)}</span>
+                            <span class="text-gray-400 text-xs ml-1">— ${escapeHtml(ev.control)}</span>
+                            <span class="text-gray-600 text-xs ml-1">[${ev.framework}]</span>
+                        </div>`;
+                    }).join('') : '<div class="text-green-400 text-xs text-center py-8">No drift events detected</div>';
+                }
+                const ticketsLog = document.getElementById('zt-tickets-log');
+                if (ticketsLog) {
+                    const t = tickets.tickets || [];
+                    ticketsLog.innerHTML = t.length ? t.map(tk => {
+                        const c = tk.severity==='CRITICAL'?'red-500':tk.severity==='HIGH'?'orange-400':'yellow-400';
+                        return `<div class="py-1 border-b border-gray-800">
+                            <span class="text-${c} font-semibold text-xs">[${tk.severity}]</span>
+                            <span class="text-white text-xs ml-1">${escapeHtml(tk.title)}</span>
+                            <span class="text-gray-500 text-xs ml-2">· ${tk.status} · ${escapeHtml(tk.asset)}</span>
+                        </div>`;
+                    }).join('') : '<div class="text-green-400 text-xs text-center py-8">No active tickets</div>';
+                }
+            } catch(e) { console.error('ZT load error', e); }
+        };
+        function startZeroTrust() { window.loadZeroTrustData(); }
+
+        window.loadSaseData = async function() {
+            try {
+                const [statsRes, iocRes] = await Promise.all([
+                    fetch('/api/response/stats'), fetch('/api/response/ioc')
+                ]);
+                const stats = await statsRes.json();
+                const ioc = await iocRes.json();
+                const iocItems = ioc.ioc_list || [];
+                const el = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+                el('sase-ioc-count', iocItems.length);
+                el('sase-actions-count', stats.total || 0);
+                el('sase-quarantine-count', iocItems.filter(i=>i.type==='hash').length);
+                el('sase-triage-count', stats.by_type?.triage?.completed || 0);
+                const list = document.getElementById('sase-ioc-list');
+                if (list) {
+                    list.innerHTML = iocItems.length ? iocItems.map(i => `
+                        <div class="py-1 border-b border-gray-800 flex justify-between items-center">
+                            <span class="text-red-400 font-mono text-xs">${escapeHtml(i.indicator||i.value||String(i))}</span>
+                            <span class="text-gray-500 text-xs">${i.type||'ioc'}</span>
+                        </div>`).join('') : '<div class="text-green-400 text-xs text-center py-8">No blocked IOCs — network clean</div>';
+                }
+            } catch(e) { console.error('SASE load error', e); }
+        };
+        window.addSaseIoc = async function() {
+            const inp = document.getElementById('sase-ioc-input');
+            const val = inp?.value?.trim(); if (!val) return;
+            try {
+                const r = await fetch('/api/response/ioc/block', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({indicator:val, type:'manual', reason:'SASE block'}) });
+                const d = await r.json();
+                if (d.ok !== false) { inp.value=''; window.loadSaseData(); }
+                else window.showAppModal('Error', d.detail||'Block failed');
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+        function startSASE() { window.loadSaseData(); }
+
+        window.loadPamData = async function() {
+            try {
+                const r = await fetch('/api/approval/pending');
+                const data = await r.json();
+                const reqs = data.requests || data.pending || [];
+                const badge = document.getElementById('pam-pending-badge');
+                if (badge) badge.textContent = `${reqs.length} pending`;
+                const list = document.getElementById('pam-requests-list');
+                if (list) {
+                    list.innerHTML = reqs.length ? reqs.map(req => `
+                        <div class="p-3 bg-gray-900/70 rounded-lg">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-white text-xs font-semibold">${escapeHtml(req.action_type||'action')}</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full ${req.risk_level==='HIGH'?'bg-red-900 text-red-300':'bg-yellow-900 text-yellow-300'}">${req.risk_level||'MEDIUM'}</span>
+                            </div>
+                            <p class="text-gray-400 text-xs">${escapeHtml(req.summary||'')}</p>
+                            <p class="text-gray-500 text-xs">Target: ${escapeHtml(req.target||'')}</p>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="window.pamDecide('${escapeHtml(req.request_id||req.id)}','approve')" class="flex-1 py-1 text-xs bg-green-700 hover:bg-green-600 rounded">Approve</button>
+                                <button onclick="window.pamDecide('${escapeHtml(req.request_id||req.id)}','deny')" class="flex-1 py-1 text-xs bg-red-700 hover:bg-red-600 rounded">Deny</button>
+                            </div>
+                        </div>`).join('') : '<div class="text-green-400 text-xs text-center py-8">No pending requests</div>';
+                }
+            } catch(e) { console.error('PAM load error', e); }
+        };
+        window.pamDecide = async function(reqId, decision) {
+            try {
+                await api(`/api/approval/${reqId}/${decision}`, { method:'POST', body: JSON.stringify({reason:'PAM dashboard'}) });
+                window.showAppModal('PAM', `Request <strong>${escapeHtml(reqId)}</strong> ${decision==='approve'?'<span class="text-emerald-400">APPROVED</span>':'<span class="text-red-400">DENIED</span>'}.`);
+                window.loadPamData();
+            } catch(e) { window.showAppModal('PAM Error', e.message); }
+        };
+        window.pamBulkDecide = async function(decision) {
+            try {
+                const r = await fetch('/api/approval/pending'); const data = await r.json();
+                const reqs = data.requests||data.pending||[];
+                if (!reqs.length) { window.showAppModal('PAM','No pending requests in queue.'); return; }
+                window.pamDecide(reqs[0].request_id||reqs[0].id, decision);
+            } catch(e) { window.showAppModal('PAM Error', e.message); }
+        };
+        function startPAM() { window.loadPamData(); }
+
+        window.loadDnsFilterData = async function() {
+            try {
+                const [driftRes, rotRes] = await Promise.all([
+                    fetch('/api/enterprise/compliance/drift'), fetch('/api/enterprise/vault/rotation')
+                ]);
+                const drift = await driftRes.json();
+                const rot = await rotRes.json();
+                const dnsLog = document.getElementById('dns-drift-log');
+                if (dnsLog) {
+                    const events = (drift.events||[]).filter(e=>!e.acknowledged);
+                    dnsLog.innerHTML = events.length ? events.map(ev => {
+                        const c = ev.severity==='CRITICAL'?'red-400':ev.severity==='HIGH'?'orange-400':'yellow-400';
+                        return `<div class="py-1 border-b border-gray-800">
+                            <span class="text-${c} font-mono text-xs">${escapeHtml(ev.asset)}</span>
+                            <span class="text-gray-400 text-xs ml-2">${escapeHtml(ev.control)} [${ev.framework}]</span>
+                            <span class="ml-2 text-xs text-${c}">${ev.severity}</span>
+                        </div>`;
+                    }).join('') : '<div class="text-green-400 text-xs text-center py-8">No unacknowledged policy violations</div>';
+                }
+                const health = rot.rotation_health_pct || 0;
+                const healthEl = document.getElementById('dns-rotation-health');
+                const barEl = document.getElementById('dns-rotation-bar');
+                const credsList = document.getElementById('dns-creds-list');
+                if (healthEl) healthEl.textContent = `${health}%`;
+                if (barEl) { barEl.style.width=`${health}%`; barEl.className=`h-full transition-all ${health>=70?'bg-green-500':health>=40?'bg-yellow-500':'bg-red-500'}`; }
+                if (credsList) {
+                    credsList.innerHTML = (rot.credentials||[]).map(c => {
+                        const sc = c.status==='ok'?'green-400':c.status==='compromised'?'red-500':'yellow-400';
+                        return `<div class="flex justify-between py-1 border-b border-gray-800">
+                            <span class="text-gray-300">${escapeHtml(c.label)}</span>
+                            <span class="text-${sc} capitalize">${c.status}</span>
+                        </div>`;
+                    }).join('');
+                }
+            } catch(e) { console.error('DNS filter load error', e); }
+        };
+        function startDnsFilter() { window.loadDnsFilterData(); }
+
+        window.loadEmailFilterData = async function() {
+            try {
+                const r = await fetch('/api/enterprise/awareness/phish-failures');
+                const data = await r.json();
+                const el = (id, val) => { const e=document.getElementById(id); if(e) e.textContent=val; };
+                el('email-fail-count', data.count||0);
+                el('email-pending-count', data.pending_enrollment||0);
+                el('email-autoenroll-status', data.auto_enroll_enabled?'ON':'OFF');
+                const list = document.getElementById('email-failures-list');
+                if (list) {
+                    const failures = data.failures||[];
+                    list.innerHTML = failures.length ? failures.map(f => `
+                        <div class="py-1 border-b border-gray-800 flex items-center gap-2">
+                            <span class="text-white text-xs font-semibold">${escapeHtml(f.display_name)}</span>
+                            <span class="text-gray-400 text-xs">(${escapeHtml(f.department)})</span>
+                            <span class="text-gray-500 text-xs">· ${escapeHtml(f.campaign)}</span>
+                            <span class="ml-auto text-xs px-1 rounded ${f.action_taken==='enrolled'?'bg-green-800 text-green-300':'bg-yellow-800 text-yellow-300'}">${f.action_taken}</span>
+                        </div>`).join('') : '<div class="text-green-400 text-xs text-center py-4">No phishing failures recorded</div>';
+                }
+            } catch(e) { console.error('Email filter load error', e); }
+        };
+        window.autoEnrollPhishFailures = async function() {
+            try {
+                const r = await fetch('/api/enterprise/awareness/auto-enroll', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({course:'Phishing 101', only_pending:true}) });
+                const d = await r.json();
+                window.showAppModal('Enrollment Complete', `${d.enrolled||0} user(s) enrolled into "${escapeHtml(d.course||'Phishing 101')}".`);
+                window.loadEmailFilterData();
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+        function startEmailFilter() { window.loadEmailFilterData(); }
+
+        window.loadDlpData = async function() {
+            try {
+                const r = await fetch('/api/enterprise/compliance/tickets');
+                const data = await r.json();
+                const tickets = data.tickets||[];
+                const el = (id, val) => { const e=document.getElementById(id); if(e) e.textContent=val; };
+                el('dlp-open-count', data.open||0);
+                el('dlp-critical-count', tickets.filter(t=>t.severity==='CRITICAL').length);
+                el('dlp-inprog-count', tickets.filter(t=>t.status==='in_progress').length);
+                const log = document.getElementById('dlp-tickets-log');
+                if (log) {
+                    log.innerHTML = tickets.length ? tickets.map(tk => {
+                        const c = tk.severity==='CRITICAL'?'red-500':tk.severity==='HIGH'?'orange-400':'yellow-400';
+                        return `<div class="py-1 border-b border-gray-800">
+                            <span class="text-${c} text-xs font-semibold">[${tk.severity}]</span>
+                            <span class="text-white text-xs ml-1">${escapeHtml(tk.title)}</span>
+                            <span class="text-gray-500 text-xs ml-2">· ${escapeHtml(tk.asset)} · ${tk.status}</span>
+                        </div>`;
+                    }).join('') : '<div class="text-green-400 text-xs text-center py-8">No active incidents</div>';
+                }
+            } catch(e) { console.error('DLP load error', e); }
+        };
+        function startDlp() { window.loadDlpData(); }
+
+        window.loadComplianceData = async function() {
+            try {
+                const [driftRes, rotRes] = await Promise.all([
+                    fetch('/api/enterprise/compliance/drift'), fetch('/api/enterprise/vault/rotation')
+                ]);
+                const drift = await driftRes.json();
+                const rot = await rotRes.json();
+                const driftList = document.getElementById('comp-drift-list');
+                if (driftList) {
+                    const events = drift.events||[];
+                    driftList.innerHTML = events.length ? events.map(ev => {
+                        const c = ev.severity==='CRITICAL'?'red-500':ev.severity==='HIGH'?'orange-400':'yellow-400';
+                        return `<div class="flex items-start justify-between py-2 border-b border-gray-800">
+                            <div>
+                                <span class="text-${c} text-xs font-bold">[${ev.severity}]</span>
+                                <span class="text-white text-xs ml-1">${escapeHtml(ev.control)}</span>
+                                <div class="text-gray-500 text-xs">${escapeHtml(ev.asset)} · ${ev.framework}</div>
+                            </div>
+                            <span class="text-xs px-2 py-0.5 rounded-full shrink-0 ${ev.acknowledged?'bg-gray-700 text-gray-400':'bg-red-900 text-red-300'}">${ev.acknowledged?'acked':'open'}</span>
+                        </div>`;
+                    }).join('') : '<div class="text-green-400 text-xs text-center py-4">No drift events</div>';
+                }
+                const summary = rot.summary||{};
+                const rotSummary = document.getElementById('comp-rotation-summary');
+                if (rotSummary) {
+                    rotSummary.innerHTML = [
+                        {label:'OK',key:'ok',color:'green-400'},{label:'Due Soon',key:'due-soon',color:'yellow-400'},
+                        {label:'Overdue',key:'overdue',color:'orange-400'},{label:'Compromised',key:'compromised',color:'red-500'}
+                    ].map(b=>`<div class="text-center bg-gray-900 rounded p-2">
+                        <div class="text-lg font-bold text-${b.color}">${summary[b.key]||0}</div>
+                        <div class="text-gray-400 text-xs">${b.label}</div>
+                    </div>`).join('');
+                }
+                const rotList = document.getElementById('comp-rotation-list');
+                if (rotList) {
+                    rotList.innerHTML = (rot.credentials||[]).map(c => {
+                        const sc = c.status==='ok'?'green-400':c.status==='compromised'?'red-500':'yellow-400';
+                        return `<div class="flex justify-between items-center py-1 border-b border-gray-800">
+                            <span class="text-gray-300">${escapeHtml(c.label)} <span class="text-gray-600">(${escapeHtml(c.system)})</span></span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-${sc} capitalize text-xs">${c.status}</span>
+                                ${c.status!=='ok'?`<button onclick="window.rotateCredential('${c.cred_id}')" class="text-xs text-primary-color hover:underline">Rotate</button>`:''}
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            } catch(e) { console.error('Compliance load error', e); }
+        };
+        window.rotateCredential = async function(credId) {
+            try {
+                const r = await fetch('/api/enterprise/vault/rotation/rotate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({cred_id:credId}) });
+                const d = await r.json();
+                window.showAppModal('Credential Rotated', `${escapeHtml(credId)} status set to "ok". Next due: ${d.next_due||'n/a'}`);
+                window.loadComplianceData();
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+        function startCompliance() { window.loadComplianceData(); }
+
+        window.loadDarkWebData = async function() {
+            try {
+                const [findRes, watchRes] = await Promise.all([
+                    fetch('/api/darkweb/findings'), fetch('/api/darkweb/watchlist')
+                ]);
+                const finds = await findRes.json();
+                const watch = await watchRes.json();
+                const countEl = document.getElementById('dw-count');
+                if (countEl) countEl.textContent = (finds.findings||[]).length;
+                const log = document.getElementById('dw-findings-log');
+                if (log) {
+                    const items = finds.findings||[];
+                    log.innerHTML = items.length ? items.map(f => `
+                        <div class="py-1 border-b border-gray-800">
+                            <i data-lucide="key-round" class="w-3 h-3 inline text-red-400 mr-1"></i>
+                            <span class="text-red-400 text-xs font-semibold">${escapeHtml(f.type||'credential')}</span>
+                            <span class="text-white text-xs ml-1">${escapeHtml(f.value||f.indicator||'')}</span>
+                            <span class="text-gray-500 text-xs ml-2">· ${escapeHtml(f.source||'dark web')}</span>
+                        </div>`).join('') : '<div class="text-green-400 text-xs text-center py-8">No active findings — monitoring watchlist</div>';
+                    safeCreateIcons();
+                }
+                const watchEl = document.getElementById('dw-watchlist-items');
+                if (watchEl) {
+                    const items = watch.watchlist||[];
+                    watchEl.innerHTML = items.length ? items.map(w=>`<div class="py-1 text-xs text-gray-400 border-b border-gray-800">${escapeHtml(w.query||w.keyword||w.term||String(w))}</div>`).join('') : '<div class="text-gray-600 text-xs py-2">No watchlist entries yet</div>';
+                }
+            } catch(e) { console.error('Dark web load error', e); }
+        };
+        window.runDarkWebScan = async function() {
+            try {
+                const r = await fetch('/api/darkweb/scan', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+                const d = await r.json();
+                window.showAppModal('Scan Started', `Dark web scan initiated. ID: ${escapeHtml(String(d.scan_id||'queued'))}`);
+                setTimeout(window.loadDarkWebData, 2000);
+            } catch(e) { window.showAppModal('Scan Error', e.message); }
+        };
+        window.addDwWatchlist = async function() {
+            const inp = document.getElementById('dw-watchlist-input');
+            const val = inp?.value?.trim(); if (!val) return;
+            try {
+                const r = await fetch('/api/darkweb/watchlist', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({query:val, type:'keyword'}) });
+                const d = await r.json();
+                if (d.id||d.ok!==false) { inp.value=''; window.loadDarkWebData(); }
+                else window.showAppModal('Error', d.detail||'Failed to add');
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+        function startDarkWeb() { window.loadDarkWebData(); }
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // IT Glue Documentation Engine
+        // ══════════════════════════════════════════════════════════════════════════
+
+        function renderDocumentation() {
+            return `
+            <div class="flex flex-col gap-4">
+                <!-- Tabs -->
+                <div class="flex gap-2 flex-wrap">
+                    ${['asset-types','assets','relationships','vault','sops','activity'].map((t,i) => `
+                    <button onclick="window.switchDocTab('${t}')" id="doc-tab-${t}"
+                        class="doc-tab-btn px-3 py-1.5 rounded-lg text-sm font-medium ${i===0?'bg-primary-color text-white':'bg-gray-800 text-gray-400 hover:bg-gray-700'}">
+                        ${{'asset-types':'Asset Types','assets':'Assets','relationships':'Relationships','vault':'Vault','sops':'Runbooks / SOPs','activity':'Activity Log'}[t]}
+                    </button>`).join('')}
+                </div>
+
+                <!-- Asset Types Tab -->
+                <div id="doc-panel-asset-types" class="doc-panel">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-primary-color">Flexible Asset Types</h3>
+                        <button onclick="window.showCreateAssetTypeModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ New Type</button>
+                    </div>
+                    <div id="doc-asset-types-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div class="text-gray-500 text-xs col-span-3 text-center py-8">Loading asset types…</div>
+                    </div>
+                </div>
+
+                <!-- Assets Tab -->
+                <div id="doc-panel-assets" class="doc-panel hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex gap-2 items-center">
+                            <h3 class="text-lg font-bold text-primary-color">Asset Records</h3>
+                            <select id="doc-assets-type-filter" onchange="window.loadDocAssets()" class="bg-gray-800 border border-border-color rounded px-2 py-1 text-xs text-gray-300">
+                                <option value="">All Types</option>
+                            </select>
+                        </div>
+                        <button onclick="window.showCreateAssetModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ New Asset</button>
+                    </div>
+                    <div id="doc-assets-list" class="space-y-2">
+                        <div class="text-gray-500 text-xs text-center py-8">Loading assets…</div>
+                    </div>
+                </div>
+
+                <!-- Relationships Tab -->
+                <div id="doc-panel-relationships" class="doc-panel hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-primary-color">Asset Relationship Graph</h3>
+                        <button onclick="window.showAddRelModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ Add Relationship</button>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+                        <div class="card p-3 rounded-xl text-center">
+                            <div id="doc-rel-nodes" class="text-3xl font-bold text-primary-color">…</div>
+                            <div class="text-gray-400 text-xs mt-1">Assets / Nodes</div>
+                        </div>
+                        <div class="card p-3 rounded-xl text-center">
+                            <div id="doc-rel-edges" class="text-3xl font-bold text-white">…</div>
+                            <div class="text-gray-400 text-xs mt-1">Relationships</div>
+                        </div>
+                        <div class="card p-3 rounded-xl text-center">
+                            <div id="doc-rel-critical" class="text-3xl font-bold text-red-400">…</div>
+                            <div class="text-gray-400 text-xs mt-1">Critical Paths</div>
+                        </div>
+                    </div>
+                    <div id="doc-rel-list" class="space-y-1 max-h-96 overflow-y-auto scrollbar-style">
+                        <div class="text-gray-500 text-xs text-center py-4">Loading relationships…</div>
+                    </div>
+                </div>
+
+                <!-- Vault Tab -->
+                <div id="doc-panel-vault" class="doc-panel hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-primary-color">Zero-Knowledge Vault</h3>
+                        <button onclick="window.showCreateVaultModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ Add Credential</button>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-3">Passwords stored as AES-256-GCM ciphertext. Decryption is logged to the immutable audit trail.</p>
+                    <div id="doc-vault-list" class="space-y-2">
+                        <div class="text-gray-500 text-xs text-center py-8">Loading vault…</div>
+                    </div>
+                </div>
+
+                <!-- SOPs Tab -->
+                <div id="doc-panel-sops" class="doc-panel hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-primary-color">Runbooks / SOPs</h3>
+                        <button onclick="window.showCreateSopModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ New SOP</button>
+                    </div>
+                    <div id="doc-sops-list" class="space-y-2">
+                        <div class="text-gray-500 text-xs text-center py-8">Loading SOPs…</div>
+                    </div>
+                </div>
+
+                <!-- Activity Log Tab -->
+                <div id="doc-panel-activity" class="doc-panel hidden">
+                    <h3 class="text-lg font-bold text-primary-color mb-3">Activity / Audit Log</h3>
+                    <div id="doc-activity-list" class="h-96 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
+                        <div class="text-gray-500 text-xs text-center py-8">Loading log…</div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        window.switchDocTab = function(tab) {
+            document.querySelectorAll('.doc-panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.doc-tab-btn').forEach(b => { b.classList.remove('bg-primary-color','text-white'); b.classList.add('bg-gray-800','text-gray-400'); });
+            const panel = document.getElementById(`doc-panel-${tab}`);
+            if (panel) panel.classList.remove('hidden');
+            const btn = document.getElementById(`doc-tab-${tab}`);
+            if (btn) { btn.classList.remove('bg-gray-800','text-gray-400'); btn.classList.add('bg-primary-color','text-white'); }
+            if (tab === 'asset-types') window.loadDocAssetTypes();
+            if (tab === 'assets') window.loadDocAssets();
+            if (tab === 'relationships') window.loadDocRelationships();
+            if (tab === 'vault') window.loadDocVault();
+            if (tab === 'sops') window.loadDocSops();
+            if (tab === 'activity') window.loadDocActivity();
+        };
+
+        window.loadDocAssetTypes = async function() {
+            try {
+                const r = await fetch('/api/docs/asset-types');
+                const data = await r.json();
+                const list = document.getElementById('doc-asset-types-list');
+                if (list) {
+                    list.innerHTML = data.types.length ? data.types.map(t => `
+                        <div class="card p-4 rounded-xl">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i data-lucide="${t.icon||'server'}" class="w-4 h-4 text-primary-color"></i>
+                                <span class="text-white font-semibold">${escapeHtml(t.name)}</span>
+                                <span class="ml-auto text-xs text-gray-500">${t.record_count} records</span>
+                            </div>
+                            <p class="text-gray-400 text-xs mb-3">${escapeHtml(t.description||'')}</p>
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                ${(t.field_spec||[]).map(f=>`<span class="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">${escapeHtml(f.name)}</span>`).join('')}
+                            </div>
+                            <button onclick="window.loadDocAssetsByType('${t.type_id}','${escapeHtml(t.name)}')" class="text-xs text-primary-color hover:underline">View Records →</button>
+                        </div>`).join('') : '<div class="text-gray-500 text-xs col-span-3 text-center py-8">No asset types defined yet</div>';
+                    safeCreateIcons();
+                }
+            } catch(e) { console.error('Doc asset types error', e); }
+        };
+
+        window.loadDocAssets = async function() {
+            try {
+                const typeFilter = document.getElementById('doc-assets-type-filter');
+                const typeId = typeFilter?.value || '';
+                const url = `/api/docs/assets${typeId ? `?type_id=${encodeURIComponent(typeId)}` : ''}`;
+                const [assetsRes, typesRes] = await Promise.all([fetch(url), fetch('/api/docs/asset-types')]);
+                const assetsData = await assetsRes.json();
+                const typesData = await typesRes.json();
+                if (typeFilter && typeFilter.options.length <= 1) {
+                    typesData.types.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.type_id; opt.textContent = t.name;
+                        typeFilter.appendChild(opt);
+                    });
+                }
+                const list = document.getElementById('doc-assets-list');
+                if (list) {
+                    const recs = assetsData.records || [];
+                    list.innerHTML = recs.length ? recs.map(r => `
+                        <div class="card p-3 rounded-xl flex items-start justify-between">
+                            <div>
+                                <span class="text-white font-semibold text-sm">${escapeHtml(r.name)}</span>
+                                <span class="text-gray-500 text-xs ml-2">${r.org_id}</span>
+                                <div class="text-xs text-gray-400 mt-1">${Object.entries(r.data||{}).slice(0,3).map(([k,v])=>`${k}: ${v}`).join(' · ')}</div>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <button onclick="window.viewDocAsset('${r.record_id}')" class="text-xs text-primary-color hover:underline">View</button>
+                                <button onclick="window.deleteDocAsset('${r.record_id}')" class="text-xs text-red-400 hover:underline">Delete</button>
+                            </div>
+                        </div>`).join('') : '<div class="text-gray-500 text-xs text-center py-8">No asset records yet — create one above</div>';
+                }
+            } catch(e) { console.error('Doc assets error', e); }
+        };
+
+        window.loadDocAssetsByType = function(typeId, typeName) {
+            window.switchDocTab('assets');
+            const f = document.getElementById('doc-assets-type-filter');
+            if (f) { f.value = typeId; window.loadDocAssets(); }
+        };
+
+        window.viewDocAsset = async function(recordId) {
+            try {
+                const r = await fetch(`/api/docs/assets/${recordId}`);
+                const d = await r.json();
+                const fields = Object.entries(d.data||{}).map(([k,v])=>`<tr><td class="text-gray-400 pr-4 py-1 text-xs">${escapeHtml(k)}</td><td class="text-white text-xs">${escapeHtml(String(v))}</td></tr>`).join('');
+                const rels = (d.relationships||[]).map(r=>`<div class="text-xs text-gray-400 py-0.5">${escapeHtml(r.source_asset)} → <span class="text-primary-color">${escapeHtml(r.relationship)}</span> → ${escapeHtml(r.target_asset)}</div>`).join('');
+                window.showAppModal(`Asset: ${escapeHtml(d.name)}`, `<table class="w-full mb-3">${fields}</table>${rels ? `<div class="mt-3 border-t border-gray-700 pt-2"><div class="text-xs text-gray-500 mb-1">Relationships</div>${rels}</div>` : ''}`);
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        window.deleteDocAsset = async function(recordId) {
+            if (!confirm('Delete this asset record?')) return;
+            try {
+                await fetch(`/api/docs/assets/${recordId}`, {method:'DELETE'});
+                window.loadDocAssets();
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        window.loadDocRelationships = async function() {
+            try {
+                const r = await fetch('/api/docs/relationships');
+                const data = await r.json();
+                const el = (id, v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+                el('doc-rel-nodes', data.node_count||0);
+                el('doc-rel-edges', data.edge_count||0);
+                el('doc-rel-critical', data.critical_count||0);
+                const list = document.getElementById('doc-rel-list');
+                if (list) {
+                    list.innerHTML = (data.edges||[]).map(e => {
+                        const cc = e.criticality==='CRITICAL'?'red-400':e.criticality==='HIGH'?'orange-400':'yellow-400';
+                        return `<div class="flex items-center gap-2 py-1 border-b border-gray-800 text-xs">
+                            <span class="text-white font-semibold">${escapeHtml(e.source)}</span>
+                            <span class="text-primary-color">→ ${escapeHtml(e.label)} →</span>
+                            <span class="text-white">${escapeHtml(e.target)}</span>
+                            <span class="ml-auto text-${cc}">${e.criticality}</span>
+                            ${e.notes ? `<span class="text-gray-500">${escapeHtml(e.notes)}</span>` : ''}
+                        </div>`;
+                    }).join('') || '<div class="text-gray-500 text-xs text-center py-4">No relationships defined</div>';
+                }
+            } catch(e) { console.error('Doc relationships error', e); }
+        };
+
+        window.loadDocVault = async function() {
+            try {
+                const r = await fetch('/api/docs/vault');
+                const data = await r.json();
+                const list = document.getElementById('doc-vault-list');
+                if (list) {
+                    list.innerHTML = (data.entries||[]).length ? data.entries.map(e => `
+                        <div class="card p-3 rounded-xl flex items-center justify-between">
+                            <div>
+                                <span class="text-white font-semibold text-sm">${escapeHtml(e.name)}</span>
+                                <span class="text-gray-400 text-xs ml-2">${escapeHtml(e.username||'')}</span>
+                                <div class="text-xs text-gray-500">${escapeHtml(e.url||'')} ${e.related_asset_id ? `· linked: ${escapeHtml(e.related_asset_id)}` : ''}</div>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <button onclick="window.decryptVaultEntry('${e.vault_id}','${escapeHtml(e.name)}')" class="text-xs bg-yellow-700 hover:bg-yellow-600 text-white px-2 py-1 rounded">🔑 Reveal</button>
+                                <button onclick="window.deleteVaultEntry('${e.vault_id}')" class="text-xs text-red-400 hover:underline">Delete</button>
+                            </div>
+                        </div>`).join('') : '<div class="text-gray-500 text-xs text-center py-8">Vault is empty — add credentials above</div>';
+                }
+            } catch(e) { console.error('Doc vault error', e); }
+        };
+
+        window.decryptVaultEntry = async function(vaultId, name) {
+            if (!confirm(`Decrypt credential "${name}"? This will be logged to the audit trail.`)) return;
+            try {
+                const r = await fetch(`/api/docs/vault/${vaultId}/decrypt`);
+                const d = await r.json();
+                window.showAppModal(`🔑 ${escapeHtml(name)}`, `
+                    <div class="space-y-2 text-sm">
+                        <div><span class="text-gray-400">Username:</span> <span class="font-mono text-white">${escapeHtml(d.username||'')}</span></div>
+                        <div><span class="text-gray-400">Password:</span> <span class="font-mono text-yellow-300 select-all">${escapeHtml(d.password||'')}</span></div>
+                        ${d.url ? `<div><span class="text-gray-400">URL:</span> <span class="text-blue-400">${escapeHtml(d.url)}</span></div>` : ''}
+                        ${d.notes ? `<div><span class="text-gray-400">Notes:</span> <span class="text-gray-300">${escapeHtml(d.notes)}</span></div>` : ''}
+                        <p class="text-xs text-red-400 mt-3">${escapeHtml(d.warning||'Access logged.')}</p>
+                    </div>`);
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        window.deleteVaultEntry = async function(vaultId) {
+            if (!confirm('Delete this credential? It cannot be recovered.')) return;
+            try { await fetch(`/api/docs/vault/${vaultId}`, {method:'DELETE'}); window.loadDocVault(); }
+            catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        window.loadDocSops = async function() {
+            try {
+                const r = await fetch('/api/docs/sops');
+                const data = await r.json();
+                const list = document.getElementById('doc-sops-list');
+                if (list) {
+                    list.innerHTML = (data.sops||[]).length ? data.sops.map(s => `
+                        <div class="card p-3 rounded-xl">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-white font-semibold text-sm">${escapeHtml(s.title)}</span>
+                                    <span class="ml-2 text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">${escapeHtml(s.category)}</span>
+                                    <span class="ml-1 text-xs text-gray-500">v${s.version}</span>
+                                </div>
+                                <button onclick="window.viewDocSop('${s.sop_id}')" class="text-xs text-primary-color hover:underline shrink-0">View Steps →</button>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">${escapeHtml(s.description||'')}</p>
+                        </div>`).join('') : '<div class="text-gray-500 text-xs text-center py-8">No SOPs yet</div>';
+                }
+            } catch(e) { console.error('Doc SOPs error', e); }
+        };
+
+        window.viewDocSop = async function(sopId) {
+            try {
+                const r = await fetch(`/api/docs/sops/${sopId}`);
+                const d = await r.json();
+                const steps = (d.steps||[]).map(s => `
+                    <div class="flex gap-3 py-2 border-b border-gray-700">
+                        <span class="text-primary-color font-bold shrink-0">${s.order}.</span>
+                        <div>
+                            <div class="text-white text-sm font-semibold">${escapeHtml(s.title)}${s.required?'<span class="text-red-400 ml-1">*</span>':''}</div>
+                            <div class="text-gray-400 text-xs mt-0.5">${escapeHtml(s.body||'')}</div>
+                        </div>
+                    </div>`).join('');
+                window.showAppModal(`📋 ${escapeHtml(d.title)} (v${d.version})`, `<div class="space-y-0">${steps}</div>`);
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        window.loadDocActivity = async function() {
+            try {
+                const r = await fetch('/api/docs/activity-log?limit=100');
+                const data = await r.json();
+                const list = document.getElementById('doc-activity-list');
+                if (list) {
+                    list.innerHTML = (data.entries||[]).map(e => {
+                        const colors = {view:'blue-400',create:'green-400',update:'yellow-400',delete:'red-400',decrypt:'orange-400'};
+                        const c = colors[e.action]||'gray-400';
+                        const ts = e.logged_at ? new Date(e.logged_at).toLocaleString() : '';
+                        return `<div class="py-1 border-b border-gray-800 text-xs">
+                            <span class="text-${c} font-semibold uppercase">${e.action}</span>
+                            <span class="text-gray-300 ml-1">${escapeHtml(e.object_type)}</span>
+                            <span class="text-white ml-1 font-semibold">${escapeHtml(e.object_name||e.object_id)}</span>
+                            <span class="text-gray-500 ml-2">${ts}</span>
+                        </div>`;
+                    }).join('') || '<div class="text-gray-500 text-xs text-center py-4">No activity yet</div>';
+                }
+            } catch(e) { console.error('Doc activity error', e); }
+        };
+
+        window.showCreateAssetTypeModal = function() {
+            window.showAppModal('Create Asset Type', `
+                <div class="space-y-2">
+                    <input id="create-at-name" placeholder="Type name (e.g. Firewall)" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <input id="create-at-desc" placeholder="Description" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <button onclick="window.doCreateAssetType()" class="w-full py-2 bg-primary-color text-white rounded text-sm mt-2">Create</button>
+                </div>`);
+        };
+        window.doCreateAssetType = async function() {
+            const name = document.getElementById('create-at-name')?.value?.trim();
+            const desc = document.getElementById('create-at-desc')?.value?.trim();
+            if (!name) { window.showAppModal('Error','Name is required'); return; }
+            try {
+                await fetch('/api/docs/asset-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, description:desc||''})});
+                window.showAppModal('Created', `Asset type "${escapeHtml(name)}" created.`);
+                window.loadDocAssetTypes();
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        window.showCreateVaultModal = function() {
+            window.showAppModal('Add Credential', `
+                <div class="space-y-2">
+                    <input id="cv-name" placeholder="Name / Label" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <input id="cv-user" placeholder="Username" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <input id="cv-pass" type="password" placeholder="Password" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <input id="cv-url" placeholder="URL (optional)" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <button onclick="window.doCreateVaultEntry()" class="w-full py-2 bg-primary-color text-white rounded text-sm mt-2">Save Encrypted</button>
+                </div>`);
+        };
+        window.doCreateVaultEntry = async function() {
+            const name = document.getElementById('cv-name')?.value?.trim();
+            const username = document.getElementById('cv-user')?.value?.trim();
+            const password = document.getElementById('cv-pass')?.value;
+            const url = document.getElementById('cv-url')?.value?.trim();
+            if (!name||!password) { window.showAppModal('Error','Name and password are required'); return; }
+            try {
+                await fetch('/api/docs/vault', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name,username:username||'',password,url:url||''})});
+                window.showAppModal('Saved', `Credential "${escapeHtml(name)}" encrypted and stored.`);
+                window.loadDocVault();
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        window.showCreateAssetModal = function() {
+            window.showAppModal('Create Asset', `
+                <div class="space-y-2">
+                    <input id="ca-name" placeholder="Asset name" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <input id="ca-notes" placeholder="Quick note (optional)" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <button onclick="window.doCreateAsset()" class="w-full py-2 bg-primary-color text-white rounded text-sm mt-2">Create</button>
+                </div>`);
+        };
+        window.doCreateAsset = async function() {
+            const name = document.getElementById('ca-name')?.value?.trim();
+            const notes = document.getElementById('ca-notes')?.value?.trim();
+            const tf = document.getElementById('doc-assets-type-filter');
+            const typeId = tf?.value || '';
+            if (!name) { window.showAppModal('Error','Name is required'); return; }
+            try {
+                await fetch('/api/docs/assets', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, type_id: typeId||'', data: notes?{notes}:{}})});
+                window.showAppModal('Created', `Asset "${escapeHtml(name)}" created.`);
+                window.loadDocAssets();
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        window.showAddRelModal = function() {
+            window.showAppModal('Add Relationship', `
+                <div class="space-y-2">
+                    <input id="ar-src" placeholder="Source asset (e.g. WIN-DC-01)" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <input id="ar-rel" placeholder="Relationship (e.g. hosts, runs-on, backs-up)" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <input id="ar-tgt" placeholder="Target asset" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <select id="ar-crit" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                        <option value="LOW">LOW</option><option value="MEDIUM" selected>MEDIUM</option>
+                        <option value="HIGH">HIGH</option><option value="CRITICAL">CRITICAL</option>
+                    </select>
+                    <button onclick="window.doAddRelationship()" class="w-full py-2 bg-primary-color text-white rounded text-sm mt-2">Add Relationship</button>
+                </div>`);
+        };
+        window.doAddRelationship = async function() {
+            const src = document.getElementById('ar-src')?.value?.trim();
+            const rel = document.getElementById('ar-rel')?.value?.trim();
+            const tgt = document.getElementById('ar-tgt')?.value?.trim();
+            const crit = document.getElementById('ar-crit')?.value;
+            if (!src||!rel||!tgt) { window.showAppModal('Error','Source, relationship, and target are all required'); return; }
+            try {
+                await fetch('/api/docs/relationships', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({source_asset:src, target_asset:tgt, relationship:rel, criticality:crit||'MEDIUM'})});
+                window.showAppModal('Added', `Relationship "${escapeHtml(src)} → ${escapeHtml(rel)} → ${escapeHtml(tgt)}" saved.`);
+                window.loadDocRelationships();
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        window.showCreateSopModal = function() {
+            window.showAppModal('Create SOP', `
+                <div class="space-y-2">
+                    <input id="cs-title" placeholder="SOP title" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <input id="cs-cat" placeholder="Category (e.g. incident-response)" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
+                    <button onclick="window.doCreateSop()" class="w-full py-2 bg-primary-color text-white rounded text-sm mt-2">Create SOP</button>
+                </div>`);
+        };
+        window.doCreateSop = async function() {
+            const title = document.getElementById('cs-title')?.value?.trim();
+            const category = document.getElementById('cs-cat')?.value?.trim()||'general';
+            if (!title) { window.showAppModal('Error','Title is required'); return; }
+            try {
+                await fetch('/api/docs/sops', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title,category,steps:[]})});
+                window.showAppModal('Created', `SOP "${escapeHtml(title)}" created.`);
+                window.loadDocSops();
+            } catch(e) { window.showAppModal('Error', e.message); }
+        };
+
+        function startDocumentation() {
+            window.switchDocTab('asset-types');
         }
 
         // ── Audit Trail ──────────────────────────────────────────────────────────

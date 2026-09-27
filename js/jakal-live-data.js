@@ -42,7 +42,11 @@
       backendId: backendId,
       name: d.name || d.hostname || "Unknown",
       user: d.user || "—",
-      client: d.client || (tags.indexOf("finance") >= 0 ? "Beta Corp" : tags.indexOf("engineering") >= 0 ? "Alpha Inc" : "Managed"),
+      // Real MSP tenant attribution only (the "tenant:<id>" tag resolved
+      // server-side to a display name by ui_bridge.py) -- never a
+      // fabricated company name for devices with no real tenant tag.
+      client: d.client || "Unassigned",
+      clientTenantId: d.client_tenant_id || null,
       type: type,
       os: d.os || d.os_fingerprint || "Unknown",
       status: status,
@@ -58,11 +62,13 @@
     if (!window.globalDashboardState) return;
     api("/api/dashboard/fleet").then(function (r) {
       online = true;
+      window.__jkAvailableClients = (r && r.available_clients) || [];
       var rows = (r && (r.data || r.devices || r.fleet)) || [];
       if (!rows.length) return;
       window.globalDashboardState.devices = rows.map(mapDevice);
       window.__jkFleetLive = true;
       try {
+        if (window.renderClientFilterOptions) window.renderClientFilterOptions(window.__jkAvailableClients);
         if (window.renderFleetSummaryBanner) window.renderFleetSummaryBanner();
         if (window.renderDeviceFleetTable) window.renderDeviceFleetTable();
         else if (window.switchDashboardTab && document.getElementById("device-list-table")) {

@@ -76,7 +76,11 @@ from routers import (
     exec_ws_router,
     automation_router,
     settings_dev_router,
+    agent_workflows_router,
+    report_builder_router,
+    rfp_router,
 )
+from routers.documentation import router as documentation_router
 from dependencies import require_permission
 
 logging.basicConfig(level=logging.INFO)
@@ -194,6 +198,10 @@ app.include_router(vulnscan_router)
 app.include_router(remote_exec_router)
 app.include_router(exec_ws_router)
 app.include_router(automation_router)
+app.include_router(agent_workflows_router)
+app.include_router(report_builder_router, prefix="/api")
+app.include_router(rfp_router,            prefix="/api")
+app.include_router(documentation_router)
 
 # ============================================================================
 # Shared Components

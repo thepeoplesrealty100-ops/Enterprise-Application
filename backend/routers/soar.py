@@ -91,3 +91,53 @@ async def tickets(limit: int = 50):
     res = db.conn.execute("SELECT ticket_id,indicator,verdict,agent_id,summary,status,created_at FROM soar_tickets ORDER BY created_at DESC LIMIT ?", (limit,))
     cols = [d[0] for d in (res.description or [])]
     return {"tickets": [dict(zip(cols, r)) for r in res.fetchall()]}
+
+
+@router.get("/playbooks")
+async def list_playbooks():
+    """Return the full playbook catalog seeded into the DB, plus execution stats per playbook."""
+    db = _db()
+    try:
+        playbooks = db.list_playbooks()
+    except Exception:
+        playbooks = []
+
+    # Seed defaults if catalog is empty so the UI is never blank on first visit
+    if not playbooks:
+        try:
+            from security_agents.edr_mdr import EdrMdrEngine, DEFAULT_PLAYBOOKS
+            eng = EdrMdrEngine(db)
+            eng.seed_default_playbooks(operator_id="system")
+            playbooks = db.list_playbooks()
+        except Exception:
+            playbooks = []
+
+    # Attach execution counts from playbook_executions
+    for pb in playbooks:
+        try:
+            row = db.conn.execute(
+                "SELECT COUNT(*) FROM playbook_executions WHERE playbook_id = ?",
+                (pb.get("id") or pb.get("pb_id"),),
+            ).fetchone()
+            pb["run_count"] = row[0] if row else 0
+        except Exception:
+            pb["run_count"] = 0
+
+    return {"playbooks": playbooks, "total": len(playbooks)}
+
+
+@router.post("/playbooks/{key}/run")
+async def run_playbook(key: str):
+    """Record a manual playbook execution (operator-initiated, logged to playbook_executions)."""
+    db = _db()
+    pb = db.get_playbook_by_key(key)
+    if not pb:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"Playbook '{key}' not found")
+
+    exec_id = db.insert_playbook_execution(
+        playbook_id=pb["id"],
+        context=json.dumps({"trigger": "manual", "at": _now().isoformat()}),
+        operator_id="operator",
+    )
+    return {"ok": True, "execution_id": exec_id, "playbook": key, "name": pb.get("name")}

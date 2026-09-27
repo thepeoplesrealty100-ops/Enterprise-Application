@@ -63,6 +63,19 @@ class Config:
     EXPLOITATION_TIMEOUT = int(os.getenv("EXPLOITATION_TIMEOUT", "600"))
     JAKAL_MASTER_KEY = os.getenv("JAKAL_MASTER_KEY", "")
 
+    # MCP server (backend/mcp_server.py) — the MCP server is an HTTP client
+    # of this same backend, so it reuses real RBAC/audit instead of a second
+    # code path. JAKAL_API_BASE_URL is where it points its calls (defaults
+    # to this process's own host:port). JAKAL_MCP_BEARER_TOKEN is optional:
+    # only needed for tools that call permission-gated endpoints (e.g.
+    # execute_remediation_script -> POST /scripts/{id}/sandbox-execute,
+    # gated on response:script_exec) — obtain it via a real
+    # POST /api/iam/auth/login for a service account that holds that
+    # permission. Read-only tools (fleet status, fabric status) call public
+    # ui_bridge endpoints and need no token.
+    JAKAL_API_BASE_URL = os.getenv("JAKAL_API_BASE_URL", f"http://127.0.0.1:{os.getenv('API_PORT', '8000')}")
+    JAKAL_MCP_BEARER_TOKEN = os.getenv("JAKAL_MCP_BEARER_TOKEN", "")
+
     # PQC crypto-agility (v3.0 Phase 2) — which NIST FIPS 204 ML-DSA
     # parameter set crypto/pqc_manager.py's PQCAuditManager signs with by
     # default. "commercial" -> ML-DSA-65 (Dilithium3), the correct default

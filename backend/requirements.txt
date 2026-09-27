@@ -7,7 +7,13 @@ requests==2.31.0
 # ── Data layer ───────────────────────────────────────────────────────────────
 duckdb==0.10.0
 pytz==2024.1
-pydantic==2.6.4
+# v2.8 fix: was pinned exactly to 2.6.4 with no compatibility rationale
+# (unlike the anthropic/httpx pins above, which document one). mcp>=1.3.0
+# requires pydantic>=2.7.2 (mcp 1.2.x needs >=2.10.1), so an exact 2.6.4 pin
+# made `pip install` unresolvable the moment mcp was added below. fastapi
+# 0.110.0 accepts any 2.x pydantic except 2.0.0/2.0.1/2.1.0, so relaxing to
+# a floor above mcp's requirement is safe for both.
+pydantic>=2.7.2,<3.0.0
 
 # ── Post-Quantum Cryptography (PQC) ─────────────────────────────────────────
 # dilithium-py: pure-Python ML-DSA / Dilithium (NIST FIPS 204 family)
@@ -90,3 +96,19 @@ pytest-asyncio>=0.23.0
 # above: an unpinned transitive dependency drifted past what this
 # fastapi/starlette version was actually built against.
 httpx>=0.27.0,<0.28    # async test client for FastAPI; TestClient needs <0.28 (see above)
+
+# ── MCP server (backend/mcp_server.py) ───────────────────────────────────────
+# Official Python SDK for the Model Context Protocol -- exposes JAKAL fleet
+# status, fabric health and remediation-script tools to MCP-speaking clients
+# (Claude Desktop, other agents) over stdio. The server is an HTTP client of
+# this same backend's own routers (see backend/agents/tools.py), so it needs
+# no direct DB/duckdb access of its own.
+mcp>=1.2.0,<2.0.0
+
+# ── Report / RFP document generation (routers/report_builder.py, routers/rfp.py) ─
+# reportlab: pure-Python PDF rendering, no native/system deps (Docker- and
+# Vercel-safe). python-docx: real, editable .docx output -- needed so an
+# operator can open a generated CPENT-style report or RFP response in Word
+# and strike/adjust sections rather than being stuck with a flattened PDF.
+reportlab>=4.1.0,<5.0.0
+python-docx>=1.1.0,<2.0.0

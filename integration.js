@@ -1122,10 +1122,10 @@ async function renderPredictiveCommandWidget() {
   let data;
   try { data = await api('/api/ares/global-matrix-summary'); } catch (e) { return `<div style="${cardStyle()};color:#f87171">${escapeHtml(e.message)}</div>`; }
   const cards = Object.entries(data).filter(([k, v]) => typeof v !== 'object').map(([k, v]) => `
-    <div style="${cardStyle()}"><div style="opacity:.7;font-size:11px">${escapeHtml(k)}</div>
-      <div style="font-size:20px;font-weight:700;color:#f97316;font-family:ui-monospace,monospace">${escapeHtml(v)}</div></div>`).join('');
+    <div style="${cardStyle()};overflow:hidden"><div style="opacity:.7;font-size:11px;overflow-wrap:anywhere;word-break:break-word">${escapeHtml(k)}</div>
+      <div style="font-size:16px;font-weight:700;color:#f97316;font-family:ui-monospace,monospace;overflow-wrap:anywhere;word-break:break-word;line-height:1.3">${escapeHtml(v)}</div></div>`).join('');
   return `<div><b style="color:#f97316">Predictive Command — Ares rollup</b>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:8px">${cards || '<p style="opacity:.6;font-size:11px">No rollup data yet.</p>'}</div></div>`;
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:8px">${cards || '<p style="opacity:.6;font-size:11px">No rollup data yet.</p>'}</div></div>`;
 }
 
 async function renderLoadMonitorWidget() {
@@ -1708,11 +1708,6 @@ async function renderGlobalSystemSettingsLive() {
 }
 
 function wireGlobalSystemSettings(host) {
-  const panel = document.getElementById('global-system-settings-panel');
-  if (panel) {
-    renderGlobalSystemSettingsLive().then((html) => { panel.innerHTML = html; wireGlobalSystemSettings(panel); });
-    return;
-  }
   const root = host || document;
   root.querySelectorAll('.gs-toggle').forEach((btn) => {
     btn.onclick = async () => {

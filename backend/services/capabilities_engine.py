@@ -131,6 +131,9 @@ def _registry() -> Dict[str, ModuleAction]:
           "detect:scan", R.MEDIUM, {"agent_id": "str", "duration_sec": "int"},
           {"button": "secondary", "slider": {"field": "duration_sec", "min": 5, "max": 300, "value": 30}}),
         # 4. SOAR Playbooks
+        A("intel:lookup", C.SOAR_PLAYBOOKS, "Threat Intel Lookup",
+          "Enrich an IP/domain/URL/hash against live threat feeds (Feodo, Tor, VirusTotal, AbuseIPDB, OTX).",
+          "soar:read", R.LOW, {"indicator": "str"}, {"button": "secondary"}),
         A("soar:run_playbook", C.SOAR_PLAYBOOKS, "Run Playbook",
           "Trigger a targeted playbook workflow manually or programmatically.",
           "soar:execute", R.HIGH, {"playbook_id": "str", "context": "json"},
@@ -442,6 +445,10 @@ class SecurityCapabilitiesEngine:
                 "duration_sec": int(p.get("duration_sec", 30)), "at": _now()}
 
     # SOAR -----------------------------------------------------------------
+    async def _h_intel_lookup(self, p, ex):
+        from services.threat_intel import lookup
+        return lookup(p.get("indicator", ""))
+
     async def _h_soar_run_playbook(self, p, ex):
         import json as _json
         run = f"run-{uuid.uuid4().hex[:8]}"

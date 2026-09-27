@@ -283,7 +283,16 @@
   function makeResizable(grip, box, body) {
     var sx, sy, sw, sh, rz = false;
     function down(e) { rz = true; var pt = e.touches ? e.touches[0] : e; sx = pt.clientX; sy = pt.clientY; sw = box.offsetWidth; sh = body.offsetHeight; document.addEventListener("mousemove", move); document.addEventListener("mouseup", up); document.addEventListener("touchmove", move, { passive: false }); document.addEventListener("touchend", up); e.preventDefault(); e.stopPropagation(); }
-    function move(e) { if (!rz) return; var pt = e.touches ? e.touches[0] : e; if (!st.docked) box.style.width = Math.max(360, Math.min(sw + (pt.clientX - sx), window.innerWidth - 20)) + "px"; var nh = Math.max(140, Math.min(sh + (pt.clientY - sy), window.innerHeight - 120)); body.style.maxHeight = nh + "px"; body.style.height = nh + "px"; if (e.cancelable) e.preventDefault(); }
+    // ↑ min width lowered from 360 to 260 so users can shrink to compact box
+    function applyCompactMode(w) {
+      // below 420px width: hide side panel, wrap text, reduce font
+      var side = el("op-side"), out = el("op-out"), hint = document.querySelector(".op-hint");
+      var isCompact = w < 420;
+      if (side) side.style.display = isCompact ? "none" : "";
+      if (out) { out.style.whiteSpace = "pre-wrap"; out.style.wordBreak = "break-word"; out.style.fontSize = isCompact ? "11px" : ""; }
+      if (hint) hint.style.display = isCompact ? "none" : "";
+    }
+    function move(e) { if (!rz) return; var pt = e.touches ? e.touches[0] : e; var nw = sw + (pt.clientX - sx); if (!st.docked) { box.style.width = Math.max(260, Math.min(nw, window.innerWidth - 20)) + "px"; applyCompactMode(Math.max(260, nw)); } var nh = Math.max(120, Math.min(sh + (pt.clientY - sy), window.innerHeight - 120)); body.style.maxHeight = nh + "px"; body.style.height = nh + "px"; if (e.cancelable) e.preventDefault(); }
     function up() { rz = false; document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up); document.removeEventListener("touchmove", move); document.removeEventListener("touchend", up); }
     grip.addEventListener("mousedown", down); grip.addEventListener("touchstart", down, { passive: false });
   }
@@ -307,7 +316,7 @@
       '<div id="op-body" style="display:flex;max-height:min(42vh,340px)">' +
         '<div style="flex:1;display:flex;flex-direction:column;min-width:0">' +
           '<div id="op-quick" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid #1e293b;background:#0b1220"></div>' +
-          '<div id="op-out" style="flex:1;overflow:auto;padding:12px 16px;min-height:120px"></div>' +
+          '<div id="op-out" style="flex:1;overflow:auto;padding:12px 16px;min-height:120px;word-break:break-word;white-space:pre-wrap"></div>' +
           '<form id="op-form" style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #1e293b;background:#0b1220">' +
             '<input id="op-input" autocomplete="off" spellcheck="false" placeholder="Ask, or /help   /isolate HOST   /scan" style="flex:1;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e5e7eb;padding:9px 12px;font:inherit;outline:none" />' +
             '<button type="submit" style="' + btn("#334155") + ';display:inline-flex;align-items:center;gap:6px;padding:8px 16px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Run</button>' +

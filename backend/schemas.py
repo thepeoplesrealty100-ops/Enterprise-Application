@@ -100,6 +100,66 @@ class AggregateReportRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# CPENT-style Report Builder (routers/report_builder.py)
+# ---------------------------------------------------------------------------
+
+class ReportBuilderRequest(BaseModel):
+    scan_id: str = Field(..., example="1")
+    scope_id: Optional[int] = Field(
+        default=None, description="scopes.id to pull client_name/dates from"
+    )
+    organization_name: Optional[str] = Field(default=None, example="Acme Corp")
+    contact_details: Optional[str] = Field(default=None, example="security@acme.com")
+    tester_name: str = Field(default="system", example="Jane Doe")
+    location: Optional[str] = Field(default=None, example="Remote")
+    report_title: str = Field(default="Penetration Testing Report")
+    excluded_sections: List[str] = Field(
+        default_factory=list,
+        description="Section keys to omit — see GET /api/report-builder/sections",
+    )
+    ai_narrative: bool = Field(
+        default=True, description="Use the configured LLM to draft Executive Summary/Conclusion prose"
+    )
+    llm_engine: Optional[str] = Field(
+        default=None, description="Override the server default LLM engine for this report: 'claude' or 'ollama'"
+    )
+    format: str = Field(default="json", example="json", description="json | markdown | docx | pdf")
+
+
+# ---------------------------------------------------------------------------
+# RFP Responses (routers/rfp.py) — client-facing proposal boilerplate
+# ---------------------------------------------------------------------------
+
+class RfpCreateRequest(BaseModel):
+    client_name: str = Field(..., example="Acme Corp")
+    methodology: Optional[str] = None
+    tools_list: List[str] = Field(default_factory=list)
+    timeline: Optional[str] = None
+    pricing: Optional[str] = None
+    insurance_statement: Optional[str] = None
+    sample_report_path: Optional[str] = None
+    ai_draft: bool = Field(
+        default=False,
+        description="Use the configured LLM to draft any of methodology/timeline/pricing left blank",
+    )
+    llm_engine: Optional[str] = Field(default=None, description="'claude' or 'ollama' override")
+
+
+class RfpUpdateRequest(BaseModel):
+    client_name: Optional[str] = None
+    methodology: Optional[str] = None
+    tools_list: Optional[List[str]] = None
+    timeline: Optional[str] = None
+    pricing: Optional[str] = None
+    insurance_statement: Optional[str] = None
+    sample_report_path: Optional[str] = None
+
+
+class RfpExportRequest(BaseModel):
+    format: str = Field(default="docx", example="docx", description="docx | pdf | markdown | json")
+
+
+# ---------------------------------------------------------------------------
 # EDR / MDR Playbooks
 # ---------------------------------------------------------------------------
 

@@ -111,6 +111,13 @@ class Device(BaseModel):
     last_seen: Optional[datetime] = None
     discovered_at: Optional[datetime] = None
     is_quarantined: bool = False
+    # Real client/tenant attribution, resolved from the device's
+    # "tenant:<id>" tag (see database.py's tenant_id_from_tags) against
+    # the real organizations table the MSP multi-tenant system maintains.
+    # None means the device carries no tenant tag -- it is genuinely
+    # unassigned, not a rendering bug.
+    client_tenant_id: Optional[str] = None
+    client_name: Optional[str] = None
 
 
 class IsolateDeviceRequest(BaseModel):
@@ -202,12 +209,13 @@ def _quarantined_ids() -> set:
         return set()
 
 
-def _row_to_device(row, quarantined: set) -> Device:
+def _row_to_device(row, quarantined: set, tenant_names: Optional[Dict[str, str]] = None) -> Device:
     (device_id, hostname, ip_address, mac_address, os_fp,
      open_ports_raw, tags_raw, risk_score, last_seen, discovered_at) = row
     tags = _loads(tags_raw, [])
     open_ports = _loads(open_ports_raw, [])
     os_value = _derive_os(os_fp)
+    tenant_id = _db.tenant_id_from_tags(tags) if isinstance(tags, list) else None
     return Device(
         device_id=str(device_id),
         hostname=hostname,
@@ -224,6 +232,8 @@ def _row_to_device(row, quarantined: set) -> Device:
         discovered_at=discovered_at,
         is_quarantined=(str(device_id) in quarantined or str(ip_address) in quarantined
                         or str(hostname) in quarantined),
+        client_tenant_id=tenant_id,
+        client_name=(tenant_names or {}).get(tenant_id) if tenant_id else None,
     )
 
 
@@ -241,6 +251,10 @@ async def get_fleet_devices(
     os: Optional[DeviceOS] = None,
     risk_min: Optional[float] = None,
     risk_max: Optional[float] = None,
+    client: Optional[str] = Query(
+        None, description="Filter by tenant id or tenant name (matches the device's "
+                           "\"tenant:<id>\" tag resolved against the real organizations table)."
+    ),
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
 ) -> Dict[str, Any]:
@@ -248,8 +262,9 @@ async def get_fleet_devices(
     Real device inventory from network_map (hosts discovered by the recon
     and enumeration agents).
 
-    `status` and `os` are derived values, not stored columns, so they are
-    filtered after the row fetch; `risk_min`/`risk_max` filter in SQL.
+    `status`, `os` and `client` are derived values, not stored columns, so
+    they are filtered after the row fetch; `risk_min`/`risk_max` filter in
+    SQL.
     """
     _require()
     where, params = ["1=1"], []
@@ -273,11 +288,17 @@ async def get_fleet_devices(
         raise HTTPException(status_code=500, detail=f"Fleet inventory query failed: {e}")
 
     quarantined = _quarantined_ids()
-    devices = [_row_to_device(r, quarantined) for r in (rows or [])]
+    tenant_names = _db.tenant_name_map()
+    devices = [_row_to_device(r, quarantined, tenant_names) for r in (rows or [])]
     if status is not None:
         devices = [d for d in devices if d.status == status]
     if os is not None:
         devices = [d for d in devices if d.os == os]
+    if client:
+        needle = client.strip().lower()
+        devices = [d for d in devices
+                   if (d.client_tenant_id or "").lower() == needle
+                   or (d.client_name or "").lower() == needle]
 
     return {
         "devices": devices,
@@ -287,9 +308,48 @@ async def get_fleet_devices(
         "note": (
             "Inventory is discovered hosts, not agent-enrolled endpoints. "
             "'status' is derived from last_seen (online = observed within "
-            f"{int(_ONLINE_WINDOW.total_seconds() // 3600)}h), and 'device_type' "
-            "is a heuristic from tags/open ports."
+            f"{int(_ONLINE_WINDOW.total_seconds() // 3600)}h), 'device_type' "
+            "is a heuristic from tags/open ports, and 'client_name' reflects "
+            "only devices tagged \"tenant:<id>\" by the MSP multi-tenant "
+            "system -- most devices will show client_name: null until "
+            "tagged."
         ),
+    }
+
+
+@router.get("/clients")
+async def get_fleet_clients() -> Dict[str, Any]:
+    """
+    Real, distinct client/tenant values currently present in the fleet
+    inventory -- the honest backing for a client-filter dropdown. Replaces
+    any UI-side hardcoded client list: a device only appears here once it
+    has been tagged "tenant:<id>" via the MSP multi-tenant system
+    (routers/msp_multi_tenant.py), so an empty list is the correct answer
+    for a fleet with no tenant tagging configured yet, not a bug.
+    """
+    _require()
+    try:
+        rows = _db.query("SELECT tags FROM network_map")
+    except Exception as e:
+        logger.exception("Client derivation failed")
+        raise HTTPException(status_code=500, detail=f"Client derivation failed: {e}")
+
+    tenant_names = _db.tenant_name_map()
+    counts: Dict[str, int] = {}
+    for (tags_raw,) in (rows or []):
+        tenant_id = _db.tenant_id_from_tags(_loads(tags_raw, []))
+        if tenant_id:
+            counts[tenant_id] = counts.get(tenant_id, 0) + 1
+
+    clients = [
+        {"tenant_id": tid, "client_name": tenant_names.get(tid, tid), "device_count": count}
+        for tid, count in sorted(counts.items(), key=lambda kv: -kv[1])
+    ]
+    return {
+        "clients": clients,
+        "total_clients": len(clients),
+        "note": "Derived from network_map tags actually present; devices with no "
+                "tenant tag are not attributed to any client.",
     }
 
 
@@ -309,7 +369,7 @@ async def get_device_details(device_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail="Device not found in inventory")
 
     row = rows[0]
-    device = _row_to_device(row[:10], _quarantined_ids())
+    device = _row_to_device(row[:10], _quarantined_ids(), _db.tenant_name_map())
     open_ports = _loads(row[5], [])
     return {
         "device": device,
@@ -344,7 +404,7 @@ async def get_device_health(device_id: str) -> Dict[str, Any]:
     if not rows:
         raise HTTPException(status_code=404, detail="Device not found in inventory")
 
-    device = _row_to_device(rows[0], _quarantined_ids())
+    device = _row_to_device(rows[0], _quarantined_ids(), _db.tenant_name_map())
     checks = [
         {"check": "Recently observed", "status": "pass" if device.status == DeviceStatus.ONLINE else "warn",
          "detail": f"last_seen={device.last_seen}"},
