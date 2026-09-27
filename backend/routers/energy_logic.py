@@ -8,9 +8,19 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from uuid import uuid4
-import asyncio
+import time
+
+from database import get_db_manager
 
 router = APIRouter(prefix="/api/energy-logic", tags=["Energy Core & Logic"])
+
+# The operation types this endpoint's docstring has always documented as
+# supported. Real validation now enforces this list -- the old version
+# accepted (and silently "completed") any garbage operation dict.
+_KNOWN_OPERATION_TYPES = {
+    "threat_assessment", "payload_generation", "swarm_coordination",
+    "resource_optimization", "response_planning",
+}
 
 
 # ============================================================================
@@ -172,42 +182,76 @@ async def logic_execute(logic_chain: LogicChain, background_tasks: BackgroundTas
     - response_planning
     """
     execution_id = str(uuid4())
-    
-    # Queue for background processing
+    db = get_db_manager()
+    db.create_logic_execution(execution_id, logic_chain.chain_id, logic_chain.execution_order,
+                               len(logic_chain.operations))
+
     background_tasks.add_task(execute_logic_chain_bg, logic_chain, execution_id)
-    
+
     return {
         "execution_id": execution_id,
         "status": "queued",
         "operations_count": len(logic_chain.operations),
         "execution_order": logic_chain.execution_order,
         "estimated_duration_ms": len(logic_chain.operations) * 50,
+        "status_url": f"/api/energy-logic/logic-execute/{execution_id}",
         "timestamp": datetime.now().isoformat()
     }
 
 
+@router.get("/logic-execute/{execution_id}")
+async def get_logic_execution_status(execution_id: str):
+    """Real status/result lookup for a chain queued via POST /logic-execute --
+    the old version had no way to check on a queued execution at all."""
+    execution = get_db_manager().get_logic_execution(execution_id)
+    if not execution:
+        raise HTTPException(status_code=404, detail="execution not found")
+    return {
+        "execution_id": execution["execution_id"],
+        "chain_id": execution["chain_id"],
+        "status": execution["status"],
+        "results": execution["results"],
+        "elapsed_ms": execution["elapsed_ms"],
+        "error": execution["error"],
+        "created_at": str(execution.get("created_at") or ""),
+        "completed_at": str(execution.get("completed_at") or ""),
+    }
+
+
 async def execute_logic_chain_bg(logic_chain: LogicChain, execution_id: str):
-    """Background task: Execute logic chain"""
+    """Background task: validates and executes each operation in the chain,
+    persisting real results instead of discarding them. There is no
+    physical nanoswarm/payload subsystem behind this platform to delegate
+    to, so "execution" here means real, honest bookkeeping (validated
+    operation types, real per-operation timing, a real error for a
+    malformed operation) rather than fabricating domain-specific output
+    for capabilities this codebase doesn't actually have."""
+    db = get_db_manager()
     results = []
-    start_time = datetime.now()
-    
+    start_time = time.monotonic()
+
     try:
         for idx, operation in enumerate(logic_chain.operations):
-            # Execute each operation (placeholder)
-            await asyncio.sleep(0.05)  # Simulate computation
+            op_start = time.monotonic()
+            op_type = operation.get("type")
+            if op_type not in _KNOWN_OPERATION_TYPES:
+                raise ValueError(
+                    f"operation {idx}: unknown type {op_type!r}; expected one of {sorted(_KNOWN_OPERATION_TYPES)}"
+                )
             results.append({
                 "operation_index": idx,
-                "operation_type": operation.get("type", "unknown"),
-                "status": "completed"
+                "operation_type": op_type,
+                "status": "completed",
+                "elapsed_ms": round((time.monotonic() - op_start) * 1000, 3),
             })
-        
-        elapsed_ms = (datetime.now() - start_time).total_seconds() * 1000
-        
-        # Store result in database
-        # await db.store_logic_execution_result(execution_id, results, elapsed_ms)
-        
+
+        elapsed_ms = round((time.monotonic() - start_time) * 1000, 3)
+        db.update_logic_execution_result(execution_id, "completed", results=results, elapsed_ms=elapsed_ms)
+
     except Exception as e:
-        pass  # Log error
+        elapsed_ms = round((time.monotonic() - start_time) * 1000, 3)
+        db.update_logic_execution_result(execution_id, "failed", results=results,
+                                          elapsed_ms=elapsed_ms, error=str(e))
 
 
 @router.get("/decision-engine")

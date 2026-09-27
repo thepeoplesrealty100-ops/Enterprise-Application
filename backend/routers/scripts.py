@@ -18,8 +18,10 @@ import json
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Query, status as http_status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status, BackgroundTasks
 from pydantic import BaseModel
+
+from dependencies import get_authenticated_user, require_permission
 
 try:
     from database import DuckDBManager
@@ -84,6 +86,14 @@ def _require():
             status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Scripts unavailable: {_SCRIPTS_ERR}"
         )
+
+
+def _actor(user: dict) -> str:
+    """Real caller identity from the authenticated Bearer token -- never a
+    client-supplied 'operator_id'/'approval_by' string, which would let any
+    anonymous caller attribute uploads, approvals or executions to whoever
+    they liked (including 'admin')."""
+    return user.get("username") or user.get("user_id") or "system"
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -194,16 +204,18 @@ def get_script(script_id: str):
         raise HTTPException(status_code=400, detail=f"Failed to fetch script: {str(e)}")
 
 
-@router.post("/catalog", status_code=http_status.HTTP_201_CREATED)
-def create_script(req: ScriptMetadata, operator_id: str = "system"):
+@router.post("/catalog", status_code=http_status.HTTP_201_CREATED,
+             dependencies=[require_permission("response:manage")])
+def create_script(req: ScriptMetadata, user: dict = Depends(get_authenticated_user)):
     """
     Upload a new script to the library.
     Scripts are unapproved by default (requires admin review).
     """
     _require()
+    actor = _actor(user)
     try:
         script_id = req.script_id or str(uuid.uuid4())
-        
+
         _db.conn.execute(
             """
             INSERT INTO script_library
@@ -219,18 +231,18 @@ def create_script(req: ScriptMetadata, operator_id: str = "system"):
                 req.language,
                 req.script_content,
                 json.dumps(req.parameters),
-                req.author or operator_id,
+                req.author or actor,
                 req.version,
                 json.dumps(req.tags),
                 False,  # Require approval
             ),
         )
         _db.conn.commit()
-        
+
         _audit_logger.log(
             event_type="script_uploaded",
             action="upload_script",
-            actor=operator_id,
+            actor=actor,
             resource=script_id,
             details={"name": req.name, "category": req.category},
         )
@@ -247,29 +259,40 @@ def create_script(req: ScriptMetadata, operator_id: str = "system"):
         raise HTTPException(status_code=400, detail=f"Failed to create script: {str(e)}")
 
 
-@router.post("/catalog/{script_id}/approve")
-def approve_script(script_id: str, approval_by: str = "admin"):
+@router.post("/catalog/{script_id}/approve",
+             dependencies=[require_permission("response:manage")])
+def approve_script(script_id: str, user: dict = Depends(get_authenticated_user)):
     """
     Approve a script for production use.
-    Only admin can approve.
+    Only a caller holding response:manage can approve.
     """
     _require()
+    approval_by = _actor(user)
     try:
-        result = _db.conn.execute(
+        # No RETURNING here: script_library.id is
+        # INTEGER PRIMARY KEY DEFAULT nextval('seq_script_lib'), and this
+        # DuckDB version's UPDATE...RETURNING re-evaluates that DEFAULT
+        # during row materialization, colliding with the row's own id
+        # (`Constraint Error: Duplicate key "id: 1" ...`) -- the exact bug
+        # already documented and fixed the same way in
+        # DuckDBManager.rotate_encryption_key(). Check existence first
+        # instead of relying on RETURNING or rowcount.
+        exists = _db.conn.execute(
+            "SELECT 1 FROM script_library WHERE script_id = ?", (script_id,)
+        ).fetchone()
+        if not exists:
+            raise HTTPException(status_code=404, detail=f"Script {script_id} not found")
+
+        _db.conn.execute(
             """
             UPDATE script_library
             SET approved = true, approval_date = ?, approval_by = ?
             WHERE script_id = ?
-            RETURNING script_id
             """,
             (datetime.now(timezone.utc), approval_by, script_id),
         )
-        
-        if not result.fetchall():
-            raise HTTPException(status_code=404, detail=f"Script {script_id} not found")
-        
         _db.conn.commit()
-        
+
         _audit_logger.log(
             event_type="script_approved",
             action="approve_script",
@@ -288,32 +311,39 @@ def approve_script(script_id: str, approval_by: str = "admin"):
 # Script Execution (Sandbox)
 # ══════════════════════════════════════════════════════════════════════════════
 
-@router.post("/{script_id}/sandbox-execute", status_code=http_status.HTTP_201_CREATED)
+@router.post("/{script_id}/sandbox-execute", status_code=http_status.HTTP_201_CREATED,
+             dependencies=[require_permission("response:script_exec")])
 def execute_script_in_sandbox(
     script_id: str,
     req: ScriptExecutionRequest,
     background_tasks: BackgroundTasks,
+    user: dict = Depends(get_authenticated_user),
 ):
     """
-    Execute a script in an isolated sandbox container.
-    
+    Execute a script directly on the host (see _execute_script_background --
+    there is no container/VM isolation despite the name).
+
     Returns:
         Execution ID + status (can poll for results or stream via SSE)
     """
     _require()
+    # The real caller identity, from the verified Bearer token -- never the
+    # request body's operator_id, which is otherwise a free-text field any
+    # caller could set to impersonate someone else in the audit trail.
+    actor = _actor(user)
     try:
         # Fetch script
         script_row = _db.conn.execute(
             "SELECT language, script_content FROM script_library WHERE script_id = ?",
             (script_id,),
         ).fetchone()
-        
+
         if not script_row:
             raise HTTPException(status_code=404, detail=f"Script {script_id} not found")
-        
+
         language, script_content = script_row
         execution_id = str(uuid.uuid4())
-        
+
         # Create execution record
         _db.conn.execute(
             """
@@ -325,7 +355,7 @@ def execute_script_in_sandbox(
             (
                 execution_id,
                 script_id,
-                req.operator_id,
+                actor,
                 "queued",
                 json.dumps(req.parameters),
                 json.dumps(req.environment or {}),
@@ -334,7 +364,7 @@ def execute_script_in_sandbox(
             ),
         )
         _db.conn.commit()
-        
+
         # Queue execution (in background)
         background_tasks.add_task(
             _execute_script_background,
@@ -345,13 +375,13 @@ def execute_script_in_sandbox(
             parameters=req.parameters,
             environment=req.environment,
             timeout_seconds=req.timeout_seconds,
-            operator_id=req.operator_id,
+            operator_id=actor,
         )
-        
+
         _audit_logger.log(
             event_type="script_execution_queued",
             action="sandbox_execute",
-            actor=req.operator_id,
+            actor=actor,
             resource=script_id,
             details={"execution_id": execution_id},
         )
@@ -545,14 +575,19 @@ def _execute_script_background(
     operator_id: str,
 ):
     """
-    Execute a script in background (sandbox).
-    In production, this would use Docker or VM containers.
-    For now, it's a placeholder.
+    Execute a script in the background. This is real, already-implemented
+    execution (subprocess.run, with real timeout handling and DB/audit
+    persistence below) -- NOT a placeholder, despite what an earlier
+    version of this docstring said. It is also not container/VM isolated:
+    the script runs directly on the host with this process's privileges.
+    Access to the endpoint that reaches this function is gated by
+    response:script_exec (see execute_script_in_sandbox above); do not
+    lower that bar without adding real sandboxing here first.
     """
     import subprocess
 
     start_time = datetime.now(timezone.utc)
-    
+
     try:
         # Update status
         _db.conn.execute(
@@ -560,9 +595,9 @@ def _execute_script_background(
             ("executing", execution_id),
         )
         _db.conn.commit()
-        
-        # In production, wrap script in Docker container
-        # For now, execute directly (dangerous, for demo only!)
+
+        # No Docker/VM wrapping -- direct host execution, protected only by
+        # the RBAC gate on the calling endpoint (see docstring above).
         if language == "bash":
             result = subprocess.run(
                 ["bash", "-c", script_content],

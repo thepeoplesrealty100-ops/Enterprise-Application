@@ -205,6 +205,11 @@ class DuckDBManager:
             "seq_remediation",
             # v2.8 tables key off app-generated VARCHAR policy_key / connector
             # call IDs -- no sequences needed.
+            # v3.1 MSP Multi-Tenant sequences
+            "seq_organizations",
+            # tenant_members keys off (tenant_id, user_id); tenant_sso_config
+            # off (tenant_id, mechanism_type); tenant_cross_ops off an
+            # app-generated operation_id -- no sequences needed for those.
         ]:
             c.execute(f"CREATE SEQUENCE IF NOT EXISTS {seq} START 1")
 
@@ -1368,6 +1373,89 @@ class DuckDBManager:
         c.execute("CREATE INDEX IF NOT EXISTS idx_qaip_circuit ON q_aip_inference_registry(circuit_type)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_qaip_executed ON q_aip_inference_registry(executed_at)")
 
+        # ── v3.1 MSP Multi-Tenant Gateway ────────────────────────────────
+        # Replaces routers/msp_multi_tenant.py's fully hardcoded tenant
+        # list/SSO/billing/audit responses. Tenant-to-device scoping reuses
+        # the `tags` JSON column network_map/agent_endpoints already have
+        # (a device carrying "tenant:<tenant_id>" belongs to that tenant)
+        # rather than adding a tenant_id column to those tables or to
+        # `users` -- keeps this additive, no existing table touched.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS organizations (
+            id                 INTEGER PRIMARY KEY DEFAULT nextval('seq_organizations'),
+            tenant_id          VARCHAR UNIQUE NOT NULL,
+            tenant_name        VARCHAR NOT NULL,
+            tenant_type        VARCHAR NOT NULL DEFAULT 'client',   -- msp | client | partner
+            status             VARCHAR NOT NULL DEFAULT 'active',   -- active | suspended | archived
+            subscription_tier  VARCHAR NOT NULL DEFAULT 'starter',
+            device_limit       INTEGER DEFAULT 0,
+            user_limit         INTEGER DEFAULT 0,
+            parent_msp_id      VARCHAR,
+            created_at         TIMESTAMPTZ DEFAULT now(),
+            updated_at         TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS tenant_members (
+            tenant_id   VARCHAR NOT NULL,
+            user_id     VARCHAR NOT NULL,
+            role        VARCHAR NOT NULL DEFAULT 'member',
+            added_at    TIMESTAMPTZ DEFAULT now(),
+            PRIMARY KEY (tenant_id, user_id)
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS tenant_sso_config (
+            tenant_id       VARCHAR NOT NULL,
+            mechanism_type  VARCHAR NOT NULL,   -- saml | oidc | oauth2
+            provider        VARCHAR NOT NULL,
+            enabled         BOOLEAN DEFAULT false,
+            config_json     VARCHAR DEFAULT '{}',
+            created_at      TIMESTAMPTZ DEFAULT now(),
+            updated_at      TIMESTAMPTZ DEFAULT now(),
+            PRIMARY KEY (tenant_id, mechanism_type)
+        )
+        """)
+
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS tenant_cross_ops (
+            operation_id     VARCHAR PRIMARY KEY,
+            operation_type   VARCHAR NOT NULL,
+            source_tenant    VARCHAR NOT NULL,
+            target_tenants   VARCHAR NOT NULL DEFAULT '[]',   -- JSON array
+            payload_json     VARCHAR DEFAULT '{}',
+            status           VARCHAR NOT NULL DEFAULT 'queued',
+            created_at       TIMESTAMPTZ DEFAULT now(),
+            updated_at       TIMESTAMPTZ DEFAULT now()
+        )
+        """)
+        c.execute("CREATE INDEX IF NOT EXISTS idx_tenant_members_user ON tenant_members(user_id)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_tenant_cross_ops_source ON tenant_cross_ops(source_tenant)")
+
+        # ── v3.1 Energy/Logic Core execution log ────────────────────────
+        # Replaces routers/energy_logic.py's logic-execute background task,
+        # which computed real per-operation results and then discarded them
+        # (a "# Store result in database" comment was never implemented).
+        # No secondary index -- this table is UPDATEd by execution_id, and
+        # ontological_object_nodes/maya_vigesimal_auth_sessions above
+        # document why UPDATE-heavy tables here stay index-free.
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS energy_logic_executions (
+            execution_id      VARCHAR PRIMARY KEY,
+            chain_id          VARCHAR NOT NULL,
+            execution_order   VARCHAR NOT NULL DEFAULT 'sequential',
+            operations_count  INTEGER NOT NULL DEFAULT 0,
+            status            VARCHAR NOT NULL DEFAULT 'queued',   -- queued | running | completed | failed
+            results_json      VARCHAR DEFAULT '[]',
+            error             VARCHAR,
+            elapsed_ms        DOUBLE,
+            created_at        TIMESTAMPTZ DEFAULT now(),
+            completed_at      TIMESTAMPTZ
+        )
+        """)
+
         self.conn.commit()
         logger.info("Schema v3.0 initialized at %s", self.db_path)
 
@@ -1579,6 +1667,266 @@ class DuckDBManager:
                         queue.append((other, depth + 1))
 
         return {"nodes": nodes, "edges": edges}
+
+    # ======================================================================
+    # v3.1 MSP Multi-Tenant Gateway helpers
+    # ======================================================================
+
+    def create_organization(self, tenant_id: str, tenant_name: str, tenant_type: str = "client",
+                             subscription_tier: str = "starter", device_limit: int = 0,
+                             user_limit: int = 0, parent_msp_id: Optional[str] = None) -> Dict[str, Any]:
+        self.conn.execute(
+            """
+            INSERT INTO organizations
+                (tenant_id, tenant_name, tenant_type, subscription_tier, device_limit, user_limit, parent_msp_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (tenant_id, tenant_name, tenant_type, subscription_tier, device_limit, user_limit, parent_msp_id),
+        )
+        self.conn.commit()
+        return self.get_organization(tenant_id)
+
+    def get_organization(self, tenant_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute("SELECT * FROM organizations WHERE tenant_id = ?", (tenant_id,)).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        return dict(zip(cols, row))
+
+    def list_organizations(self) -> List[Dict[str, Any]]:
+        rows = self.conn.execute("SELECT * FROM organizations ORDER BY created_at DESC").fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def update_organization(self, tenant_id: str, fields: Dict[str, Any]) -> bool:
+        if not self.get_organization(tenant_id):
+            return False
+        allowed = {"tenant_name", "tenant_type", "status", "subscription_tier", "device_limit", "user_limit"}
+        sets, params = [], []
+        for k, v in fields.items():
+            if k in allowed:
+                sets.append(f"{k} = ?")
+                params.append(v)
+        if not sets:
+            return False
+        params.append(tenant_id)
+        self.conn.execute(
+            f"UPDATE organizations SET {', '.join(sets)}, updated_at = now() WHERE tenant_id = ?", params
+        )
+        self.conn.commit()
+        return True
+
+    def count_devices_for_tenant(self, tenant_id: str) -> int:
+        """Counts network_map + agent_endpoints rows tagged "tenant:<id>".
+        Tag-based rather than a schema column -- see the organizations
+        table comment in initialize_schema()."""
+        tag = f"tenant:{tenant_id}"
+        total = 0
+        row = self.conn.execute(
+            "SELECT COUNT(*) FROM network_map WHERE tags LIKE ?", (f"%{tag}%",)
+        ).fetchone()
+        total += int(row[0]) if row else 0
+        try:
+            row = self.conn.execute(
+                "SELECT COUNT(*) FROM agent_endpoints WHERE tags LIKE ?", (f"%{tag}%",)
+            ).fetchone()
+            total += int(row[0]) if row else 0
+        except Exception:
+            pass  # agent_endpoints is created lazily by routers/fleet_agent.py on first registration
+        return total
+
+    def add_tenant_member(self, tenant_id: str, user_id: str, role: str = "member") -> None:
+        self.conn.execute(
+            """
+            INSERT INTO tenant_members (tenant_id, user_id, role) VALUES (?, ?, ?)
+            ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = excluded.role
+            """,
+            (tenant_id, user_id, role),
+        )
+        self.conn.commit()
+
+    def remove_tenant_member(self, tenant_id: str, user_id: str) -> bool:
+        existing = self.conn.execute(
+            "SELECT 1 FROM tenant_members WHERE tenant_id = ? AND user_id = ?", (tenant_id, user_id)
+        ).fetchone()
+        if not existing:
+            return False
+        self.conn.execute(
+            "DELETE FROM tenant_members WHERE tenant_id = ? AND user_id = ?", (tenant_id, user_id)
+        )
+        self.conn.commit()
+        return True
+
+    def list_tenant_members(self, tenant_id: str) -> List[Dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT tenant_id, user_id, role, added_at FROM tenant_members WHERE tenant_id = ? ORDER BY added_at",
+            (tenant_id,),
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        return [dict(zip(cols, r)) for r in rows]
+
+    def list_tenants_for_user(self, user_id: str) -> List[str]:
+        rows = self.conn.execute(
+            "SELECT tenant_id FROM tenant_members WHERE user_id = ?", (user_id,)
+        ).fetchall()
+        return [r[0] for r in rows]
+
+    def set_user_active_tenant(self, user_id: str, tenant_id: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO tenant_members (tenant_id, user_id, role, added_at)
+            VALUES (?, ?, 'member', now())
+            ON CONFLICT (tenant_id, user_id) DO NOTHING
+            """,
+            (tenant_id, user_id),
+        )
+        self.conn.commit()
+
+    def save_tenant_sso_config(self, tenant_id: str, mechanism_type: str, provider: str,
+                                config: Dict[str, Any], enabled: bool = False) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO tenant_sso_config (tenant_id, mechanism_type, provider, enabled, config_json, updated_at)
+            VALUES (?, ?, ?, ?, ?, now())
+            ON CONFLICT (tenant_id, mechanism_type) DO UPDATE SET
+                provider = excluded.provider, enabled = excluded.enabled,
+                config_json = excluded.config_json, updated_at = now()
+            """,
+            (tenant_id, mechanism_type, provider, enabled, json.dumps(config, default=str)),
+        )
+        self.conn.commit()
+
+    def list_tenant_sso_configs(self, tenant_id: str) -> List[Dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT * FROM tenant_sso_config WHERE tenant_id = ? ORDER BY mechanism_type", (tenant_id,)
+        ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        out = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            try:
+                d["config"] = json.loads(d.get("config_json") or "{}")
+            except Exception:
+                d["config"] = {}
+            out.append(d)
+        return out
+
+    def get_tenant_sso_config(self, tenant_id: str, mechanism_type: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM tenant_sso_config WHERE tenant_id = ? AND mechanism_type = ?",
+            (tenant_id, mechanism_type),
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        d = dict(zip(cols, row))
+        try:
+            d["config"] = json.loads(d.get("config_json") or "{}")
+        except Exception:
+            d["config"] = {}
+        return d
+
+    def create_cross_tenant_op(self, operation_type: str, source_tenant: str,
+                                target_tenants: List[str], payload: Dict[str, Any]) -> Dict[str, Any]:
+        operation_id = str(uuid.uuid4())
+        self.conn.execute(
+            """
+            INSERT INTO tenant_cross_ops
+                (operation_id, operation_type, source_tenant, target_tenants, payload_json, status)
+            VALUES (?, ?, ?, ?, ?, 'queued')
+            """,
+            (operation_id, operation_type, source_tenant,
+             json.dumps(target_tenants, default=str), json.dumps(payload, default=str)),
+        )
+        self.conn.commit()
+        return self.get_cross_tenant_op(operation_id)
+
+    def get_cross_tenant_op(self, operation_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM tenant_cross_ops WHERE operation_id = ?", (operation_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        d = dict(zip(cols, row))
+        try:
+            d["target_tenants"] = json.loads(d.get("target_tenants") or "[]")
+        except Exception:
+            d["target_tenants"] = []
+        return d
+
+    def update_cross_tenant_op_status(self, operation_id: str, status: str) -> bool:
+        if not self.get_cross_tenant_op(operation_id):
+            return False
+        self.conn.execute(
+            "UPDATE tenant_cross_ops SET status = ?, updated_at = now() WHERE operation_id = ?",
+            (status, operation_id),
+        )
+        self.conn.commit()
+        return True
+
+    def audit_log_summary(self, start_date: datetime, end_date: datetime,
+                           action_prefix: Optional[str] = None) -> Dict[str, Any]:
+        """Real aggregation over the existing audit_log table -- replaces
+        routers/msp_multi_tenant.py's previous hardcoded audit counts."""
+        where = "WHERE timestamp >= CAST(? AS TIMESTAMPTZ) AND timestamp <= CAST(? AS TIMESTAMPTZ)"
+        params: List[Any] = [start_date, end_date]
+        if action_prefix:
+            where += " AND action LIKE ?"
+            params.append(f"{action_prefix}%")
+        total_row = self.conn.execute(f"SELECT COUNT(*) FROM audit_log {where}", params).fetchone()
+        by_action_rows = self.conn.execute(
+            f"SELECT action, COUNT(*) FROM audit_log {where} GROUP BY action ORDER BY 2 DESC", params
+        ).fetchall()
+        by_outcome_rows = self.conn.execute(
+            f"SELECT outcome, COUNT(*) FROM audit_log {where} GROUP BY outcome", params
+        ).fetchall()
+        return {
+            "total": int(total_row[0]) if total_row else 0,
+            "by_action": {r[0]: int(r[1]) for r in by_action_rows},
+            "by_outcome": {r[0]: int(r[1]) for r in by_outcome_rows},
+        }
+
+    # v3.1 Energy/Logic Core execution log helpers
+    def create_logic_execution(self, execution_id: str, chain_id: str, execution_order: str,
+                                operations_count: int) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO energy_logic_executions
+                (execution_id, chain_id, execution_order, operations_count, status)
+            VALUES (?, ?, ?, ?, 'queued')
+            """,
+            (execution_id, chain_id, execution_order, operations_count),
+        )
+        self.conn.commit()
+
+    def update_logic_execution_result(self, execution_id: str, status: str,
+                                       results: Optional[List[Dict[str, Any]]] = None,
+                                       elapsed_ms: Optional[float] = None,
+                                       error: Optional[str] = None) -> None:
+        self.conn.execute(
+            """
+            UPDATE energy_logic_executions
+            SET status = ?, results_json = ?, elapsed_ms = ?, error = ?, completed_at = now()
+            WHERE execution_id = ?
+            """,
+            (status, json.dumps(results or [], default=str), elapsed_ms, error, execution_id),
+        )
+        self.conn.commit()
+
+    def get_logic_execution(self, execution_id: str) -> Optional[Dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM energy_logic_executions WHERE execution_id = ?", (execution_id,)
+        ).fetchone()
+        if not row:
+            return None
+        cols = [d[0] for d in self.conn.description]
+        d = dict(zip(cols, row))
+        try:
+            d["results"] = json.loads(d.get("results_json") or "[]")
+        except Exception:
+            d["results"] = []
+        return d
 
     def create_maya_session(self, payload_id: str, operator_id: str,
                              tzolkin: str, haab: str, challenge_token: str,

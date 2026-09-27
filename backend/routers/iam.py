@@ -98,6 +98,7 @@ _DEFAULT_PERMISSIONS = [
     ("response:manage", "Trigger detection & response actions (IOC block, quarantine, isolate)", "Detection & Response"),
     ("response:script_exec", "Stage/run gacyber_toolkit scripts from the CheatSheet Library", "Detection & Response"),
     ("read:dashboard", "View dashboards (read-only)", "General"),
+    ("msp:manage", "Create/manage MSP tenants, SSO federation, and cross-tenant operations", "MSP"),
 ]
 
 _DEFAULT_ROLES = [
