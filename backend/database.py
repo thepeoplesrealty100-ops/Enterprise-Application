@@ -1450,6 +1450,56 @@ class DuckDBManager:
         self.conn.commit()
         return True
 
+    def update_node_attributes(self, node_id: str, attributes: Dict[str, Any], merge: bool = True) -> bool:
+        """Same SELECT-then-UPDATE shape as update_node_confidence() (see
+        its comment re: DuckDB's UPDATE rowcount). `merge=True` (default)
+        shallow-merges `attributes` into the node's existing
+        attributes_json rather than replacing it wholesale -- lets a
+        refresh (e.g. Digital Twin sync) add/overwrite specific keys
+        without clobbering attributes set by another caller."""
+        row = self.conn.execute(
+            "SELECT attributes_json FROM ontological_object_nodes WHERE node_id = ?", (node_id,)
+        ).fetchone()
+        if not row:
+            return False
+        if merge:
+            try:
+                current = json.loads(row[0] or "{}")
+            except Exception:
+                current = {}
+            current.update(attributes)
+            attributes = current
+        self.conn.execute(
+            "UPDATE ontological_object_nodes SET attributes_json = ?, updated_at = now() WHERE node_id = ?",
+            (json.dumps(attributes, default=str), node_id),
+        )
+        self.conn.commit()
+        return True
+
+    def list_ontological_nodes(self, object_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """All nodes of `object_type` (every node if None), newest first,
+        with attributes_json pre-parsed into `attributes` -- same
+        JSON-scan caveat as find_ontological_node_by_attribute()."""
+        if object_type:
+            rows = self.conn.execute(
+                "SELECT * FROM ontological_object_nodes WHERE object_type = ? ORDER BY created_at DESC",
+                (object_type,),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM ontological_object_nodes ORDER BY created_at DESC"
+            ).fetchall()
+        cols = [d[0] for d in self.conn.description]
+        out = []
+        for r in rows:
+            d = dict(zip(cols, r))
+            try:
+                d["attributes"] = json.loads(d.get("attributes_json") or "{}")
+            except Exception:
+                d["attributes"] = {}
+            out.append(d)
+        return out
+
     def get_ontological_node(self, node_id: str) -> Optional[Dict[str, Any]]:
         row = self.conn.execute(
             "SELECT * FROM ontological_object_nodes WHERE node_id = ?", (node_id,)

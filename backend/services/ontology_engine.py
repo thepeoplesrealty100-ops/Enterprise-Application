@@ -55,6 +55,12 @@ class OntologyEngine:
     def update_confidence(self, node_id: str, new_score: float) -> bool:
         return self.db.update_node_confidence(node_id, new_score)
 
+    def update_attributes(self, node_id: str, attributes: Dict[str, Any], merge: bool = True) -> bool:
+        return self.db.update_node_attributes(node_id, attributes, merge=merge)
+
+    def list_nodes(self, object_type: Optional[str] = None) -> list:
+        return self.db.list_ontological_nodes(object_type)
+
     def get_node(self, node_id: str) -> Optional[Dict[str, Any]]:
         return self.db.get_ontological_node(node_id)
 
