@@ -75,6 +75,7 @@ from routers import (
     remote_exec_router,
     exec_ws_router,
     automation_router,
+    settings_dev_router,
 )
 from dependencies import require_permission
 
@@ -159,6 +160,7 @@ app.include_router(resonance_router,  prefix="/api")
 app.include_router(qaip_router,       prefix="/api")
 app.include_router(ares_router,       prefix="/api")
 app.include_router(iam_router,        prefix="/api")
+app.include_router(settings_dev_router, prefix="/api")
 app.include_router(vault_router,      prefix="/api")
 app.include_router(awareness_router,  prefix="/api")
 app.include_router(darkweb_router,    prefix="/api")

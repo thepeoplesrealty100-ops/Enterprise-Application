@@ -31,12 +31,13 @@ class Config:
     API_PORT = int(os.getenv("API_PORT", "8000"))
     API_WORKERS = int(os.getenv("API_WORKERS", "4"))
 
-    # LLM Configuration
+    # LLM Configuration — PRIMARY is Claude (Anthropic subscription).
+    # Ollama is offline/dev fallback only (set LLM_ENGINE=ollama explicitly).
     CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
     CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-5")
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
-    LLM_ENGINE = os.getenv("LLM_ENGINE", "claude")  # 'claude' or 'ollama'
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
+    LLM_ENGINE = os.getenv("LLM_ENGINE", "claude")
 
     # Quantum Configuration
     IBM_QUANTUM_TOKEN = os.getenv("IBM_QUANTUM_TOKEN", "")
@@ -79,9 +80,19 @@ class Config:
 
     @classmethod
     def validate(cls):
-        """Validate critical configuration at startup."""
+        """Validate critical configuration at startup.
+
+        Claude is primary. Missing CLAUDE_API_KEY is a hard error in production;
+        in development/testing we only warn so the API process can still boot
+        (LLM-backed routes degrade individually).
+        """
+        import logging
+        env = os.getenv("ENVIRONMENT", "development").lower()
         if cls.LLM_ENGINE == "claude" and not cls.CLAUDE_API_KEY:
-            raise ValueError("CLAUDE_API_KEY required when using Claude LLM engine")
+            msg = "CLAUDE_API_KEY required when using Claude LLM engine"
+            if env == "production":
+                raise ValueError(msg)
+            logging.getLogger(__name__).warning("%s — Claude features disabled until key is set", msg)
         if cls.IBM_QUANTUM_TOKEN and not cls.IBM_QUANTUM_CHANNEL:
             raise ValueError("IBM_QUANTUM_CHANNEL required when IBM_QUANTUM_TOKEN is set")
         return True

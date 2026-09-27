@@ -15,7 +15,7 @@ services:
       - LLM_ENGINE=${LLM_ENGINE:-ollama}
       - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5-coder:7b}
       - IBM_QUANTUM_TOKEN=${IBM_QUANTUM_TOKEN:-}
       - JAKAL_MASTER_KEY=${JAKAL_MASTER_KEY:-}
       # Allow any local UI port (5500, 3000, 5173, …). Same-origin UI on :8000 needs no CORS.

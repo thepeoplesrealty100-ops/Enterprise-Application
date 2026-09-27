@@ -237,6 +237,173 @@
             color: white;
             border-left-color: var(--primary-color);
         }
+
+        /* ─── JAKAL Visual Polish v2.11 (Palantir/Anduril/IBM SOC patterns) ─── */
+        /* Clarity over complexity: tighter hierarchy, calmer density, status vectors */
+
+        .card {
+            background: linear-gradient(180deg, rgba(31,41,55,0.92) 0%, rgba(17,24,39,0.95) 100%);
+            border: 1px solid rgba(55,65,81,0.85);
+            border-radius: 12px;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.25);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        }
+        .card:hover {
+            border-color: rgba(249,115,22,0.35);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 28px rgba(0,0,0,0.3);
+        }
+
+        /* Status vector pills — color encodes state at a glance (Radware/IBM pattern) */
+        .jakal-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            text-transform: capitalize;
+        }
+        .jakal-status::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 6px currentColor;
+        }
+        .jakal-status-healthy { color: #34d399; background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); }
+        .jakal-status-warning { color: #fbbf24; background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.35); }
+        .jakal-status-critical { color: #f87171; background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); }
+        .jakal-status-unknown { color: #9ca3af; background: rgba(107,114,128,0.12); border-color: rgba(107,114,128,0.35); }
+
+        /* Fleet / metric summary tiles */
+        .jakal-metric-tile {
+            background: rgba(17,24,39,0.7);
+            border: 1px solid rgba(55,65,81,0.7);
+            border-radius: 12px;
+            padding: 16px 18px;
+            text-align: center;
+            transition: border-color 0.2s ease;
+        }
+        .jakal-metric-tile:hover { border-color: rgba(249,115,22,0.4); }
+        .jakal-metric-tile .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+        .jakal-metric-tile .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* Device fleet cards — single-pane selection clarity (Anduril Lattice) */
+        .jakal-device-card {
+            background: rgba(17,24,39,0.65);
+            border: 1px solid rgba(55,65,81,0.75);
+            border-radius: 10px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+        }
+        .jakal-device-card:hover {
+            background: rgba(31,41,55,0.85);
+            border-color: rgba(249,115,22,0.45);
+            transform: translateY(-1px);
+        }
+        .jakal-device-card.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px rgba(249,115,22,0.35), 0 8px 20px rgba(249,115,22,0.12);
+            background: rgba(249,115,22,0.06);
+        }
+        .jakal-device-card .device-name {
+            font-weight: 600;
+            color: #f3f4f6;
+            font-size: 13px;
+        }
+        .jakal-device-card .device-meta {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+        .jakal-device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        /* Activity feed rows — progressive disclosure */
+        .jakal-activity-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(55,65,81,0.45);
+            font-size: 12px;
+        }
+        .jakal-activity-row:last-child { border-bottom: none; }
+        .jakal-activity-row .ts { color: #6b7280; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .jakal-activity-row .evt { color: #e5e7eb; font-weight: 500; }
+        .jakal-activity-row .ok { color: #34d399; }
+        .jakal-activity-row .fail { color: #f87171; }
+
+        /* Cleaner settings sub-nav */
+        #settings-tabs-container {
+            background: rgba(17,24,39,0.4);
+        }
+        .settings-nav-link {
+            border-radius: 8px;
+            margin-bottom: 2px;
+        }
+        .settings-nav-link.active {
+            background: rgba(249,115,22,0.12) !important;
+            color: #fdba74 !important;
+        }
+
+        /* Operator console chrome */
+        #operator-console, .operator-console {
+            border-color: rgba(249,115,22,0.35) !important;
+            backdrop-filter: blur(12px);
+        }
+
+        /* Reduce visual noise on primary action buttons */
+        button.bg-primary-color, .btn-primary {
+            box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 4px 12px rgba(249,115,22,0.25);
+        }
+        button.bg-primary-color:hover {
+            filter: brightness(1.08);
+        }
+
+        /* Section headers — F-pattern scanning aid */
+        .jakal-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+
+        /* Live badge */
+        .jakal-live-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #34d399;
+            box-shadow: 0 0 0 0 rgba(52,211,153,0.5);
+            animation: jakal-live-pulse 2s infinite;
+        }
+        @keyframes jakal-live-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.5); }
+            70% { box-shadow: 0 0 0 8px rgba(52,211,153,0); }
+            100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+        }
+
         
         /* Action Dropdown for Table */
         .action-dropdown {
@@ -3189,12 +3356,12 @@
             const counts = { Healthy: 0, Warning: 0, Critical: 0 };
             devices.forEach(d => { counts[d.status] = (counts[d.status] || 0) + 1; });
             const isLive = window.__jkFleetLive === true;
-            const tile = (icon, color, value, label) => `
-                <div class="flex items-center gap-3 bg-gray-800/60 rounded-xl px-5 py-3 flex-1 min-w-[140px]">
-                    <i data-lucide="${icon}" class="w-8 h-8 flex-shrink-0 text-${color}"></i>
+            const tile = (icon, color, value, label, statusClass) => `
+                <div class="jakal-metric-tile flex-1 min-w-[130px] flex items-center gap-3 text-left !text-left">
+                    <i data-lucide="${icon}" class="w-7 h-7 flex-shrink-0 text-${color}"></i>
                     <div>
-                        <div class="text-2xl font-bold text-white leading-none">${value}</div>
-                        <div class="text-xs text-gray-400 mt-1">${label}</div>
+                        <div class="value text-white">${value}</div>
+                        <div class="label">${label}</div>
                     </div>
                 </div>`;
             el.innerHTML = `
@@ -3204,7 +3371,7 @@
                     ${tile('shield-alert', 'red-400', counts.Critical, 'Critical')}
                     ${tile('server', 'blue-400', devices.length, 'Total Managed')}
                 </div>
-                <p class="text-xs text-gray-500 mt-2">${isLive ? 'Live from /api/dashboard/fleet' : 'Demo data — connect a backend and open this tab to sync real devices'}</p>
+                <p class="text-xs text-gray-500 mt-2 flex items-center gap-2">${isLive ? '<span class="jakal-live-dot"></span> Live from /api/dashboard/fleet' : 'Demo data — connect a backend and open this tab to sync real devices'}</p>
             `;
             safeCreateIcons();
         }
@@ -3234,11 +3401,11 @@
                     ${filteredDevices.map(dev => {
                         const style = statusStyles[dev.status] || { text: 'text-gray-400', bg: 'bg-gray-700/10', border: 'border-gray-700' };
                         return `
-                        <div class="card p-4 rounded-xl ${style.bg} border ${style.border} hover:bg-gray-900/50 transition-all">
+                        <div class="jakal-device-card ${style.bg} border ${style.border}" onclick="window.selectDevice('${dev.id}')">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="font-semibold text-white">${dev.name}</p>
-                                    <p class="text-xs text-gray-400">${dev.client}</p>
+                                    <p class="device-name">${dev.name}</p>
+                                    <p class="device-meta">${dev.client}</p>
                                 </div>
                                 <div class="action-dropdown inline-block text-right">
                                     <button class="p-1 text-gray-400 hover:text-white rounded-md hover:bg-gray-700">
@@ -3306,7 +3473,7 @@
 
             pane.innerHTML = `
                 <div class="p-2 h-full flex flex-col fade-in">
-                    <h4 class="text-lg font-bold text-white mb-2 flex justify-between items-center">${device.name} <span class="text-xs px-2 py-1 rounded-full ${device.status === 'Healthy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">${device.status}</span></h4>
+                    <h4 class="text-lg font-bold text-white mb-2 flex justify-between items-center">${device.name} <span class="jakal-status ${device.status === 'Healthy' ? 'jakal-status-healthy' : device.status === 'Warning' ? 'jakal-status-warning' : 'jakal-status-critical'}">${device.status}</span></h4>
                     <p class="text-sm text-gray-400 mb-4">${device.type} on ${device.os}</p>
                     
                     <div class="grid grid-cols-2 gap-2 text-sm mb-4">
@@ -3376,7 +3543,10 @@
                 { key: 'pen_test', label: 'Penetration Testing', icon: 'shield-zap' },
                 { key: 'rbac', label: 'RBAC', icon: 'users' },
                 { key: 'auditing', label: 'Auditing', icon: 'file-check-2' },
-                { key: 'kms', label: 'Key Management', icon: 'key-round' }
+                { key: 'kms', label: 'Key Management', icon: 'key-round' },
+                { key: 'developer', label: 'Developer', icon: 'code-2' },
+                { key: 'global_system', label: 'Global System', icon: 'sliders-horizontal' },
+                { key: 'user_profile', label: 'User Profile', icon: 'user-cog' }
             ];
             
             return `
@@ -3426,10 +3596,73 @@
                 case 'rbac': return renderRbacTab();
                 case 'auditing': return renderAuditingTab();
                 case 'kms': return renderKmsTab();
+                case 'developer': return renderDeveloperSettingsTab();
+                case 'global_system': return renderGlobalSystemSettingsTab();
+                case 'user_profile': return renderUserProfileSettingsTab();
                 default: return renderProfileTab();
             }
         };
         
+
+        function renderDeveloperSettingsTab() {
+            return `
+                <h3 class="text-xl font-semibold text-white mb-2">Developer Settings</h3>
+                <p class="text-sm text-gray-400 mb-6">Telemetry, live debug stream, and post-quantum crypto profile. Changes require system:* permission.</p>
+                <div id="dev-settings-panel" class="space-y-4">
+                    <div class="bg-gray-900/60 border border-border-color rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-200">Telemetry</span>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="dev-telemetry" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-700 peer-checked:bg-primary-color rounded-full relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500">Anonymous usage signals for operator console health.</p>
+                    </div>
+                    <div class="bg-gray-900/60 border border-border-color rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-200">Debug log stream</span>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="dev-debug" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-700 peer-checked:bg-primary-color rounded-full relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                            </label>
+                        </div>
+                        <pre id="dev-debug-log" class="mt-3 text-xs bg-black/50 text-green-400 p-3 rounded max-h-48 overflow-y-auto font-mono">Debug stream idle. Enable and open the live panel below.</pre>
+                    </div>
+                    <div class="bg-gray-900/60 border border-border-color rounded-lg p-4">
+                        <label class="block text-sm font-medium text-gray-200 mb-2">PQC profile</label>
+                        <select id="dev-pqc-profile" class="w-full bg-gray-800 border border-border-color text-white rounded-lg px-3 py-2 text-sm">
+                            <option value="commercial">commercial (ML-DSA-65)</option>
+                            <option value="cnsa2">cnsa2 (ML-DSA-87)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-2">A process restart is required for crypto modules to fully re-bind after a profile change.</p>
+                    </div>
+                    <button id="dev-settings-save" class="w-full bg-primary-color hover:opacity-90 text-white px-4 py-3 rounded-lg font-semibold">Save developer settings</button>
+                    <p id="dev-settings-status" class="text-xs text-gray-500"></p>
+                </div>
+            `;
+        }
+
+        function renderGlobalSystemSettingsTab() {
+            return `
+                <h3 class="text-xl font-semibold text-white mb-2">Global System Settings</h3>
+                <p class="text-sm text-gray-400 mb-6">Resonance automation knobs: auto-stage threshold, severity floor, low-risk auto-approve, trade-secret isolation, sandbox lifetime. Live-wired to <code class="text-xs">/api/resonance/automation-settings</code>.</p>
+                <div id="global-system-settings-panel" class="space-y-3">
+                    <p class="text-sm text-gray-500">Loading automation settings…</p>
+                </div>
+            `;
+        }
+
+        function renderUserProfileSettingsTab() {
+            return `
+                <h3 class="text-xl font-semibold text-white mb-2">User Profile Settings</h3>
+                <p class="text-sm text-gray-400 mb-6">Identity, password, MFA, and active sessions. Backed by <code class="text-xs">/api/iam/auth/*</code>.</p>
+                <div id="user-profile-settings-panel" class="space-y-4">
+                    <p class="text-sm text-gray-500">Loading profile…</p>
+                </div>
+            `;
+        }
+
         function renderProfileTab() {
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             return `
