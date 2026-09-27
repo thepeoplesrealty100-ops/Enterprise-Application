@@ -80,9 +80,19 @@ class Config:
 
     @classmethod
     def validate(cls):
-        """Validate critical configuration at startup."""
+        """Validate critical configuration at startup.
+
+        Claude is primary. Missing CLAUDE_API_KEY is a hard error in production;
+        in development/testing we only warn so the API process can still boot
+        (LLM-backed routes degrade individually).
+        """
+        import logging
+        env = os.getenv("ENVIRONMENT", "development").lower()
         if cls.LLM_ENGINE == "claude" and not cls.CLAUDE_API_KEY:
-            raise ValueError("CLAUDE_API_KEY required when using Claude LLM engine")
+            msg = "CLAUDE_API_KEY required when using Claude LLM engine"
+            if env == "production":
+                raise ValueError(msg)
+            logging.getLogger(__name__).warning("%s — Claude features disabled until key is set", msg)
         if cls.IBM_QUANTUM_TOKEN and not cls.IBM_QUANTUM_CHANNEL:
             raise ValueError("IBM_QUANTUM_CHANNEL required when IBM_QUANTUM_TOKEN is set")
         return True
