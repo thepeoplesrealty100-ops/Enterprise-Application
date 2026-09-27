@@ -31,12 +31,13 @@ class Config:
     API_PORT = int(os.getenv("API_PORT", "8000"))
     API_WORKERS = int(os.getenv("API_WORKERS", "4"))
 
-    # LLM Configuration
+    # LLM Configuration — PRIMARY is Claude (Anthropic subscription).
+    # Ollama is offline/dev fallback only (set LLM_ENGINE=ollama explicitly).
     CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
-    CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-5")
+    CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
-    LLM_ENGINE = os.getenv("LLM_ENGINE", "claude")  # 'claude' or 'ollama'
+    LLM_ENGINE = os.getenv("LLM_ENGINE", "claude")
 
     # Quantum Configuration
     IBM_QUANTUM_TOKEN = os.getenv("IBM_QUANTUM_TOKEN", "")
