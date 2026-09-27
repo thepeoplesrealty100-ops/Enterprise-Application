@@ -253,11 +253,14 @@ async def triage(req: TriageRequest, request: Request):
     threshold = req.auto_stage_threshold
     if threshold is None:
         threshold = _db.get_policy_value("response_auto_stage_threshold", 0.8)
+    # Hard lower bound: even an explicit per-call threshold below this never
+    # auto-stages. See routers/resonance.py's auto_stage_severity_floor.
+    severity_floor = _db.get_policy_value("auto_stage_severity_floor", 0.5)
 
     staged_request_id = None
     staged_risk_level = None
     maya_challenge = None
-    if severity >= threshold and recommended:
+    if severity >= threshold and severity >= severity_floor and recommended:
         staged_request_id = str(uuid.uuid4())
         staged_risk_level = "HIGH" if severity >= 0.9 else "MEDIUM"
         pqc_entry = _pqc_sign("triage_auto_stage", {

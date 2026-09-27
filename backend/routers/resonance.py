@@ -137,10 +137,10 @@ _DEFAULT_POLICY = [
      "is approved automatically (still authorization-gated, still audited, still sandbox-only) "
      "instead of waiting on a human at POST /api/approval/{id}/approve. MEDIUM/HIGH/CRITICAL "
      "always require a human decision regardless of this setting."),
-        ("auto_stage_severity_floor", 0.5, "number", "Auto-stage severity floor",
+    ("auto_stage_severity_floor", 0.5, "number", "Auto-stage severity floor",
      "Minimum severity (0-1) below which triage will never auto-stage containment, "
      "regardless of response_auto_stage_threshold. Acts as a hard lower bound."),
-("sandbox_max_lifetime_hours", 24, "number", "Sandbox max lifetime (hours)",
+    ("sandbox_max_lifetime_hours", 24, "number", "Sandbox max lifetime (hours)",
      "Sandboxes older than this are surfaced by GET /resonance/automation-settings/stale-sandboxes as due "
      "for review/destruction. Informational only -- nothing auto-destroys a sandbox."),
 ]

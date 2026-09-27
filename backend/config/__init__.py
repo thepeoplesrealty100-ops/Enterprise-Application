@@ -34,9 +34,9 @@ class Config:
     # LLM Configuration — PRIMARY is Claude (Anthropic subscription).
     # Ollama is offline/dev fallback only (set LLM_ENGINE=ollama explicitly).
     CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
-    CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+    CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-5")
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
     LLM_ENGINE = os.getenv("LLM_ENGINE", "claude")
 
     # Quantum Configuration

@@ -43,7 +43,7 @@ async def _root_headers(client) -> dict:
     # Register (ignore if already exists)
     await client.post(
         "/api/iam/auth/register",
-        json={"username": _ROOT_USERNAME, "password": _ROOT_PASSWORD, "email": f"{_ROOT_USERNAME}@test.local"},
+        json={"username": _ROOT_USERNAME, "password": _ROOT_PASSWORD},
     )
     # Force root_admin at DB layer for determinism
     try:
