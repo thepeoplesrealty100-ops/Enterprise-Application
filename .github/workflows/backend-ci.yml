@@ -1,0 +1,82 @@
+name: Backend CI
+
+# Runs the backend pytest suite on every push and pull request against main,
+# so a regression can't quietly land the way the pre-CI ones did (an entire
+# 4-file WebSocket lineage silently 404'd in every deployment because
+# `websockets` wasn't in requirements.txt -- see
+# backend/tests/test_remote_exec_websocket.py for the writeup; a CI run
+# would have failed on `test_websocket_connects_replays_and_receives_live_broadcast`
+# instead of shipping to main and only being noticed weeks later by hand).
+#
+# Deliberately runs against Docker (the same image `docker compose up`
+# builds and every RUN_ON_UBUNTU.md reader gets), not a fresh pip install
+# on a clean Ubuntu, because that would sidestep whichever deps aren't in
+# requirements.txt yet -- which is exactly the class of bug this CI is
+# meant to catch.
+#
+# Test image build takes ~2-3 minutes cold (Qiskit + PQC wheels compile);
+# the actual pytest run is ~4 minutes. Cache the pip layer between runs
+# via docker buildx's own layer cache so unchanged requirements.txt
+# builds cost seconds, not minutes.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "backend/**"
+      - "Dockerfile"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "backend/**"
+      - "Dockerfile"
+      - ".github/workflows/backend-ci.yml"
+  workflow_dispatch:
+
+# One in-flight run per branch. A newer push on the same branch cancels
+# the running one -- prevents stacked queues on rapid iteration, matches
+# what the Pages workflow already does (concurrency: pages).
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20   # full suite is ~4min; 20 min catches a hang without letting one wedge the queue
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # GHA cache backing for docker buildx: unchanged requirements.txt
+      # -> pip install layer restored from cache -> whole image built in
+      # <15s. First run seeds the cache.
+      - name: Build test image (with layer cache)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          tags: jakal-backend:ci
+          load: true
+          cache-from: type=gha,scope=backend-ci
+          cache-to: type=gha,scope=backend-ci,mode=max
+
+      # Run the same pytest suite RUN_ON_UBUNTU.md instructs a local
+      # user to run (`docker compose exec jakal-backend python -m
+      # pytest tests/ -q`). DUCKDB_PATH points at container-local /tmp
+      # so nothing writes to a mounted volume that could bleed between
+      # runs; JAKAL_MASTER_KEY is a throwaway (no encrypted data
+      # survives the container).
+      - name: Run pytest
+        run: |
+          docker run --rm \
+            -e DUCKDB_PATH=/tmp/ci.duckdb \
+            -e JAKAL_MASTER_KEY=ci-throwaway-key \
+            -w /app/backend \
+            jakal-backend:ci \
+            python -m pytest tests/ -q --tb=short -p no:cacheprovider
