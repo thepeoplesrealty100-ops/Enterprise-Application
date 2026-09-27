@@ -1359,6 +1359,15 @@ async function injectSettingsLive(tabKey) {
       host.innerHTML = await renderAuditingPanelLive();
     } else if (tabKey === 'kms') {
       host.innerHTML = await renderSimpleJsonPanel('Encryption / Key Management', '/api/crypto/status');
+    } else if (tabKey === 'developer') {
+      host.innerHTML = await renderDeveloperSettingsLive();
+      wireDeveloperSettings(host);
+    } else if (tabKey === 'global_system') {
+      host.innerHTML = await renderGlobalSystemSettingsLive();
+      wireGlobalSystemSettings(host);
+    } else if (tabKey === 'user_profile') {
+      host.innerHTML = await renderUserProfileSettingsLive();
+      wireUserProfileSettings(host);
     } else {
       host.remove();
     }
@@ -1604,5 +1613,206 @@ if (typeof window !== 'undefined') {
     setTimeout(boot, 50);
   } else {
     window.addEventListener('load', boot);
+  }
+}
+
+
+/* ─── Developer / Global System / User Profile settings panels ─────────── */
+
+async function renderDeveloperSettingsLive() {
+  let data = {};
+  try {
+    data = await api('/api/settings/developer');
+  } catch (e) {
+    return `<div style="${cardStyle()};color:#f87171">Failed to load developer settings: ${escapeHtml(e.message)}</div>`;
+  }
+  return `
+    <div style="${cardStyle()}">
+      <div style="font-size:13px;opacity:.85;margin-bottom:8px">Live developer settings</div>
+      <div style="display:grid;gap:8px;font-size:13px">
+        <div>Telemetry: <b>${data.telemetry_enabled ? 'ON' : 'OFF'}</b></div>
+        <div>Debug stream: <b>${data.debug_log_enabled ? 'ON' : 'OFF'}</b></div>
+        <div>PQC profile: <b>${escapeHtml(data.pqc_profile || '—')}</b>
+          <span style="opacity:.6">(${(data.pqc_profiles_available || []).join(' / ')})</span></div>
+        <div style="opacity:.6;font-size:11px">Updated: ${escapeHtml(String(data.updated_at || 'never'))}
+          ${data.updated_by ? ' by ' + escapeHtml(data.updated_by) : ''}</div>
+      </div>
+    </div>`;
+}
+
+function wireDeveloperSettings(host) {
+  const tel = document.getElementById('dev-telemetry');
+  const dbg = document.getElementById('dev-debug');
+  const pqc = document.getElementById('dev-pqc-profile');
+  const save = document.getElementById('dev-settings-save');
+  const status = document.getElementById('dev-settings-status');
+  if (!save) return;
+
+  api('/api/settings/developer').then((d) => {
+    if (tel) tel.checked = !!d.telemetry_enabled;
+    if (dbg) dbg.checked = !!d.debug_log_enabled;
+    if (pqc && d.pqc_profile) pqc.value = d.pqc_profile;
+  }).catch(() => {});
+
+  save.onclick = async () => {
+    status.textContent = 'Saving…';
+    try {
+      const body = {
+        telemetry_enabled: tel ? tel.checked : undefined,
+        debug_log_enabled: dbg ? dbg.checked : undefined,
+        pqc_profile: pqc ? pqc.value : undefined,
+      };
+      const res = await api('/api/settings/developer', { method: 'PUT', body: JSON.stringify(body) });
+      status.textContent = 'Saved. PQC profile=' + (res.pqc_profile || '');
+      status.style.color = '#4ade80';
+      if (host) host.innerHTML = await renderDeveloperSettingsLive();
+    } catch (e) {
+      status.textContent = 'Error: ' + e.message;
+      status.style.color = '#f87171';
+    }
+  };
+}
+
+async function renderGlobalSystemSettingsLive() {
+  let policies = [];
+  try {
+    const res = await api('/api/resonance/automation-settings');
+    policies = res.policy || res.policies || res || [];
+    if (!Array.isArray(policies)) policies = Object.entries(policies).map(([k, v]) => ({ policy_key: k, ...(typeof v === 'object' ? v : { value: v }) }));
+  } catch (e) {
+    return `<div style="${cardStyle()};color:#f87171">Failed to load automation settings: ${escapeHtml(e.message)}</div>`;
+  }
+  if (!policies.length) {
+    return `<div style="${cardStyle()}">No automation policy knobs returned.</div>`;
+  }
+  const rows = policies.map((p) => {
+    const key = p.policy_key || p.key || '';
+    const val = p.value !== undefined ? p.value : p.default_value;
+    const label = p.label || key;
+    const typ = p.value_type || typeof val;
+    let control = '';
+    if (typ === 'bool' || typeof val === 'boolean') {
+      control = `<button data-key="${escapeHtml(key)}" data-val="${val ? 'false' : 'true'}" class="gs-toggle px-2 py-1 rounded text-xs ${val ? 'bg-green-700' : 'bg-gray-700'}">${val ? 'ON' : 'OFF'}</button>`;
+    } else {
+      control = `<input data-key="${escapeHtml(key)}" class="gs-num bg-gray-800 border border-border-color rounded px-2 py-1 text-sm w-24" type="number" step="any" value="${escapeHtml(String(val))}" />
+        <button data-key="${escapeHtml(key)}" class="gs-save px-2 py-1 rounded text-xs bg-primary-color text-white ml-1">Set</button>`;
+    }
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+      <div><div style="font-weight:600;font-size:13px">${escapeHtml(label)}</div>
+      <div style="font-size:11px;opacity:.6">${escapeHtml(key)}</div>
+      <div style="font-size:11px;opacity:.5;max-width:420px">${escapeHtml(p.description || '')}</div></div>
+      <div>${control}</div>
+    </div>`;
+  }).join('');
+  return `<div style="${cardStyle()}"><div style="font-size:13px;opacity:.85;margin-bottom:8px">Automation policy knobs</div>${rows}</div>`;
+}
+
+function wireGlobalSystemSettings(host) {
+  const panel = document.getElementById('global-system-settings-panel');
+  if (panel) {
+    renderGlobalSystemSettingsLive().then((html) => { panel.innerHTML = html; wireGlobalSystemSettings(panel); });
+    return;
+  }
+  const root = host || document;
+  root.querySelectorAll('.gs-toggle').forEach((btn) => {
+    btn.onclick = async () => {
+      const key = btn.getAttribute('data-key');
+      const raw = btn.getAttribute('data-val');
+      const value = raw === 'true';
+      try {
+        await api(`/api/resonance/automation-settings/${key}`, { method: 'POST', body: JSON.stringify({ value }) });
+        if (host) host.innerHTML = await renderGlobalSystemSettingsLive();
+        wireGlobalSystemSettings(host);
+      } catch (e) {
+        alert('Update failed: ' + e.message);
+      }
+    };
+  });
+  root.querySelectorAll('.gs-save').forEach((btn) => {
+    btn.onclick = async () => {
+      const key = btn.getAttribute('data-key');
+      const input = root.querySelector(`.gs-num[data-key="${key}"]`);
+      if (!input) return;
+      const value = Number(input.value);
+      try {
+        await api(`/api/resonance/automation-settings/${key}`, { method: 'POST', body: JSON.stringify({ value }) });
+        if (host) host.innerHTML = await renderGlobalSystemSettingsLive();
+        wireGlobalSystemSettings(host);
+      } catch (e) {
+        alert('Update failed: ' + e.message);
+      }
+    };
+  });
+}
+
+async function renderUserProfileSettingsLive() {
+  let me = {};
+  let sessions = [];
+  try {
+    me = await api('/api/iam/auth/me');
+  } catch (e) {
+    return `<div style="${cardStyle()};color:#f87171">Not authenticated or IAM unavailable: ${escapeHtml(e.message)}</div>`;
+  }
+  try {
+    const s = await api('/api/iam/auth/sessions');
+    sessions = s.sessions || [];
+  } catch (_) { /* optional */ }
+
+  const sessionRows = sessions.length
+    ? sessions.map((s) => `<tr>
+        <td style="padding:4px 8px;font-size:12px">${escapeHtml(String(s.session_id || '').slice(0, 12))}…</td>
+        <td style="padding:4px 8px;font-size:12px">${escapeHtml(String(s.ip_address || '—'))}</td>
+        <td style="padding:4px 8px;font-size:12px">${escapeHtml(String(s.issued_at || ''))}</td>
+        <td style="padding:4px 8px;font-size:12px">${s.revoked ? '<span style="color:#f87171">revoked</span>' : '<span style="color:#4ade80">active</span>'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" style="padding:8px;opacity:.6">No sessions listed</td></tr>';
+
+  return `
+    <div style="${cardStyle()}">
+      <div style="font-size:13px;opacity:.85;margin-bottom:8px">Identity</div>
+      <div style="display:grid;gap:4px;font-size:13px">
+        <div><b>${escapeHtml(me.username || '')}</b> <span style="opacity:.6">${escapeHtml(me.email || '')}</span></div>
+        <div>Roles: ${(me.roles || []).map(r => escapeHtml(typeof r === 'string' ? r : (r.role_key || r.label || ''))).join(', ') || '—'}</div>
+        <div>MFA: <b>${me.mfa_enabled ? 'enabled' : 'disabled'}</b></div>
+        <div style="opacity:.6;font-size:11px">Last login: ${escapeHtml(String(me.last_login_at || '—'))}</div>
+      </div>
+    </div>
+    <div style="${cardStyle()};margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;opacity:.85">Active sessions</div>
+        <button id="up-revoke-others" class="px-3 py-1 rounded text-xs bg-red-800/80 text-white">Revoke other sessions</button>
+      </div>
+      <table style="width:100%;border-collapse:collapse"><thead>
+        <tr style="text-align:left;opacity:.6;font-size:11px"><th style="padding:4px 8px">Session</th><th style="padding:4px 8px">IP</th><th style="padding:4px 8px">Issued</th><th style="padding:4px 8px">Status</th></tr>
+      </thead><tbody>${sessionRows}</tbody></table>
+    </div>
+    <div style="${cardStyle()};margin-top:12px">
+      <div style="font-size:13px;opacity:.85;margin-bottom:8px">Password & MFA</div>
+      <p style="font-size:12px;opacity:.7">Use the Login Encryption tab for MFA enroll/confirm/disable and password change — those flows are already live-wired there.</p>
+    </div>`;
+}
+
+function wireUserProfileSettings(host) {
+  const panel = document.getElementById('user-profile-settings-panel');
+  if (panel && !panel.dataset.wired) {
+    panel.dataset.wired = '1';
+    renderUserProfileSettingsLive().then((html) => {
+      panel.innerHTML = html;
+      wireUserProfileSettings(panel);
+    });
+    return;
+  }
+  const btn = (host || document).querySelector('#up-revoke-others');
+  if (btn) {
+    btn.onclick = async () => {
+      if (!confirm('Revoke all other sessions? You will stay signed in on this browser.')) return;
+      try {
+        await api('/api/iam/auth/sessions/revoke-others', { method: 'POST', body: '{}' });
+        if (host) host.innerHTML = await renderUserProfileSettingsLive();
+        wireUserProfileSettings(host);
+      } catch (e) {
+        alert('Revoke failed: ' + e.message);
+      }
+    };
   }
 }

@@ -92,6 +92,7 @@ from .assistant import router as assistant_router
 from .vulnscan import router as vulnscan_router
 from .automation import router as automation_router
 from .remote_exec import router as remote_exec_router, ws_router as exec_ws_router
+from .settings_dev import router as settings_dev_router
 
 __all__ = [
     "pentest_router",
@@ -139,4 +140,5 @@ __all__ = [
     "automation_router",
     "remote_exec_router",
     "exec_ws_router",
+    "settings_dev_router",
 ]

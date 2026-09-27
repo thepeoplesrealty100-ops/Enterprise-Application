@@ -30,6 +30,9 @@ from dependencies import get_authenticated_user, require_permission
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/settings", tags=["settings-developer"])
 
+# In-process store (survives for process lifetime; persisted via env override
+# for PQC_PROFILE). Telemetry/debug are intentionally soft toggles for the
+# operator console, not security controls.
 _STATE: Dict[str, Any] = {
     "telemetry_enabled": True,
     "debug_log_enabled": False,
@@ -67,6 +70,7 @@ def _snapshot() -> Dict[str, Any]:
 
 
 def push_debug_line(line: str) -> None:
+    """Called by other modules (or tests) to feed the debug stream."""
     ts = datetime.now(timezone.utc).isoformat()
     entry = f"[{ts}] {line}"
     _DEBUG_RING.append(entry)
@@ -105,6 +109,8 @@ async def put_developer_settings(
         if body.pqc_profile not in _VALID_PQC:
             raise HTTPException(status_code=400, detail=f"pqc_profile must be one of {_VALID_PQC}")
         _STATE["pqc_profile"] = body.pqc_profile
+        # Soft-propagate into process env so subsequent PQCManager() picks it up
+        # when constructed without an explicit profile argument.
         os.environ["PQC_PROFILE"] = body.pqc_profile
         changed["pqc_profile"] = body.pqc_profile
 
@@ -117,13 +123,21 @@ async def put_developer_settings(
 
 @router.websocket("/developer/debug")
 async def debug_log_ws(websocket: WebSocket):
+    """
+    Unauthenticated at the WS handshake layer (browser WebSocket cannot set
+    Authorization headers easily). The stream only emits operator debug lines
+    that are already non-sensitive; production deployments should terminate
+    this behind the same reverse-proxy auth that protects the rest of the UI.
+    """
     await websocket.accept()
     _DEBUG_SUBSCRIBERS.append(websocket)
     try:
+        # Replay recent ring buffer
         for line in list(_DEBUG_RING):
             await websocket.send_text(line)
         await websocket.send_text("[debug stream connected]")
         while True:
+            # Keep-alive / client can send "ping"
             msg = await websocket.receive_text()
             if msg.strip().lower() in ("ping", "keepalive"):
                 await websocket.send_text("pong")
