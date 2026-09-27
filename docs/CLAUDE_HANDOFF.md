@@ -1,70 +1,57 @@
-# JAKAL — Claude handoff (updated 2026-09-27)
+# JAKAL — Claude handoff (updated 2026-09-27 ~03:40 EDT)
 
 ## Mission
-Build and harden the JAKAL Enterprise-Application (Horizon / JAKALHUS-OS Console): a 24-module cybersecurity + agentic AI platform. **Do not rewrite the app.** Extend the existing FastAPI + index.html foundation surgically.
+Harden JAKAL Enterprise-Application (Horizon / JAKALHUS-OS Console). **Do not rewrite.** Surgical extensions only on FastAPI + `index.html` foundation.
 
-## Primary AI model (mandatory)
-- **Claude (Anthropic) is the primary LLM.** Ollama is offline/dev fallback only.
-- `LLM_ENGINE=claude` (default in `backend/config/__init__.py`)
-- `CLAUDE_MODEL=claude-sonnet-4-20250514`
-- Requires `CLAUDE_API_KEY` in `.env` (production hard-fails without it; development warns)
-- Health: `GET /api/llm/health`
-- Orchestrator: `backend/llm_orchestrator.py` (system prompt = security ops + approval-gate bias)
+## Primary AI (mandatory)
+- **Claude** is primary. Ollama = offline/dev fallback only.
+- `LLM_ENGINE=claude`, `CLAUDE_MODEL=claude-sonnet-4-20250514`, `CLAUDE_API_KEY` in `.env`
+- Prod: missing key = hard fail. Dev: soft warn (API still boots).
+- `GET /api/llm/health` · orchestrator system prompt = security ops + approval-gate bias
+- Operator Console free-text routes to `/api/assistant/generate` (Claude)
 
 ## Branch / PR
-- Branch: `feat/settings-developer-system-profile`
+- `feat/settings-developer-system-profile`
 - PR: https://github.com/thepeoplesrealty100-ops/Enterprise-Application/pull/21
-- Merge into `main` when CI is green.
-- Apply local patch `0005-feat-fabric-fleet-soar-claude-handoff.patch` if index.html device actions / fabric bars are missing after pull.
+- Apply patch **`0006-feat-toast-timeline-operator-claude.patch`** if local is behind (index/integration/operator-console/llm).
 
-## Safety invariants (never break)
-1. Host **isolate / quarantine** are **staged** via Human Approval Gate — never auto-execute against production.
-2. HIGH/CRITICAL payloads require approval (+ optional Maya 2FA).
-3. PQC audit trail on security-sensitive actions.
-4. Claude remains default LLM; do not flip default to Ollama.
+## Safety invariants
+1. Host isolate/quarantine **staged only** (Approval Gate).
+2. HIGH/CRITICAL need human approval (+ optional Maya 2FA).
+3. PQC audit on sensitive actions.
+4. Never default LLM to Ollama.
 
-## What is live / robust
-| Module / area | Backend | UI | Notes |
-|---------------|---------|-----|--------|
-| Global Dashboard + Fleet | `/api/dashboard/fleet` | Live cards + detail actions | Scan/Isolate/Quarantine |
-| Fabric Zero Trust posture | `/api/fabric/status` | Pillar bars + capability cards | NSA/CISA maturity |
-| SOAR | `/api/soar/auto-triage`, tickets | Run + ticket list + loading state | Containment approval-gated |
-| Response | `/api/response/*` | Live Ops + fleet actions | Triage, IOC, isolate |
-| Settings Developer / System / User Profile | `/api/settings/developer`, IAM sessions | Global Settings tabs | This branch |
-| Resonance / Q'AIP / Energy | routers present | Module pages | |
-| Compliance / Dark Web / Awareness | routers present | Module pages | |
-| Cheatsheet / Integrations / Audit | routers present | Module pages | |
-| Quantum / Ontology / Canvas | routers present | Module pages | |
-| Operator Console | `/health`, fabric | Slash commands | |
-| Live data bridge | — | `js/jakal-live-data.js` | Fleet ids, fabric, agent logs |
+## Live / robust matrix
+| Area | Notes |
+|------|--------|
+| Global Fleet | Live `/api/dashboard/fleet`; Scan/Isolate/Quarantine actions |
+| Fabric | Pillar progress bars; capability cards; live `/api/fabric/status` |
+| SOAR | Auto-triage + tickets + loading/finally + toasts |
+| Dashboard activity | Timeline UI (`jakal-timeline`) from agent logs |
+| Toasts | `window.jakalToast(msg, 'ok'|'err'|'info')` |
+| Operator Console | `/llm`, `/timeline`, free-text → assistant/Claude |
+| Settings | Developer / Global System / User Profile |
+| Live bridge | `js/jakal-live-data.js` preserves backendIds |
 
 ## Key files
-- UI: `index.html`, `integration.js`, `js/jakal-live-data.js`, `js/operator-console.js`
-- Config/LLM: `backend/config/__init__.py`, `backend/llm_orchestrator.py`, `.env.example`
-- Settings: `backend/routers/settings_dev.py`
-- Response / SOAR: `backend/routers/response.py`, `backend/routers/soar.py`
-- Fleet bridge: `backend/routers/ui_bridge.py`
-- Fabric: `backend/routers/fabric.py`
+`index.html`, `integration.js`, `js/jakal-live-data.js`, `js/operator-console.js`,
+`backend/config/__init__.py`, `backend/llm_orchestrator.py`, `backend/app.py`,
+`backend/routers/settings_dev.py`, `response.py`, `soar.py`, `ui_bridge.py`, `fabric.py`
 
-## Suggested next work (priority)
-1. Merge PR #21; pull main.
-2. Ensure `.env` has `CLAUDE_API_KEY` on operator machines.
-3. Agent activity **timeline** visualization on Global Dashboard (`/api/agent/logs`).
-4. Per-capability drill-down actions on Fabric cards.
-5. SOAR playbook library catalog UI beyond auto-triage.
-6. Uniform loading/error/success toasts on every destructive table action.
-7. Operator Console: replace remaining demo branches with live endpoints.
-8. Keep `backend/tests/test_settings_developer.py` green in CI.
+## Next priorities for Claude
+1. Merge PR #21 when CI green.
+2. Fabric capability card drill-down (live metrics per module_key).
+3. Uniform toast on every remaining destructive table action.
+4. Vuln management pills: ensure live `/api/vulnerability*` bind.
+5. Predictive Command / Load Monitor: confirm live widgets in integration inject.
+6. Expand SOAR beyond auto-triage if playbook catalog API is added.
+7. Keep tests green (`test_settings_developer.py`, suite).
 
-## Local verify (Windows PowerShell)
+## Local (PowerShell)
 ```powershell
 cd C:\Users\Freddy\Enterprise-Application
 git checkout feat/settings-developer-system-profile
 git pull origin feat/settings-developer-system-profile
-# Edit .env: CLAUDE_API_KEY=sk-ant-...
-# Restart backend, Ctrl+Shift+R on http://localhost:8000
+# .env: CLAUDE_API_KEY=... LLM_ENGINE=claude
+# Restart backend; Ctrl+Shift+R
 ```
-
-## Research themes already applied
-Palantir Workshop hierarchy, Anduril single-pane status, IBM QRadar dark SOC density,
-NSA/CISA Zero Trust pillars, Claude-first agentic security ops.
