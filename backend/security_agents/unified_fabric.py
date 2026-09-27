@@ -236,6 +236,8 @@ class UnifiedSecurityFabric:
             "fabric": "Unified Security Fabric",
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "capability_count": len(capabilities),
+            "overall_score": posture.get("overall_score", 0),
+            "overall_level": posture.get("overall_level", "unknown"),
             "capabilities": capabilities,
             "posture": posture,
             "cross_cutting": CROSS_CUTTING,

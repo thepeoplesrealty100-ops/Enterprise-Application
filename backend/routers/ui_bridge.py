@@ -41,7 +41,7 @@ Endpoints:
 v1.0 - Fully integrated with DuckDB, SSE telemetry, and approval gates
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 from datetime import datetime, timezone, timedelta
 import json
@@ -221,6 +221,44 @@ async def get_device_details(device_id: int):
         }
     except Exception as e:
         logger.error(f"Error fetching device {device_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/dashboard/fleet/register")
+async def register_device(request: Request):
+    """Register or update a device in the fleet (agent self-registration)."""
+    from database import get_db_manager
+    db = get_db_manager()
+    body = await request.json()
+    hostname = body.get("hostname", "UNKNOWN")
+    ip = body.get("ip_address", "")
+    os_fp = body.get("os_fingerprint", "")
+    mac = body.get("mac_address", "")
+    tags = json.dumps(body.get("tags", []))
+    risk = float(body.get("risk_score", 0.1))
+    notes = body.get("notes", "")
+    try:
+        existing = db.query("SELECT id FROM network_map WHERE hostname = ?", [hostname])
+        if existing:
+            db.conn.execute(
+                "UPDATE network_map SET ip_address=?, os_fingerprint=?, risk_score=?, tags=?, notes=? WHERE hostname=?",
+                [ip, os_fp, risk, tags, notes, hostname]
+            )
+            device_id = existing[0][0]
+            action = "updated"
+        else:
+            db.conn.execute(
+                """INSERT INTO network_map (hostname, ip_address, mac_address, os_fingerprint, risk_score, tags, discovered_at, notes)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                [hostname, ip, mac, os_fp, risk, tags, datetime.now(timezone.utc).isoformat(), notes]
+            )
+            row = db.query("SELECT id FROM network_map WHERE hostname = ?", [hostname])
+            device_id = row[0][0] if row else None
+            action = "registered"
+        db.conn.commit()
+        return {"status": "ok", "action": action, "device_id": device_id, "hostname": hostname}
+    except Exception as e:
+        logger.error(f"Device registration error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

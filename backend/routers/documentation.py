@@ -1,5 +1,5 @@
 """
-routers/documentation.py — IT Glue-style documentation, asset management,
+routers/documentation.py — GACyber Documentation Engine — asset management,
 and zero-knowledge vault engine.
 
 Architecture mirrors IT Glue's three core pillars:
