@@ -874,6 +874,8 @@
             admin_vulnerabilities: { title: "Vulnerability Management", html: () => renderVulnerabilityManagement() },
             admin_integrations: { title: "Integrations", html: () => renderIntegrationsVault() },
             admin_audit_trail: { title: "Audit Trail", html: () => renderAuditTrail() },
+            // Standalone deep-link for report builder
+            admin_report_builder: { title: "CPENT / Pentest Report Builder", html: () => renderTradeSecretsTab() },
 
             // CLIENT PORTAL (ORIGINAL)
             client_global_dashboard: { title: "Client Global Dashboard", html: () => renderGlobalClientDashboard() },
@@ -1657,7 +1659,35 @@
               body: `#!/bin/bash\necho "=== IAM Identity ==="\naws sts get-caller-identity\necho "=== S3 Buckets ==="\naws s3 ls\necho "=== EC2 Instances ==="\naws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,State.Name,PublicIpAddress]' --output table\necho "=== Security Groups ==="\naws ec2 describe-security-groups --query 'SecurityGroups[*].[GroupId,GroupName,Description]' --output table\necho "=== IAM Users ==="\naws iam list-users --output table` },
             { id: 'builtin-report-gen', name: 'CPENT Report Generator (local)', category: 'reporting', os: 'cross', lang: 'bash', tags: ['cpent','report','generate'],
               description: 'Generate CPENT-style pentest report skeleton from scan outputs in the current directory.',
-              body: `#!/bin/bash\nCLIENT="\${1:-CLIENT_NAME}"\nDATE=$(date +%Y-%m-%d)\nOUTPUT="CPENT_Report_\${CLIENT}_\${DATE}.md"\ncat > "\${OUTPUT}" << EOF\n# CPENT Pentest Report — \${CLIENT}\n**Date:** \${DATE}\n**Assessor:** [Your Name]\n**Classification:** CONFIDENTIAL\n\n## Executive Summary\n[Risk rating, key findings, remediation priority]\n\n## Scope & Methodology\n[In-scope assets, testing approach, tools used]\n\n## Findings Summary\n| # | Title | Severity | CVSS | Status |\n|---|-------|----------|------|--------|\n| 1 | [Finding Title] | Critical | 9.8 | Open |\n\n## Technical Findings\n### Finding 1: [Title]\n**Severity:** Critical\n**CVSS:** 9.8 (AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)\n**Description:** ...\n**Proof of Concept:** ...\n**Remediation:** ...\nEOF\necho "[+] Report skeleton created: \${OUTPUT}"` },
+              body: `#!/bin/bash\nCLIENT="\${1:-CLIENT_NAME}"\nDATE=$(date +%Y-%m-%d)\nOUTPUT="CPENT_Report_\${CLIENT}_\${DATE}.md"\ncat > "\${OUTPUT}" << EOF\n# CPENT Pentest Report — \${CLIENT}\n**Date:** \${DATE}\n**Assessor:** [Your Name]\n**Classification:** CONFIDENTIAL\n\n## Executive Summary\n[Risk rating, key findings, remediation priority]\n\n## Scope & Methodology\n[In-scope assets, testing approach, tools used]\n\n## Findings Summary\n| # | Title | Severity | CVSS | Status |\n|---|-------|----------|------|--------|\n| 1 | [Finding Title] | Critical | 9.8 | Open |\nEOF\necho "[+] Report skeleton: \${OUTPUT}"` },
+            // CPENTv2 Official Scripts (Module 03 - OSINT)
+            { id: 'cpent-dns-interrogation', name: 'DNS Interrogation', category: 'recon', os: 'linux', lang: 'bash', tags: ['dns','whois','nmap','osint'],
+              description: 'CPENTv2 Module 03 — Perform WHOIS lookup and DNS record collection on a target domain.',
+              body: `#!/bin/bash\n# CPENTv2 Module 03 — DNS Interrogation\nread -p "Enter the target website: " target\nmkdir -p DNS_Interrogation_Results\necho "Performing whois lookup..."\nnmap -sn --script whois-* \${target} > DNS_Interrogation_Results/whois.txt\necho "Collecting DNS records..."\ndnsrecon -d \${target} > DNS_Interrogation_Results/dns_records.txt\necho "All tasks completed. Results saved in DNS_Interrogation_Results/"` },
+            { id: 'cpent-attack-surface', name: 'Attack Surface Mapping', category: 'recon', os: 'cross', lang: 'python', tags: ['nmap','scanning','discovery','osint'],
+              description: 'CPENTv2 Module 03 — Comprehensive nmap host discovery, port scanning, and service version detection.',
+              body: `#!/usr/bin/env python3\n# CPENTv2 Module 03 — Attack Surface Mapping\nimport subprocess\n\ndef run_nmap(target, scan_type):\n    result = subprocess.run(['nmap', scan_type, target], capture_output=True, text=True)\n    return result.stdout\n\ntarget = input("Enter target URL or IP: ")\nprint("Host Discovery (ICMP):", run_nmap(target, '-sn'))\nprint("TCP Connect Scan:", run_nmap(target, '-sT'))\nprint("Service Version:", run_nmap(target, '-sV'))\nprint("UDP Top-1000:", run_nmap(target, '-sU --top-ports 1000'))\n\nwith open('Scan_Results.txt', 'w') as f:\n    for scan in ['-sn', '-sT', '-sU', '-sS', '-sX', '-sV']:\n        f.write(f"{scan}:\\n" + run_nmap(target, scan) + "\\n")\nprint("Results saved to Scan_Results.txt")` },
+            { id: 'cpent-discover-hosts', name: 'Discover Live Hosts', category: 'recon', os: 'cross', lang: 'python', tags: ['hosts','discovery','ping','nmap'],
+              description: 'CPENTv2 Module 03 — Discover live hosts on a network using ICMP, ARP, and TCP pings.',
+              body: `#!/usr/bin/env python3\n# CPENTv2 Module 03 — Discover Live Hosts\nimport subprocess, ipaddress\n\nnetwork = input("Enter network range (e.g. 192.168.1.0/24): ")\nprint(f"Scanning {network}...")\nresult = subprocess.run(['nmap', '-sn', network, '-oN', 'live_hosts.txt'], capture_output=True, text=True)\nprint(result.stdout)\nlines = [l for l in result.stdout.split('\\n') if 'Nmap scan report' in l]\nprint(f"\\n[+] Found {len(lines)} live hosts:")\nfor l in lines:\n    print('  ', l.replace('Nmap scan report for ', ''))\nprint("\\nFull results saved to live_hosts.txt")` },
+            // CPENTv2 Official Scripts (Module 05 - Web App)
+            { id: 'cpent-web-vuln-scan', name: 'Web Vulnerability Scanner', category: 'web-app', os: 'cross', lang: 'python', tags: ['web','nikto','xss','sqli','forms'],
+              description: 'CPENTv2 Module 05 — Identify input entry points, scan with Nikto, and perform fuzz testing.',
+              body: `#!/usr/bin/env python3\n# CPENTv2 Module 05 — Web Vulnerability Scanning\nimport subprocess, requests\nfrom bs4 import BeautifulSoup\nfrom urllib.parse import urljoin\n\nOUTPUT = "Web_Vuln_Results.txt"\ntarget = input("Enter target URL (e.g. https://example.com): ")\n\n# Identify forms\nresp = requests.get(target, headers={'User-Agent':'Mozilla/5.0'})\nsoup = BeautifulSoup(resp.text, 'html.parser')\nforms = soup.find_all('form')\nprint(f"[1] Found {len(forms)} forms")\n\n# Nikto scan\nprint("[2] Running Nikto...")\nos_result = subprocess.getoutput(f"nikto -h {target}")\nprint(os_result[:2000])\n\n# Basic fuzz\nprint("[3] Fuzz testing...")\npayloads = ["' OR '1'='1", "<script>alert('XSS')</script>", "A"*5000]\nfor form in forms:\n    action = form.get('action',''); method = form.get('method','GET').upper()\n    data = {i.get('name','x'): payloads[0] for i in form.find_all('input') if i.get('name')}\n    url = urljoin(target, action)\n    r = requests.post(url, data=data) if method=='POST' else requests.get(url, params=data)\n    print(f"  Tested {url}: HTTP {r.status_code}")\nprint(f"Complete. Results: {OUTPUT}")` },
+            { id: 'cpent-dir-bruteforce', name: 'Directory Brute-Force (CPENTv2)', category: 'web-app', os: 'cross', lang: 'python', tags: ['gobuster','dirb','directories','wordlist'],
+              description: 'CPENTv2 Module 05 — Brute-force web directories using common wordlists.',
+              body: `#!/usr/bin/env python3\n# CPENTv2 Module 05 — Directory Brute-Force\nimport subprocess\n\ntarget = input("Enter target URL: ")\nwordlist = input("Wordlist path [/usr/share/wordlists/dirb/common.txt]: ") or "/usr/share/wordlists/dirb/common.txt"\ncmd = f"gobuster dir -u {target} -w {wordlist} -x php,html,js,txt,bak -t 50 -o gobuster_results.txt"\nprint(f"Running: {cmd}")\nresult = subprocess.run(cmd, shell=True, capture_output=True, text=True)\nprint(result.stdout)\nprint("Results saved to gobuster_results.txt")` },
+            // CPENTv2 Official Scripts (Module 10 - Linux PrivEsc)
+            { id: 'cpent-linux-enum', name: 'Linux Privilege Escalation Enum', category: 'post-exploit', os: 'linux', lang: 'bash', tags: ['privesc','linux','suid','cron'],
+              description: 'CPENTv2 Module 10 — Enumerate Linux privilege escalation vectors: SUID, sudo, cron, kernel.',
+              body: `#!/bin/bash\n# CPENTv2 Module 10 — Linux Privilege Escalation Enumeration\necho "=== System Info ==="\nuname -a; cat /etc/os-release 2>/dev/null\necho "\\n=== Current User ==="\nid; whoami\necho "\\n=== Sudo Rights ==="\nsudo -l 2>/dev/null\necho "\\n=== SUID Binaries ==="\nfind / -perm -u=s -type f 2>/dev/null\necho "\\n=== World-Writable Files ==="\nfind / -perm -o=w -not -type l -type f 2>/dev/null | head -20\necho "\\n=== Cron Jobs ==="\ncat /etc/crontab 2>/dev/null\nls -la /etc/cron* 2>/dev/null\necho "\\n=== Network Connections ==="\nnetstat -tulnp 2>/dev/null || ss -tulnp\necho "\\n=== Running Processes ==="\nps aux\necho "\\n=== Writable /etc/passwd? ==="\nls -la /etc/passwd\necho "[+] Enumeration complete"` },
+            { id: 'cpent-linux-gain-access', name: 'Linux Gain Access & Enumerate', category: 'post-exploit', os: 'linux', lang: 'bash', tags: ['ssh','brute','hydra','access'],
+              description: 'CPENTv2 Module 10 — Attempt SSH access and run post-exploitation enumeration.',
+              body: `#!/bin/bash\n# CPENTv2 Module 10 — Gain Access and Enumerate\nTARGET="\${1:-TARGET_IP}"\nUSERS="\${2:-/usr/share/wordlists/metasploit/unix_users.txt}"\nPASS="\${3:-/usr/share/wordlists/rockyou.txt}"\necho "[*] SSH Brute Force on \${TARGET}..."\nhydra -L \${USERS} -P \${PASS} \${TARGET} ssh -t 4 -o hydra_ssh_results.txt 2>/dev/null\necho "[*] Results saved to hydra_ssh_results.txt"\necho "[+] If access gained, run: ssh user@\${TARGET}"` },
+            // CPENTv2 Module 13 — IoT
+            { id: 'cpent-iot-enum', name: 'IoT Device Enumeration', category: 'network', os: 'linux', lang: 'bash', tags: ['iot','shodan','nmap','firmware'],
+              description: 'CPENTv2 Module 13 — Enumerate IoT devices, discover services, and check for default credentials.',
+              body: `#!/bin/bash\n# CPENTv2 Module 13 — IoT Penetration Testing\nRANGE="\${1:-192.168.1.0/24}"\necho "=== IoT Device Discovery ==="\nnmap -sV -p 23,80,443,8080,8443,554,1883,5683 --script banner,http-title \${RANGE} -oN iot_scan.txt\necho "\\n=== MQTT Discovery ==="\nnmap -p 1883 --script mqtt-subscribe \${RANGE} 2>/dev/null\necho "\\n=== RTSP Cameras ==="\nnmap -p 554 --script rtsp-url-brute \${RANGE} 2>/dev/null\necho "\\n=== Default Credential Check ==="\nnmap -p 23,80 --script telnet-brute,http-brute --script-args userdb=/usr/share/nmap/nselib/data/usernames.lst,passdb=/usr/share/nmap/nselib/data/passwords.lst \${RANGE} 2>/dev/null\necho "[+] IoT scan complete → iot_scan.txt"` },
         ];
 
         function renderScriptLibraryTab() {
@@ -5274,18 +5304,26 @@
                             <!-- Report Preview Panel -->
                             <div id="rb-preview-area" class="hidden border-t border-border-color pt-4">
                                 <div class="flex items-center justify-between mb-2">
-                                    <h5 class="text-sm font-semibold text-white">Report Preview</h5>
+                                    <h5 class="text-sm font-semibold text-white flex items-center gap-2">
+                                        <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i>Report Preview
+                                        <span id="rb-preview-date" class="text-xs text-gray-500 font-normal ml-2"></span>
+                                    </h5>
                                     <div class="flex gap-2">
+                                        <button onclick="window.openReportFullView()" class="text-xs bg-blue-900/40 text-blue-300 hover:bg-blue-900/70 px-2 py-1 rounded flex items-center gap-1"><i data-lucide="external-link" class="w-3 h-3"></i>Full View</button>
                                         <button onclick="window.copyReportPreview()" class="text-xs text-primary-color hover:underline flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i>Copy</button>
-                                        <button onclick="window.downloadReportPreview()" class="text-xs text-emerald-400 hover:underline flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i>Download</button>
+                                        <button onclick="window.downloadReportPreview()" class="text-xs text-emerald-400 hover:underline flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i>Download HTML</button>
                                         <button onclick="document.getElementById('rb-preview-area').classList.add('hidden')" class="text-xs text-gray-500 hover:text-white">✕</button>
                                     </div>
                                 </div>
-                                <!-- GACyber branded report header -->
+                                <!-- GACyber branded report header + iframe preview -->
                                 <div class="rounded-xl overflow-hidden border border-blue-900/30">
                                     <div class="px-4 py-3 text-white text-xs font-bold flex items-center gap-2" style="background:linear-gradient(135deg,#001a3a,#003380)">
+                                        <div class="w-5 h-5 rounded flex items-center justify-center text-white font-black text-xs" style="background:linear-gradient(135deg,#00c6ff,#0072ff)">G</div>
                                         <span style="color:#00c6ff">GACyber Defense LLC</span>
-                                        <span class="text-gray-400 font-normal ml-auto" id="rb-preview-date"></span>
+                                        <span class="text-gray-400 font-normal text-xs">— CPENT v2 Report</span>
+                                    </div>
+                                    <div id="rb-preview-html-wrap" class="hidden">
+                                        <iframe id="rb-preview-iframe" sandbox="allow-same-origin" class="w-full border-0 bg-gray-900" style="height:480px;"></iframe>
                                     </div>
                                     <pre id="rb-preview-content" class="text-xs text-gray-300 bg-gray-900 p-4 overflow-y-auto max-h-80 whitespace-pre-wrap font-mono leading-relaxed scrollbar-style"></pre>
                                 </div>
@@ -5416,15 +5454,30 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
 
         window._lastReportContent = '';
         window.copyReportPreview = () => {
-            if (window._lastReportContent) navigator.clipboard.writeText(window._lastReportContent).then(() => window.showToast?.('Report copied', 'success'));
+            const content = window._lastReportHtml || window._lastReportContent;
+            if (content) navigator.clipboard.writeText(content).then(() => window.showToast?.('Report copied', 'success'));
+        };
+        window.openReportFullView = () => {
+            const html = window._lastReportHtml || window._lastReportContent;
+            if (!html) return;
+            const blob = new Blob([html], {type:'text/html'});
+            window.open(URL.createObjectURL(blob), '_blank');
         };
         window.downloadReportPreview = () => {
-            if (!window._lastReportContent) return;
             const clientName = document.getElementById('rb-client-name')?.value || 'client';
-            const blob = new Blob([window._lastReportContent], {type:'text/plain'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            a.download = `GACyber_Report_${clientName.replace(/\s+/g,'-')}_${new Date().toISOString().slice(0,10)}.md`;
-            a.click();
+            const safeName = clientName.replace(/\s+/g,'-');
+            const date = new Date().toISOString().slice(0,10);
+            if (window._lastReportHtml) {
+                const blob = new Blob([window._lastReportHtml], {type:'text/html'});
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = `GACyber_CPENT_Report_${safeName}_${date}.html`;
+                a.click();
+            } else if (window._lastReportContent) {
+                const blob = new Blob([window._lastReportContent], {type:'text/plain'});
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = `GACyber_Report_${safeName}_${date}.md`;
+                a.click();
+            }
         };
 
         window.loadReportSections = async () => {
@@ -5482,118 +5535,8 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
                         const r = await api('/api/report-builder/generate', { method: 'POST', body: JSON.stringify(body) });
                         reportContent = typeof r === 'string' ? r : (r.content || r.markdown || JSON.stringify(r, null, 2));
                     } catch (apiErr) {
-                        // Fallback: generate a local CPENT report skeleton
-                        const date = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
-                        reportContent = `# CPENT Penetration Test Report
-## GACyber Defense LLC — CONFIDENTIAL
-
-**Client:** ${clientName}
-**Assessor:** ${assessor}
-**Date:** ${date}
-**Engagement ID:** ${engagement || 'N/A'}
-**Template:** ${template || 'Custom'}
-**Classification:** CONFIDENTIAL — FOR AUTHORIZED EYES ONLY
-
----
-
-## Executive Summary
-
-This report presents the findings of a ${template.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) || 'penetration test'} conducted by GACyber Defense LLC against ${clientName}. The assessment was performed in accordance with CPENT (Certified Penetration Testing Engineer) methodology.
-
-**Overall Risk Rating:** [HIGH / MEDIUM / LOW]
-
-**Key Findings:**
-- [Finding 1 — Critical]
-- [Finding 2 — High]
-- [Finding 3 — Medium]
-
----
-
-## Scope & Methodology
-
-### Scope of Work
-${scopeText || '[Describe target scope, IP ranges, domains, and systems in scope]'}
-
-### Scope Technicals
-\`\`\`
-${scopeTechnicals || '[Target IPs, ports, OS versions, discovered services]'}
-\`\`\`
-
-### Methodology
-CPENT testing methodology was applied across all phases:
-1. Passive Intelligence Gathering (OSINT, DNS, WHOIS, Shodan)
-2. Active Scanning (Nmap, Nessus, OpenVAS)
-3. Vulnerability Enumeration & Analysis
-4. Exploitation & Proof-of-Concept Development
-5. Post-Exploitation & Privilege Escalation
-6. Lateral Movement Analysis
-7. Evidence Collection & Documentation
-
-### Tools Used
-- Nmap, Masscan (discovery & scanning)
-- Metasploit Framework (exploitation)
-- Burp Suite (web application testing)
-- CrackMapExec, Impacket (Active Directory)
-- BloodHound (AD attack path analysis)
-- Nikto, SQLMap (web vulnerability scanning)
-- Aircrack-ng, Reaver (wireless, if in scope)
-
----
-
-## Findings Summary
-
-| # | Title | Severity | CVSS | Status |
-|---|-------|----------|------|--------|
-| 1 | [Finding Title] | Critical | 9.8 | Open |
-| 2 | [Finding Title] | High | 7.5 | Open |
-| 3 | [Finding Title] | Medium | 5.3 | Open |
-
----
-
-## Technical Findings
-
-### Finding 1: [Title]
-**Severity:** Critical
-**CVSS Score:** 9.8 (AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)
-**Affected Systems:** [List of affected hosts/services]
-**Description:**
-[Detailed technical description of the vulnerability]
-
-**Proof of Concept:**
-\`\`\`
-[Command/payload used to demonstrate the vulnerability]
-\`\`\`
-
-**Business Impact:**
-[Impact on confidentiality, integrity, availability]
-
-**Remediation:**
-[Specific remediation steps with priority timeline]
-
-**References:**
-- CVE-XXXX-XXXXX
-- https://nvd.nist.gov/vuln/detail/CVE-XXXX-XXXXX
-
----
-
-## Remediation Roadmap
-
-| Priority | Finding | Owner | Target Date |
-|----------|---------|-------|-------------|
-| Critical (24h) | [Finding 1] | IT Security | Immediate |
-| High (7 days) | [Finding 2] | IT Operations | [Date] |
-| Medium (30 days) | [Finding 3] | Dev Team | [Date] |
-
----
-
-## Conclusion
-
-${clientName} presents a [HIGH/MEDIUM/LOW] overall security posture. GACyber Defense LLC recommends immediate remediation of all critical and high severity findings. A follow-up validation test is recommended after remediation is complete.
-
----
-
-*Report prepared by ${assessor} | GACyber Defense LLC | www.gacyberdefense.com*
-*Classification: CONFIDENTIAL — Do not distribute without authorization*`;
+                        // Fallback: generate full CPENT v2 structured HTML report
+                        reportContent = window._buildCpentV2Report({clientName, assessor, engagement, scopeText, scopeTechnicals, template});
                     }
 
                     window._lastReportContent = reportContent;
@@ -5601,9 +5544,25 @@ ${clientName} presents a [HIGH/MEDIUM/LOW] overall security posture. GACyber Def
                     const previewContent = document.getElementById('rb-preview-content');
                     const previewDate = document.getElementById('rb-preview-date');
                     if (previewArea) previewArea.classList.remove('hidden');
-                    if (previewContent) previewContent.textContent = reportContent;
+                    // Render as HTML in iframe, else show as text
+                    if (reportContent.trim().startsWith('<!DOCTYPE') || reportContent.trim().startsWith('<html')) {
+                        window._lastReportHtml = reportContent;
+                        const iframeWrap = document.getElementById('rb-preview-html-wrap');
+                        const iframe = document.getElementById('rb-preview-iframe');
+                        if (iframe && iframeWrap) {
+                            iframeWrap.classList.remove('hidden');
+                            if (previewContent) previewContent.classList.add('hidden');
+                            const blob = new Blob([reportContent], {type:'text/html'});
+                            iframe.src = URL.createObjectURL(blob);
+                        }
+                    } else {
+                        window._lastReportHtml = null;
+                        if (previewContent) { previewContent.classList.remove('hidden'); previewContent.textContent = reportContent; }
+                        const iframeWrap = document.getElementById('rb-preview-html-wrap');
+                        if (iframeWrap) iframeWrap.classList.add('hidden');
+                    }
                     if (previewDate) previewDate.textContent = new Date().toLocaleDateString();
-                    statusEl.textContent = `✓ Report generated — preview below`;
+                    statusEl.textContent = '✓ CPENT v2 report generated — preview below';
                 } else {
                     // docx/pdf → download as binary
                     const resp = await fetch('/api/report-builder/generate', {
@@ -5708,6 +5667,415 @@ ${clientName} presents a [HIGH/MEDIUM/LOW] overall security posture. GACyber Def
                 const a = document.createElement('a'); a.href = url; a.download = `rfp-response-${id}.${fmt}`;
                 document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
             } catch(e) { window.showAppModal('Export Error', escapeHtml(e.message)); }
+        };
+
+        // ── CPENT v2 Full Report Builder ─────────────────────────────────────────
+        window._buildCpentV2Report = function(opts) {
+            var clientName = opts.clientName, assessor = opts.assessor, engagement = opts.engagement,
+                scopeText = opts.scopeText, scopeTechnicals = opts.scopeTechnicals, template = opts.template;
+            var date = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+            var tplMap = {
+                'cpent-full': 'CPENT Full Assessment',
+                'external-pentest': 'External Penetration Test',
+                'internal-assessment': 'Internal Network Assessment',
+                'web-app-owasp': 'Web Application (OWASP Top-10)',
+                'wireless-audit': 'Wireless Security Audit',
+                'cloud-aws': 'AWS Cloud Security Review',
+                'red-team': 'Red Team Engagement',
+                'vulnerability-assessment': 'Vulnerability Assessment',
+                'social-eng': 'Social Engineering Assessment',
+            };
+            var tplLabel = tplMap[template] || 'CPENT Penetration Test';
+
+            function row(label, val) {
+                val = val === undefined ? '' : val;
+                return '<tr><td class="rpt-th">' + label + '</td><td class="rpt-td">' + val + '</td></tr>';
+            }
+            function chkRow(label) {
+                return '<tr><td class="rpt-th">' + label + '</td><td class="rpt-td">&#9744; Yes &nbsp;&nbsp; &#9744; No</td></tr>';
+            }
+            function fiveRow(label) {
+                return '<tr><td class="rpt-th">' + label + '</td><td class="rpt-td">1.&nbsp;&nbsp;&nbsp;&nbsp;2.&nbsp;&nbsp;&nbsp;&nbsp;3.&nbsp;&nbsp;&nbsp;&nbsp;4.&nbsp;&nbsp;&nbsp;&nbsp;5.</td></tr>';
+            }
+            function sectionHeader(num, title, desc) {
+                desc = desc || '';
+                return '<div class="rpt-section-hdr"><span class="rpt-section-num">' + num + '</span>' + title + '</div>' +
+                    (desc ? '<p class="rpt-section-desc">' + desc + '</p>' : '');
+            }
+            function subsection(num, title, rows) {
+                return '<div class="rpt-subsection"><div class="rpt-subsection-hdr">' + num + '&nbsp;&nbsp;' + title + '</div>' +
+                    '<table class="rpt-table">' + rows + '</table></div>';
+            }
+            function emptyRows(n, cols) {
+                var s = '', td = '<td class="rpt-td"></td>';
+                for (var i = 0; i < n; i++) { s += '<tr>'; for (var c = 0; c < cols; c++) s += td; s += '</tr>'; }
+                return s;
+            }
+            function numRows(n, cols) {
+                var s = '';
+                for (var i = 1; i <= n; i++) {
+                    s += '<tr><td class="rpt-td">' + i + '.</td>';
+                    for (var c = 1; c < cols; c++) s += '<td class="rpt-td"></td>';
+                    s += '</tr>';
+                }
+                return s;
+            }
+            function thRow(labels) {
+                return '<tr>' + labels.map(function(l){ return '<th class="rpt-th">' + l + '</th>'; }).join('') + '</tr>';
+            }
+
+            const css = `
+                <style>
+                body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0f1e;color:#e2e8f0;margin:0;padding:0;}
+                .rpt-cover{background:linear-gradient(135deg,#001a3a,#003380);padding:48px 40px;min-height:180px;position:relative;}
+                .rpt-logo-row{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+                .rpt-logo-box{width:56px;height:56px;background:linear-gradient(135deg,#00c6ff,#0072ff);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;}
+                .rpt-org-name{font-size:22px;font-weight:700;color:#00c6ff;letter-spacing:0.04em;}
+                .rpt-org-sub{font-size:12px;color:#94a3b8;margin-top:2px;}
+                .rpt-title{font-size:28px;font-weight:800;color:#ffffff;margin:16px 0 4px;}
+                .rpt-title-sub{font-size:14px;color:#94a3b8;}
+                .rpt-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px;}
+                .rpt-meta-item label{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;display:block;}
+                .rpt-meta-item span{font-size:14px;color:#e2e8f0;font-weight:600;}
+                .rpt-confidential{position:absolute;top:16px;right:24px;font-size:11px;font-weight:700;color:#ef4444;letter-spacing:0.12em;border:1px solid #ef4444;padding:3px 8px;border-radius:4px;}
+                .rpt-body{padding:24px 32px;max-width:1000px;margin:0 auto;}
+                .rpt-section-hdr{background:linear-gradient(90deg,#0072ff22,transparent);border-left:4px solid #0072ff;padding:10px 14px;margin:28px 0 12px;font-size:15px;font-weight:700;color:#00c6ff;display:flex;align-items:center;gap:12px;}
+                .rpt-section-num{background:#0072ff;color:#fff;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
+                .rpt-section-desc{font-size:12px;color:#64748b;padding:0 14px 8px;font-style:italic;}
+                .rpt-subsection{margin-bottom:20px;}
+                .rpt-subsection-hdr{background:#0f172a;border:1px solid #1e3a5f;padding:8px 12px;font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:0;border-radius:6px 6px 0 0;}
+                .rpt-table{width:100%;border-collapse:collapse;font-size:12px;border:1px solid #1e3a5f;border-top:none;}
+                .rpt-th{background:#0f172a;border:1px solid #1e2a3a;padding:7px 10px;font-weight:600;color:#94a3b8;width:240px;vertical-align:top;}
+                .rpt-td{border:1px solid #1e2a3a;padding:7px 10px;color:#cbd5e1;vertical-align:top;min-height:32px;}
+                .rpt-findings-tbl{width:100%;border-collapse:collapse;margin:12px 0;}
+                .rpt-findings-tbl th{background:#0072ff22;border:1px solid #1e3a5f;padding:8px 10px;font-size:12px;font-weight:700;color:#00c6ff;text-align:left;}
+                .rpt-findings-tbl td{border:1px solid #1e2a3a;padding:8px 10px;font-size:12px;color:#cbd5e1;}
+                .badge-crit{background:#7f1d1d;color:#fca5a5;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;}
+                .badge-high{background:#7c2d12;color:#fdba74;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;}
+                .badge-med{background:#713f12;color:#fde68a;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;}
+                .badge-low{background:#14532d;color:#86efac;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;}
+                .rpt-scope-box{background:#0f172a;border:1px solid #1e3a5f;border-radius:6px;padding:12px 14px;font-family:monospace;font-size:12px;color:#94a3b8;white-space:pre-wrap;margin:8px 0;}
+                .rpt-footer{border-top:1px solid #1e3a5f;margin-top:32px;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#475569;}
+                .rpt-page-brk{page-break-before:always;}
+                @media print{body{background:#fff;color:#000;}.rpt-cover{background:#003380!important;-webkit-print-color-adjust:exact;}.rpt-section-hdr,.rpt-subsection-hdr{-webkit-print-color-adjust:exact;}}
+                </style>`;
+
+            // Tool mappings per template
+            const toolsByTemplate = {
+                'cpent-full': 'Nmap, Masscan, Metasploit, Burp Suite, CrackMapExec, BloodHound, Nikto, SQLMap, Aircrack-ng, Wireshark, theHarvester, Maltego, OSINT Framework',
+                'web-app-owasp': 'Burp Suite, OWASP ZAP, Nikto, SQLMap, Dirb/Gobuster, Wapiti, Skipfish, WPScan',
+                'external-pentest': 'Nmap, Masscan, Shodan, theHarvester, Metasploit, CrackMapExec, BloodHound',
+                'internal-assessment': 'Nmap, Nessus, CrackMapExec, BloodHound, Responder, Impacket, Kerbrute',
+                'wireless-audit': 'Aircrack-ng, Wireshark, Reaver, Wifiphisher, Kismet, Bettercap',
+                'cloud-aws': 'AWS CLI, Pacu, Scout Suite, Prowler, CloudMapper, S3Scanner, CloudFox',
+            };
+            const tools = toolsByTemplate[template] || toolsByTemplate['cpent-full'];
+
+            // Build body with string concatenation — no nested template literals
+            var body = '';
+            // Section 1: OSINT on Target Domain
+            body += sectionHeader('1','Open Source Intelligence (OSINT) on Target Domain','This section provides an overview of techniques used to gather intelligence on the target\'s domain name, including domain discovery, WHOIS data, IP addresses, email addresses, and publicly accessible services.');
+            body += subsection('1.1','Find Domain and Subdomains of the Target',
+                row('URLs Tested', scopeText || '') +
+                row('Search Engine Used','Shodan, Censys, Google Dorks, theHarvester') +
+                chkRow('Found Domain and Sub-domains of the Target Successfully') +
+                row('Tools and Commands Used','theHarvester -d [target] -b all\nnmap --script dns-brute [target]\nsubfinder -d [target]') +
+                row('Scripts Used (if any)','DNS_Interrogation.sh, Domains_SimilarDomainNames.py') +
+                row('AI Tools/Prompts Used (if any)','') +
+                '<tr><td class="rpt-th">Result Obtained &mdash; Domain Names</td><td class="rpt-td">1.&nbsp;&nbsp;2.&nbsp;&nbsp;3.&nbsp;&nbsp;4.&nbsp;&nbsp;5.</td></tr>' +
+                '<tr><td class="rpt-th">Result Obtained &mdash; Subdomains</td><td class="rpt-td">1.&nbsp;&nbsp;2.&nbsp;&nbsp;3.&nbsp;&nbsp;4.&nbsp;&nbsp;5.</td></tr>' +
+                row('Result Analysis',''));
+            body += subsection('1.2','Find Similar or Parallel Domain Names',
+                row('Target URL', scopeText || '') +
+                chkRow('Found Parallel Domain Names Successfully') +
+                row('Tools/Commands Used','dnstwist [domain]\nwhoisdomain [target]') +
+                thRow(['Parallel Domains','IP Address','Country','Name/Mail Server']) +
+                emptyRows(3,4) +
+                row('Result Analysis',''));
+            body += subsection('1.3','Perform Whois Lookups',
+                row('Domain Name', scopeText || '') +
+                chkRow('Obtained Whois Data Successfully') +
+                row('Tools/Commands Used','whois [domain]\nnmap -sn --script whois-* [target]') +
+                row('Scripts Used (if any)','Whois_Search.pl') +
+                row('Registrant Address','') + row('Domain Name Details','') +
+                row('IP Address and Network Range','') + row('Physical Location','') +
+                row('Administrative Contact','') + row('Technical Contact','') +
+                row('Record Creation Date','') + row('Record Expiry Date','') +
+                row('Domain Servers','1.&nbsp;&nbsp;2.&nbsp;&nbsp;3.') +
+                row('Result Analysis',''));
+            body += subsection('1.4','Find IP Address Block Allocated to Organization',
+                row('URL', scopeText || '') +
+                chkRow('Found IP Range Successfully') +
+                row('IP Registries Used','ARIN, RIPE NCC, APNIC, AFRINIC, LACNIC') +
+                row('IP Range Identified', scopeTechnicals ? scopeTechnicals.split('\n')[0] : '') +
+                row('Result Analysis',''));
+            body += subsection('1.5','Find DNS Records for the Domain',
+                row('URL', scopeText || '') +
+                chkRow('Found DNS Records Successfully') +
+                row('Tools Used','dnsrecon -d [domain]\ndig [domain] ANY\nnmap --script dns-zone-transfer [target]') +
+                row('Scripts Used (if any)','DNS_Records.pl, DNS_Interrogation.sh') +
+                thRow(['Name','Class','Type','Data','TTL']) +
+                emptyRows(5,5) +
+                row('Result Analysis',''));
+            body += subsection('1.6','Perform Reverse Lookups',
+                row('IP Range for Reverse DNS Lookup', scopeTechnicals ? scopeTechnicals.split('\n')[0] : '') +
+                chkRow('Performed Reverse DNS Lookup Successfully') +
+                row('Tools/Commands Used','dnsrecon -r [range] -t rvl') +
+                fiveRow('Domains/Hostnames Discovered') +
+                fiveRow('DNS PTR Records Found') +
+                row('Result Analysis',''));
+            body += subsection('1.7','Perform DNS Zone Transfer',
+                row('Target URL', scopeText || '') +
+                chkRow('Performed DNS Zone Transfer Successfully') +
+                row('Tools and Commands Used','dig axfr @[nameserver] [domain]\nnmap --script dns-zone-transfer -p 53 [target]') +
+                row('Scripts Used (if any)','DNS_Records.pl') +
+                row('Gathered DNS Information','') + row('Identified Host Names','') +
+                row('Identified IP Addresses','') + row('Result Analysis',''));
+            // Section 2: OSINT on the Web
+            body += sectionHeader('2','Collecting OSINT about Target Organization on the Web','Analysis of publicly available information on the target organization, detailing its profile, infrastructure, technologies, and web activity.');
+            body += subsection('2.1','Perform Web Searches using Advanced Operators',
+                row('Target URL', scopeText || '') +
+                row('Search Engine Used','Google, Bing, DuckDuckGo, Shodan') +
+                chkRow('Refined Web Searches using Advanced Operators') +
+                row('Google Dorks Used','site:[domain], inurl:[path], filetype:pdf, intitle:[title]') +
+                row('Scripts Used (if any)','hostcheck.sh, Host_Check.pl') +
+                row('Result Analysis',''));
+            body += subsection('2.2','Find Geographical Location',
+                row('Target URL', scopeText || '') +
+                chkRow('Recovered Maps Successfully') +
+                row('Tools Used','Google Maps, Bing Maps, MaxMind GeoIP') +
+                row('Location of Organization','') + row('GPS Coordinates','') +
+                row('Result Analysis',''));
+            body += subsection('2.3','Identify Network Devices Used',
+                row('Target URL', scopeText || '') +
+                chkRow('Identified Network Devices Successfully') +
+                row('Search Engines Used','Shodan, Censys, FOFA') +
+                row('Network Devices Identified','&#9744; Cisco Routing Devices &nbsp; &#9744; Checkpoint Firewalls &nbsp; &#9744; Oracle DB Servers &nbsp; &#9744; Other') +
+                row('Result Analysis',''));
+            // Section 3: Employee OSINT
+            body += sectionHeader('3','Perform OSINT on Target Employees','Insights into publicly available employee information, including roles, email addresses, social media profiles, and professional networks.');
+            body += subsection('3.1','List Key Employees and Email Addresses',
+                chkRow('Found Key Employees and Email IDs Successfully') +
+                row('Tools Used','theHarvester, Hunter.io, LinkedIn, Maltego') +
+                row('Scripts Used (if any)','Email_Header_Analysis.sh') +
+                thRow(['#','Domain Name','Employee Name','Email ID']) +
+                numRows(4,4) +
+                row('Result Analysis',''));
+            body += subsection('3.2','Enumerate Key Email Addresses',
+                row('Target Domain', scopeText || '') +
+                chkRow('Enumerated Target Email IDs Successfully') +
+                row('Tools/Websites Used','HaveIBeenPwned, WhatBreach, SimplyEmail, Pastebin') +
+                thRow(['Email IDs Discovered','Data Breaches Identified','Other Risks']) +
+                emptyRows(3,3) +
+                row('Result Analysis',''));
+            // Section 4: OSINT Automation
+            body += sectionHeader('4','OSINT using Automation Tools','Automation tools and frameworks used to streamline OSINT collection and analysis.');
+            body += subsection('4.1','Automate OSINT Process',
+                chkRow('Is OSINT Automated by Tools/Frameworks') +
+                row('Tools/Frameworks Used','Maltego, FSOCIETY, PENTMENU, OSINT Framework, Recon-ng') +
+                row('Scripts Used (if any)','Attack_Surface_Mapping.py, Discover_Live_Hosts.py') +
+                row('Information Gathered','1.&nbsp;&nbsp;2.&nbsp;&nbsp;3.&nbsp;&nbsp;4.') +
+                row('Findings/Conclusion',''));
+            body += subsection('4.2','Document the Result',
+                row('Domain Names and Subdomains','') +
+                row('IP Address Ranges', scopeTechnicals || '') +
+                row('DNS Records','') + row('Hosting Providers and Servers','') +
+                row('Key Personnel','') + row('Email Addresses','') +
+                row('Sensitive Files Found','') + row('Breach/Leak Information',''));
+            // Section 5: Attack Surface Mapping
+            body += sectionHeader('5','Attack Surface Mapping','Network scanning, live host discovery, port scanning, and service fingerprinting to identify potential entry points and security risks.');
+            body += subsection('5.1','Perform Traceroute Analysis',
+                row('Target URL/Domain', scopeText || '') +
+                chkRow('Conducted Traceroute Successfully') +
+                row('Tools Used','traceroute [target]\nnmap -sn --traceroute [target]\nhping3 -S --traceroute [target]') +
+                thRow(['IP Address','Response Time','Hop','Geolocation']) +
+                emptyRows(5,4) +
+                row('Result Analysis',''));
+            body += subsection('5.2','Network Scanning',
+                chkRow('Network Scanned Successfully') +
+                row('Tools Used','nmap -sV -sC -O -p- [target]\nmasscan -p1-65535 [target] --rate=1000') +
+                thRow(['#','Subnet Scanned','Port','Port State','Service']) +
+                numRows(5,5) +
+                row('Result Analysis',''));
+            body += subsection('5.3','Discover Live Hosts',
+                chkRow('Identified Active Hosts Successfully') +
+                row('Tools Used','nmap -sn [range]\nnetdiscover -r [range]\narp-scan --localnet') +
+                row('Scripts Used (if any)','Discover_Live_Hosts.py, pingsweep.rb') +
+                thRow(['Subnet Scanned','Host Up (IP)','MAC Address']) +
+                emptyRows(3,3) +
+                row('Result Analysis',''));
+            body += subsection('5.4','Perform Port Scanning',
+                chkRow('Conducted Port Scanning Successfully') +
+                row('Types of Scans','&#9744; Full Port &nbsp;&#9744; UDP Top-1000 &nbsp;&#9744; Half-Open (SYN) &nbsp;&#9744; Version Detection &nbsp;&#9744; Script Scan &nbsp;&#9744; OS Detection') +
+                row('Tools Used','nmap -sV -sC -O -p- --min-rate 1000 -T4 [target]\nnmap -sU --top-ports 1000 [target]') +
+                row('Scripts Used (if any)','Port_Scanning.py, Port_Scanning.pl') +
+                thRow(['#','IP/Range Scanned','MAC Address','Port(s)','State','Service']) +
+                numRows(5,6) +
+                row('Result Analysis',''));
+            body += subsection('5.5','OS Banner Grabbing and Service Fingerprinting',
+                chkRow('Identified Target OS and Version Successfully') +
+                chkRow('Identified Services Successfully') +
+                row('Tools Used','nmap -O -sV [target]\np0f -r [pcap]\nmetasploit auxiliary/scanner/portscan/tcp') +
+                row('Scripts Used (if any)','OS_and_Service_Version_Discovery.py, OS_and_Service_Version_Discovery.pl') +
+                thRow(['#','Target IP','OS Name/Version','Port/State','Service']) +
+                numRows(3,5) +
+                row('Result Analysis',''));
+            body += subsection('5.6','Map Internal Network',
+                chkRow('Mapped Target Internal Network Successfully') +
+                thRow(['Device Type','Discovered','Make and Model']) +
+                ['Hubs','Switches','Servers','Printers','Workstations','Wireless APs','Firewalls','Proxy Servers','IoT Devices'].map(function(d){
+                    return '<tr><td class="rpt-td">' + d + '</td><td class="rpt-td">&#9744; Yes &nbsp;&#9744; No</td><td class="rpt-td"></td></tr>';
+                }).join('') +
+                row('Result Analysis',''));
+            // Section 6: Web App Testing
+            body += sectionHeader('6','Web Application Penetration Testing','Assessment of web application vulnerabilities following OWASP Top-10 methodology.');
+            body += subsection('6.1','Web Server Configuration Testing',
+                row('Target URL', scopeText || '') +
+                chkRow('Tested Web Server Configuration Successfully') +
+                row('Tools Used','nikto -h [target] -C all\nnmap -p 80,443 --script http-methods,http-headers [target]') +
+                row('Scripts Used (if any)','TestConfiguration.sh, Web_Server_Banner_Grabbing.sh') +
+                row('Web Server Identified','') + row('Server Version','') +
+                row('Dangerous Methods Found','&#9744; PUT &nbsp;&#9744; DELETE &nbsp;&#9744; TRACE &nbsp;&#9744; CONNECT &nbsp;&#9744; None') +
+                row('Result Analysis',''));
+            body += subsection('6.2','Directory and File Brute-Force',
+                row('Target URL', scopeText || '') +
+                chkRow('Completed Directory Brute-Force Successfully') +
+                row('Tools Used','gobuster dir -u [target] -w /usr/share/wordlists/dirb/common.txt -x php,html,txt\ndirb [target]') +
+                row('Scripts Used (if any)','Directory_Bruteforce.py, Common_Word_List.py') +
+                thRow(['#','Path Found','Status Code','Notes']) +
+                numRows(5,4) +
+                row('Result Analysis',''));
+            body += subsection('6.3','SQL Injection Testing',
+                row('Target URL', scopeText || '') +
+                chkRow('Identified SQL Injection Vulnerabilities') +
+                row('Tools Used','sqlmap -u [url] --batch --level=3 --risk=2 --dbs') +
+                row('Scripts Used (if any)','Fuzz_Testing.py') +
+                row('Parameters Tested','') + row('Database Type Found','') +
+                row('Data Extracted','') + row('Result Analysis',''));
+            body += subsection('6.4','Cross-Site Scripting (XSS) Testing',
+                row('Target URL', scopeText || '') +
+                chkRow('Identified XSS Vulnerabilities') +
+                row('Tools Used','Burp Suite Active Scanner\nOWASP ZAP\nXSSer') +
+                row('XSS Type Found','&#9744; Reflected &nbsp;&#9744; Stored &nbsp;&#9744; DOM-Based') +
+                row('Payloads Used','') + row('Result Analysis',''));
+            // Section 7: Exploitation
+            body += sectionHeader('7','Exploitation and Privilege Escalation','Controlled exploitation of discovered vulnerabilities to demonstrate impact and privilege escalation paths.');
+            body += subsection('7.1','Exploitation of Discovered Vulnerabilities',
+                row('Target System', scopeText || '') +
+                chkRow('Exploited Vulnerability Successfully') +
+                row('Vulnerability Exploited','') + row('CVE Reference','') +
+                row('Exploit Used','Metasploit: use exploit/[path]\nCustom script: [filename]') +
+                row('Proof of Concept','') +
+                row('Access Level Gained','&#9744; User &nbsp;&#9744; Service Account &nbsp;&#9744; Local Admin &nbsp;&#9744; Domain Admin &nbsp;&#9744; SYSTEM/root') +
+                row('Result Analysis',''));
+            body += subsection('7.2','Linux Privilege Escalation',
+                chkRow('Escalated Privileges on Linux Successfully') +
+                row('Tools Used','LinPEAS, LinEnum, linux-exploit-suggester\ncurl -sL [linpeas-url] | sh') +
+                row('Scripts Used (if any)','GainAccess_Enumerate.sh, Linux_Enumeration.sh, Privilege_Escalate.sh') +
+                row('SUID Binaries Found','find / -perm -u=s -type f 2>/dev/null') +
+                row('Sudo Rights','sudo -l') +
+                row('Kernel Version and Exploits Tried','') +
+                row('Cron Jobs Found','') + row('Final Access Level Achieved','') +
+                row('Result Analysis',''));
+            body += subsection('7.3','Windows Privilege Escalation',
+                chkRow('Escalated Privileges on Windows Successfully') +
+                row('Tools Used','WinPEAS, PowerSploit, Watson, Sherlock\nGet-WmiObject Win32_Service') +
+                row('Unquoted Service Paths Found','') +
+                row('AlwaysInstallElevated','&#9744; Yes &nbsp;&#9744; No') +
+                row('Writable Service Binaries','') + row('Weak Registry ACLs','') +
+                row('Final Access Level Achieved','') + row('Result Analysis',''));
+            // Section 8: AD Testing
+            body += sectionHeader('8','Active Directory Penetration Testing','Assessment of Active Directory infrastructure including enumeration, attack paths, and domain compromise.');
+            body += subsection('8.1','AD Enumeration',
+                row('Target DC IP', scopeTechnicals ? scopeTechnicals.split('\n')[0] : '') +
+                chkRow('Enumerated AD Successfully') +
+                row('Tools Used','BloodHound/SharpHound\nldapsearch -x -H ldap://[DC] -b [base_dn]\nenum4linux -a [target]') +
+                row('Scripts Used (if any)','DNS_Interrogation.sh') +
+                row('Domain Name','') + row('Domain Controllers Found','') +
+                row('Number of Users','') + row('Number of Groups','') +
+                row('High-Value Targets Identified','') +
+                row('Kerberoastable Accounts','') + row('AS-REP Roastable Accounts','') +
+                row('Result Analysis',''));
+            body += subsection('8.2','Credential Attacks',
+                chkRow('Performed Credential Attacks Successfully') +
+                row('Attack Types','&#9744; Password Spray &nbsp;&#9744; Kerberoasting &nbsp;&#9744; AS-REP Roasting &nbsp;&#9744; Pass-the-Hash &nbsp;&#9744; Pass-the-Ticket') +
+                row('Tools Used','CrackMapExec, Impacket, Rubeus, Hashcat, JohnTheRipper') +
+                row('Credentials Obtained','') + row('Hashes Cracked','') +
+                row('Result Analysis',''));
+            // Section 9: Lateral Movement
+            body += sectionHeader('9','Lateral Movement and Pivoting','Techniques used to move through the network after initial access, expanding the attack footprint.');
+            body += subsection('9.1','Lateral Movement Techniques',
+                chkRow('Performed Lateral Movement Successfully') +
+                row('Techniques Used','&#9744; Pass-the-Hash &nbsp;&#9744; Pass-the-Ticket &nbsp;&#9744; Over-Pass-the-Hash &nbsp;&#9744; Token Impersonation &nbsp;&#9744; RDP Hijacking') +
+                row('Tools Used','CrackMapExec, Impacket (psexec.py, wmiexec.py), Mimikatz, Cobalt Strike') +
+                row('Systems Compromised','') + row('Result Analysis',''));
+            body += subsection('9.2','Pivoting and Tunneling',
+                chkRow('Set Up Pivoting Successfully') +
+                row('Techniques','&#9744; SSH Tunneling &nbsp;&#9744; SOCKS Proxy &nbsp;&#9744; Chisel &nbsp;&#9744; Metasploit route &nbsp;&#9744; SSHuttle') +
+                row('Tools Used','chisel server/client, proxychains, ssh -L/-R/-D, meterpreter portfwd') +
+                row('Internal Networks Reached','') + row('Result Analysis',''));
+            // Section 10: Findings Summary
+            body += sectionHeader('10','Findings Summary and Risk Assessment','Consolidated view of all findings with severity ratings and remediation priority.');
+            body += '<table class="rpt-findings-tbl"><thead><tr><th>#</th><th>Finding Title</th><th>Severity</th><th>CVSS</th><th>Affected System</th><th>Status</th></tr></thead><tbody>' +
+                '<tr><td>1</td><td></td><td><span class="badge-crit">Critical</span></td><td>9.8</td><td></td><td>Open</td></tr>' +
+                '<tr><td>2</td><td></td><td><span class="badge-high">High</span></td><td>7.5</td><td></td><td>Open</td></tr>' +
+                '<tr><td>3</td><td></td><td><span class="badge-med">Medium</span></td><td>5.3</td><td></td><td>Open</td></tr>' +
+                '<tr><td>4</td><td></td><td><span class="badge-low">Low</span></td><td>2.5</td><td></td><td>Open</td></tr>' +
+                '</tbody></table>';
+            // Section 11: Remediation
+            body += sectionHeader('11','Remediation Roadmap','Prioritized remediation plan with ownership and target dates.');
+            body += '<table class="rpt-findings-tbl"><thead><tr><th>Priority</th><th>Finding</th><th>Owner</th><th>Target Date</th><th>Effort</th></tr></thead><tbody>' +
+                '<tr><td><span class="badge-crit">Immediate (24h)</span></td><td></td><td>IT Security</td><td></td><td>High</td></tr>' +
+                '<tr><td><span class="badge-high">Short (7 days)</span></td><td></td><td>IT Operations</td><td></td><td>Medium</td></tr>' +
+                '<tr><td><span class="badge-med">Medium (30 days)</span></td><td></td><td>Dev Team</td><td></td><td>Medium</td></tr>' +
+                '<tr><td><span class="badge-low">Long (90 days)</span></td><td></td><td>Management</td><td></td><td>Low</td></tr>' +
+                '</tbody></table>';
+            // Section 12: Conclusion
+            body += '<div class="rpt-subsection" style="margin-top:20px">' +
+                '<div class="rpt-subsection-hdr">12&nbsp;&nbsp;Conclusion</div>' +
+                '<div style="padding:12px 14px;background:#0f172a;border:1px solid #1e3a5f;border-top:none;font-size:13px;color:#cbd5e1;line-height:1.7;">' +
+                '<p>' + (clientName||'Client') + ' presents a <strong>[HIGH / MEDIUM / LOW]</strong> overall security posture. This ' + tplLabel + ' was conducted by ' + (assessor||'GACyber Defense LLC') + ' in accordance with CPENT v2 methodology across all applicable assessment phases.</p>' +
+                '<p>Scope: ' + (scopeText || '[scope summary]') + '</p>' +
+                '<p>GACyber Defense LLC recommends prioritizing critical and high severity findings immediately, followed by a structured remediation program. A follow-up validation assessment is recommended after primary remediation is complete.</p>' +
+                '<p>Tools employed: ' + tools + '</p>' +
+                '</div></div>';
+
+            return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+            <title>CPENT Report — ${escapeHtml(clientName)}</title>${css}</head><body>
+            <div class="rpt-cover">
+                <div class="rpt-confidential">CONFIDENTIAL</div>
+                <div class="rpt-logo-row">
+                    <div class="rpt-logo-box">G</div>
+                    <div>
+                        <div class="rpt-org-name">GACyber Defense LLC</div>
+                        <div class="rpt-org-sub">www.gacyberdefense.com &nbsp;|&nbsp; Professional Cybersecurity Services</div>
+                    </div>
+                </div>
+                <div class="rpt-title">${escapeHtml(tplLabel)}</div>
+                <div class="rpt-title-sub">Penetration Test Report — CPENTv2 Methodology</div>
+                <div class="rpt-meta-grid">
+                    <div class="rpt-meta-item"><label>Target Organization</label><span>${escapeHtml(clientName)}</span></div>
+                    <div class="rpt-meta-item"><label>Penetration Tester</label><span>${escapeHtml(assessor)}</span></div>
+                    <div class="rpt-meta-item"><label>Date</label><span>${date}</span></div>
+                    <div class="rpt-meta-item"><label>Engagement ID</label><span>${escapeHtml(engagement || 'N/A')}</span></div>
+                    <div class="rpt-meta-item"><label>Classification</label><span style="color:#ef4444">CONFIDENTIAL</span></div>
+                    <div class="rpt-meta-item"><label>Location</label><span></span></div>
+                </div>
+            </div>
+            <div class="rpt-body">
+                <div style="background:#0f172a;border:1px solid #1e3a5f;border-radius:8px;padding:14px 18px;margin:20px 0;">
+                    <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Scope &amp; Technical Summary</div>
+                    <div style="font-size:12px;color:#94a3b8;">${escapeHtml(scopeText || 'See scope section for full details.')}</div>
+                    ${scopeTechnicals ? `<div class="rpt-scope-box">${escapeHtml(scopeTechnicals)}</div>` : ''}
+                </div>
+                ${body}
+            </div>
+            <div class="rpt-footer">
+                <span>GACyber Defense LLC &mdash; ${escapeHtml(clientName)} &mdash; ${date}</span>
+                <span>CONFIDENTIAL &mdash; Authorized Distribution Only</span>
+                <span>CPENTv2 Methodology</span>
+            </div>
+            </body></html>`;
         };
 
         function startTradeSecrets() {
@@ -6526,12 +6894,15 @@ ${clientName} presents a [HIGH/MEDIUM/LOW] overall security posture. GACyber Def
             modal.classList.add('flex');
         };
 
-        // Auto-load data and render cards when cheatsheet page activates
+        // Auto-load data and render cards when specific pages activate
         const _origLoadPage = window.loadPage;
         window.loadPage = function(pageKey) {
             _origLoadPage(pageKey);
             if (pageKey === 'admin_cheatsheet_library') {
                 _loadCsData().then(() => window.filterCheatsheets());
+            }
+            if (pageKey === 'admin_report_builder') {
+                setTimeout(() => { startTradeSecrets(); safeCreateIcons(); }, 150);
             }
         };
 
