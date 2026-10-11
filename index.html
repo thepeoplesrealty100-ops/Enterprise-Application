@@ -554,7 +554,7 @@
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
                 <div class="lg:block">
-                    <h1 id="header-title" class="text-xl font-semibold text-white">Q'MDYM Automation System</h1>
+                    <h1 id="header-title" class="text-xl font-semibold text-white">JAKAL Horizon OS</h1>
                 </div>
                 
                 <!-- View Switch & User Info --><div class="flex items-center space-x-4">
@@ -563,18 +563,21 @@
                         <button id="switch-client" onclick="window.setView('client')" class="px-3 py-1 text-xs font-semibold rounded-md text-gray-400 hover:bg-gray-600 transition-colors">Client Portal</button>
                     </div>
 
-                    <div class="relative">
-                        <i data-lucide="bell" class="w-6 h-6 text-gray-400 hover:text-white cursor-pointer"></i>
-                        <span class="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-mid-bg-opaque bg-red-500"></span>
+                    <div class="relative cursor-pointer" onclick="window.loadPage('admin_soar')" title="Notifications">
+                        <i data-lucide="bell" class="w-5 h-5 text-gray-400 hover:text-white transition-colors"></i>
+                        <span id="notif-badge" class="absolute -top-0.5 -right-0.5 block h-2 w-2 rounded-full bg-red-500 hidden"></span>
                     </div>
                     <!-- Terminal launcher -->
-                    <button id="console-launcher-btn" title="Operator Console" onclick="window.toggleConsolePanel()"
-                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border-color text-gray-400 hover:text-white hover:border-primary-color/50 hover:bg-gray-800/50 transition-all text-xs font-medium">
-                        <i data-lucide="terminal" class="w-4 h-4"></i>
-                        <span class="hidden sm:inline">Console</span>
-                    </button>
+                    <div class="relative">
+                        <button id="console-launcher-btn" title="Operator Console" onclick="window.toggleConsolePanel()"
+                            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border-color text-gray-400 hover:text-white hover:border-primary-color/50 hover:bg-gray-800/50 transition-all text-xs font-medium">
+                            <i data-lucide="terminal" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Console</span>
+                        </button>
+                        <span id="console-pending-dot" class="absolute -top-1 -right-1 block h-2.5 w-2.5 rounded-full bg-primary-color border border-mid-bg-opaque hidden"></span>
+                    </div>
                     <div class="flex items-center space-x-2">
-                        <img src="https://placehold.co/32x32/f97316/111827?text=OP" class="w-8 h-8 rounded-full border-2 border-primary-color cursor-pointer" onclick="window.loadPage('admin_settings')" onerror="this.onerror=null;this.src='https://placehold.co/32x32/f97316/111827?text=U'" title="Settings">
+                        <img src="https://placehold.co/32x32/f97316/111827?text=OP" class="w-8 h-8 rounded-full border-2 border-primary-color cursor-pointer" onclick="window.loadPage('admin_global_dashboard');setTimeout(()=>window.switchDashboardTab('settings'),60)" onerror="this.onerror=null;this.src='https://placehold.co/32x32/f97316/111827?text=U'" title="Settings">
                         <span id="operator-name" class="text-sm font-medium hidden sm:inline">Operator Alpha</span>
                     </div>
                 </div>
@@ -583,7 +586,7 @@
             <!-- Page Content --><main id="content-area" class="flex-1 overflow-y-auto scrollbar-style p-4 lg:p-6 pb-10">
                 <!-- Content will be injected here --></main>
              <!-- Footer --><footer class="fixed bottom-0 left-0 right-0 h-8 text-gray-500 text-xs flex items-center justify-center border-t border-border-color z-40">
-                <span id="app-footer" class="footer-pulse">Powered by Q'MDYM Technologies Systems. JAKAL OS | Release: Ares v1.0</span>
+                <span id="app-footer" class="footer-pulse">JAKAL Horizon OS · Ares v1.0 · GACyber Technologies</span>
             </footer>
         </div>
     </div>
@@ -4215,10 +4218,8 @@
 
         function renderGlobalAdminDashboard() {
             return `
-                 <h2 class="text-3xl font-extrabold text-white mb-4">Global Dashboard</h2>
-
                  <!-- Tab Navigation -->
-                 <div class="flex flex-wrap border-b border-border-color mb-4 gap-0">
+                 <div class="flex flex-wrap items-center border-b border-border-color mb-4 gap-0">
                      <button onclick="window.switchDashboardTab('overview')" id="tab-overview" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
                          <i data-lucide="layout-dashboard" class="w-4 h-4 mr-2 inline"></i> Overview
                      </button>
@@ -4229,12 +4230,12 @@
                          <i data-lucide="map" class="w-4 h-4 mr-2 inline"></i> Predictive Matrix
                      </button>
                      <button onclick="window.switchDashboardTab('settings')" id="tab-settings" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
-                         <i data-lucide="settings-2" class="w-4 h-4 mr-2 inline"></i> Settings & Security
+                         <i data-lucide="settings-2" class="w-4 h-4 mr-2 inline"></i> Settings
                      </button>
                  </div>
 
                  <!-- Tab Content Area -->
-                 <div id="dashboard-content-area" class="h-[calc(100vh-13rem)] overflow-y-auto scrollbar-style">
+                 <div id="dashboard-content-area" class="h-[calc(100vh-10rem)] overflow-y-auto scrollbar-style">
                      <!-- Content injected by JS -->
                  </div>
             `;
@@ -4243,69 +4244,101 @@
         function renderDashboardOverviewTab() {
             return `
                 <div class="space-y-5 pb-6">
-                    <!-- Top KPI row -->
+                    <!-- Top KPI row — jakal-metric-tile pattern -->
                     <div id="dash-kpi-row" class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="card p-4 rounded-xl text-center"><div class="text-3xl font-extrabold text-emerald-400" id="kpi-healthy">—</div><div class="text-xs text-gray-500 mt-1">Healthy Devices</div></div>
-                        <div class="card p-4 rounded-xl text-center"><div class="text-3xl font-extrabold text-yellow-400" id="kpi-warnings">—</div><div class="text-xs text-gray-500 mt-1">Warnings</div></div>
-                        <div class="card p-4 rounded-xl text-center"><div class="text-3xl font-extrabold text-red-400" id="kpi-critical">—</div><div class="text-xs text-gray-500 mt-1">Critical</div></div>
-                        <div class="card p-4 rounded-xl text-center"><div class="text-3xl font-extrabold text-primary-color" id="kpi-pam">—</div><div class="text-xs text-gray-500 mt-1">Pending Approvals</div></div>
+                        <div class="jakal-metric-tile cursor-pointer" onclick="window.switchDashboardTab('fleet')">
+                            <div class="value text-emerald-400" id="kpi-healthy">—</div>
+                            <div class="label">Healthy Devices</div>
+                            <div class="text-xs text-emerald-700 mt-1 flex items-center justify-center gap-1"><i data-lucide="arrow-up-right" class="w-3 h-3"></i> Online</div>
+                        </div>
+                        <div class="jakal-metric-tile cursor-pointer" onclick="window.switchDashboardTab('fleet')">
+                            <div class="value text-yellow-400" id="kpi-warnings">—</div>
+                            <div class="label">Warnings</div>
+                            <div class="text-xs text-yellow-700 mt-1 flex items-center justify-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3"></i> Review needed</div>
+                        </div>
+                        <div class="jakal-metric-tile cursor-pointer" onclick="window.switchDashboardTab('fleet')">
+                            <div class="value text-red-400" id="kpi-critical">—</div>
+                            <div class="label">Critical</div>
+                            <div class="text-xs text-red-700 mt-1 flex items-center justify-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Immediate action</div>
+                        </div>
+                        <div class="jakal-metric-tile cursor-pointer" onclick="window.loadPage('admin_soar')">
+                            <div class="value text-primary-color" id="kpi-pam">—</div>
+                            <div class="label">Pending Approvals</div>
+                            <div class="text-xs text-orange-700 mt-1 flex items-center justify-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i> Approval Gate</div>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <!-- AI Safety Fabric panel -->
                         <div class="card p-4 rounded-xl">
                             <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-sm font-bold uppercase tracking-widest text-primary-color flex items-center gap-2">
-                                    <i data-lucide="shield-alert" class="w-4 h-4"></i> AI Safety Fabric
+                                <h3 class="jakal-section-title flex items-center gap-2 mb-0">
+                                    <i data-lucide="shield-check" class="w-4 h-4 text-primary-color"></i> Security Fabric
                                 </h3>
-                                <button onclick="window.loadPage('admin_horizon_fabric')" class="text-xs text-gray-400 hover:text-white border border-border-color rounded px-2 py-1">Open Full View</button>
+                                <button onclick="window.loadPage('admin_fabric')" class="text-xs text-gray-400 hover:text-white border border-border-color rounded-lg px-2 py-1 transition-colors hover:border-primary-color/40">Full View →</button>
                             </div>
                             <div id="dash-safety-fabric" class="space-y-2 text-sm">
-                                <p class="text-xs text-gray-500 italic animate-pulse">Loading…</p>
+                                <div class="flex items-center gap-2 text-xs text-gray-500 animate-pulse"><i data-lucide="loader" class="w-3 h-3"></i> Loading fabric status…</div>
                             </div>
                         </div>
 
-                        <!-- Agentic Canvas status panel -->
+                        <!-- Latest Agent Activity panel -->
                         <div class="card p-4 rounded-xl">
                             <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-sm font-bold uppercase tracking-widest text-primary-color flex items-center gap-2">
-                                    <i data-lucide="git-branch-plus" class="w-4 h-4"></i> Agentic Canvas
+                                <h3 class="jakal-section-title flex items-center gap-2 mb-0">
+                                    <i data-lucide="activity" class="w-4 h-4 text-primary-color"></i> Latest Agent Activity
                                 </h3>
-                                <button onclick="window.loadPage('admin_horizon_agentic')" class="text-xs text-gray-400 hover:text-white border border-border-color rounded px-2 py-1">Open Canvas</button>
+                                <button onclick="window.toggleConsolePanel()" class="text-xs text-gray-400 hover:text-white border border-border-color rounded-lg px-2 py-1 transition-colors hover:border-primary-color/40 flex items-center gap-1">
+                                    <i data-lucide="terminal" class="w-3 h-3"></i> Console
+                                </button>
                             </div>
-                            <div id="dash-agentic-canvas" class="space-y-2 text-sm">
-                                <p class="text-xs text-gray-500 italic animate-pulse">Loading…</p>
+                            <div id="dash-agent-activity" class="space-y-0">
+                                <div class="flex items-center gap-2 text-xs text-gray-500 animate-pulse"><i data-lucide="loader" class="w-3 h-3"></i> Loading activity…</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SOAR + Compliance row -->
+                    <!-- SOAR + Compliance + Dark Web row -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
                         <div class="card p-4 rounded-xl">
-                            <h3 class="text-xs font-bold uppercase text-gray-500 mb-3">SOAR Recent Tickets</h3>
-                            <div id="dash-soar-tickets" class="space-y-1 text-xs"><p class="text-gray-500 italic">Loading…</p></div>
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="jakal-section-title mb-0">SOAR Tickets</h3>
+                                <button onclick="window.loadPage('admin_soar')" class="text-xs text-primary-color hover:underline">View all →</button>
+                            </div>
+                            <div id="dash-soar-tickets" class="space-y-0"><div class="text-xs text-gray-500 animate-pulse">Loading…</div></div>
                         </div>
                         <div class="card p-4 rounded-xl">
-                            <h3 class="text-xs font-bold uppercase text-gray-500 mb-3">Compliance Drift</h3>
-                            <div id="dash-drift-events" class="space-y-1 text-xs"><p class="text-gray-500 italic">Loading…</p></div>
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="jakal-section-title mb-0">Compliance Drift</h3>
+                                <button onclick="window.loadPage('admin_compliance')" class="text-xs text-primary-color hover:underline">View all →</button>
+                            </div>
+                            <div id="dash-drift-events" class="space-y-0"><div class="text-xs text-gray-500 animate-pulse">Loading…</div></div>
                         </div>
                         <div class="card p-4 rounded-xl">
-                            <h3 class="text-xs font-bold uppercase text-gray-500 mb-3">Dark Web Findings</h3>
-                            <div id="dash-dw-findings" class="space-y-1 text-xs"><p class="text-gray-500 italic">Loading…</p></div>
-                            <button onclick="window.loadPage('admin_dark_web')" class="mt-2 text-xs text-primary-color hover:underline">View Full Monitor →</button>
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="jakal-section-title mb-0">Dark Web Findings</h3>
+                                <button onclick="window.loadPage('admin_dark_web')" class="text-xs text-primary-color hover:underline">View all →</button>
+                            </div>
+                            <div id="dash-dw-findings" class="space-y-0"><div class="text-xs text-gray-500 animate-pulse">Loading…</div></div>
                         </div>
                     </div>
 
-                    <!-- Mini action panel -->
+                    <!-- Quick Actions — enterprise pill grid -->
                     <div class="card p-4 rounded-xl">
-                        <h3 class="text-xs font-bold uppercase text-gray-500 mb-3">Quick Actions</h3>
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="window.loadPage('admin_soar')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="workflow" class="w-3 h-3"></i> SOAR Playbooks</button>
-                            <button onclick="window.loadPage('admin_vulnerabilities')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="bug" class="w-3 h-3"></i> Vulnerabilities</button>
-                            <button onclick="window.loadPage('admin_compliance')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="landmark" class="w-3 h-3"></i> Compliance</button>
-                            <button onclick="window.loadPage('admin_audit_trail')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="file-clock" class="w-3 h-3"></i> Audit Trail</button>
-                            <button onclick="window.loadPage('admin_dark_web')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="scan-search" class="w-3 h-3"></i> Dark Web</button>
-                            <button onclick="window.loadPage('admin_documentation')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="book-open" class="w-3 h-3"></i> AtlasMesh</button>
+                        <h3 class="jakal-section-title mb-3">Quick Actions</h3>
+                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            ${[
+                                { page: 'admin_soar', icon: 'workflow', label: 'SOAR' },
+                                { page: 'admin_vulnerabilities', icon: 'bug', label: 'Vulnerabilities' },
+                                { page: 'admin_compliance', icon: 'landmark', label: 'Compliance' },
+                                { page: 'admin_audit_trail', icon: 'file-clock', label: 'Audit Trail' },
+                                { page: 'admin_dark_web', icon: 'scan-search', label: 'Dark Web' },
+                                { page: 'admin_documentation', icon: 'book-open', label: 'AtlasMesh' },
+                            ].map(a => `
+                            <button onclick="window.loadPage('${a.page}')" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-border-color hover:border-primary-color/40 transition-all group">
+                                <i data-lucide="${a.icon}" class="w-4 h-4 text-gray-400 group-hover:text-primary-color transition-colors"></i>
+                                <span class="text-xs text-gray-400 group-hover:text-white transition-colors text-center leading-tight">${a.label}</span>
+                            </button>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -4326,7 +4359,13 @@
 
             // PAM pending
             const pamData = await fetchSafe('/api/approval/pending');
-            setEl('kpi-pam', pamData?.count ?? '—');
+            const pamCount = pamData?.count ?? 0;
+            setEl('kpi-pam', pamCount || '—');
+            // Light up the notification badge when there are pending approvals
+            const notifBadge = document.getElementById('notif-badge');
+            const consoleDot = document.getElementById('console-pending-dot');
+            if (notifBadge) notifBadge.classList.toggle('hidden', !pamCount);
+            if (consoleDot) consoleDot.classList.toggle('hidden', !pamCount);
 
             // AI Safety Fabric
             const fabricData = await fetchSafe('/api/fabric/status');
@@ -4350,33 +4389,56 @@
                 fabEl.innerHTML = '<p class="text-gray-500 text-xs">Fabric data unavailable.</p>';
             }
 
-            // Agentic Canvas — show SOAR playbooks summary as proxy
-            const playbookData = await fetchSafe('/api/soar/playbooks?limit=5');
-            const agentEl = document.getElementById('dash-agentic-canvas');
-            if (agentEl) {
-                const pbs = (playbookData?.playbooks || playbookData?.items || []).slice(0, 5);
-                if (pbs.length) {
-                    agentEl.innerHTML = `<p class="text-xs text-gray-400 mb-2">Active playbooks in canvas:</p>` +
-                        pbs.map(p => `<div class="flex items-center justify-between text-xs py-1 border-b border-border-color/30">
-                            <span class="text-gray-300 truncate">${escapeHtml(p.name||p.id||'Playbook')}</span>
-                            <span class="text-xs px-2 rounded-full ${p.active||p.status==='active'?'bg-emerald-900 text-emerald-300':'bg-gray-700 text-gray-400'}">${p.active||p.status==='active'?'Active':'Idle'}</span>
-                        </div>`).join('') +
-                        `<button onclick="window.loadPage('admin_soar')" class="mt-2 text-xs text-primary-color hover:underline">Manage Playbooks →</button>`;
+            // Latest Agent Activity — SOAR + docs activity + automation log
+            const [soarData, activityData] = await Promise.all([
+                fetchSafe('/api/soar/tickets?limit=6'),
+                fetchSafe('/api/docs/activity-log?limit=6'),
+            ]);
+            const actEl = document.getElementById('dash-agent-activity');
+            if (actEl) {
+                const tickets = (soarData?.tickets || []).slice(0, 3);
+                const docLog = (activityData?.entries || activityData?.items || activityData?.log || []).slice(0, 3);
+                const rows = [];
+                tickets.forEach(t => {
+                    const dot = t.status === 'open' ? 'bg-yellow-400' : t.status === 'resolved' ? 'bg-emerald-400' : 'bg-gray-500';
+                    rows.push(`<div class="jakal-activity-row">
+                        <span class="flex-shrink-0 mt-1 w-2 h-2 rounded-full ${dot}"></span>
+                        <div class="flex-1 min-w-0">
+                            <div class="evt truncate">${escapeHtml((t.summary||t.indicator||'SOAR Ticket').substring(0,55))}</div>
+                            <div class="ts">SOAR · ${escapeHtml(t.status||'')}</div>
+                        </div>
+                    </div>`);
+                });
+                docLog.forEach(e => {
+                    const action = (e.action||e.event||'update').toLowerCase();
+                    rows.push(`<div class="jakal-activity-row">
+                        <span class="flex-shrink-0 mt-1 w-2 h-2 rounded-full bg-blue-400"></span>
+                        <div class="flex-1 min-w-0">
+                            <div class="evt truncate">${escapeHtml((e.entity_name||e.record_id||'Record').substring(0,40))}</div>
+                            <div class="ts">AtlasMesh · ${escapeHtml(action)}</div>
+                        </div>
+                    </div>`);
+                });
+                if (rows.length) {
+                    actEl.innerHTML = rows.join('') + `<button onclick="window.toggleConsolePanel()" class="mt-2 text-xs text-gray-500 hover:text-primary-color transition-colors flex items-center gap-1"><i data-lucide="terminal" class="w-3 h-3"></i> Open console for full log</button>`;
                 } else {
-                    agentEl.innerHTML = `<p class="text-xs text-gray-500">No active playbooks. <button onclick="window.loadPage('admin_soar')" class="text-primary-color hover:underline">Open Canvas</button> to create one.</p>`;
+                    actEl.innerHTML = `<p class="text-xs text-gray-500 italic">No recent activity. <button onclick="window.loadPage('admin_soar')" class="text-primary-color hover:underline">Run a playbook</button> to see agent actions here.</p>`;
                 }
+                safeCreateIcons();
             }
 
-            // SOAR tickets
-            const soarData = await fetchSafe('/api/soar/tickets?limit=4');
+            // SOAR tickets (secondary panel)
             const soarEl = document.getElementById('dash-soar-tickets');
             if (soarEl) {
                 const tickets = (soarData?.tickets||[]).slice(0,4);
                 soarEl.innerHTML = tickets.length ? tickets.map(t => `
-                    <div class="flex items-center justify-between py-1">
-                        <span class="text-gray-400 truncate">${escapeHtml((t.summary||t.indicator||'').substring(0,40))}</span>
-                        <span class="${t.status==='open'?'text-yellow-400':t.status==='resolved'?'text-emerald-400':'text-gray-500'} text-xs ml-2 flex-shrink-0">${escapeHtml(t.status||'')}</span>
-                    </div>`).join('') : '<p class="text-gray-500 italic">No recent tickets.</p>';
+                    <div class="jakal-activity-row">
+                        <span class="flex-shrink-0 mt-1 w-2 h-2 rounded-full ${t.status==='open'?'bg-yellow-400':t.status==='resolved'?'bg-emerald-400':'bg-gray-500'}"></span>
+                        <div class="flex-1 min-w-0">
+                            <span class="evt truncate block">${escapeHtml((t.summary||t.indicator||'Ticket').substring(0,38))}</span>
+                            <span class="ts">${escapeHtml(t.status||'unknown')}</span>
+                        </div>
+                    </div>`).join('') : '<p class="text-xs text-gray-500 italic">No open tickets.</p>';
             }
 
             // Compliance drift
@@ -4385,10 +4447,13 @@
             if (driftEl) {
                 const events = (driftData?.events||[]).slice(0,4);
                 driftEl.innerHTML = events.length ? events.map(e => `
-                    <div class="flex items-center justify-between py-1">
-                        <span class="text-gray-400 truncate">${escapeHtml((e.description||e.type||'').substring(0,40))}</span>
-                        <span class="${e.severity==='CRITICAL'?'text-red-400':e.severity==='HIGH'?'text-orange-400':'text-yellow-400'} text-xs ml-2 flex-shrink-0">${escapeHtml(e.severity||'')}</span>
-                    </div>`).join('') : '<p class="text-gray-500 italic">No drift events.</p>';
+                    <div class="jakal-activity-row">
+                        <span class="flex-shrink-0 mt-1 w-2 h-2 rounded-full ${e.severity==='CRITICAL'?'bg-red-400':e.severity==='HIGH'?'bg-orange-400':'bg-yellow-400'}"></span>
+                        <div class="flex-1 min-w-0">
+                            <span class="evt truncate block">${escapeHtml((e.description||e.type||'Drift event').substring(0,38))}</span>
+                            <span class="ts">${escapeHtml(e.severity||'INFO')}</span>
+                        </div>
+                    </div>`).join('') : '<p class="text-xs text-emerald-500">No drift events.</p>';
             }
 
             // Dark web findings
@@ -4397,10 +4462,13 @@
             if (dwEl) {
                 const findings = (dwData?.findings||[]).slice(0,4);
                 dwEl.innerHTML = findings.length ? findings.map(f => `
-                    <div class="flex items-center justify-between py-1">
-                        <span class="text-gray-400 truncate">${escapeHtml((f.title||f.query||'').substring(0,40))}</span>
-                        <span class="text-red-400 text-xs ml-2 flex-shrink-0">${escapeHtml(f.severity||'new')}</span>
-                    </div>`).join('') : '<p class="text-emerald-500 text-xs">No active findings.</p>';
+                    <div class="jakal-activity-row">
+                        <span class="flex-shrink-0 mt-1 w-2 h-2 rounded-full bg-red-400"></span>
+                        <div class="flex-1 min-w-0">
+                            <span class="evt truncate block">${escapeHtml((f.title||f.query||'Finding').substring(0,38))}</span>
+                            <span class="ts">${escapeHtml(f.severity||'new')}</span>
+                        </div>
+                    </div>`).join('') : '<p class="text-xs text-emerald-500">No active findings.</p>';
             }
         };
 
