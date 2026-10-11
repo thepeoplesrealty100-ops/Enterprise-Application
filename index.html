@@ -5301,7 +5301,7 @@
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             return `
                 <h3 class="text-xl font-semibold text-white mb-4">Operator Profile</h3>
-                <p class="text-sm text-gray-400 mb-6">Manages the Operator's identity within the QuantumForge security domain.</p>
+                <p class="text-sm text-gray-400 mb-6">Manages the Operator's identity within the JAKAL Horizon OS security domain.</p>
                 <div class="space-y-4">
                     ${renderMetricPill('', 'Operator ID', `U-${(userId || '01683675').substring(0,8).toUpperCase()}`, 'yellow-400')}
                     ${renderMetricPill('', 'App Instance ID', appId.substring(0, 12), 'yellow-400')}
@@ -6331,7 +6331,7 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
                          ${generateLogEntry('Login success for Operator Alpha from 72.14.213.101.', 'green-500', 'lucide-log-in')}
                      </div>
                  </div>
-                 <button class="w-full mt-4 bg-primary-color text-white p-3 rounded-lg" onclick="window.showAppModal('Exporting...', 'Audit log from 2025-10-11 has been exported.')">Export Full Audit Log</button>
+                 <button class="w-full mt-4 bg-primary-color text-white p-3 rounded-lg" onclick="window.showAppModal('Exporting...', 'Audit log from ' + new Date().toLocaleDateString() + ' has been exported.')">Export Full Audit Log</button>
                `;
         }
 
