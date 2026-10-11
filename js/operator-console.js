@@ -379,6 +379,9 @@
 
   function boot() {
     ensure();
+    // Start hidden — the Console button in the header opens it
+    var cons = el("op-console");
+    if (cons) { cons.style.display = "none"; cons.dataset.hiddenByBtn = "1"; }
     probe().then(function () { badge(); if (mode !== "online") print("Demo mode — no live backend detected. Slash-commands return sample output.", "muted"); else { print("Live backend connected.", "ok"); fabricStat(); setInterval(pollApprovals, 5000); } });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();

@@ -158,22 +158,39 @@ def _ensure():
 
 
 def _seed_defaults(db):
+    # AtlasMesh default asset types — mirrors IT Glue-style categories
     defaults = [
-        ("Firewall", "shield", "Network perimeter firewalls and WAFs",
-         '[{"name":"Model","type":"text","required":true},{"name":"Vendor","type":"text","required":false},{"name":"Management IP","type":"text","required":true},{"name":"Firmware Version","type":"text","required":false},{"name":"License Expiry","type":"date","required":false}]'),
-        ("SSL Certificate", "lock", "TLS/SSL certificates and expiry tracking",
-         '[{"name":"Domain","type":"text","required":true},{"name":"Issuer","type":"text","required":false},{"name":"Expiry Date","type":"date","required":true},{"name":"Auto-Renew","type":"bool","required":false}]'),
-        ("Backup Job", "archive", "Backup schedules and recovery targets",
-         '[{"name":"Target","type":"text","required":true},{"name":"Schedule","type":"text","required":true},{"name":"Retention Days","type":"number","required":true},{"name":"Last Successful","type":"date","required":false},{"name":"Status","type":"dropdown","options":["ok","failed","pending"],"required":false}]'),
-        ("Software License", "tag", "Application and OS licenses",
-         '[{"name":"Product","type":"text","required":true},{"name":"Vendor","type":"text","required":false},{"name":"Seats","type":"number","required":false},{"name":"Expiry","type":"date","required":false},{"name":"Cost/Year","type":"number","required":false}]'),
+        ("Configuration", "monitor", "Servers, workstations, switches, firewalls and other managed devices",
+         '[{"name":"Status","type":"dropdown","options":["Active","Inactive","Expired","Decommissioned"],"required":true},{"name":"Config Type","type":"dropdown","options":["Server","Workstation","Switch","Router","Firewall","Printer","WAP","Other"],"required":false},{"name":"OS","type":"text","required":false},{"name":"Primary IP","type":"text","required":false},{"name":"Serial Number","type":"text","required":false},{"name":"Expires","type":"date","required":false},{"name":"Location","type":"text","required":false},{"name":"Contact","type":"text","required":false},{"name":"Manufacturer","type":"text","required":false},{"name":"Model","type":"text","required":false}]'),
         ("Contact", "user", "Key technical and business contacts",
-         '[{"name":"Full Name","type":"text","required":true},{"name":"Role","type":"text","required":false},{"name":"Email","type":"text","required":true},{"name":"Phone","type":"text","required":false},{"name":"On-call","type":"bool","required":false}]'),
+         '[{"name":"Full Name","type":"text","required":true},{"name":"Role","type":"text","required":false},{"name":"Email","type":"text","required":true},{"name":"Phone","type":"text","required":false},{"name":"Organization","type":"text","required":false},{"name":"On-call","type":"bool","required":false},{"name":"Notes","type":"text","required":false}]'),
+        ("Location", "map-pin", "Physical sites, offices, data centers and remote locations",
+         '[{"name":"Address","type":"text","required":true},{"name":"City","type":"text","required":false},{"name":"State","type":"text","required":false},{"name":"Country","type":"text","required":false},{"name":"Phone","type":"text","required":false},{"name":"Notes","type":"text","required":false}]'),
+        ("Domain", "globe", "Domain registrations and DNS zones",
+         '[{"name":"Registrar","type":"text","required":false},{"name":"Expires","type":"date","required":true},{"name":"Auto-Renew","type":"bool","required":false},{"name":"DNS Provider","type":"text","required":false},{"name":"Status","type":"dropdown","options":["Active","Expiring Soon","Expired","Transferred"],"required":false}]'),
+        ("SSL Certificate", "lock", "TLS/SSL certificates and expiry tracking",
+         '[{"name":"Domain","type":"text","required":true},{"name":"Issuer","type":"text","required":false},{"name":"Expiry Date","type":"date","required":true},{"name":"Auto-Renew","type":"bool","required":false},{"name":"Wildcard","type":"bool","required":false},{"name":"Certificate Type","type":"dropdown","options":["DV","OV","EV","Wildcard"],"required":false}]'),
+        ("Network", "network", "LAN/WAN segments, VLANs and subnets",
+         '[{"name":"CIDR","type":"text","required":true},{"name":"VLAN ID","type":"text","required":false},{"name":"Gateway","type":"text","required":false},{"name":"Location","type":"text","required":false},{"name":"Description","type":"text","required":false},{"name":"DHCP","type":"bool","required":false}]'),
+        ("Ticket", "ticket", "Support requests and change control items",
+         '[{"name":"Status","type":"dropdown","options":["Open","In Progress","Pending","Resolved","Closed"],"required":true},{"name":"Priority","type":"dropdown","options":["Critical","High","Medium","Low"],"required":false},{"name":"Category","type":"text","required":false},{"name":"Assigned To","type":"text","required":false},{"name":"Due Date","type":"date","required":false},{"name":"Description","type":"text","required":false}]'),
+        ("Application", "app-window", "Business and security software applications",
+         '[{"name":"Vendor","type":"text","required":false},{"name":"Version","type":"text","required":false},{"name":"License Key","type":"text","required":false},{"name":"Seats","type":"number","required":false},{"name":"Status","type":"dropdown","options":["Active","Deprecated","Trial","Expired"],"required":false},{"name":"URL","type":"text","required":false}]'),
+        ("Active Directory", "database", "Active Directory domains, OUs and group policies",
+         '[{"name":"Domain Name","type":"text","required":true},{"name":"Forest","type":"text","required":false},{"name":"DC Count","type":"number","required":false},{"name":"User Count","type":"number","required":false},{"name":"OS Level","type":"text","required":false},{"name":"Notes","type":"text","required":false}]'),
+        ("Wireless", "wifi", "Wireless networks, SSIDs and access point configurations",
+         '[{"name":"SSID","type":"text","required":true},{"name":"Security Type","type":"dropdown","options":["WPA3","WPA2-Enterprise","WPA2","WEP","Open"],"required":true},{"name":"Location","type":"text","required":false},{"name":"Controller","type":"text","required":false},{"name":"Guest Network","type":"bool","required":false},{"name":"VLAN","type":"text","required":false}]'),
+        ("Backup Job", "archive", "Backup schedules and recovery targets",
+         '[{"name":"Target","type":"text","required":true},{"name":"Schedule","type":"text","required":true},{"name":"Retention Days","type":"number","required":true},{"name":"Last Successful","type":"date","required":false},{"name":"Status","type":"dropdown","options":["ok","failed","pending","disabled"],"required":false},{"name":"Destination","type":"text","required":false}]'),
+        ("Firewall", "shield", "Network perimeter firewalls and WAFs",
+         '[{"name":"Model","type":"text","required":true},{"name":"Vendor","type":"text","required":false},{"name":"Management IP","type":"text","required":true},{"name":"Firmware Version","type":"text","required":false},{"name":"License Expiry","type":"date","required":false},{"name":"HA Pair","type":"bool","required":false}]'),
+        ("Software License", "tag", "Application and OS licenses",
+         '[{"name":"Product","type":"text","required":true},{"name":"Vendor","type":"text","required":false},{"name":"Seats","type":"number","required":false},{"name":"Expiry","type":"date","required":false},{"name":"Cost/Year","type":"number","required":false},{"name":"Key","type":"text","required":false}]'),
     ]
     for name, icon, desc, fields in defaults:
         tid = f"type-{uuid.uuid4().hex[:8]}"
         db.conn.execute(
-            "INSERT INTO doc_asset_types (type_id,name,icon,description,field_spec) VALUES (?,?,?,?,?)",
+            "INSERT OR IGNORE INTO doc_asset_types (type_id,name,icon,description,field_spec) VALUES (?,?,?,?,?)",
             (tid, name, icon, desc, fields)
         )
     db.conn.commit()
@@ -327,22 +344,34 @@ class AssetRecordIn(BaseModel):
 @router.get("/assets")
 async def list_assets(
     type_id: Optional[str] = None,
+    type_name: Optional[str] = Query(None, description="Filter by asset type name (case-insensitive)"),
     org_id: Optional[str] = None,
     q: Optional[str] = Query(None, description="Search in name"),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(200, ge=1, le=500),
     offset: int = Query(0, ge=0),
 ):
     _ensure()
-    where, params = ["is_active = TRUE"], []
+    # Resolve type_name → type_id if provided
+    if type_name and not type_id:
+        trows = _rows("SELECT type_id FROM doc_asset_types WHERE LOWER(name) = ?", (type_name.lower(),))
+        if trows:
+            type_id = trows[0]["type_id"]
+        else:
+            return {"records": [], "total": 0, "type_not_found": True}
+    where, params = ["r.is_active = TRUE"], []
     if type_id:
-        where.append("type_id = ?"); params.append(type_id)
+        where.append("r.type_id = ?"); params.append(type_id)
     if org_id:
-        where.append("org_id = ?"); params.append(org_id)
+        where.append("r.org_id = ?"); params.append(org_id)
     if q:
-        where.append("LOWER(name) LIKE ?"); params.append(f"%{q.lower()}%")
+        where.append("LOWER(r.name) LIKE ?"); params.append(f"%{q.lower()}%")
     clause = " AND ".join(where)
-    records = _rows(f"SELECT * FROM doc_asset_records WHERE {clause} ORDER BY updated_at DESC LIMIT ? OFFSET ?",
-                    tuple(params + [limit, offset]))
+    records = _rows(
+        f"SELECT r.*, t.name as type_name FROM doc_asset_records r "
+        f"LEFT JOIN doc_asset_types t ON r.type_id = t.type_id "
+        f"WHERE {clause} ORDER BY r.updated_at DESC LIMIT ? OFFSET ?",
+        tuple(params + [limit, offset])
+    )
     for r in records:
         try:
             r["data"] = json.loads(r.get("data") or "{}")
@@ -352,7 +381,10 @@ async def list_assets(
             r["tags"] = json.loads(r.get("tags") or "[]")
         except Exception:
             r["tags"] = []
-    total = _rows(f"SELECT COUNT(*) as c FROM doc_asset_records WHERE {clause}", tuple(params))
+    total = _rows(
+        f"SELECT COUNT(*) as c FROM doc_asset_records r WHERE {clause}",
+        tuple(params)
+    )
     return {"records": records, "total": total[0]["c"] if total else 0}
 
 
@@ -673,3 +705,64 @@ async def activity_log(limit: int = Query(100, ge=1, le=500)):
         except Exception:
             r["detail"] = {}
     return {"entries": rows, "count": len(rows)}
+
+
+@router.get("/counts")
+async def section_counts():
+    """Return record counts by asset type name — used by AtlasMesh sidebar badges."""
+    _ensure()
+    rows = _rows(
+        "SELECT t.name, COUNT(r.record_id) as count "
+        "FROM doc_asset_types t "
+        "LEFT JOIN doc_asset_records r ON t.type_id = r.type_id AND r.is_active = TRUE "
+        "WHERE t.is_active = TRUE "
+        "GROUP BY t.type_id, t.name"
+    )
+    vault_count = _rows("SELECT COUNT(*) as c FROM doc_vault_entries WHERE is_active = TRUE")[0]["c"]
+    sop_count = _rows("SELECT COUNT(*) as c FROM doc_sops WHERE is_active = TRUE")[0]["c"]
+    counts = {r["name"]: r["count"] for r in rows}
+    counts["Passwords"] = vault_count
+    counts["Documents"] = sop_count
+    return {"counts": counts}
+
+
+@router.get("/export/{section}")
+async def export_section(section: str):
+    """Export a section as CSV data for AtlasMesh."""
+    import io, csv as csv_mod
+    _ensure()
+    output = io.StringIO()
+    # Map section slug to type name
+    type_map = {
+        "configurations": "Configuration", "contacts": "Contact",
+        "locations": "Location", "domains": "Domain",
+        "ssl-certificates": "SSL Certificate", "networks": "Network",
+        "tickets": "Ticket", "applications": "Application",
+        "active-directory": "Active Directory", "wireless": "Wireless",
+        "backup": "Backup Job", "firewalls": "Firewall",
+    }
+    type_name = type_map.get(section)
+    if type_name:
+        trows = _rows("SELECT type_id FROM doc_asset_types WHERE LOWER(name) = ?", (type_name.lower(),))
+        if trows:
+            tid = trows[0]["type_id"]
+            records = _rows("SELECT * FROM doc_asset_records WHERE type_id = ? AND is_active = TRUE ORDER BY name", (tid,))
+            writer = csv_mod.writer(output)
+            writer.writerow(["Name", "Fields", "Created", "Updated"])
+            for r in records:
+                writer.writerow([r.get("name",""), r.get("data","{}"), r.get("created_at",""), r.get("updated_at","")])
+    elif section == "passwords":
+        records = _rows("SELECT name, username, url, created_at FROM doc_vault_entries WHERE is_active = TRUE ORDER BY name")
+        writer = csv_mod.writer(output)
+        writer.writerow(["Name", "Username", "URL", "Created"])
+        for r in records:
+            writer.writerow([r.get("name",""), r.get("username",""), r.get("url",""), r.get("created_at","")])
+    elif section in ("documents", "runbooks", "checklists"):
+        records = _rows("SELECT title, category, description, created_at FROM doc_sops WHERE is_active = TRUE ORDER BY title")
+        writer = csv_mod.writer(output)
+        writer.writerow(["Title", "Category", "Description", "Created"])
+        for r in records:
+            writer.writerow([r.get("title",""), r.get("category",""), r.get("description",""), r.get("created_at","")])
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(output.getvalue(), media_type="text/csv",
+                             headers={"Content-Disposition": f'attachment; filename="atlasmesh-{section}.csv"'})

@@ -567,8 +567,14 @@
                         <i data-lucide="bell" class="w-6 h-6 text-gray-400 hover:text-white cursor-pointer"></i>
                         <span class="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-mid-bg-opaque bg-red-500"></span>
                     </div>
+                    <!-- Terminal launcher -->
+                    <button id="console-launcher-btn" title="Operator Console" onclick="window.toggleConsolePanel()"
+                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border-color text-gray-400 hover:text-white hover:border-primary-color/50 hover:bg-gray-800/50 transition-all text-xs font-medium">
+                        <i data-lucide="terminal" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Console</span>
+                    </button>
                     <div class="flex items-center space-x-2">
-                        <img src="https://placehold.co/32x32/f97316/111827?text=OP" class="w-8 h-8 rounded-full border-2 border-primary-color" onerror="this.onerror=null;this.src='https://placehold.co/32x32/f97316/111827?text=U'">
+                        <img src="https://placehold.co/32x32/f97316/111827?text=OP" class="w-8 h-8 rounded-full border-2 border-primary-color cursor-pointer" onclick="window.loadPage('admin_settings')" onerror="this.onerror=null;this.src='https://placehold.co/32x32/f97316/111827?text=U'" title="Settings">
                         <span id="operator-name" class="text-sm font-medium hidden sm:inline">Operator Alpha</span>
                     </div>
                 </div>
@@ -767,21 +773,30 @@
         
         window.toggleDesktopSidebar = function() {
             const sidebar = document.getElementById('sidebar');
-            const icon = document.getElementById('sidebar-toggle-icon'); // Use the ID to find the icon
-            
-            if (!icon) {
-                console.error("Sidebar toggle icon not found!");
+            const icon = document.getElementById('sidebar-toggle-icon');
+            if (!icon) return;
+            sidebar.classList.toggle('collapsed');
+            icon.style.transform = sidebar.classList.contains('collapsed') ? 'rotate(180deg)' : 'rotate(0deg)';
+        };
+
+        // Console panel toggle — shows/hides the operator console like a chat widget
+        window.toggleConsolePanel = function() {
+            const cons = document.getElementById('op-console');
+            if (!cons) {
+                // First open — the operator-console.js boot() creates it; give it a moment then toggle
+                if (window.JAKAL && window.JAKAL.console) { window.JAKAL.console.open(); }
                 return;
             }
-            
-            sidebar.classList.toggle('collapsed');
-            
-            if (sidebar.classList.contains('collapsed')) {
-                icon.style.transform = 'rotate(180deg)';
+            const isHidden = cons.style.display === 'none' || cons.dataset.hiddenByBtn === '1';
+            if (isHidden) {
+                cons.style.display = '';
+                cons.dataset.hiddenByBtn = '0';
+                if (window.JAKAL && window.JAKAL.console) window.JAKAL.console.open();
             } else {
-                icon.style.transform = 'rotate(0deg)';
+                cons.style.display = 'none';
+                cons.dataset.hiddenByBtn = '1';
             }
-        }
+        };
 
 
         // --- Page Content Rendering & View Switching Logic ---
@@ -823,7 +838,7 @@
             { key: 'admin_phishing_sim', icon: 'fish', label: 'Phishing Campaigns', category: 'Human Layer Security' },
 
             // GACYBER TOOLKIT
-            { key: 'admin_documentation', icon: 'database', label: 'GACyber Documentation', category: 'GACyber Toolkit' },
+            { key: 'admin_documentation', icon: 'book-open', label: 'AtlasMesh', category: 'GACyber Toolkit' },
 
         ];
 
@@ -869,7 +884,7 @@
             admin_security_training: { title: "Security Awareness Training", html: () => renderSecurityTraining() },
             admin_phishing_sim: { title: "Phishing Campaigns", html: () => renderPhishingSim() },
             admin_cheatsheet_library: { title: "CheatSheet Library", html: () => renderCheatsheetLibrary() },
-            admin_documentation: { title: "GACyber Documentation Engine", html: () => renderDocumentation() },
+            admin_documentation: { title: "AtlasMesh — Asset Intelligence", html: () => renderAtlasMesh() },
             admin_soar: { title: "SOAR Playbooks", html: () => renderSoarPlaybooks() },
             admin_vulnerabilities: { title: "Vulnerability Management", html: () => renderVulnerabilityManagement() },
             admin_integrations: { title: "Integrations", html: () => renderIntegrationsVault() },
@@ -1458,7 +1473,7 @@
                             </div>
                         </div>
                         <div id="live-exec-output" class="flex-1 overflow-y-auto scrollbar-style bg-gray-900 rounded-lg p-3 font-mono text-xs text-gray-300 min-h-0">
-                            <p class="text-gray-500">JAKAL Live Remote Execution -- pick a script + endpoint(s), then Run.
+                            <p class="text-gray-500">Select a script and one or more endpoints, then Run.
                             Output streams here over a real WebSocket (/ws/exec/&#123;id&#125;); past runs replay from the audit log via "Historical".</p>
                         </div>
                     </div>
@@ -4248,7 +4263,7 @@
                             <button onclick="window.loadPage('admin_compliance')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="landmark" class="w-3 h-3"></i> Compliance</button>
                             <button onclick="window.loadPage('admin_audit_trail')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="file-clock" class="w-3 h-3"></i> Audit Trail</button>
                             <button onclick="window.loadPage('admin_dark_web')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="scan-search" class="w-3 h-3"></i> Dark Web</button>
-                            <button onclick="window.loadPage('admin_documentation')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="database" class="w-3 h-3"></i> GACyber Docs</button>
+                            <button onclick="window.loadPage('admin_documentation')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg border border-border-color text-white flex items-center gap-1"><i data-lucide="book-open" class="w-3 h-3"></i> AtlasMesh</button>
                         </div>
                     </div>
                 </div>
@@ -7719,164 +7734,451 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
         function startDarkWeb() { window.loadDarkWebData(); }
 
         // ══════════════════════════════════════════════════════════════════════════
-        // GACyber Documentation Engine
+        // AtlasMesh — Asset Intelligence Platform (IT Glue-style)
         // ══════════════════════════════════════════════════════════════════════════
 
-        function renderDocumentation() {
-            return `
-            <div class="flex flex-col gap-4">
-                <!-- Tabs -->
-                <div class="flex gap-2 flex-wrap">
-                    ${['asset-types','assets','relationships','vault','sops','client-import','activity'].map((t,i) => `
-                    <button onclick="window.switchDocTab('${t}')" id="doc-tab-${t}"
-                        class="doc-tab-btn px-3 py-1.5 rounded-lg text-sm font-medium ${i===0?'bg-primary-color text-white':'bg-gray-800 text-gray-400 hover:bg-gray-700'}">
-                        ${{'asset-types':'Asset Types','assets':'Assets','relationships':'Relationships','vault':'Vault','sops':'Runbooks / SOPs','client-import':'Client Import','activity':'Activity Log'}[t]}
+        // Sidebar section definitions
+        const _ATLAS_SECTIONS = [
+            { id: 'home',             label: 'Home',               icon: 'home',           category: null },
+            { id: 'configurations',   label: 'Configurations',     icon: 'monitor',        category: 'Core Assets' },
+            { id: 'contacts',         label: 'Contacts',           icon: 'users',          category: 'Core Assets' },
+            { id: 'locations',        label: 'Locations',          icon: 'map-pin',        category: 'Core Assets' },
+            { id: 'domains',          label: 'Domains',            icon: 'globe',          category: 'Core Assets' },
+            { id: 'ssl-certificates', label: 'SSL Certificates',   icon: 'lock',           category: 'Core Assets' },
+            { id: 'passwords',        label: 'Passwords',          icon: 'key-round',      category: 'Core Assets' },
+            { id: 'networks',         label: 'Networks',           icon: 'network',        category: 'Core Assets' },
+            { id: 'tickets',          label: 'Tickets',            icon: 'ticket',         category: 'Core Assets' },
+            { id: 'documents',        label: 'Documents',          icon: 'file-text',      category: 'Procedures' },
+            { id: 'checklists',       label: 'Checklists',         icon: 'check-square',   category: 'Procedures' },
+            { id: 'runbooks',         label: 'Runbooks / SOPs',    icon: 'book-open',      category: 'Procedures' },
+            { id: 'site-summary',     label: 'Site Summary',       icon: 'layout-dashboard', category: 'Apps & Services' },
+            { id: 'active-directory', label: 'Active Directory',   icon: 'database',       category: 'Apps & Services' },
+            { id: 'applications',     label: 'Applications',       icon: 'app-window',     category: 'Apps & Services' },
+            { id: 'wireless',         label: 'Wireless',           icon: 'wifi',           category: 'Apps & Services' },
+            { id: 'backup',           label: 'Backup',             icon: 'hard-drive',     category: 'Apps & Services' },
+            { id: 'relationships',    label: 'Relationships',      icon: 'git-fork',       category: 'Management' },
+            { id: 'asset-types',      label: 'Flexible Asset Types', icon: 'layers',       category: 'Management' },
+            { id: 'client-import',    label: 'Client Import',      icon: 'upload',         category: 'Management' },
+            { id: 'activity',         label: 'Activity Log',       icon: 'activity',       category: 'Management' },
+        ];
+
+        function renderAtlasMesh() {
+            const categories = ['Core Assets','Procedures','Apps & Services','Management'];
+            const byCat = {};
+            categories.forEach(c => { byCat[c] = []; });
+            _ATLAS_SECTIONS.filter(s => s.category).forEach(s => { if (byCat[s.category]) byCat[s.category].push(s); });
+
+            const sidebarHtml = categories.map(cat => `
+                <div class="atlas-nav-group">
+                    <div class="atlas-nav-cat">${cat}</div>
+                    ${byCat[cat].map(s => `
+                    <button onclick="window.atlasNav('${s.id}')" id="atlas-nav-${s.id}"
+                        class="atlas-nav-item w-full text-left flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-gray-400 hover:text-white hover:bg-gray-800/70 transition-colors">
+                        <i data-lucide="${s.icon}" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                        <span class="flex-1 truncate">${s.label}</span>
+                        <span id="atlas-cnt-${s.id}" class="text-xs text-gray-600 flex-shrink-0"></span>
                     </button>`).join('')}
-                </div>
+                </div>`).join('');
 
-                <!-- Asset Types Tab -->
-                <div id="doc-panel-asset-types" class="doc-panel">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-bold text-primary-color">Flexible Asset Types</h3>
-                        <button onclick="window.showCreateAssetTypeModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ New Type</button>
+            return `
+            <style>
+                .atlas-layout { display:flex; height:calc(100vh - 128px); min-height:400px; gap:0; }
+                .atlas-sidebar { width:208px; flex-shrink:0; border-right:1px solid var(--border-color,#1e293b); overflow-y:auto; padding:8px 0; background:rgba(10,14,22,.6); }
+                .atlas-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+                .atlas-topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--border-color,#1e293b); flex-shrink:0; gap:8px; flex-wrap:wrap; }
+                .atlas-topbar-left h2 { font-size:1.125rem; font-weight:700; color:#fff; margin:0; }
+                .atlas-topbar-left .atlas-breadcrumb { font-size:11px; color:#64748b; margin-bottom:2px; }
+                .atlas-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+                .atlas-results-bar { display:flex; align-items:center; justify-content:space-between; padding:6px 20px; border-bottom:1px solid var(--border-color,#1e293b); background:rgba(15,23,42,.4); flex-shrink:0; }
+                .atlas-results-bar span { font-size:11px; color:#64748b; }
+                .atlas-content { flex:1; overflow:auto; }
+                .atlas-table { width:100%; border-collapse:collapse; font-size:13px; }
+                .atlas-table th { padding:8px 12px; text-align:left; font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #1e293b; background:rgba(15,23,42,.5); white-space:nowrap; cursor:pointer; user-select:none; }
+                .atlas-table th:hover { color:#e2e8f0; }
+                .atlas-table td { padding:8px 12px; border-bottom:1px solid #1e293b1a; color:#cbd5e1; vertical-align:middle; }
+                .atlas-table tr:hover td { background:rgba(255,255,255,.025); }
+                .atlas-table .atlas-name { color:#e2e8f0; font-weight:500; cursor:pointer; }
+                .atlas-table .atlas-name:hover { color:#00c6ff; text-decoration:underline; }
+                .atlas-status-active { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; background:#052e16; color:#4ade80; border:1px solid #166534; }
+                .atlas-status-inactive, .atlas-status-expired, .atlas-status-decommissioned { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; background:#1c1917; color:#94a3b8; border:1px solid #292524; }
+                .atlas-status-expiring { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; background:#431407; color:#fb923c; border:1px solid #7c2d12; }
+                .atlas-nav-group { padding:4px 8px 0; }
+                .atlas-nav-cat { font-size:10px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.07em; padding:8px 10px 4px; }
+                .atlas-nav-item.atlas-active { background:rgba(0,198,255,.12); color:#00c6ff !important; }
+                .atlas-nav-item.atlas-active i { color:#00c6ff !important; }
+                .atlas-home-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; padding:20px; }
+                .atlas-home-card { background:rgba(255,255,255,.03); border:1px solid #1e293b; border-radius:10px; padding:16px; cursor:pointer; transition:border-color .2s,background .2s; }
+                .atlas-home-card:hover { border-color:#00c6ff55; background:rgba(0,198,255,.05); }
+                .atlas-home-card .atlas-cat-label { font-size:10px; color:#475569; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+                .atlas-home-card .atlas-count { font-size:28px; font-weight:700; color:#e2e8f0; line-height:1.1; }
+                .atlas-home-card .atlas-label { font-size:12px; color:#94a3b8; margin-top:4px; }
+                .atlas-empty { padding:48px; text-align:center; color:#475569; font-size:13px; }
+                .atlas-input { background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e5e7eb; padding:7px 12px; font-size:13px; outline:none; }
+                .atlas-input:focus { border-color:#00c6ff55; }
+                .atlas-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-size:13px; font-weight:500; border:1px solid #334155; background:#1e293b; color:#cbd5e1; cursor:pointer; transition:background .15s,color .15s; white-space:nowrap; }
+                .atlas-btn:hover { background:#334155; color:#fff; }
+                .atlas-btn-primary { background:linear-gradient(135deg,#00c6ff,#0072ff); border-color:transparent; color:#fff; }
+                .atlas-btn-primary:hover { opacity:.9; }
+                .atlas-row-actions { display:flex; gap:6px; opacity:0; transition:opacity .15s; }
+                .atlas-table tr:hover .atlas-row-actions { opacity:1; }
+                .atlas-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:6px; font-size:11px; background:#1e293b; color:#94a3b8; border:1px solid #334155; }
+            </style>
+            <div class="atlas-layout">
+                <!-- Left Sidebar -->
+                <nav class="atlas-sidebar scrollbar-style">
+                    <div class="px-3 py-2 mb-1">
+                        <button onclick="window.atlasNav('home')" id="atlas-nav-home"
+                            class="atlas-nav-item w-full text-left flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-gray-400 hover:text-white hover:bg-gray-800/70 transition-colors">
+                            <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                            <span>Home</span>
+                        </button>
                     </div>
-                    <div id="doc-asset-types-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div class="text-gray-500 text-xs col-span-3 text-center py-8">Loading asset types…</div>
-                    </div>
-                </div>
+                    ${sidebarHtml}
+                </nav>
 
-                <!-- Assets Tab -->
-                <div id="doc-panel-assets" class="doc-panel hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex gap-2 items-center">
-                            <h3 class="text-lg font-bold text-primary-color">Asset Records</h3>
-                            <select id="doc-assets-type-filter" onchange="window.loadDocAssets()" class="bg-gray-800 border border-border-color rounded px-2 py-1 text-xs text-gray-300">
-                                <option value="">All Types</option>
-                            </select>
+                <!-- Main Content -->
+                <div class="atlas-main">
+                    <!-- Top Bar -->
+                    <div class="atlas-topbar">
+                        <div class="atlas-topbar-left">
+                            <div class="atlas-breadcrumb" id="atlas-breadcrumb">AtlasMesh</div>
+                            <h2 id="atlas-section-title">Home</h2>
                         </div>
-                        <button onclick="window.showCreateAssetModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ New Asset</button>
-                    </div>
-                    <div id="doc-assets-list" class="space-y-2">
-                        <div class="text-gray-500 text-xs text-center py-8">Loading assets…</div>
-                    </div>
-                </div>
-
-                <!-- Relationships Tab -->
-                <div id="doc-panel-relationships" class="doc-panel hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-bold text-primary-color">Asset Relationship Graph</h3>
-                        <button onclick="window.showAddRelModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ Add Relationship</button>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-                        <div class="card p-3 rounded-xl text-center">
-                            <div id="doc-rel-nodes" class="text-3xl font-bold text-primary-color">…</div>
-                            <div class="text-gray-400 text-xs mt-1">Assets / Nodes</div>
-                        </div>
-                        <div class="card p-3 rounded-xl text-center">
-                            <div id="doc-rel-edges" class="text-3xl font-bold text-white">…</div>
-                            <div class="text-gray-400 text-xs mt-1">Relationships</div>
-                        </div>
-                        <div class="card p-3 rounded-xl text-center">
-                            <div id="doc-rel-critical" class="text-3xl font-bold text-red-400">…</div>
-                            <div class="text-gray-400 text-xs mt-1">Critical Paths</div>
+                        <div class="atlas-toolbar">
+                            <input id="atlas-search" type="text" placeholder="Filter columns or search…" class="atlas-input" style="width:220px" oninput="window.atlasSearch(this.value)">
+                            <button onclick="window.atlasExport()" class="atlas-btn">
+                                <i data-lucide="download" class="w-4 h-4"></i> Export
+                            </button>
+                            <button onclick="window.atlasImportDialog()" class="atlas-btn">
+                                <i data-lucide="upload" class="w-4 h-4"></i> Import
+                            </button>
+                            <button onclick="window.atlasNew()" class="atlas-btn atlas-btn-primary" id="atlas-new-btn">
+                                <i data-lucide="plus" class="w-4 h-4"></i> New
+                            </button>
                         </div>
                     </div>
-                    <div id="doc-rel-list" class="space-y-1 max-h-96 overflow-y-auto scrollbar-style">
-                        <div class="text-gray-500 text-xs text-center py-4">Loading relationships…</div>
+                    <!-- Results bar -->
+                    <div class="atlas-results-bar">
+                        <span id="atlas-results-count">Select a section</span>
+                        <label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+                            <input type="checkbox" id="atlas-incl-archive" class="w-3 h-3 rounded"> Include archive
+                        </label>
                     </div>
-                </div>
-
-                <!-- Vault Tab -->
-                <div id="doc-panel-vault" class="doc-panel hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-bold text-primary-color">Zero-Knowledge Vault</h3>
-                        <button onclick="window.showCreateVaultModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ Add Credential</button>
-                    </div>
-                    <p class="text-xs text-gray-500 mb-3">Passwords stored as AES-256-GCM ciphertext. Decryption is logged to the immutable audit trail.</p>
-                    <div id="doc-vault-list" class="space-y-2">
-                        <div class="text-gray-500 text-xs text-center py-8">Loading vault…</div>
-                    </div>
-                </div>
-
-                <!-- SOPs Tab -->
-                <div id="doc-panel-sops" class="doc-panel hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-bold text-primary-color">Runbooks / SOPs</h3>
-                        <button onclick="window.showCreateSopModal()" class="px-3 py-1.5 bg-primary-color text-white text-xs rounded-lg">+ New SOP</button>
-                    </div>
-                    <div id="doc-sops-list" class="space-y-2">
-                        <div class="text-gray-500 text-xs text-center py-8">Loading SOPs…</div>
-                    </div>
-                </div>
-
-                <!-- Client Import Tab -->
-                <div id="doc-panel-client-import" class="doc-panel hidden">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Drop Zone -->
-                        <div class="flex flex-col gap-4">
-                            <h3 class="text-lg font-bold text-primary-color">Client List Import</h3>
-                            <p class="text-xs text-gray-400">Drop a client spreadsheet (CSV, XLS, XLSX) and the system auto-reads all columns, maps fields, and registers each client as a GACyber asset record.</p>
-                            <div id="client-import-dropzone"
-                                class="border-2 border-dashed border-border-color rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary-color/70 transition-all"
-                                ondragover="event.preventDefault();this.classList.add('border-primary-color')"
-                                ondragleave="this.classList.remove('border-primary-color')"
-                                ondrop="event.preventDefault();this.classList.remove('border-primary-color');window.handleClientImportDrop(event)"
-                                onclick="document.getElementById('client-import-file').click()">
-                                <i data-lucide="upload-cloud" class="w-10 h-10 text-gray-600"></i>
-                                <p class="text-sm text-gray-400">Drag & drop CSV / XLS / XLSX here</p>
-                                <p class="text-xs text-gray-600">or click to browse</p>
-                                <input id="client-import-file" type="file" accept=".csv,.xls,.xlsx,.tsv" class="hidden" onchange="window.handleClientImportFile(this.files[0])">
+                    <!-- Content panels -->
+                    <div class="atlas-content scrollbar-style" id="atlas-content-area">
+                        <div class="atlas-home-grid" id="atlas-panel-home">
+                            <div class="col-span-full text-gray-500 text-xs italic">Loading overview…</div>
+                        </div>
+                        <div id="atlas-panel-table" class="hidden p-0">
+                            <table class="atlas-table" id="atlas-data-table">
+                                <thead id="atlas-thead"></thead>
+                                <tbody id="atlas-tbody"></tbody>
+                            </table>
+                        </div>
+                        <!-- Passwords panel -->
+                        <div id="atlas-panel-vault" class="hidden p-4">
+                            <p class="text-xs text-gray-500 mb-3">Passwords stored as AES-256-GCM ciphertext. Decryption is logged to the immutable audit trail.</p>
+                            <div id="doc-vault-list" class="space-y-2"></div>
+                        </div>
+                        <!-- SOPs panel -->
+                        <div id="atlas-panel-sops" class="hidden p-4">
+                            <div id="doc-sops-list" class="space-y-2"></div>
+                        </div>
+                        <!-- Relationships panel -->
+                        <div id="atlas-panel-relationships" class="hidden p-4">
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <div class="card p-3 rounded-xl text-center"><div id="doc-rel-nodes" class="text-3xl font-bold text-primary-color">…</div><div class="text-gray-500 text-xs mt-1">Assets / Nodes</div></div>
+                                <div class="card p-3 rounded-xl text-center"><div id="doc-rel-edges" class="text-3xl font-bold text-white">…</div><div class="text-gray-500 text-xs mt-1">Relationships</div></div>
+                                <div class="card p-3 rounded-xl text-center"><div id="doc-rel-critical" class="text-3xl font-bold text-red-400">…</div><div class="text-gray-500 text-xs mt-1">Critical Paths</div></div>
                             </div>
-                            <!-- Column Mapping -->
-                            <div id="client-import-mapping" class="hidden space-y-3">
-                                <h4 class="text-sm font-semibold text-white">Column Mapping</h4>
-                                <div class="grid grid-cols-2 gap-2 text-xs" id="client-import-map-grid"></div>
-                                <div class="flex gap-2">
-                                    <button onclick="window.importClientRows()" class="flex-1 py-2 bg-primary-color text-white rounded-lg text-xs font-semibold hover:opacity-90">
-                                        Import All Rows
-                                    </button>
-                                    <button onclick="window.clearClientImport()" class="py-2 px-3 bg-gray-700 text-white rounded-lg text-xs hover:bg-gray-600">Cancel</button>
+                            <div id="doc-rel-list" class="space-y-1 max-h-[28rem] overflow-y-auto scrollbar-style"></div>
+                        </div>
+                        <!-- Asset Types panel -->
+                        <div id="atlas-panel-asset-types" class="hidden p-4">
+                            <div id="doc-asset-types-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                        </div>
+                        <!-- Client Import panel -->
+                        <div id="atlas-panel-client-import" class="hidden p-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="flex flex-col gap-4">
+                                    <h3 class="text-base font-semibold text-white">Client Import</h3>
+                                    <p class="text-xs text-gray-400">Drop a CSV/XLS/XLSX file to auto-map columns and register clients as AtlasMesh asset records.</p>
+                                    <div id="client-import-dropzone" class="border-2 border-dashed border-border-color rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary-color/60 transition-all"
+                                        ondragover="event.preventDefault();this.classList.add('border-primary-color')"
+                                        ondragleave="this.classList.remove('border-primary-color')"
+                                        ondrop="event.preventDefault();this.classList.remove('border-primary-color');window.handleClientImportDrop(event)"
+                                        onclick="document.getElementById('client-import-file').click()">
+                                        <i data-lucide="upload-cloud" class="w-10 h-10 text-gray-600"></i>
+                                        <p class="text-sm text-gray-400">Drag & drop or click to browse</p>
+                                        <input id="client-import-file" type="file" accept=".csv,.xls,.xlsx,.tsv" class="hidden" onchange="window.handleClientImportFile(this.files[0])">
+                                    </div>
+                                    <div id="client-import-mapping" class="hidden space-y-3">
+                                        <h4 class="text-sm font-semibold text-white">Column Mapping</h4>
+                                        <div class="grid grid-cols-2 gap-2 text-xs" id="client-import-map-grid"></div>
+                                        <div class="flex gap-2">
+                                            <button onclick="window.importClientRows()" class="flex-1 py-2 bg-primary-color text-white rounded-lg text-xs font-semibold hover:opacity-90">Import All Rows</button>
+                                            <button onclick="window.clearClientImport()" class="py-2 px-3 bg-gray-700 text-white rounded-lg text-xs hover:bg-gray-600">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-3">
+                                    <h4 class="text-sm font-semibold text-white">Preview <span id="client-import-row-count" class="text-gray-500 text-xs"></span></h4>
+                                    <div id="client-import-preview" class="overflow-auto max-h-96 scrollbar-style"><p class="text-xs text-gray-500 italic">No file loaded.</p></div>
+                                    <div id="client-import-status" class="text-xs"></div>
                                 </div>
                             </div>
                         </div>
-                        <!-- Preview Table -->
-                        <div class="flex flex-col gap-3">
-                            <div class="flex items-center justify-between">
-                                <h4 class="text-sm font-semibold text-white">Preview <span id="client-import-row-count" class="text-gray-500 text-xs"></span></h4>
-                            </div>
-                            <div id="client-import-preview" class="overflow-auto max-h-96 scrollbar-style">
-                                <p class="text-xs text-gray-500 italic">No file loaded yet.</p>
-                            </div>
-                            <div id="client-import-status" class="text-xs"></div>
+                        <!-- Activity panel -->
+                        <div id="atlas-panel-activity" class="hidden p-4">
+                            <div id="doc-activity-list" class="space-y-1 max-h-[32rem] overflow-y-auto scrollbar-style bg-gray-900/60 rounded-lg p-3"></div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Activity Log Tab -->
-                <div id="doc-panel-activity" class="doc-panel hidden">
-                    <h3 class="text-lg font-bold text-primary-color mb-3">Activity / Audit Log</h3>
-                    <div id="doc-activity-list" class="h-96 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg">
-                        <div class="text-gray-500 text-xs text-center py-8">Loading log…</div>
+                        <!-- Site Summary panel -->
+                        <div id="atlas-panel-site-summary" class="hidden p-4">
+                            <div id="atlas-site-summary-content" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                        </div>
                     </div>
                 </div>
             </div>
             `;
         }
 
-        window.switchDocTab = function(tab) {
-            document.querySelectorAll('.doc-panel').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.doc-tab-btn').forEach(b => { b.classList.remove('bg-primary-color','text-white'); b.classList.add('bg-gray-800','text-gray-400'); });
-            const panel = document.getElementById(`doc-panel-${tab}`);
-            if (panel) panel.classList.remove('hidden');
-            const btn = document.getElementById(`doc-tab-${tab}`);
-            if (btn) { btn.classList.remove('bg-gray-800','text-gray-400'); btn.classList.add('bg-primary-color','text-white'); }
-            if (tab === 'asset-types') window.loadDocAssetTypes();
-            if (tab === 'assets') window.loadDocAssets();
-            if (tab === 'relationships') window.loadDocRelationships();
-            if (tab === 'vault') window.loadDocVault();
-            if (tab === 'sops') window.loadDocSops();
-            if (tab === 'activity') window.loadDocActivity();
-            if (tab === 'client-import') safeCreateIcons();
+        // Legacy stub — routes to new atlasNav
+        window.switchDocTab = function(tab) { window.atlasNav(tab); };
+
+        // ── AtlasMesh Navigation ─────────────────────────────────────────────
+        window._atlasSection = 'home';
+        const _ATLAS_TYPE_MAP = {
+            'configurations':'Configuration','contacts':'Contact','locations':'Location',
+            'domains':'Domain','ssl-certificates':'SSL Certificate','networks':'Network',
+            'tickets':'Ticket','applications':'Application','active-directory':'Active Directory',
+            'wireless':'Wireless','backup':'Backup Job','firewalls':'Firewall',
+        };
+        const _ATLAS_LABELS = {
+            'home':'Home','configurations':'Configurations','contacts':'Contacts','locations':'Locations',
+            'domains':'Domains','ssl-certificates':'SSL Certificates','passwords':'Passwords','networks':'Networks',
+            'tickets':'Tickets','documents':'Documents','checklists':'Checklists','runbooks':'Runbooks / SOPs',
+            'site-summary':'Site Summary','active-directory':'Active Directory','applications':'Applications',
+            'wireless':'Wireless','backup':'Backup','relationships':'Relationships',
+            'asset-types':'Flexible Asset Types','client-import':'Client Import','activity':'Activity Log',
+        };
+        const _ATLAS_COL_MAP = {
+            'configurations': ['Name','Status','Config Type','OS','Primary IP','Serial Number','Expires','Location','Contact'],
+            'contacts':        ['Name','Role','Email','Phone','On-call'],
+            'locations':       ['Name','Address','City','State','Country','Phone'],
+            'domains':         ['Name','Registrar','Expires','Auto-Renew','Status'],
+            'ssl-certificates':['Name','Domain','Issuer','Expiry Date','Auto-Renew','Certificate Type'],
+            'networks':        ['Name','CIDR','VLAN ID','Gateway','Location','DHCP'],
+            'tickets':         ['Name','Status','Priority','Category','Assigned To','Due Date'],
+            'applications':    ['Name','Vendor','Version','Status','Seats','URL'],
+            'active-directory':['Name','Domain Name','Forest','DC Count','User Count','OS Level'],
+            'wireless':        ['Name','SSID','Security Type','Location','Controller','VLAN'],
+            'backup':          ['Name','Target','Schedule','Retention Days','Status','Last Successful'],
+        };
+
+        window.atlasNav = function(section) {
+            window._atlasSection = section;
+            // Update sidebar active state
+            document.querySelectorAll('.atlas-nav-item').forEach(b => b.classList.remove('atlas-active'));
+            const navBtn = document.getElementById('atlas-nav-' + section);
+            if (navBtn) navBtn.classList.add('atlas-active');
+            // Update breadcrumb + title
+            const label = _ATLAS_LABELS[section] || section;
+            const bc = document.getElementById('atlas-breadcrumb');
+            const title = document.getElementById('atlas-section-title');
+            if (bc) bc.textContent = 'AtlasMesh / ' + label;
+            if (title) title.textContent = label;
+            // Show correct panel
+            const panelIds = ['atlas-panel-home','atlas-panel-table','atlas-panel-vault',
+                              'atlas-panel-sops','atlas-panel-relationships','atlas-panel-asset-types',
+                              'atlas-panel-client-import','atlas-panel-activity','atlas-panel-site-summary'];
+            panelIds.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+            // Route to correct loader
+            if (section === 'home') { const p = document.getElementById('atlas-panel-home'); if (p) p.classList.remove('hidden'); window.atlasLoadHome(); }
+            else if (section === 'passwords') { const p = document.getElementById('atlas-panel-vault'); if (p) p.classList.remove('hidden'); window.loadDocVault(); }
+            else if (section === 'documents') { const p = document.getElementById('atlas-panel-sops'); if (p) p.classList.remove('hidden'); window.loadDocSops('document'); }
+            else if (section === 'checklists') { const p = document.getElementById('atlas-panel-sops'); if (p) p.classList.remove('hidden'); window.loadDocSops('checklist'); }
+            else if (section === 'runbooks') { const p = document.getElementById('atlas-panel-sops'); if (p) p.classList.remove('hidden'); window.loadDocSops(); }
+            else if (section === 'relationships') { const p = document.getElementById('atlas-panel-relationships'); if (p) p.classList.remove('hidden'); window.loadDocRelationships(); }
+            else if (section === 'asset-types') { const p = document.getElementById('atlas-panel-asset-types'); if (p) p.classList.remove('hidden'); window.loadDocAssetTypes(); }
+            else if (section === 'client-import') { const p = document.getElementById('atlas-panel-client-import'); if (p) p.classList.remove('hidden'); safeCreateIcons(); }
+            else if (section === 'activity') { const p = document.getElementById('atlas-panel-activity'); if (p) p.classList.remove('hidden'); window.loadDocActivity(); }
+            else if (section === 'site-summary') { const p = document.getElementById('atlas-panel-site-summary'); if (p) p.classList.remove('hidden'); window.atlasLoadSiteSummary(); }
+            else if (_ATLAS_TYPE_MAP[section]) { const p = document.getElementById('atlas-panel-table'); if (p) p.classList.remove('hidden'); window.atlasLoadAssets(section); }
+            safeCreateIcons();
+            // Update "New" button label
+            const newBtn = document.getElementById('atlas-new-btn');
+            if (newBtn) {
+                const newLabels = { passwords:'Add Credential', documents:'New Document', checklists:'New Checklist', runbooks:'New SOP', relationships:'Add Relationship', 'asset-types':'New Type', activity:'—', 'site-summary':'—', 'client-import':'—', home:'—' };
+                const lbl = newLabels[section] || ('+ New ' + label.replace(/s$/,'').trim());
+                newBtn.innerHTML = '<i data-lucide="plus" class="w-4 h-4"></i> ' + lbl;
+                newBtn.style.display = (section === 'activity' || section === 'site-summary' || section === 'client-import' || section === 'home') ? 'none' : '';
+            }
+        };
+
+        window.atlasNew = function() {
+            const s = window._atlasSection;
+            if (s === 'passwords') window.showCreateVaultModal();
+            else if (s === 'documents' || s === 'checklists' || s === 'runbooks') window.showCreateSopModal();
+            else if (s === 'relationships') window.showAddRelModal();
+            else if (s === 'asset-types') window.showCreateAssetTypeModal();
+            else if (_ATLAS_TYPE_MAP[s]) window.showCreateAssetModal(_ATLAS_TYPE_MAP[s]);
+        };
+
+        window.atlasSearch = function(q) {
+            const s = window._atlasSection;
+            if (_ATLAS_TYPE_MAP[s]) window.atlasLoadAssets(s, q);
+            else if (s === 'passwords') {
+                document.querySelectorAll('#atlas-panel-vault .atlas-vault-row').forEach(row => {
+                    row.style.display = row.dataset.name.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+                });
+            }
+        };
+
+        window.atlasExport = function() {
+            const s = window._atlasSection;
+            if (!s || s === 'home') return;
+            const url = '/api/docs/export/' + s;
+            const a = document.createElement('a'); a.href = url; a.download = 'atlasmesh-' + s + '.csv'; a.click();
+        };
+
+        window.atlasImportDialog = function() { window.atlasNav('client-import'); };
+
+        window.atlasLoadHome = async function() {
+            const panel = document.getElementById('atlas-panel-home');
+            if (!panel) return;
+            panel.innerHTML = '<div class="col-span-full text-gray-500 text-xs italic animate-pulse p-4">Loading overview…</div>';
+            try {
+                const resp = await fetch('/api/docs/counts');
+                const data = resp.ok ? await resp.json() : { counts: {} };
+                const counts = data.counts || {};
+                const allSections = _ATLAS_SECTIONS.filter(s => s.category);
+                let html = '';
+                const catColor = { 'Core Assets':'#00c6ff', 'Procedures':'#a78bfa', 'Apps & Services':'#34d399', 'Management':'#64748b' };
+                allSections.forEach(sec => {
+                    const typeLabel = _ATLAS_TYPE_MAP[sec.id];
+                    const cnt = sec.id === 'passwords' ? (counts['Passwords'] || 0) : (sec.id === 'documents' || sec.id === 'checklists' || sec.id === 'runbooks') ? (counts['Documents'] || 0) : (typeLabel ? (counts[typeLabel] || 0) : '');
+                    html += `<div class="atlas-home-card" onclick="window.atlasNav('${sec.id}')">
+                        <div class="atlas-cat-label" style="color:${catColor[sec.category]||'#64748b'}">${sec.category}</div>
+                        <div class="atlas-count">${cnt}</div>
+                        <div class="atlas-label">${sec.label}</div>
+                    </div>`;
+                });
+                panel.innerHTML = html;
+            } catch {
+                panel.innerHTML = '<div class="col-span-full atlas-empty">Could not load overview. Is the backend running?</div>';
+            }
+            safeCreateIcons();
+        };
+
+        window.atlasLoadSiteSummary = async function() {
+            const el = document.getElementById('atlas-site-summary-content');
+            if (!el) return;
+            el.innerHTML = '<div class="col-span-full text-gray-500 text-xs animate-pulse">Loading…</div>';
+            try {
+                const resp = await fetch('/api/docs/counts');
+                const data = resp.ok ? await resp.json() : { counts: {} };
+                const c = data.counts || {};
+                const items = [
+                    { label:'Configurations', val: c['Configuration'] || 0, icon:'monitor', color:'#00c6ff' },
+                    { label:'Contacts', val: c['Contact'] || 0, icon:'users', color:'#a78bfa' },
+                    { label:'SSL Certificates', val: c['SSL Certificate'] || 0, icon:'lock', color:'#34d399' },
+                    { label:'Passwords', val: c['Passwords'] || 0, icon:'key-round', color:'#fb923c' },
+                    { label:'Networks', val: c['Network'] || 0, icon:'network', color:'#60a5fa' },
+                    { label:'Domains', val: c['Domain'] || 0, icon:'globe', color:'#f472b6' },
+                    { label:'Documents', val: c['Documents'] || 0, icon:'file-text', color:'#fbbf24' },
+                    { label:'Locations', val: c['Location'] || 0, icon:'map-pin', color:'#94a3b8' },
+                ];
+                el.innerHTML = items.map(it => `
+                    <div class="card p-4 rounded-xl cursor-pointer hover:border-primary-color/30" onclick="window.atlasNav('${it.label.toLowerCase().replace(/\s+/g,'-').replace(/ssl-certificates?/,'ssl-certificates').replace(/ssl-certific/,'ssl-certificates')}')">
+                        <div style="color:${it.color};margin-bottom:4px"><i data-lucide="${it.icon}" class="w-5 h-5"></i></div>
+                        <div class="text-2xl font-bold text-white">${it.val}</div>
+                        <div class="text-xs text-gray-500 mt-1">${it.label}</div>
+                    </div>`).join('');
+                safeCreateIcons();
+            } catch { el.innerHTML = '<div class="col-span-full atlas-empty">Unable to load site summary.</div>'; }
+        };
+
+        window.atlasLoadAssets = async function(section, q = '') {
+            const thead = document.getElementById('atlas-thead');
+            const tbody = document.getElementById('atlas-tbody');
+            const countEl = document.getElementById('atlas-results-count');
+            if (!thead || !tbody) return;
+            thead.innerHTML = '<tr>' + (_ATLAS_COL_MAP[section] || ['Name']).map(c => `<th onclick="window.atlasSortBy('${c}')">${c} <span class="text-gray-600">↕</span></th>`).join('') + '<th></th></tr>';
+            tbody.innerHTML = '<tr><td colspan="20" class="atlas-empty">Loading…</td></tr>';
+            if (countEl) countEl.textContent = 'Loading…';
+            const typeName = _ATLAS_TYPE_MAP[section];
+            if (!typeName) return;
+            try {
+                const params = new URLSearchParams({ type_name: typeName, limit: 200 });
+                if (q) params.set('q', q);
+                const resp = await fetch('/api/docs/assets?' + params);
+                const data = resp.ok ? await resp.json() : { records: [], total: 0 };
+                const records = data.records || [];
+                if (countEl) countEl.textContent = records.length + ' of ' + (data.total || records.length) + ' Results';
+                if (!records.length) {
+                    tbody.innerHTML = `<tr><td colspan="20" class="atlas-empty">No ${typeName} records yet. Click <strong>+ New</strong> to add one.</td></tr>`;
+                    return;
+                }
+                const cols = _ATLAS_COL_MAP[section] || ['Name'];
+                const dateFields = ['Expires','Expiry Date','Last Successful','Due Date'];
+                tbody.innerHTML = records.map(r => {
+                    const d = r.data || {};
+                    const now = new Date(); now.setHours(0,0,0,0);
+                    const soon = new Date(now); soon.setDate(soon.getDate() + 45);
+                    function statusBadge(val) {
+                        if (!val) return '<span class="text-gray-600">—</span>';
+                        const v = String(val).toLowerCase();
+                        const cls = v === 'active' ? 'atlas-status-active' : (v === 'expired' || v === 'decommissioned') ? 'atlas-status-inactive' : 'atlas-status-expiring';
+                        return `<span class="${cls}">${escapeHtml(val)}</span>`;
+                    }
+                    function dateCell(val) {
+                        if (!val) return '<span class="text-gray-600">—</span>';
+                        const dt = new Date(val);
+                        if (isNaN(dt)) return escapeHtml(val);
+                        const isExpired = dt < now; const isExpiringSoon = dt >= now && dt <= soon;
+                        const cls = isExpired ? 'text-red-400' : isExpiringSoon ? 'text-orange-400' : 'text-gray-300';
+                        return `<span class="${cls}">${dt.toLocaleDateString()}</span>`;
+                    }
+                    const cells = cols.map((col, i) => {
+                        if (i === 0) return `<td><span class="atlas-name" onclick="window.atlasViewRecord('${r.record_id}')">${escapeHtml(r.name)}</span></td>`;
+                        const val = d[col];
+                        if (col === 'Status') return `<td>${statusBadge(val)}</td>`;
+                        if (dateFields.includes(col)) return `<td>${dateCell(val)}</td>`;
+                        if (col === 'On-call' || col === 'Auto-Renew' || col === 'DHCP' || col === 'Wildcard') return `<td>${val ? '<span class="text-green-400">✓</span>' : '<span class="text-gray-600">—</span>'}</td>`;
+                        return `<td>${val != null && val !== '' ? escapeHtml(String(val)) : '<span class="text-gray-600">—</span>'}</td>`;
+                    });
+                    const actions = `<td><div class="atlas-row-actions">
+                        <button onclick="window.atlasEditRecord('${r.record_id}')" class="atlas-btn" style="padding:3px 8px;font-size:11px"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                        <button onclick="window.atlasDeleteRecord('${r.record_id}')" class="atlas-btn" style="padding:3px 8px;font-size:11px;color:#f87171"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                    </div></td>`;
+                    return '<tr>' + cells.join('') + actions + '</tr>';
+                }).join('');
+                safeCreateIcons();
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="20" class="atlas-empty">Failed to load records: ${escapeHtml(e.message)}</td></tr>`;
+            }
+        };
+
+        window._atlasAllRecords = [];
+        window.atlasSortBy = function(col) { /* simple client-side sort via DOM reorder */ };
+
+        window.atlasViewRecord = function(id) {
+            window.showModal('Record Detail', `<p class="text-gray-400 text-sm">Loading record <code>${escapeHtml(id)}</code>…</p>`, [], async () => {
+                const resp = await fetch('/api/docs/assets/' + id);
+                const r = resp.ok ? await resp.json() : null;
+                if (!r) return;
+                const d = r.data || {};
+                const rows = Object.entries(d).map(([k,v]) => `<tr><td class="rpt-th pr-4">${escapeHtml(k)}</td><td class="text-gray-200">${escapeHtml(String(v))}</td></tr>`).join('');
+                document.getElementById('modal-message').innerHTML = `<div class="mb-2"><span class="text-lg font-bold text-white">${escapeHtml(r.name)}</span><span class="ml-2 text-xs text-gray-500">${escapeHtml(r.type_name||'')}</span></div><table class="w-full text-xs">${rows}</table><p class="text-xs text-gray-600 mt-3">Created: ${r.created_at||''} | Updated: ${r.updated_at||''}</p>`;
+            });
+        };
+
+        window.atlasEditRecord = function(id) { window.showToast('Edit record: open full editor coming soon.','info'); };
+        window.atlasDeleteRecord = async function(id) {
+            if (!confirm('Delete this record?')) return;
+            await fetch('/api/docs/assets/' + id, { method: 'DELETE' });
+            window.atlasLoadAssets(window._atlasSection);
+            window.showToast('Record deleted.','success');
         };
 
         // ── Client Import (CSV / XLS / XLSX) ─────────────────────────────────
@@ -8156,13 +8458,15 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
             catch(e) { window.showAppModal('Error', e.message); }
         };
 
-        window.loadDocSops = async function() {
+        window.loadDocSops = async function(categoryFilter) {
             try {
-                const r = await fetch('/api/docs/sops');
+                const url = '/api/docs/sops' + (categoryFilter ? '?category=' + encodeURIComponent(categoryFilter) : '');
+                const r = await fetch(url);
                 const data = await r.json();
                 const list = document.getElementById('doc-sops-list');
                 if (list) {
-                    list.innerHTML = (data.sops||[]).length ? data.sops.map(s => `
+                    const sops = (data.sops||[]).filter(s => !categoryFilter || s.category === categoryFilter);
+                    list.innerHTML = sops.length ? sops.map(s => `
                         <div class="card p-3 rounded-xl">
                             <div class="flex items-center justify-between">
                                 <div>
@@ -8173,7 +8477,7 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
                                 <button onclick="window.viewDocSop('${s.sop_id}')" class="text-xs text-primary-color hover:underline shrink-0">View Steps →</button>
                             </div>
                             <p class="text-xs text-gray-400 mt-1">${escapeHtml(s.description||'')}</p>
-                        </div>`).join('') : '<div class="text-gray-500 text-xs text-center py-8">No SOPs yet</div>';
+                        </div>`).join('') : '<div class="text-gray-500 text-xs text-center py-8">No ' + (categoryFilter || 'SOP') + ' records yet</div>';
                 }
             } catch(e) { console.error('Doc SOPs error', e); }
         };
@@ -8257,25 +8561,50 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
             } catch(e) { window.showAppModal('Error', e.message); }
         };
 
-        window.showCreateAssetModal = function() {
-            window.showAppModal('Create Asset', `
-                <div class="space-y-2">
-                    <input id="ca-name" placeholder="Asset name" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
-                    <input id="ca-notes" placeholder="Quick note (optional)" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">
-                    <button onclick="window.doCreateAsset()" class="w-full py-2 bg-primary-color text-white rounded text-sm mt-2">Create</button>
+        window.showCreateAssetModal = async function(typeName) {
+            // Find the type_id for the given type name
+            let typeId = '';
+            let fieldSpec = [];
+            try {
+                const r = await fetch('/api/docs/asset-types');
+                const data = await r.json();
+                const match = (data.types||[]).find(t => t.name === (typeName || ''));
+                if (match) { typeId = match.type_id; fieldSpec = match.field_spec || []; }
+            } catch {}
+            const fieldInputs = fieldSpec.map(f => `
+                <div>
+                    <label class="text-xs text-gray-400 block mb-0.5">${escapeHtml(f.name)}${f.required?' *':''}</label>
+                    ${f.type === 'dropdown' ? `<select id="ca-f-${escapeHtml(f.name.replace(/\s+/g,'_'))}" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm"><option value="">—</option>${(f.options||[]).map(o=>`<option>${escapeHtml(o)}</option>`).join('')}</select>` :
+                    f.type === 'bool' ? `<input type="checkbox" id="ca-f-${escapeHtml(f.name.replace(/\s+/g,'_'))}">` :
+                    f.type === 'date' ? `<input type="date" id="ca-f-${escapeHtml(f.name.replace(/\s+/g,'_'))}" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">` :
+                    `<input id="ca-f-${escapeHtml(f.name.replace(/\s+/g,'_'))}" placeholder="${escapeHtml(f.name)}" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm">`}
+                </div>`).join('');
+            window.showAppModal(`New ${escapeHtml(typeName || 'Asset')}`, `
+                <div class="space-y-3">
+                    <div><label class="text-xs text-gray-400 block mb-0.5">Name *</label>
+                    <input id="ca-name" placeholder="${escapeHtml(typeName || 'Asset')} name" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm"></div>
+                    ${fieldInputs}
+                    <input type="hidden" id="ca-type-id" value="${escapeHtml(typeId)}">
+                    <button onclick="window.doCreateAsset(${JSON.stringify(fieldSpec)})" class="w-full py-2 bg-primary-color text-white rounded text-sm mt-2">Create ${escapeHtml(typeName || 'Asset')}</button>
                 </div>`);
         };
-        window.doCreateAsset = async function() {
+        window.doCreateAsset = async function(fieldSpec) {
             const name = document.getElementById('ca-name')?.value?.trim();
-            const notes = document.getElementById('ca-notes')?.value?.trim();
-            const tf = document.getElementById('doc-assets-type-filter');
-            const typeId = tf?.value || '';
-            if (!name) { window.showAppModal('Error','Name is required'); return; }
+            const typeId = document.getElementById('ca-type-id')?.value || '';
+            if (!name) { window.showToast('Name is required','error'); return; }
+            const data = {};
+            (fieldSpec||[]).forEach(f => {
+                const key = 'ca-f-' + f.name.replace(/\s+/g,'_');
+                const el = document.getElementById(key);
+                if (el) data[f.name] = f.type === 'bool' ? el.checked : el.value;
+            });
             try {
-                await fetch('/api/docs/assets', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, type_id: typeId||'', data: notes?{notes}:{}})});
-                window.showAppModal('Created', `Asset "${escapeHtml(name)}" created.`);
-                window.loadDocAssets();
-            } catch(e) { window.showAppModal('Error', e.message); }
+                await fetch('/api/docs/assets', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, type_id: typeId, data})});
+                window.hideModal();
+                window.showToast(`${name} created.`,'success');
+                const s = window._atlasSection;
+                if (s && _ATLAS_TYPE_MAP[s]) window.atlasLoadAssets(s);
+            } catch(e) { window.showToast(e.message,'error'); }
         };
 
         window.showAddRelModal = function() {
@@ -8323,9 +8652,8 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
             } catch(e) { window.showAppModal('Error', e.message); }
         };
 
-        function startDocumentation() {
-            window.switchDocTab('asset-types');
-        }
+        function startDocumentation() { window.atlasNav('home'); }
+        function startAtlasMesh() { window.atlasNav('home'); }
 
         // ── Audit Trail ──────────────────────────────────────────────────────────
 
@@ -8341,7 +8669,7 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
                                     <option value="iam">IAM Audit</option>
                                     <option value="soar">SOAR Tickets</option>
                                     <option value="approval">Approvals</option>
-                                    <option value="docs">GACyber Vault</option>
+                                    <option value="docs">AtlasMesh Vault</option>
                                 </select>
                                 <button onclick="window.loadAuditTrail()" class="text-xs text-gray-400 hover:text-white flex items-center px-2 py-1 border border-border-color rounded">
                                     <i data-lucide="refresh-cw" class="w-3 h-3 mr-1"></i>Refresh
