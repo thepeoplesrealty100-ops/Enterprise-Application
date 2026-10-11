@@ -1,10 +1,10 @@
 """
-routers/cynet_edr.py — Cynet/Datto EDR endpoint detection and response
+routers/threat_detection_response.py — JAKAL Threat Detection & Response
 Provides endpoints for:
-  - Threat ingestion from EDR
-  - Device quarantine/isolation
-  - Automated threat remediation
-  - EDR alert aggregation
+  - Threat ingestion from detection systems
+  - Device quarantine/isolation orchestration
+  - Automated threat remediation workflows
+  - Unified threat alert aggregation
 """
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 import uuid
 from dependencies import get_current_user, get_db_connection
 
-router = APIRouter(prefix="/api/cynet", tags=["Cynet/Datto EDR"])
+router = APIRouter(prefix="/api/threat-ops", tags=["JAKAL Threat Operations"])
 
 
 class EDRThreat(BaseModel):
@@ -43,7 +43,7 @@ async def list_active_threats(
     user = Depends(get_current_user),
     db = Depends(get_db_connection)
 ):
-    """List active EDR threats across managed endpoints"""
+    """List active threats detected across JAKAL-monitored endpoints"""
     threats = [
         {
             "threat_id": "cynet-001",
@@ -83,7 +83,7 @@ async def list_active_threats(
 
 @router.post("/isolate")
 async def isolate_device(request: QuarantineRequest, user = Depends(get_current_user)):
-    """Quarantine a compromised device from network"""
+    """Quarantine a compromised device detected by JAKAL threat systems"""
     return {
         "ok": True,
         "device_id": request.device_id,
@@ -99,7 +99,7 @@ async def isolate_device(request: QuarantineRequest, user = Depends(get_current_
 
 @router.post("/remediate")
 async def execute_remediation(request: RemediationRequest, user = Depends(get_current_user)):
-    """Execute automated threat remediation action"""
+    """Execute automated threat remediation from JAKAL threat engine"""
     actions_map = {
         "kill_process": "Process terminated successfully",
         "quarantine_file": "Malicious file moved to vault",
@@ -120,7 +120,7 @@ async def execute_remediation(request: RemediationRequest, user = Depends(get_cu
 
 @router.get("/device-status/{device_id}")
 async def device_edr_status(device_id: str, user = Depends(get_current_user)):
-    """Get EDR status for a specific device"""
+    """Get threat detection status for a device in JAKAL fleet"""
     return {
         "ok": True,
         "device_id": device_id,
@@ -141,7 +141,7 @@ async def list_edr_alerts(
     user = Depends(get_current_user),
     db = Depends(get_db_connection)
 ):
-    """List recent EDR alerts with pagination"""
+    """List recent threat alerts from JAKAL detection systems"""
     alerts = [
         {
             "alert_id": "cynet-alert-001",
@@ -173,7 +173,7 @@ async def list_edr_alerts(
 
 @router.post("/acknowledge-threat")
 async def acknowledge_threat(threat_id: str, user = Depends(get_current_user)):
-    """Mark an EDR threat as reviewed"""
+    """Mark a JAKAL-detected threat as reviewed by analyst"""
     return {
         "ok": True,
         "threat_id": threat_id,

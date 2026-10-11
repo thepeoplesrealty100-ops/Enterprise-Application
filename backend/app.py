@@ -196,10 +196,10 @@ app.include_router(exec_ws_router)
 app.include_router(automation_router)
 
 # ── Enterprise Platform Integrations (TIER 2 connectors) ──
-app.include_router(kaseyasaas_router)
-app.include_router(cynet_edr_router)
-app.include_router(nablo_router)
-app.include_router(connectsecure_router)
+app.include_router(device_sync_router)
+app.include_router(threat_ops_router)
+app.include_router(network_intel_router)
+app.include_router(remote_mgmt_router)
 
 # ============================================================================
 # Shared Components

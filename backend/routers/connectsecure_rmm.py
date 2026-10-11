@@ -1,8 +1,8 @@
 """
-routers/connectsecure_rmm.py — ConnectSecure RMM integration
+routers/remote_management.py — JAKAL Remote Device Management
 Provides endpoints for:
-  - Device inventory from ConnectSecure
-  - Remote script execution via ConnectSecure
+  - Device inventory from management platforms
+  - Remote script execution across JAKAL fleet
   - Managed service orchestration
 """
 from fastapi import APIRouter, Depends, HTTPException
@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 import uuid
 from dependencies import get_current_user, get_db_connection
 
-router = APIRouter(prefix="/api/connectsecure", tags=["ConnectSecure RMM"])
+router = APIRouter(prefix="/api/fleet/remote-mgmt", tags=["JAKAL Fleet Remote Management"])
 
 
 class RemoteScriptExecution(BaseModel):
@@ -34,7 +34,7 @@ async def list_connectsecure_devices(
     user = Depends(get_current_user),
     db = Depends(get_db_connection)
 ):
-    """Fetch managed devices from ConnectSecure"""
+    """Fetch devices managed by JAKAL fleet orchestration"""
     devices = [
         {"device_id": "cs-001", "name": "CS001-DESKTOP", "os": "Windows 10", "os_version": "22H2", "agent_version": "1.8.9", "status": "online"},
         {"device_id": "cs-002", "name": "CS002-LAPTOP", "os": "macOS", "os_version": "13.4", "agent_version": "1.8.9", "status": "online"},
@@ -65,7 +65,7 @@ async def list_connectsecure_devices(
 
 @router.post("/script-execute")
 async def execute_remote_script(request: RemoteScriptExecution, user = Depends(get_current_user)):
-    """Execute a script on a ConnectSecure-managed device"""
+    """Execute a script on a JAKAL-managed device"""
     execution_id = f"cs-exec-{uuid.uuid4().hex[:8]}"
     
     return {
@@ -83,7 +83,7 @@ async def execute_remote_script(request: RemoteScriptExecution, user = Depends(g
 
 @router.get("/script-execution/{execution_id}")
 async def get_execution_status(execution_id: str, user = Depends(get_current_user)):
-    """Get status and result of a script execution"""
+    """Get execution status and results from JAKAL script execution"""
     return {
         "ok": True,
         "execution_id": execution_id,
@@ -97,7 +97,7 @@ async def get_execution_status(execution_id: str, user = Depends(get_current_use
 
 @router.post("/device-action")
 async def execute_device_action(request: ManagedDeviceAction, user = Depends(get_current_user)):
-    """Execute a management action on a device (restart, shutdown, etc.)"""
+    """Execute a management action on a JAKAL-managed device"""
     actions_map = {
         "restart": "Device restart initiated",
         "shutdown": "Device shutdown initiated",
@@ -117,7 +117,7 @@ async def execute_device_action(request: ManagedDeviceAction, user = Depends(get
 
 @router.get("/asset-inventory")
 async def get_asset_inventory(user = Depends(get_current_user)):
-    """Get detailed asset inventory from ConnectSecure"""
+    """Get detailed asset inventory from JAKAL fleet"""
     return {
         "ok": True,
         "total_devices": 4,
@@ -145,7 +145,7 @@ async def get_asset_inventory(user = Depends(get_current_user)):
 
 @router.post("/policy-deploy")
 async def deploy_policy(policy_id: str, device_ids: List[str], user = Depends(get_current_user)):
-    """Deploy a policy to multiple devices via ConnectSecure"""
+    """Deploy a policy to multiple devices via JAKAL fleet management"""
     return {
         "ok": True,
         "policy_id": policy_id,
@@ -159,7 +159,7 @@ async def deploy_policy(policy_id: str, device_ids: List[str], user = Depends(ge
 
 @router.get("/patches")
 async def list_available_patches(device_id: Optional[str] = None, user = Depends(get_current_user)):
-    """List available patches from ConnectSecure"""
+    """List available patches for JAKAL-managed devices"""
     patches = [
         {"id": "KB5012345", "title": "Security Update for Windows 10", "severity": "CRITICAL", "released": "2026-09-15"},
         {"id": "KB5012346", "title": "Cumulative Update for .NET Framework", "severity": "HIGH", "released": "2026-09-20"},

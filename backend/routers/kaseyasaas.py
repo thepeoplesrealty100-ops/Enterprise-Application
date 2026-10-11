@@ -1,9 +1,10 @@
 """
-routers/kaseyasaas.py — KaseyaSaaS MSP connector for device sync and remediation
+routers/managed_device_sync.py — JAKAL Managed Device Sync Module
 Provides endpoints for:
-  - Device discovery and sync from KaseyaSaaS
+  - Device discovery and sync from external management platforms
   - Managed services orchestration
-  - Remediation task deployment
+  - Remediation task deployment to device fleet
+  - Cross-platform device inventory normalization
 """
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -11,7 +12,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 from dependencies import get_current_user, get_db_connection
 
-router = APIRouter(prefix="/api/kaseyasaas", tags=["KaseyaSaaS Connector"])
+router = APIRouter(prefix="/api/fleet/device-sync", tags=["JAKAL Fleet Device Sync"])
 
 
 class KaseyaSaaSConfig(BaseModel):
@@ -37,8 +38,8 @@ class RemediationTask(BaseModel):
 
 
 @router.post("/authorize")
-async def authorize_kaseyasaas(config: KaseyaSaaSConfig, user = Depends(get_current_user)):
-    """Authorize KaseyaSaaS API access (SAML/API key pattern)"""
+async def authorize_external_platform(config: KaseyaSaaSConfig, user = Depends(get_current_user)):
+    """Authorize external platform API access (SAML/API key pattern)"""
     return {
         "ok": True,
         "status": "authorized",
@@ -54,7 +55,7 @@ async def list_kaseyasaas_devices(
     user = Depends(get_current_user),
     db = Depends(get_db_connection)
 ):
-    """Fetch and sync managed devices from KaseyaSaaS to local inventory"""
+    """Fetch and sync managed devices from external platforms to JAKAL inventory"""
     # In production: call real KaseyaSaaS API
     # For now: return seeded demo devices plus any real machine
     demo_devices = [
@@ -101,7 +102,7 @@ async def deploy_remediation(task: RemediationTask, user = Depends(get_current_u
 
 @router.get("/managed-services")
 async def list_managed_services(user = Depends(get_current_user)):
-    """List active managed services associated with KaseyaSaaS tenant"""
+    """List active managed services configured in JAKAL"""
     return {
         "ok": True,
         "services": [
@@ -116,7 +117,7 @@ async def list_managed_services(user = Depends(get_current_user)):
 
 @router.post("/sync-status")
 async def sync_status(user = Depends(get_current_user)):
-    """Trigger a full KaseyaSaaS device sync"""
+    """Trigger a full device sync across all configured platforms"""
     return {
         "ok": True,
         "sync_id": "sync-ksa-20260927",

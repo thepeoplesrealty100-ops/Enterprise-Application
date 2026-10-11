@@ -1,10 +1,10 @@
 """
-routers/nablo.py — Nablo alert aggregation and management
+routers/network_intelligence.py — JAKAL Network Intelligence & Analytics
 Provides endpoints for:
-  - Alert ingestion from Nablo
-  - Alert acknowledgment and resolution
-  - Alert filtering and search
-  - Webhook endpoint for real-time alerts
+  - Alert ingestion from detection systems
+  - Alert acknowledgment and resolution workflow
+  - Network behavior filtering and search
+  - Webhook endpoint for real-time alert integration
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 import uuid
 from dependencies import get_current_user, get_db_connection
 
-router = APIRouter(prefix="/api/nablo", tags=["Nablo Alerts"])
+router = APIRouter(prefix="/api/network-intel", tags=["JAKAL Network Intelligence"])
 
 
 class AlertWebhookPayload(BaseModel):
@@ -33,7 +33,7 @@ async def list_nablo_alerts(
     user = Depends(get_current_user),
     db = Depends(get_db_connection)
 ):
-    """List Nablo alerts with filtering"""
+    """List JAKAL network intelligence alerts with filtering"""
     alerts = [
         {
             "id": "nablo-alert-001",
@@ -96,7 +96,7 @@ async def list_nablo_alerts(
 
 @router.post("/alerts/{alert_id}/acknowledge")
 async def acknowledge_alert(alert_id: str, user = Depends(get_current_user)):
-    """Mark an alert as acknowledged by the operator"""
+    """Mark a network alert as acknowledged in JAKAL"""
     return {
         "ok": True,
         "alert_id": alert_id,
@@ -108,7 +108,7 @@ async def acknowledge_alert(alert_id: str, user = Depends(get_current_user)):
 
 @router.post("/alerts/{alert_id}/resolve")
 async def resolve_alert(alert_id: str, resolution: str, user = Depends(get_current_user)):
-    """Mark an alert as resolved with a resolution note"""
+    """Resolve a network alert in JAKAL with resolution notes"""
     return {
         "ok": True,
         "alert_id": alert_id,
@@ -121,7 +121,7 @@ async def resolve_alert(alert_id: str, resolution: str, user = Depends(get_curre
 
 @router.post("/webhook")
 async def receive_nablo_webhook(payload: AlertWebhookPayload, db = Depends(get_db_connection)):
-    """Webhook endpoint for real-time Nablo alert ingestion"""
+    """Webhook endpoint for real-time JAKAL network alert ingestion"""
     # Store webhook alert in database
     try:
         db.conn.execute("""
@@ -147,7 +147,7 @@ async def receive_nablo_webhook(payload: AlertWebhookPayload, db = Depends(get_d
 
 @router.get("/status")
 async def nablo_status(user = Depends(get_current_user)):
-    """Get Nablo integration status"""
+    """Get JAKAL network intelligence system status"""
     return {
         "ok": True,
         "status": "connected",
@@ -160,7 +160,7 @@ async def nablo_status(user = Depends(get_current_user)):
 
 @router.get("/network-segments")
 async def list_monitored_segments(user = Depends(get_current_user)):
-    """List network segments being monitored by Nablo"""
+    """List network segments monitored by JAKAL"""
     return {
         "ok": True,
         "segments": [
