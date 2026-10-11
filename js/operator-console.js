@@ -121,6 +121,7 @@
     "/help": "Show operator commands",
     "/status": "Backend + fabric posture",
     "/fleet": "List managed devices (RMM)",
+    "/activity": "Recent agent activity log",
     "/caps": "Capability catalog (7 domains)",
     "/run": "/run <action_id> [k=v ...] — execute a capability (approval-gated)",
     "/isolate": "/isolate <HOST> — network-isolate an endpoint (CRITICAL)",
@@ -141,10 +142,10 @@
   // typed, on purpose, so a misclick can't trigger one.
   var QUICK_ACTIONS = [
     { label: "Status", cmd: "/status" },
+    { label: "Activity", cmd: "/activity" },
     { label: "Fleet", cmd: "/fleet" },
     { label: "Capabilities", cmd: "/caps" },
     { label: "Scan demo target", cmd: "/scan " + DEMO_TARGET },
-    { label: "Quantum (bell state)", cmd: "/quantum bell_state 512" },
     { label: "Help", cmd: "/help" },
   ];
 
@@ -208,6 +209,22 @@
       case "/fleet":
         if (demo) { printJson("(demo) fleet", { devices: [{ hostname: "WIN-OPS-01", os: "Windows", status: "healthy" }, { hostname: "LNX-EDGE-04", os: "Linux", status: "patch-pending" }] }); break; }
         P = api("/api/dashboard/fleet").then(function (dd) { var rows = dd.data || dd.devices || dd.fleet || []; print("fleet (" + rows.length + " devices):", "info"); rows.forEach(function (x) { print("  " + ((x.name || x.hostname || "?") + "               ").slice(0, 15) + " " + ((x.ip || "") + "            ").slice(0, 15) + " " + (x.os || x.os_platform || "") + "  risk " + Math.round((x.risk || 0) * 100) + "%", "out"); }); });
+        break;
+      case "/activity":
+        if (demo) { printJson("(demo) agent activity", { events: [{ agent: "EDR-01", action: "quarantine", status: "approved", ts: new Date().toISOString() }, { agent: "SOAR", action: "playbook:ransomware", status: "complete", ts: new Date().toISOString() }] }); break; }
+        P = Promise.all([
+          api("/api/soar/tickets?limit=5").catch(function () { return null; }),
+          api("/api/docs/activity-log?limit=5").catch(function () { return null; }),
+        ]).then(function (res) {
+          var soarTickets = res[0] ? (res[0].tickets || []) : [];
+          var docActivity = res[1] ? (res[1].entries || res[1].items || res[1].log || []) : [];
+          print("─── Recent SOAR tickets (" + soarTickets.length + ") ───", "info");
+          soarTickets.forEach(function (t) { print("  [" + (t.status || "?") + "] " + esc((t.summary || t.indicator || t.id || "").slice(0, 60)), "out"); });
+          print("─── AtlasMesh activity (" + docActivity.length + ") ───", "info");
+          docActivity.forEach(function (e) { print("  " + esc((e.action || e.event || "") + " " + (e.entity_name || e.record_id || "")), "out"); });
+          if (!soarTickets.length && !docActivity.length) print("No recent activity logged.", "muted");
+          refreshActivityPanel();
+        });
         break;
       default: print('Unknown command: "' + c + '". Type /help.', "err");
     }
@@ -323,11 +340,19 @@
             '<button type="button" id="op-trash" title="Clear" style="' + btn() + ';padding:8px 10px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>' +
           '</form>' +
         '</div>' +
-        '<div id="op-side" style="width:250px;border-left:1px solid #1e293b;padding:14px 16px;background:#0c1119;overflow:auto">' +
-          '<div style="font-weight:700;color:#e5e7eb;margin-bottom:8px">Safety fabric</div>' +
-          '<div style="font-size:12px;color:#94a3b8;line-height:1.6">Every line is scanned for destructive shells, jailbreaks, and encoded payloads. HIGH actions stage an approval instead of executing.</div>' +
-          '<div id="op-fabric-stat" style="margin-top:14px;display:flex;flex-direction:column;gap:6px"></div>' +
-          '<div style="margin-top:14px;font-size:11px;color:#475569;line-height:1.6">Raw HTML from failed backends is never rendered here.</div>' +
+        '<div id="op-side" style="width:250px;border-left:1px solid #1e293b;padding:14px 16px;background:#0c1119;overflow:auto;display:flex;flex-direction:column;gap:14px">' +
+          '<div>' +
+            '<div style="font-weight:700;color:#e5e7eb;margin-bottom:6px;font-size:12px">Safety fabric</div>' +
+            '<div style="font-size:11px;color:#94a3b8;line-height:1.6">Every line is scanned for destructive shells, jailbreaks, and encoded payloads. HIGH actions stage an approval instead of executing.</div>' +
+            '<div id="op-fabric-stat" style="margin-top:10px;display:flex;flex-direction:column;gap:4px"></div>' +
+          '</div>' +
+          '<div style="border-top:1px solid #1e293b;padding-top:12px">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+              '<span style="font-weight:700;color:#e5e7eb;font-size:12px">Agent activity</span>' +
+              '<button id="op-refresh-activity" type="button" title="Refresh" style="cursor:pointer;background:#1e293b;border:1px solid #334155;border-radius:5px;color:#94a3b8;padding:1px 6px;font-size:10px">↻</button>' +
+            '</div>' +
+            '<div id="op-activity-list" style="font-size:11px;color:#64748b;line-height:1.8">— /activity to load —</div>' +
+          '</div>' +
         '</div>' +
         '<div id="op-grip" title="Drag to resize" style="position:absolute;right:2px;bottom:2px;width:16px;height:16px;cursor:nwse-resize;color:#475569;font-size:12px;text-align:right;line-height:16px">◢</div>' +
       '</div>';
@@ -344,6 +369,7 @@
     });
     var clr = function () { el("op-out").innerHTML = ""; system(); };
     el("op-clear").onclick = clr; el("op-trash").onclick = clr;
+    var refreshBtn = el("op-refresh-activity"); if (refreshBtn) refreshBtn.onclick = refreshActivityPanel;
     el("op-form").onsubmit = function (e) { e.preventDefault(); var inp = el("op-input"), cmd = inp.value.trim(); if (!cmd) return; inp.value = ""; st.history.push(cmd); st.histIdx = st.history.length; run(cmd); };
     el("op-input").addEventListener("keydown", function (e) {
       if (e.key === "ArrowUp" && st.histIdx > 0) { st.histIdx--; e.target.value = st.history[st.histIdx] || ""; e.preventDefault(); }
@@ -364,11 +390,35 @@
     if (mode !== "online") return;
     api("/api/fabric/status").then(function (f) {
       var host = el("op-fabric-stat"); if (!host) return;
-      var score = (f.posture && f.posture.overall_score) || "?";
+      var score = (f.posture && f.posture.overall_score) || f.overall_score || "?";
       host.innerHTML =
         '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#64748b">Zero-Trust</span><span style="color:#34d399;font-weight:700">' + esc(score) + '</span></div>' +
         '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#64748b">Capabilities</span><span style="color:#e5e7eb">' + esc(f.capability_count || 7) + '</span></div>';
     }).catch(function () {});
+  }
+
+  function refreshActivityPanel() {
+    var host = el("op-activity-list"); if (!host) return;
+    if (mode !== "online") { host.textContent = "Demo mode — connect backend for live data."; return; }
+    host.textContent = "Loading…";
+    Promise.all([
+      fetch(BASE + "/api/soar/tickets?limit=4").then(function (r) { return r.json(); }).catch(function () { return null; }),
+      fetch(BASE + "/api/docs/activity-log?limit=4").then(function (r) { return r.json(); }).catch(function () { return null; }),
+    ]).then(function (res) {
+      var tickets = res[0] ? (res[0].tickets || []) : [];
+      var docLog = res[1] ? (res[1].entries || res[1].items || res[1].log || []) : [];
+      var rows = [];
+      tickets.slice(0, 3).forEach(function (t) {
+        var status = (t.status || "").toLowerCase();
+        var color = status === "open" ? "#fbbf24" : status === "resolved" ? "#34d399" : "#94a3b8";
+        rows.push('<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #1e293b"><span style="color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">' + esc((t.summary || t.indicator || "Ticket").slice(0, 30)) + '</span><span style="color:' + color + ';flex-shrink:0;margin-left:6px">' + esc(t.status || "?") + '</span></div>');
+      });
+      docLog.slice(0, 3).forEach(function (e) {
+        var txt = ((e.action || e.event || "") + " " + (e.entity_name || e.record_id || "")).trim().slice(0, 35);
+        rows.push('<div style="color:#94a3b8;padding:2px 0;border-bottom:1px solid #1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(txt || "—") + '</div>');
+      });
+      host.innerHTML = rows.length ? rows.join("") : '<span style="color:#475569">No recent activity.</span>';
+    }).catch(function () { host.textContent = "—"; });
   }
 
   // ── Public API ───────────────────────────────────────────────────────────
@@ -382,7 +432,7 @@
     // Start hidden — the Console button in the header opens it
     var cons = el("op-console");
     if (cons) { cons.style.display = "none"; cons.dataset.hiddenByBtn = "1"; }
-    probe().then(function () { badge(); if (mode !== "online") print("Demo mode — no live backend detected. Slash-commands return sample output.", "muted"); else { print("Live backend connected.", "ok"); fabricStat(); setInterval(pollApprovals, 5000); } });
+    probe().then(function () { badge(); if (mode !== "online") print("Demo mode — no live backend detected. Slash-commands return sample output.", "muted"); else { print("Live backend connected.", "ok"); fabricStat(); refreshActivityPanel(); setInterval(pollApprovals, 5000); setInterval(refreshActivityPanel, 30000); } });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();
