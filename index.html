@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horizon Unified Singularity OS</title>
-    <!-- Bundled locally (A2): no runtime CDN dependency — works offline / air-gapped, tighter CSP -->
-    <link rel="stylesheet" href="/css/app.min.css">
-    <script src="/js/vendor/lucide.min.js"></script>
-    <script src="/js/vendor/chart.umd.min.js"></script>
-    <script src="/js/vendor/three.min.js"></script>
-    <script src="/js/vendor/d3.min.js"></script>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons --><script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Load Chart.js for graphs --><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Load Three.js for 3D Globe --><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Load D3.js for force-directed graphs --><script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         /* Custom Styles for Futuristic Look */
         :root {
@@ -22,6 +21,7 @@
             --mid-bg-translucent: rgba(31, 41, 55, 0.85); /* Gray 800 with 85% opacity */
             --border-color: #374151; /* Gray 700 */
         }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--dark-bg-opaque);
@@ -175,25 +175,15 @@
             animation: pulse-glow 2.5s ease-in-out infinite;
         }
         
-        /* Threat Matrix Specific Styles */
-        .threat-source {
-            animation: pulse-dot 1.5s ease-in-out infinite;
-            cursor: pointer;
-            transition: r 0.3s ease;
+        /* Global Predictive Matrix map styles */
+        .gpm-threat-arc {
+            animation: dash-flow 1.2s linear infinite reverse;
         }
-        .threat-source:hover { r: 12; }
-        .threat-path {
-            stroke-dasharray: 4, 4;
-            animation: dash-flow 2s linear infinite reverse;
+        .gpm-origin-pin:hover text {
+            fill: #fff;
         }
-        #world-map-svg .country {
-            fill: #374151; /* Gray 700 */
-            stroke: #1f2937; /* Gray 800 */
-            stroke-width: 0.5;
+        #gpm-landmass {
             transition: fill 0.3s ease;
-        }
-         #world-map-svg .country:hover {
-            fill: var(--primary-color);
         }
         #ucc-graph .link {
             stroke: var(--border-color);
@@ -247,6 +237,173 @@
             color: white;
             border-left-color: var(--primary-color);
         }
+
+        /* ─── JAKAL Visual Polish v2.11 (Palantir/Anduril/IBM SOC patterns) ─── */
+        /* Clarity over complexity: tighter hierarchy, calmer density, status vectors */
+
+        .card {
+            background: linear-gradient(180deg, rgba(31,41,55,0.92) 0%, rgba(17,24,39,0.95) 100%);
+            border: 1px solid rgba(55,65,81,0.85);
+            border-radius: 12px;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.25);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        }
+        .card:hover {
+            border-color: rgba(249,115,22,0.35);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 28px rgba(0,0,0,0.3);
+        }
+
+        /* Status vector pills — color encodes state at a glance (Radware/IBM pattern) */
+        .jakal-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            text-transform: capitalize;
+        }
+        .jakal-status::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 6px currentColor;
+        }
+        .jakal-status-healthy { color: #34d399; background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); }
+        .jakal-status-warning { color: #fbbf24; background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.35); }
+        .jakal-status-critical { color: #f87171; background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); }
+        .jakal-status-unknown { color: #9ca3af; background: rgba(107,114,128,0.12); border-color: rgba(107,114,128,0.35); }
+
+        /* Fleet / metric summary tiles */
+        .jakal-metric-tile {
+            background: rgba(17,24,39,0.7);
+            border: 1px solid rgba(55,65,81,0.7);
+            border-radius: 12px;
+            padding: 16px 18px;
+            text-align: center;
+            transition: border-color 0.2s ease;
+        }
+        .jakal-metric-tile:hover { border-color: rgba(249,115,22,0.4); }
+        .jakal-metric-tile .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+        .jakal-metric-tile .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* Device fleet cards — single-pane selection clarity (Anduril Lattice) */
+        .jakal-device-card {
+            background: rgba(17,24,39,0.65);
+            border: 1px solid rgba(55,65,81,0.75);
+            border-radius: 10px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+        }
+        .jakal-device-card:hover {
+            background: rgba(31,41,55,0.85);
+            border-color: rgba(249,115,22,0.45);
+            transform: translateY(-1px);
+        }
+        .jakal-device-card.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px rgba(249,115,22,0.35), 0 8px 20px rgba(249,115,22,0.12);
+            background: rgba(249,115,22,0.06);
+        }
+        .jakal-device-card .device-name {
+            font-weight: 600;
+            color: #f3f4f6;
+            font-size: 13px;
+        }
+        .jakal-device-card .device-meta {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+        .jakal-device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        /* Activity feed rows — progressive disclosure */
+        .jakal-activity-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(55,65,81,0.45);
+            font-size: 12px;
+        }
+        .jakal-activity-row:last-child { border-bottom: none; }
+        .jakal-activity-row .ts { color: #6b7280; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .jakal-activity-row .evt { color: #e5e7eb; font-weight: 500; }
+        .jakal-activity-row .ok { color: #34d399; }
+        .jakal-activity-row .fail { color: #f87171; }
+
+        /* Cleaner settings sub-nav */
+        #settings-tabs-container {
+            background: rgba(17,24,39,0.4);
+        }
+        .settings-nav-link {
+            border-radius: 8px;
+            margin-bottom: 2px;
+        }
+        .settings-nav-link.active {
+            background: rgba(249,115,22,0.12) !important;
+            color: #fdba74 !important;
+        }
+
+        /* Operator console chrome */
+        #operator-console, .operator-console {
+            border-color: rgba(249,115,22,0.35) !important;
+            backdrop-filter: blur(12px);
+        }
+
+        /* Reduce visual noise on primary action buttons */
+        button.bg-primary-color, .btn-primary {
+            box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 4px 12px rgba(249,115,22,0.25);
+        }
+        button.bg-primary-color:hover {
+            filter: brightness(1.08);
+        }
+
+        /* Section headers — F-pattern scanning aid */
+        .jakal-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+
+        /* Live badge */
+        .jakal-live-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #34d399;
+            box-shadow: 0 0 0 0 rgba(52,211,153,0.5);
+            animation: jakal-live-pulse 2s infinite;
+        }
+        @keyframes jakal-live-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.5); }
+            70% { box-shadow: 0 0 0 8px rgba(52,211,153,0); }
+            100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+        }
+
         
         /* Action Dropdown for Table */
         .action-dropdown {
@@ -290,46 +447,7 @@
             50% { opacity: 0.7; transform: scale(1.05); }
         }
 
-    
-        /* JAKAL additive legibility + auto-fit safety (non-destructive) */
-        #content-area, .content-card, .card, table td, table th { overflow-wrap:anywhere; word-break:break-word; }
-        #content-area { max-width:100%; }
-        #content-area img, #content-area canvas, #content-area svg { max-width:100%; height:auto; }
-        .jakal-scroll-x { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-        pre, code { white-space:pre-wrap; word-break:break-word; }
-        .jk-cog{cursor:pointer;border:1px solid #374151;background:#1f2937;color:#9ca3af;border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
-        .jk-cog:hover{color:#f97316;border-color:#f97316;box-shadow:0 0 10px rgba(249,115,22,.25)}
-        .jk-dot{width:12px;height:12px;border-radius:999px;border:2px solid #4b5563;cursor:pointer;display:inline-block;transition:.15s}
-        .jk-dot.on{background:#34d399;border-color:#34d399;box-shadow:0 0 8px rgba(52,211,153,.5)}
-        .jk-dot.off{background:transparent}
-        .jk-seg{display:inline-flex;background:#111827;border:1px solid #374151;border-radius:8px;overflow:hidden}
-        .jk-seg button{background:transparent;color:#9ca3af;border:0;padding:5px 12px;font-size:12px;cursor:pointer}
-        .jk-seg button.active{background:#f97316;color:#0b0f1a;font-weight:700}
-        .jk-radial{display:inline-flex;gap:10px;flex-wrap:wrap}
-        .jk-radial label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#d1d5db}
-        .jk-radial input{accent-color:#f97316}
-        .jk-slider{-webkit-appearance:none;appearance:none;height:6px;border-radius:999px;background:linear-gradient(90deg,#f97316 var(--fill,50%),#374151 var(--fill,50%));outline:none;width:100%}
-        .jk-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:999px;background:#f97316;border:2px solid #0b0f1a;box-shadow:0 0 8px rgba(249,115,22,.5);cursor:pointer}
-        .jk-slider::-moz-range-thumb{width:18px;height:18px;border-radius:999px;background:#f97316;border:2px solid #0b0f1a;cursor:pointer}
-        .jk-pop{position:fixed;z-index:99997;background:#0f172a;border:1px solid #f97316;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px;max-width:min(420px,92vw);max-height:70vh;overflow:auto;color:#e5e7eb}
-        /* ── JAKAL responsive AUTO-FIT: fill space, adapt desktop/mobile, no dead space, no endless scroll ── */
-        #content-area{min-height:calc(100vh - 150px);padding-bottom:72px}
-        .jk-autofit{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
-        .jk-autofit-sm{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr))}
-        .jk-grow{flex:1 1 auto}
-        @media (max-width:1024px){ #content-area .lg\:grid-cols-3, #content-area .lg\:grid-cols-4, #content-area .grid-cols-3, #content-area .grid-cols-4 { grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr)) !important; } }
-        @media (max-width:640px){ #content-area .md\:grid-cols-2, #content-area .grid-cols-2 { grid-template-columns:1fr !important; } [id$="-live-bar"]{flex-wrap:wrap} }
-        #content-area h1{font-size:clamp(1.35rem,2.4vw,2.1rem);line-height:1.15}
-        #content-area h2{font-size:clamp(1.1rem,1.8vw,1.6rem);line-height:1.2}
-        #content-area h3{font-size:clamp(1rem,1.4vw,1.25rem)}
-        #content-area .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px}
-        #content-area table{width:100%;border-collapse:collapse}
-        @media (max-width:768px){ #sidebar:not(.open){transform:translateX(-100%)} }
-
     </style>
-    <!-- Phase 2: Frontend-Backend Integration -->
-    <script src="./js/api-client.js"></script>
-    <script src="./js/integration-loader.js"></script>
 </head>
 <body>
     <div id="background-container"></div>
@@ -449,69 +567,54 @@
     </div>
 
     <script type="module">
-        // Firebase modules load DYNAMICALLY and defensively. A failed CDN import
-        // (offline / blocked / CSP) must never blank the whole console: with
-        // static top-level imports, one failed fetch aborts this entire module
-        // and the nav never renders. These are loaded at boot instead, wrapped
-        // in try/catch, so the UI comes up with or without cloud auth.
-        let initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, setLogLevel;
-        async function __loadFirebase() {
-            try {
-                const [appMod, authMod, fsMod] = await Promise.all([
-                    import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"),
-                    import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"),
-                    import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"),
-                ]);
-                initializeApp = appMod.initializeApp;
-                ({ getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = authMod);
-                ({ getFirestore, setLogLevel } = fsMod);
-                return true;
-            } catch (e) {
-                console.warn("Firebase modules unavailable — console runs without cloud auth/DB.", e);
-                return false;
-            }
-        }
-
+        import { api, authToken, setAuthToken, cardStyle, btnStyle, escapeHtml } from './integration.js';
         let chartInstances = {};
         let activeIntervals = [];
         let animationFrameId = null;
         let globeGroup;
         let d3Simulations = {}; // Store multiple simulations
 
+        // Lucide is loaded from an external CDN (see CSP allowlist in
+        // backend/middleware/security_hardening.py). A blocked/offline CDN
+        // must not crash page rendering -- icons just won't appear.
+        function safeCreateIcons() {
+            if (window.lucide) {
+                try { lucide.createIcons(); } catch (e) { console.warn('lucide.createIcons failed:', e); }
+            }
+        }
+
         // Global utility for icon rendering
-        window.onload = async function() {
-            // Bring the console up FIRST — nothing here may gate the nav on
-            // Firebase. Each step is isolated so one failure can't blank the rest.
-            try { lucide.createIcons(); } catch (e) { console.warn("icons:", e); }
-            try { setupBackground(); } catch (e) { console.warn("background:", e); }
-            try { setupSidebarControls(); } catch (e) { console.warn("sidebar:", e); }
-            try { window.setView('admin'); } catch (e) { console.error("setView failed:", e); }
-            // Then load Firebase + auth in the background; failure is non-fatal.
-            try { await __loadFirebase(); await setupAuthAndDatabase(); }
-            catch (e) { console.warn("auth/db init skipped:", e); }
+        window.onload = function() {
+            safeCreateIcons();
+            setupAuthAndDatabase();
+            setupBackground();
+            setupSidebarControls();
+            window.setView('admin'); // Set initial view to Admin Console
         }
         
         // --- Background Image Rotator ---
         function setupBackground() {
-            // Efficient, dependency-free background: layered CSS gradients + a
-            // faint orange grid + a slow scan sheen. No external images (the old
-            // placehold.co "JAKAL DATA CORE" placeholder was a wasted round-trip).
-            const bg = document.getElementById('background-container');
-            if (!bg) return;
-            bg.innerHTML = '';
-            bg.style.background = [
-                'radial-gradient(1200px 700px at 78% -10%, rgba(249,115,22,0.10), transparent 60%)',
-                'radial-gradient(900px 600px at 12% 110%, rgba(59,130,246,0.08), transparent 60%)',
-                'linear-gradient(180deg, #0b0f1a 0%, #0a0d16 100%)'
-            ].join(',');
-            const grid = document.createElement('div');
-            grid.style.cssText = 'position:absolute;inset:0;pointer-events:none;'
-                + 'background-image:radial-gradient(circle, rgba(249,115,22,0.06) 1px, transparent 1px);'
-                + 'background-size:34px 34px;opacity:.5';
-            bg.appendChild(grid);
-            const sheen = document.createElement('div');
-            sheen.className = 'horizon-scanline';
-            bg.appendChild(sheen);
+            // New static background image of a black hole (Sagittarius A*)
+            const imageUrl = 'https://placehold.co/1920x1080/000000/f97316?text=JAKAL+DATA+CORE&font=inter';
+
+            const bgContainer = document.getElementById('background-container');
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            let triedFallback = false;
+            img.onerror = () => {
+                console.error("Failed to load background image.");
+                // Re-assigning img.src (even to the same failing value) always
+                // triggers a fresh request, so without this guard a persistently
+                // unreachable placehold.co retries forever. Fall back once, then
+                // give up and let the container's own CSS background show through.
+                if (triedFallback) { img.onerror = null; img.remove(); return; }
+                triedFallback = true;
+                img.src = 'https://placehold.co/1920x1080/000000/374151?text=Background+Load+Error';
+            };
+            bgContainer.appendChild(img);
+
+            // Make the image active immediately
+            img.classList.add('active');
         }
 
         // --- Modal Functions (Made global for inline onclick handlers) ---
@@ -555,118 +658,60 @@
         }
         // --- End Modal Functions ---
 
-        // --- Gemini API Call Helper ---
+        // --- JAKAL LLM Helper ---
         /**
-         * A centralized function to call the Gemini API with exponential backoff.
-         * @param {object} payload - The complete payload to send to the API.
-         * @param {number} [retries=3] - Number of retries for rate limiting or server errors.
-         * @param {number} [delay=1000] - Initial delay for backoff (in ms).
-         * @returns {Promise<object>} - A promise that resolves to { text, sources, json }.
+         * Calls this platform's own configured LLM (Claude or Ollama, whichever
+         * LLM_ENGINE is set to server-side) via POST /api/assistant/generate.
+         *
+         * Previously this called Google's Gemini API directly from the browser
+         * with a hardcoded, permanently-empty API key ("apiKey = ''; ... will
+         * be populated by the environment" -- boilerplate left over from an
+         * AI Studio-style prototype scaffold, never adapted to this app's
+         * actual server-side LLM configuration). Every one of those requests
+         * 403'd; the three features built on it (phishing-content generation,
+         * "real-time threat intel", and the AIP Investigator) had been
+         * permanently broken since that code was written, visible only as
+         * console errors nobody had looked at.
+         *
+         * @param {string} systemPrompt
+         * @param {string} userPrompt
+         * @param {object|null} [jsonSchema] - when given, asks the backend to
+         *   constrain output to this shape; returns { text, json }.
+         * @returns {Promise<{text: string, json: object|null}>}
          */
-        async function callGeminiApi(payload, retries = 3, delay = 1000) {
-            // Per instructions, apiKey is an empty string and will be populated by the environment.
-            const apiKey = ""; 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    // Check for retryable errors (rate limiting or server-side)
-                    if ((response.status === 429 || response.status >= 500) && retries > 0) {
-                        // This is an intentional retry, not an error to be logged to the console.
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        return callGeminiApi(payload, retries - 1, delay * 2);
-                    }
-                    // Non-retryable error
-                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                const candidate = result.candidates?.[0];
-
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    const text = candidate.content.parts[0].text;
-                    
-                    // 1. Extract sources if grounding was used
-                    let sources = [];
-                    const groundingMetadata = candidate.groundingMetadata;
-                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                        sources = groundingMetadata.groundingAttributions
-                            .map(attr => ({
-                                uri: attr.web?.uri,
-                                title: attr.web?.title,
-                            }))
-                            .filter(source => source.uri && source.title); // Ensure valid sources
-                    }
-                    
-                    // 2. Parse JSON if requested
-                    let json = null;
-                    if (payload.generationConfig?.responseMimeType === 'application/json') {
-                        try {
-                            json = JSON.parse(text);
-                        } catch (e) {
-                            console.error("Failed to parse JSON response from API:", text);
-                            throw new Error("Failed to parse JSON response from API.");
-                        }
-                    }
-                    
-                    // 3. Return all parts
-                    return { text, sources, json };
-
-                } else if (result.promptFeedback) {
-                     throw new Error(`API call blocked. Reason: ${result.promptFeedback.blockReason}`);
-                } else {
-                    throw new Error("Invalid response structure from API. No candidate found.");
-                }
-            } catch (error) {
-                console.error("Gemini API call failed:", error);
-                throw error; // Re-throw to be caught by the caller
+        async function callJakalLLM(systemPrompt, userPrompt, jsonSchema = null) {
+            const response = await fetch('/api/assistant/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    system_prompt: systemPrompt,
+                    user_prompt: userPrompt,
+                    json_schema: jsonSchema,
+                }),
+            });
+            if (!response.ok) {
+                throw new Error(`Assistant API error: ${response.status} ${response.statusText}`);
             }
-        }
-        // --- End Gemini API Call Helper ---
-
-
-        // --- Firebase Setup (Mandatory Placeholder) ---
-        let db, auth, userId;
-
-        async function setupAuthAndDatabase() {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-            if (firebaseConfig && initializeApp) {
-                try {
-                    if (setLogLevel) setLogLevel('Debug');
-                    const app = initializeApp(firebaseConfig);
-                    db = getFirestore(app);
-                    auth = getAuth(app);
-
-                    onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            userId = user.uid;
-                        } else {
-                            if (initialAuthToken) {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                        }
-                    });
-                } catch (error) {
-                    console.error("Firebase initialization failed:", error);
-                    userId = crypto.randomUUID();
-                }
-            } else {
-                console.warn("Firebase config not available. Running in local mode.");
-                userId = crypto.randomUUID();
+            const result = await response.json();
+            if (!result.ok) {
+                // Honest failure from the backend (no LLM configured, engine
+                // unreachable) -- surfaced to the operator, not swallowed.
+                throw new Error(result.error || 'LLM generation failed');
             }
+            return { text: result.text, json: result.json ?? null };
         }
-        // --- End Firebase Setup ---
+        // --- End JAKAL LLM Helper ---
+
+
+        // Operator session identifier. Real login/session identity comes
+        // from the IAM router (see integration.js's renderAuthPanel); this
+        // is a client-only fallback ID for pages that just need a stable
+        // per-tab identifier.
+        let userId;
+
+        function setupAuthAndDatabase() {
+            userId = crypto.randomUUID();
+        }
 
         // --- Sidebar Controls ---
         function setupSidebarControls() {
@@ -721,7 +766,6 @@
             { key: 'admin_energy_core', icon: 'battery-charging', label: 'Energy Core Management', category: 'Resonance & Q\'AIP Cores' },
             { key: 'admin_logic_core', icon: 'cpu', label: 'Q\'AIP Logic Core Manager', category: 'Resonance & Q\'AIP Cores' },
             { key: 'admin_automation_controls', icon: 'bot', label: 'Resonance Wave Automation', category: 'Resonance & Q\'AIP Cores' },
-            { key: 'admin_automation_engine', icon: 'workflow', label: 'Automation & Orchestration', category: 'Command & Control' },
             { key: 'admin_ontology', icon: 'layers-3', label: 'Ontology & Simulation Hub', category: 'Computational Agentic system' },
             { key: 'admin_model_chains', icon: 'plug-zap', label: 'Model Chains & Inference', category: 'Computational Agentic system' },
             { key: 'admin_quantum_nexus', icon: 'atom', label: 'Quantum Orbital & Event Comms', category: 'Computational Agentic system' },
@@ -735,7 +779,11 @@
             { key: 'admin_dark_web', icon: 'scan-search', label: 'Dark Web Monitoring', category: 'Risk & Compliance' },
             { key: 'admin_security_training', icon: 'graduation-cap', label: 'Awareness Training', category: 'Human Layer Security' },
             { key: 'admin_phishing_sim', icon: 'fish', label: 'Phishing Campaigns', category: 'Human Layer Security' },
-            { key: 'admin_cheatsheet_library', icon: 'book-open-check', label: 'CheatSheet Library', category: 'GACyber Toolkit' }
+            { key: 'admin_cheatsheet_library', icon: 'book-open-check', label: 'CheatSheet Library', category: 'GACyber Toolkit' },
+            { key: 'admin_soar', icon: 'workflow', label: 'SOAR Playbooks', category: 'Security Operations' },
+            { key: 'admin_vulnerabilities', icon: 'bug', label: 'Vulnerabilities', category: 'Security Operations' },
+            { key: 'admin_integrations', icon: 'plug', label: 'Integrations', category: 'Security Operations' },
+            { key: 'admin_audit_trail', icon: 'file-clock', label: 'Audit Trail', category: 'Security Operations' }
         ];
 
         const clientNavLinks = [
@@ -754,7 +802,6 @@
             
             // ADMIN CONSOLE (ORIGINAL)
             admin_global_dashboard: { title: "Global Dashboard", html: () => renderGlobalAdminDashboard() },
-            admin_automation_engine: { title: "Automation & Orchestration", html: () => `<iframe src="/automation.html?embed=1" title="Automation & Orchestration" style="width:100%;height:calc(100vh-7.5rem);border:0;border-radius:12px;background:#0a0e15"></iframe>` },
             admin_energy_core: { title: "Energy Core Management", html: () => renderEnergyCoreManagement() },
             admin_logic_core: { title: "Q'AIP Logic Core Manager", html: () => renderAipLogicCoreManager() },
             admin_automation_controls: { title: "Resonance Wave Automation", html: () => renderAutomationControls() },
@@ -781,6 +828,10 @@
             admin_security_training: { title: "Security Awareness Training", html: () => renderSecurityTraining() },
             admin_phishing_sim: { title: "Phishing Campaigns", html: () => renderPhishingSim() },
             admin_cheatsheet_library: { title: "CheatSheet Library", html: () => renderCheatsheetLibrary() },
+            admin_soar: { title: "SOAR Playbooks", html: () => renderSoarPlaybooks() },
+            admin_vulnerabilities: { title: "Vulnerability Management", html: () => renderVulnerabilityManagement() },
+            admin_integrations: { title: "Integrations", html: () => renderIntegrationsVault() },
+            admin_audit_trail: { title: "Audit Trail", html: () => renderAuditTrail() },
 
             // CLIENT PORTAL (ORIGINAL)
             client_global_dashboard: { title: "Client Global Dashboard", html: () => renderGlobalClientDashboard() },
@@ -841,7 +892,7 @@
             });
             
             appNav.innerHTML = html;
-            lucide.createIcons(); 
+            safeCreateIcons(); 
 
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.addEventListener('click', handleNavClick);
@@ -879,13 +930,22 @@
             contentArea.innerHTML = `
                 <div class="page-content">${page.html()}</div>
             `;
-            lucide.createIcons();
+            safeCreateIcons();
             
             // Post-render initialization for specific pages
             if(pageKey === 'admin_global_dashboard') {
-                if (document.getElementById('dashboard-content-area')) {
-                    window.switchDashboardTab(currentDashboardTab, false); // legacy tabs (if present)
-                }
+                // Regression fix: doRender was false here, so
+                // switchDashboardTab only set the active tab's CSS class
+                // and never actually called content.innerHTML = render*(),
+                // leaving the Global Dashboard's content pane completely
+                // empty on every fresh page load (confirmed live -- the
+                // Global Fleet tab showed as active with zero rendered
+                // content until a tab was clicked by hand). Nothing else in
+                // the load path provides that missing render: js/jakal-
+                // live-data.js's own refresh even checks for
+                // #device-list-table before re-rendering, so it silently
+                // no-ops against the empty pane instead of fixing it.
+                window.switchDashboardTab(currentDashboardTab, true); // Load the last active tab
             }
             if(pageKey === 'admin_automation_controls') startAxiomEdgeSimulation();
             if(pageKey === 'admin_cognitive_load_monitor') startCognitiveMonitor();
@@ -897,6 +957,10 @@
             if (pageKey === 'admin_investigation_canvas') startInvestigationCanvas();
             // Horizon Inits
             if (pageKey === 'admin_horizon_agentic') startHorizonAgenticCanvas();
+            if (pageKey === 'admin_soar') startSoarPlaybooks();
+            if (pageKey === 'admin_vulnerabilities') startVulnerabilityManagement();
+            if (pageKey === 'admin_integrations') startIntegrationsVault();
+            if (pageKey === 'admin_audit_trail') startAuditTrail();
 
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.querySelector(`.nav-link[data-page="${pageKey}"]`);
@@ -1077,8 +1141,8 @@
                                   </div>
 
                                   <!-- Connecting Path Simulation -->
-                                  <svg class="absolute inset-0 w-full h-full pointer-events-none">
-                                      <path d="M 30% 35% Q 50% 20% 80% 45%" fill="none" stroke="rgba(249,115,22,0.5)" stroke-width="2" stroke-dasharray="10 5" class="threat-path"/>
+                                  <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                      <path d="M 30 35 Q 50 20 80 45" fill="none" stroke="rgba(249,115,22,0.5)" stroke-width="0.5" stroke-dasharray="3 1.5" vector-effect="non-scaling-stroke" class="threat-path"/>
                                   </svg>
 
                              </div>
@@ -1142,6 +1206,7 @@
         // =========================================================================
         
         function startAipLogicCoreSimulations() {
+            if (!window.Chart) { console.warn('Chart.js unavailable (CDN blocked/offline) — skipping chart init.'); return; }
             const ctx = document.getElementById('aip-core-performance-chart')?.getContext('2d');
             if(!ctx) return;
             
@@ -1187,7 +1252,7 @@
                     taskQueueEl.innerHTML = generateLogEntry(tasks[taskIndex % tasks.length], 'accent-color', 'lucide-cog') + taskQueueEl.innerHTML;
                     if(taskQueueEl.children.length > 10) taskQueueEl.lastElementChild.remove();
                     taskIndex++;
-                    lucide.createIcons();
+                    safeCreateIcons();
                 }
                 
             }, 5000);
@@ -1236,188 +1301,389 @@
                 `;
         }
         
-        function renderAutomationControls() {
-            const rules = [
-                { name: 'Suspicious Login Tier I', trigger: 'Impossible Travel', action: 'Contact User -> Reset Pass', active: true, source: 'AI Generated' },
-                { name: 'Phishing Attempt Quarantine', trigger: 'Email Scan Flag', action: 'Sandbox URL & Quarantine', active: true, source: 'Manual' },
-                { name: 'Data Exfiltration Block', trigger: 'High-Volume Outbound', action: 'Throttle & Alert SOC', active: true, source: 'Manual' },
-                { name: 'New Device Onboarding', trigger: 'New Device Detected', action: 'Scan -> Enroll -> Apply Policy', active: false, source: 'AI Generated' }
-            ];
-            return `
-                <div class="space-y-6">
-                    <div class="card p-6 rounded-xl">
-                        <h3 class="text-xl font-semibold text-purple-400 mb-4 flex items-center">
-                            <i data-lucide="git-commit-vertical" class="w-6 h-6 mr-3"></i> Axiom Edge: Autonomous AI Lifecycle
-                        </h3>
-                        <p class="text-sm text-gray-400 mb-6">Autonomous MLOps for edge sensor networks. The system researches, builds, tests, and deploys AI model updates across the entire Kubernetes lifecycle, ensuring continuous improvement and adaptation to new data and technologies.</p>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Lifecycle -->
-                            <div class="md:col-span-2">
-                                <h4 class="text-lg font-semibold text-white mb-3">Live Deployment Pipeline</h4>
-                                <div id="k8s-lifecycle" class="flex items-center justify-between p-4 bg-gray-900 rounded-lg">
-                                    <!-- Stages will be injected by JS -->
-                                </div>
-                                <div class="mt-4 p-3 bg-gray-900/70 rounded-lg">
-                                    <p id="axiom-edge-status" class="font-mono text-sm text-yellow-400">STATUS: Monitoring sensor data for drift...</p>
-                                </div>
-                            </div>
-                            <!-- Controls and Info -->
-                            <div>
-                                <h4 class="text-lg font-semibold text-white mb-3">Controls & Status</h4>
-                                <div class="space-y-2">
-                                    ${renderMetricPill('', 'Deployed Model', 'AnomalyDetect-v3.2.1', 'primary-color')}
-                                    ${renderMetricPill('', 'Cloud Nodes', '1,280 / 1,300', 'green-400')}
-                                    ${renderMetricPill('', 'Physical Nodes', '0 / 50', 'gray-400')}
-                                    <button onclick="window.showAppModal('Deployment', 'Deploying model to physical edge sensor array...')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm flex items-center justify-center">
-                                        <i data-lucide="move-3d" class="w-4 h-4 mr-2"></i>Deploy to Physical Sensors
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+        // ══════════════════════════════════════════════════════════════════
+        // Automation & Orchestration — Live Execution / Script Library /
+        // Playbooks / Tasks / Template Gallery. Real backend throughout:
+        // backend/routers/automation.py (scripts, playbooks, tasks,
+        // templates -- real seeded content, real DB), backend/routers/
+        // fleet_agent.py (real registered endpoint agents), backend/
+        // routers/remote_exec.py (real queued execution + WebSocket live
+        // streaming). Replaces the "Axiom Edge" content that used to sit
+        // behind this same nav slot -- a fully hardcoded MLOps-for-edge-
+        // sensors simulation (fake node counts, a canned optimizer log,
+        // playbook toggles that only ever showed a modal) with no backend
+        // behind any of it. Nav slot and icon unchanged; the content is now
+        // real.
+        // ══════════════════════════════════════════════════════════════════
 
-                        <div class="mt-6">
-                            <h4 class="text-lg font-semibold text-white mb-3">Autonomous Optimizer Log</h4>
-                            <div id="axiom-optimizer-log" class="h-40 overflow-y-auto scrollbar-style p-2 text-sm bg-gray-900 rounded-lg"></div>
-                        </div>
+        let automationState = { tab: 'live_exec', ws: null, execTargets: [], agents: [], scripts: [] };
+
+        function renderAutomationControls() {
+            return `
+                <div class="flex flex-col h-full">
+                    <div class="flex border-b border-border-color mb-4 flex-wrap">
+                        <button onclick="window.switchAutomationTab('live_exec')" id="auto-tab-live_exec" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="terminal" class="w-4 h-4 mr-2 inline"></i>Live Execution
+                        </button>
+                        <button onclick="window.switchAutomationTab('scripts')" id="auto-tab-scripts" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="file-code-2" class="w-4 h-4 mr-2 inline"></i>Script Library
+                        </button>
+                        <button onclick="window.switchAutomationTab('playbooks')" id="auto-tab-playbooks" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="workflow" class="w-4 h-4 mr-2 inline"></i>Playbooks
+                        </button>
+                        <button onclick="window.switchAutomationTab('tasks')" id="auto-tab-tasks" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="clock" class="w-4 h-4 mr-2 inline"></i>Tasks
+                        </button>
+                        <button onclick="window.switchAutomationTab('templates')" id="auto-tab-templates" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                            <i data-lucide="layout-template" class="w-4 h-4 mr-2 inline"></i>Template Gallery
+                        </button>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 card p-4 rounded-xl">
-                            <h3 class="text-lg font-bold text-primary-color mb-3">Automation Playbooks</h3>
-                             <div class="space-y-3">
-                            ${rules.map((rule, index) => `
-                                <div class="p-3 bg-gray-900/70 rounded-lg">
-                                    <div class="flex justify-between items-center">
-                                        <span class="font-semibold text-white">${rule.name}</span>
-                                        <div class="flex items-center space-x-4">
-                                            <span class="text-xs px-2 py-1 rounded-full ${rule.source === 'AI Generated' ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-500/20 text-gray-300'}">${rule.source}</span>
-                                            <label class="inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" value="" class="sr-only peer" ${rule.active ? 'checked' : ''} onchange="window.showAppModal('Playbook Updated', 'Playbook ${index + 1} has been ' + (this.checked ? 'ENABLED' : 'DISABLED') + '.')">
-                                            <div class="relative w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-primary-color peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-color"></div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-1"><span class="font-semibold">Trigger:</span> ${rule.trigger} -> <span class="font-semibold">Action:</span> ${rule.action}</p>
-                                </div>
+                    <div id="automation-content-area" class="flex-1 min-h-0"></div>
+                </div>
+            `;
+        }
+
+        window.switchAutomationTab = (tab) => {
+            automationState.tab = tab;
+            document.querySelectorAll('#automation-content-area').length; // no-op guard
+            document.querySelectorAll('[id^="auto-tab-"]').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`auto-tab-${tab}`);
+            if (btn) btn.classList.add('active');
+            const area = document.getElementById('automation-content-area');
+            if (!area) return;
+            if (automationState.ws && tab !== 'live_exec') { try { automationState.ws.close(); } catch (e) {} automationState.ws = null; }
+            if (tab === 'live_exec') { area.innerHTML = renderLiveExecutionTab(); startLiveExecutionTab(); }
+            if (tab === 'scripts') { area.innerHTML = renderScriptLibraryTab(); loadScriptLibrary(); }
+            if (tab === 'playbooks') { area.innerHTML = renderPlaybooksTab(); loadAutomationPlaybooks(); }
+            if (tab === 'tasks') { area.innerHTML = renderTasksTab(); loadAutomationTasks(); }
+            if (tab === 'templates') { area.innerHTML = renderTemplateGalleryTab(); loadTemplateGallery(); }
+            safeCreateIcons();
+        };
+
+        function startAxiomEdgeSimulation() {
+            // Entry point kept: loadPage()'s admin_automation_controls hook
+            // calls this by name. It now just boots the tab strip above.
+            window.switchAutomationTab(automationState.tab || 'live_exec');
+        }
+
+        // ── Live Execution ───────────────────────────────────────────────
+
+        function renderLiveExecutionTab() {
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+                    <div class="card p-4 rounded-xl flex flex-col min-h-0">
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Script</h4>
+                        <select id="live-exec-script" class="w-full bg-gray-800 p-2 rounded-md border border-border-color text-sm mb-3">
+                            <option>Loading scripts…</option>
+                        </select>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Filter OS</h4>
+                        <div id="live-exec-os-filter" class="flex flex-wrap gap-1 mb-3">
+                            ${['all', 'windows', 'macos', 'linux', 'cross'].map(o => `
+                                <button data-os="${o}" onclick="window.setLiveExecOsFilter('${o}')"
+                                    class="live-exec-os-btn px-2 py-1 text-xs rounded border border-border-color ${o === 'all' ? 'bg-primary-color text-white' : 'text-gray-400'}">${o}</button>
                             `).join('')}
-                            </div>
-                             <button class="w-full mt-4 py-2 bg-purple-600 text-white rounded-lg text-sm flex items-center justify-center hover:bg-purple-700">
-                                <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>AIP: Generate New Playbook
-                            </button>
                         </div>
-                        <div class="card p-4 rounded-xl">
-                            <h3 class="text-lg font-bold text-primary-color mb-3">Live Automation Event Log</h3>
-                            <div id="automation-log" class="h-full overflow-y-auto text-sm bg-gray-900 rounded-lg p-2 scrollbar-style">
-                                ${generateLogEntry('Automation Control module online.', 'green-500', 'lucide-power')}
-                                ${generateLogEntry('Playbook "Phishing Attempt Quarantine" triggered for user@client.com.', 'yellow-500', 'lucide-shield-alert')}
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Endpoints</h4>
+                        <div id="live-exec-endpoints" class="flex-1 overflow-y-auto scrollbar-style space-y-1 min-h-0">
+                            <p class="text-xs text-gray-500 italic">Loading agents…</p>
+                        </div>
+                        <button id="live-exec-run-btn" onclick="window.runLiveExecution()" class="w-full mt-3 py-2 bg-primary-color text-white rounded-lg text-sm font-semibold flex items-center justify-center">
+                            <i data-lucide="play" class="w-4 h-4 mr-2"></i>Run on <span id="live-exec-target-count">0</span> target(s)
+                        </button>
+                    </div>
+                    <div class="lg:col-span-3 card p-4 rounded-xl flex flex-col min-h-0">
+                        <div class="flex items-center justify-between mb-2 flex-shrink-0">
+                            <div class="flex items-center gap-2">
+                                <span id="live-exec-status" class="text-xs text-gray-500">no execution</span>
+                                <span id="live-exec-ws-badge" class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400">idle</span>
                             </div>
+                            <div class="flex gap-2">
+                                <button onclick="window.loadLiveExecHistory()" class="text-xs px-2 py-1 rounded border border-border-color text-gray-400 hover:text-white">Historical</button>
+                            </div>
+                        </div>
+                        <div id="live-exec-output" class="flex-1 overflow-y-auto scrollbar-style bg-gray-900 rounded-lg p-3 font-mono text-xs text-gray-300 min-h-0">
+                            <p class="text-gray-500">JAKAL Live Remote Execution -- pick a script + endpoint(s), then Run.
+                            Output streams here over a real WebSocket (/ws/exec/&#123;id&#125;); past runs replay from the audit log via "Historical".</p>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        function startAxiomEdgeSimulation() {
-            const lifecycleContainer = document.getElementById('k8s-lifecycle');
-            const statusEl = document.getElementById('axiom-edge-status');
-            const optimizerLog = document.getElementById('axiom-optimizer-log');
+        window.setLiveExecOsFilter = (os) => {
+            document.querySelectorAll('.live-exec-os-btn').forEach(b => {
+                b.classList.toggle('bg-primary-color', b.dataset.os === os);
+                b.classList.toggle('text-white', b.dataset.os === os);
+                b.classList.toggle('text-gray-400', b.dataset.os !== os);
+            });
+            renderLiveExecEndpoints(os);
+        };
 
-            if (!lifecycleContainer || !statusEl || !optimizerLog) return;
+        function renderLiveExecEndpoints(osFilter = 'all') {
+            const el = document.getElementById('live-exec-endpoints');
+            if (!el) return;
+            const agents = automationState.agents.filter(a => osFilter === 'all' || a.os === osFilter);
+            if (!agents.length) {
+                el.innerHTML = `<p class="text-xs text-gray-500 italic">No ${osFilter === 'all' ? '' : osFilter + ' '}endpoints registered.
+                    Run <code class="text-gray-400">python agent/jakal_agent.py --server ${window.location.origin}</code> on a real machine to enroll one.</p>`;
+                return;
+            }
+            el.innerHTML = agents.map(a => `
+                <label class="flex items-center gap-2 p-2 bg-gray-800/60 rounded-md cursor-pointer hover:bg-gray-800">
+                    <input type="checkbox" class="live-exec-target-cb" value="${a.agent_id}" onchange="window.updateLiveExecTargetCount()">
+                    <span class="w-2 h-2 rounded-full flex-shrink-0 ${a.status === 'online' ? 'bg-emerald-400' : 'bg-gray-500'}"></span>
+                    <span class="flex-1 min-w-0">
+                        <div class="text-xs font-semibold text-white truncate">${escapeHtml(a.hostname)}</div>
+                        <div class="text-xs text-gray-500 truncate">${escapeHtml(a.ip || '')} &middot; ${escapeHtml(a.agent_id)}</div>
+                    </span>
+                </label>
+            `).join('');
+        }
 
-            const stages = [
-                { key: 'data-ingest', label: 'Data Ingest', icon: 'database' },
-                { key: 'build-train', label: 'Build/Train', icon: 'hammer' },
-                { key: 'sec-scan', label: 'Security Scan', icon: 'scan-search' },
-                { key: 'deploy', label: 'Deploy', icon: 'send' },
-                { key: 'monitor', label: 'Monitor', icon: 'activity' },
-            ];
+        window.updateLiveExecTargetCount = () => {
+            const n = document.querySelectorAll('.live-exec-target-cb:checked').length;
+            const el = document.getElementById('live-exec-target-count');
+            if (el) el.textContent = n;
+        };
 
-            const optimizerLogs = [
-                "Researching new tensor processing architectures for efficiency gains.",
-                "Found efficiency gain with 'Federated Learning v2'. Proposing model upgrade.",
-                "Initiating automated build for 'AnomalyDetector-v3.2.2'.",
-                "Self-healing: Restarting failed pod on edge-node-734.",
-                "Analyzing public CVEs for potential impact on container base images.",
-                "Pre-fetching next-gen CUDA drivers for sandbox testing."
-            ];
+        async function startLiveExecutionTab() {
+            const scriptSel = document.getElementById('live-exec-script');
+            try {
+                const r = await api('/api/automation/scripts');
+                automationState.scripts = r.scripts || [];
+                scriptSel.innerHTML = automationState.scripts.length
+                    ? automationState.scripts.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.os)}/${escapeHtml(s.lang)})</option>`).join('')
+                    : '<option disabled>No scripts in library</option>';
+            } catch (e) {
+                scriptSel.innerHTML = `<option disabled>Failed to load: ${escapeHtml(e.message)}</option>`;
+            }
+            try {
+                const r = await api('/api/agents');
+                automationState.agents = r.agents || [];
+            } catch (e) {
+                automationState.agents = [];
+            }
+            renderLiveExecEndpoints('all');
+        }
 
-            let currentStage = 4; // Start at monitor
-            let logIndex = 0;
+        window.runLiveExecution = async () => {
+            const scriptSel = document.getElementById('live-exec-script');
+            const scriptId = scriptSel.value;
+            const targets = Array.from(document.querySelectorAll('.live-exec-target-cb:checked')).map(cb => cb.value);
+            const outputEl = document.getElementById('live-exec-output');
+            const statusEl = document.getElementById('live-exec-status');
+            const badgeEl = document.getElementById('live-exec-ws-badge');
+            if (!scriptId) { window.showAppModal('Error', 'Select a script first.'); return; }
+            if (!targets.length) { window.showAppModal('Error', 'Select at least one endpoint.'); return; }
 
-            const renderLifecycle = () => {
-                lifecycleContainer.innerHTML = stages.map((stage, index) => {
-                    let statusClass = 'text-gray-500';
-                    let statusIcon = 'circle-dashed';
-                    if (index < currentStage) {
-                        statusClass = 'text-green-500';
-                        statusIcon = 'check-circle-2';
-                    } else if (index === currentStage) {
-                        statusClass = 'text-yellow-500 animate-pulse';
-                        statusIcon = 'loader';
+            const script = automationState.scripts.find(s => s.id === scriptId);
+            outputEl.innerHTML = `<p class="text-gray-500">Queuing ${escapeHtml(script ? script.name : scriptId)} on ${targets.length} target(s)…</p>`;
+
+            try {
+                const r = await api('/api/exec/run', {
+                    method: 'POST',
+                    body: JSON.stringify({ script_id: scriptId, target_endpoint_ids: targets, operator: 'operator' }),
+                });
+                statusEl.textContent = `execution ${r.execution_id}`;
+                outputEl.innerHTML = `<p class="text-gray-500">Queued as ${escapeHtml(r.execution_id)}. Waiting for agent output…</p>`;
+                window.connectLiveExecWs(r.execution_id, badgeEl, outputEl);
+            } catch (e) {
+                outputEl.innerHTML += `<p class="text-red-400">Failed to queue: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.connectLiveExecWs = (executionId, badgeEl, outputEl) => {
+            if (automationState.ws) { try { automationState.ws.close(); } catch (e) {} }
+            const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${proto}//${window.location.host}/ws/exec/${executionId}`);
+            automationState.ws = ws;
+            badgeEl.textContent = 'connecting'; badgeEl.className = 'text-xs px-2 py-0.5 rounded-full bg-yellow-700 text-yellow-200';
+            ws.onopen = () => { badgeEl.textContent = 'live'; badgeEl.className = 'text-xs px-2 py-0.5 rounded-full bg-emerald-700 text-emerald-200'; };
+            ws.onclose = () => { badgeEl.textContent = 'closed'; badgeEl.className = 'text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400'; };
+            ws.onerror = () => { badgeEl.textContent = 'error'; badgeEl.className = 'text-xs px-2 py-0.5 rounded-full bg-red-700 text-red-200'; };
+            ws.onmessage = (ev) => {
+                let msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
+                if (msg.type === 'REPLAY_DONE') return;
+                if (msg.type === 'AGENT_STREAM_DATA') {
+                    if (msg.data) {
+                        const isErr = msg.streamType === 'stderr' || msg.streamType === 'powershell_error';
+                        const row = document.createElement('div');
+                        row.className = isErr ? 'text-red-400' : 'text-gray-200';
+                        row.textContent = `[${escapeHtml(msg.endpointId)}] ${msg.data}`;
+                        outputEl.appendChild(row);
+                        outputEl.scrollTop = outputEl.scrollHeight;
                     }
-                    
-                    let connector = index < stages.length - 1 ? `<div class="w-full h-px bg-gray-700 self-center mb-6 hidden sm:block"></div>` : '';
+                    if (msg.done) {
+                        const row = document.createElement('p');
+                        row.className = 'text-emerald-400 mt-2';
+                        row.textContent = `[${escapeHtml(msg.endpointId)}] execution finished.`;
+                        outputEl.appendChild(row);
+                        outputEl.scrollTop = outputEl.scrollHeight;
+                    }
+                }
+            };
+        };
 
-                    return `
-                        <div class="flex-1 flex flex-col sm:flex-row items-center">
-                            <div class="flex flex-col items-center text-center w-24 ${statusClass}">
-                                <i data-lucide="${statusIcon}" class="w-8 h-8 ${index === currentStage ? 'animate-spin' : ''}"></i>
-                                <span class="text-xs font-semibold mt-2">${stage.label}</span>
-                            </div>
-                            ${connector}
+        window.loadLiveExecHistory = async () => {
+            const outputEl = document.getElementById('live-exec-output');
+            try {
+                const r = await api('/api/exec?limit=20');
+                const runs = r.executions || [];
+                if (!runs.length) { outputEl.innerHTML = '<p class="text-gray-500">No past executions yet.</p>'; return; }
+                outputEl.innerHTML = runs.map(e => `
+                    <div class="mb-2 pb-2 border-b border-gray-800">
+                        <span class="text-white">${escapeHtml(e.execution_id)}</span> &middot;
+                        <span class="text-gray-400">${escapeHtml(e.script_name)}</span> &middot;
+                        <span class="${e.status === 'completed' ? 'text-emerald-400' : 'text-yellow-400'}">${escapeHtml(e.status)}</span>
+                        &middot; <span class="text-gray-500">${e.targets.length} target(s)</span>
+                        &middot; <button class="text-gray-400 hover:text-white underline" onclick="window.replayExec('${e.execution_id}')">view output</button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                outputEl.innerHTML = `<p class="text-red-400">Failed to load history: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.replayExec = async (executionId) => {
+            const outputEl = document.getElementById('live-exec-output');
+            try {
+                const r = await api(`/api/exec/${executionId}`);
+                if (!r.ok) { outputEl.innerHTML = `<p class="text-red-400">${escapeHtml(r.error || 'not found')}</p>`; return; }
+                outputEl.innerHTML = (r.logs || []).map(l => {
+                    const isErr = l.stream_type === 'stderr' || l.stream_type === 'powershell_error';
+                    return `<div class="${isErr ? 'text-red-400' : 'text-gray-200'}">[${escapeHtml(l.endpoint_id)}] ${escapeHtml(l.chunk)}</div>`;
+                }).join('') || '<p class="text-gray-500">No output recorded for this run.</p>';
+            } catch (e) {
+                outputEl.innerHTML = `<p class="text-red-400">${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        // ── Script Library ───────────────────────────────────────────────
+
+        function renderScriptLibraryTab() {
+            return `<div id="script-library-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">Loading…</div>`;
+        }
+
+        async function loadScriptLibrary() {
+            const el = document.getElementById('script-library-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/automation/scripts');
+                const scripts = r.scripts || [];
+                el.innerHTML = scripts.length ? scripts.map(s => `
+                    <div class="card p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-1">
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(s.name)}</h4>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">${escapeHtml(s.os)}</span>
                         </div>
-                    `;
-                }).join('');
-                lucide.createIcons();
-            };
+                        <p class="text-xs text-gray-400 mb-2">${escapeHtml(s.description || '')}</p>
+                        <div class="flex items-center justify-between text-xs text-gray-500">
+                            <span>${escapeHtml(s.lang)} &middot; ${escapeHtml(s.category)}</span>
+                            <button onclick="window.switchAutomationTab('live_exec'); setTimeout(() => { const sel = document.getElementById('live-exec-script'); if (sel) sel.value = '${s.id}'; }, 300)"
+                                class="text-primary-color hover:underline">Run in Live Execution &rarr;</button>
+                        </div>
+                    </div>
+                `).join('') : '<p class="text-gray-500 italic">No scripts in the library.</p>';
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load: ${escapeHtml(e.message)}</p>`;
+            }
+        }
 
-            const runCycle = () => {
-                currentStage = (currentStage + 1) % (stages.length + 1); // +1 to have a 'done' state
-                
-                if (currentStage < stages.length) {
-                    statusEl.textContent = `STATUS: [${stages[currentStage].label}] - Processing new data batch...`;
-                } else {
-                    statusEl.textContent = 'STATUS: Monitoring sensor data for drift...';
-                    currentStage = 4; // Reset to monitor
-                }
-                
-                renderLifecycle();
+        // ── Playbooks ─────────────────────────────────────────────────────
 
-                // If cycle is complete, wait before starting a new one
-                if (currentStage >= stages.length - 1) { // -1 because monitor is the last stage
-                     // stay in monitor
-                } else {
-                    setTimeout(runCycle, 3000); // 3s per stage
-                }
-            };
-            
-            // Initial render
-            renderLifecycle();
-            optimizerLog.innerHTML += generateLogEntry("Axiom Edge Optimizer Initialized.", 'green-500', 'lucide-power');
-            lucide.createIcons();
+        function renderPlaybooksTab() {
+            return `<div id="automation-playbooks-list" class="space-y-3">Loading…</div>`;
+        }
 
-            // Start optimizer log updates
-            const logInterval = setInterval(() => {
-                if (document.getElementById('axiom-optimizer-log')) {
-                    optimizerLog.innerHTML += generateLogEntry(optimizerLogs[logIndex % optimizerLogs.length], 'purple-400', 'lucide-cpu');
-                    optimizerLog.scrollTop = optimizerLog.scrollHeight;
-                    lucide.createIcons();
-                    logIndex++;
-                }
-            }, 7000);
-            activeIntervals.push(logInterval);
+        async function loadAutomationPlaybooks() {
+            const el = document.getElementById('automation-playbooks-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/automation/playbooks');
+                const playbooks = r.playbooks || [];
+                const riskColor = { critical: 'red-500', high: 'orange-400', medium: 'yellow-400', low: 'blue-400' };
+                el.innerHTML = playbooks.length ? playbooks.map(p => `
+                    <div class="card p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(p.name)}</h4>
+                            <span class="text-xs font-bold text-${riskColor[p.risk] || 'gray-400'}">${escapeHtml((p.risk || '').toUpperCase())}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">Trigger: <code class="text-gray-400">${escapeHtml(p.trigger)}</code></p>
+                        <ol class="text-xs text-gray-400 list-decimal list-inside space-y-0.5">
+                            ${(p.steps || []).map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+                        </ol>
+                    </div>
+                `).join('') : '<p class="text-gray-500 italic">No playbooks defined.</p>';
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load: ${escapeHtml(e.message)}</p>`;
+            }
+        }
 
-            // After a delay, trigger a new cycle
-            setTimeout(() => {
-                const logEl = document.getElementById('axiom-optimizer-log');
-                if(logEl) {
-                    logEl.innerHTML += generateLogEntry("Model drift detected. Initiating upgrade cycle.", 'yellow-400', 'lucide-git-commit-vertical');
-                    logEl.scrollTop = logEl.scrollHeight;
-                    lucide.createIcons();
-                }
-                currentStage = -1; // Ready to start from beginning
-                runCycle();
-            }, 5000);
+        // ── Tasks ─────────────────────────────────────────────────────────
+
+        function renderTasksTab() {
+            return `<div id="automation-tasks-list" class="space-y-2">Loading…</div>`;
+        }
+
+        async function loadAutomationTasks() {
+            const el = document.getElementById('automation-tasks-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/automation/tasks');
+                const tasks = r.tasks || [];
+                el.innerHTML = tasks.length ? tasks.map(t => `
+                    <div class="card p-3 rounded-lg flex items-center justify-between">
+                        <div>
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(t.name)}</h4>
+                            <p class="text-xs text-gray-500">${escapeHtml(t.schedule)} &middot; ${escapeHtml(t.targets)} &middot; script <code>${escapeHtml(t.script_id)}</code></p>
+                        </div>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" ${t.status === 'enabled' ? 'checked' : ''}
+                                onchange="window.toggleAutomationTask('${t.id}', this.checked)">
+                            <div class="relative w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-color"></div>
+                        </label>
+                    </div>
+                `).join('') : '<p class="text-gray-500 italic">No scheduled tasks.</p>';
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load: ${escapeHtml(e.message)}</p>`;
+            }
+        }
+
+        window.toggleAutomationTask = async (taskId, enabled) => {
+            try {
+                await api(`/api/automation/tasks/${taskId}/toggle`, {
+                    method: 'POST', body: JSON.stringify({ status: enabled ? 'enabled' : 'paused' }),
+                });
+            } catch (e) {
+                window.showAppModal('Error', e.message);
+                loadAutomationTasks();
+            }
+        };
+
+        // ── Template Gallery ──────────────────────────────────────────────
+
+        function renderTemplateGalleryTab() {
+            return `<div id="automation-templates-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">Loading…</div>`;
+        }
+
+        async function loadTemplateGallery() {
+            const el = document.getElementById('automation-templates-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/automation/templates');
+                const templates = r.templates || [];
+                el.innerHTML = templates.length ? templates.map(t => `
+                    <div class="card p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-1">
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(t.name)}</h4>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">${escapeHtml(t.os)}</span>
+                        </div>
+                        <p class="text-xs text-gray-400">${escapeHtml(t.description)}</p>
+                    </div>
+                `).join('') : '<p class="text-gray-500 italic">No templates available.</p>';
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load: ${escapeHtml(e.message)}</p>`;
+            }
         }
 
         function renderOntologyHub() {
@@ -1620,7 +1886,7 @@
             if (!btn || btn.disabled) return;
             btn.disabled = true;
             btn.innerHTML = '<i data-lucide="loader" class="w-5 h-5 mr-2 animate-spin"></i>Running...';
-            lucide.createIcons();
+            safeCreateIcons();
 
             const checks = ['diag-hw', 'diag-sw', 'diag-net', 'diag-sec'];
             let currentCheck = 0;
@@ -1629,7 +1895,7 @@
                 if (currentCheck >= checks.length) {
                     btn.disabled = false;
                     btn.innerHTML = '<i data-lucide="play" class="w-5 h-5 mr-2"></i>Start Diagnostics';
-                    lucide.createIcons();
+                    safeCreateIcons();
                     window.showAppModal("Diagnostics Complete", "All systems are nominal. No issues found.");
                     return;
                 }
@@ -1641,7 +1907,7 @@
                     if(document.getElementById('run-diag-btn')) { 
                         document.getElementById('run-diag-btn').disabled = false;
                         document.getElementById('run-diag-btn').innerHTML = '<i data-lucide="play" class="w-5 h-5 mr-2"></i>Start Diagnostics';
-                        lucide.createIcons();
+                        safeCreateIcons();
                     }
                     return;
                 }
@@ -1655,7 +1921,7 @@
                 statusEl.textContent = 'Checking...';
                 statusEl.classList.remove('text-gray-500');
                 statusEl.classList.add('text-yellow-500');
-                lucide.createIcons();
+                safeCreateIcons();
 
                 setTimeout(() => {
                     const currentCheckEl = document.getElementById(checkId);
@@ -1672,7 +1938,7 @@
                         currentStatusEl.classList.remove('text-yellow-500');
                         currentStatusEl.classList.add('text-green-500');
                     }
-                    lucide.createIcons();
+                    safeCreateIcons();
                     currentCheck++;
                     runCheck();
                 }, 1500);
@@ -1782,7 +2048,7 @@
                     if (r.ok) {
                         const data = await r.json();
                         const host = document.getElementById('unified-fabric-host');
-                        if (host) { host.innerHTML = renderFabricFromData(data); if (window.lucide) lucide.createIcons(); }
+                        if (host) { host.innerHTML = renderFabricFromData(data); safeCreateIcons(); }
                     }
                 } catch (e) { /* backend offline — keep fallback */ }
             }, 50);
@@ -1965,23 +2231,14 @@
 
             btn.disabled = true;
             btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Generating...';
-            lucide.createIcons();
+            safeCreateIcons();
             outputWrapper.classList.add('hidden');
 
             const systemPrompt = "You are a cybersecurity expert specializing in 'red team' operations. Your task is to generate realistic, convincing phishing email content for training simulations. NEVER generate harmful links. Use placeholders like `[LINK]` or `[ATTACHMENT]`. The email should have a clear subject and a body. Respond ONLY with the email content, starting with 'Subject:'.";
             const userQuery = `Generate a phishing email based on this theme: "${theme}"`;
 
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 500,
-                }
-            };
-
             try {
-                const { text } = await callGeminiApi(payload);
+                const { text } = await callJakalLLM(systemPrompt, userQuery);
                 outputEl.textContent = text;
                 outputWrapper.classList.remove('hidden');
             } catch (error) {
@@ -1990,7 +2247,7 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>Generate Content';
-                lucide.createIcons();
+                safeCreateIcons();
             }
         }
 
@@ -2056,7 +2313,7 @@
             
             btn.disabled = true;
             btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i> Simulating...';
-            lucide.createIcons();
+            safeCreateIcons();
             
             wrapper.classList.remove('hidden');
             log.innerHTML = '';
@@ -2064,7 +2321,7 @@
             const addLog = (message, color, icon) => {
                 log.innerHTML += generateLogEntry(message, color, icon);
                 log.scrollTop = log.scrollHeight;
-                lucide.createIcons();
+                safeCreateIcons();
             };
 
             setTimeout(() => addLog("Establishing quantum entanglement with target network segment...", 'purple-400', 'lucide-atom'), 0);
@@ -2076,7 +2333,7 @@
                 addLog("Simulation complete. Collapsing quantum state.", 'gray-400', 'lucide-zap-off');
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="play-circle" class="w-4 h-4 mr-2"></i>Initiate Simulation';
-                lucide.createIcons();
+                safeCreateIcons();
             }, 7000);
         };
 
@@ -2091,12 +2348,12 @@
             const encrypted = message.split('').map(() => String.fromCharCode(Math.random() * (126 - 33) + 33)).join('');
             log.innerHTML += generateLogEntry(`Transmitting: <span class="text-red-400 font-mono">${encrypted}</span>`, 'gray-500', 'lucide-lock');
             log.scrollTop = log.scrollHeight;
-            lucide.createIcons();
+            safeCreateIcons();
 
             setTimeout(() => {
                 log.innerHTML += generateLogEntry(`Operator Alpha: ${message}`, 'primary-color', 'lucide-message-square');
                 log.scrollTop = log.scrollHeight;
-                lucide.createIcons();
+                safeCreateIcons();
             }, 1000);
         }
 
@@ -2207,39 +2464,93 @@
             'EU': { x: 480, y: 130, name: 'Europe' },
             'AF': { x: 490, y: 280, name: 'Africa' },
             'AS': { x: 700, y: 160, name: 'Asia' },
-            'OC': { x: 850, y: 380, name: 'Oceania' },
+            'OC': { x: 870, y: 320, name: 'Oceania' },
         };
-        const targetLocation = { x: 250, y: 160 }; // US East Coast as primary target
+        const targetLocation = { x: 280, y: 155, name: 'Protected Infrastructure (US East)' };
+        let _gpmWorldPath = null; // cached fetch of /world_land_map.json
+        let _gpmSituations = []; // bounded feed backing the right-column cards (replaces the old unbounded log)
+        const GPM_MAX_SITUATIONS = 12;
 
         function renderGlobalPredictiveMatrix() {
-            // Replaced Geopolitical Threat Matrix with Horizon Global Predictive Matrix
-            const worldMapPath = "M500.1,248.8c0.2,0,0.5,0,0.7,0c0.2-0.1,0.5-0.2,0.7-0.3c0.2-0.1,0.4-0.3,0.6-0.5l1-1.1c0.1-0.1,0.2-0.2,0.3-0.4c0.1-0.1,0.1-0.3,0.2-0.4c0.1-0.2,0.1-0.3,0.2-0.5c0.1-0.2,0.1-0.4,0.1-0.6c0-0.2,0-0.4,0-0.6c-0.1-0.4-0.1-0.9-0.2-1.3c0-0.1,0-0.2,0-0.3c-0.1-0.4-0.2-0.8-0.3-1.2c-0.1-0.2-0.2-0.5-0.3-0.7c-0.1-0.2-0.2-0.4-0.4-0.6c-0.1-0.2-0.2-0.3-0.4-0.5c-0.2-0.2-0.3-0.4-0.5-0.5c-0.4-0.4-0.9-0.7-1.4-1c-0.2-0.1-0.5-0.2-0.7-0.3c-0.5-0.3-1-0.5-1.5-0.7c-0.3-0.1-0.5-0.2-0.8-0.3c-0.5-0.2-1-0.4-1.6-0.5c-0.3-0.1-0.6-0.1-0.9-0.2c-0.3-0.1-0.5-0.1-0.8-0.1c-0.6,0-1.1,0.1-1.7,0.2c-0.3,0-0.6,0.1-0.9,0.2c-0.6,0.1-1.1,0.3-1.7,0.5c-0.3,0.1-0.6,0.2-0.9,0.3c-0.5,0.2-1,0.5-1.5,0.8c-0.2,0.1-0.5,0.3-0.7,0.4c-0.5,0.3-0.9,0.7-1.3,1.1c-0.2,0.2-0.4,0.4-0.6,0.6c-0.4,0.5-0.7,1-1,1.5c-0.2,0.3-0.3,0.6-0.5,0.9c-0.3,0.7-0.6,1.4-0.8,2.1c-0.1,0.4-0.2,0.8-0.3,1.2c-0.1,0.4-0.2,0.9-0.2,1.3c0,0.5,0.1,0.9,0.2,1.4c0,0.1,0.1,0.3,0.1,0.4c0.1,0.3,0.2,0.6,0.3,0.9c0.2,0.5,0.5,1,0.8,1.5c0.3,0.5,0.7,0.9,1.1,1.3c0.5,0.4,1,0.8,1.6,1.1c0.6,0.3,1.2,0.6,1.9,0.8c0.3,0.1,0.7,0.2,1,0.3c0.7,0.2,1.4,0.3,2.1,0.4c0.4,0.1,0.8,0.1,1.2,0.2c0.8,0.1,1.6,0.1,2.4,0.1C499,248.8,499.5,248.8,500.1,248.8z M500.2,251.2c-0.8,0-1.6-0.1-2.4-0.1c-0.4,0-0.8-0.1-1.2-0.1c-0.7-0.1-1.4-0.2-2.1-0.4c-0.3-0.1-0.7-0.2-1-0.3c-0.7-0.2-1.3-0.5-1.9-0.8c-0.6-0.3-1.1-0.7-1.6-1.1c-0.4-0.4-0.8-0.8-1.1-1.3c-0.3-0.5-0.6-1-0.8-1.5c-0.1-0.3-0.2-0.6-0.3-0.9c-0.1-0.2-0.1-0.3-0.1-0.4c-0.1-0.5-0.1-0.9-0.2-1.4c0-0.5,0.1-0.9,0.2-1.3c0.1-0.4,0.2-0.8,0.3-1.2c0.2-0.7,0.5-1.4,0.8-2.1c0.1-0.3,0.3-0.6,0.5-0.9c0.3-0.5,0.6-1,1-1.5c0.2-0.2,0.4-0.4,0.6-0.6c0.4-0.4,0.8-0.7,1.3-1.1c0.3-0.1,0.5-0.2,0.8-0.3c0.5-0.2,1.1-0.4,1.7-0.5c0.3-0.1,0.6-0.1,0.9-0.2c0.6-0.1,1.1-0.2,1.7-0.2c0.3,0,0.5,0,0.8,0.1c0.3,0,0.6,0.1,0.9,0.2c0.5,0.1,1.1,0.3,1.6,0.5c0.3,0.1,0.5,0.2,0.8,0.3c0.5,0.2,1,0.4,1.5,0.7c0.3,0.1,0.5,0.2,0.7,0.3c0.5,0.3,1,0.6,1.4,1c0.2,0.2,0.3,0.3,0.5,0.5c0.2,0.2,0.3,0.3,0.4,0.5c0.1,0.2,0.3,0.4,0.4,0.6c0.1,0.2,0.2,0.5,0.3,0.7c0.1,0.4,0.2,0.8,0.3,1.2c0,0.1,0,0.2,0,0.3c0.1,0.4,0.1,0.9,0.2,1.3c0,0.2,0,0.4,0,0.6c-0.1,0.2-0.1,0.4-0.1,0.6c-0.1,0.2-0.1,0.3-0.2,0.5c-0.1,0.1-0.1,0.3-0.2,0.4c-0.1,0.1-0.2,0.2-0.3,0.4l-1,1.1c-0.2,0.2-0.4,0.4-0.6,0.5c-0.2,0.1-0.5,0.2-0.7,0.3c-0.2,0-0.5,0-0.7,0C500.7,251.2,500.5,251.2,500.2,251.2z M994.9,248c-0.4-0.9-0.9-1.8-1.4-2.7l-0.1-0.2c-0.1-0.2-0.2-0.4-0.3-0.5c-0.1-0.2-0.1-0.4-0.2-0.6c-0.1-0.2-0.1-0.4-0.2-0.6c-0.1-0.4-0.1-0.9-0.2-1.3c0-0.1,0-0.1,0-0.2c-0.1-0.4-0.2-0.8-0.3-1.2c-0.1-0.2-0.2-0.5-0.3-0.7c-0.1-0.2-0.2-0.4-0.4-0.6c-0.1-0.2-0.2-0.3-0.4-0.5c-0.2-0.2-0.3-0.4-0.5-0.5c-0.4-0.4-0.9-0.7-1.4-1c-0.2-0.1-0.5-0.2-0.7-0.3c-0.5-0.3-1-0.5-1.5-0.7c-0.3-0.1-0.5-0.2-0.8-0.3c-0.5-0.2-1-0.4-1.6-0.5c-0.3-0.1-0.6-0.1-0.9-0.2c-0.3-0.1-0.5-0.1-0.8-0.1c-0.6,0-1.1,0.1-1.7,0.2c-0.3,0-0.6,0.1-0.9,0.2c-0.6,0.1-1.1,0.3-1.7,0.5c-0.3,0.1-0.6,0.2-0.9,0.3c-0.5,0.2-1,0.5-1.5,0.8c-0.2,0.1-0.5,0.3-0.7,0.4c-0.5,0.3-0.9,0.7-1.3,1.1c-0.2,0.2-0.4,0.4-0.6,0.6c-0.4,0.5-0.7,1-1,1.5c-0.2,0.3-0.3,0.6-0.5,0.9c-0.3,0.7-0.6,1.4-0.8,2.1c-0.1,0.4-0.2,0.8-0.3,1.2c-0.1,0.4-0.2,0.9-0.2,1.3c0,0.5,0.1,0.9,0.2,1.4c0,0.1,0.1,0.3,0.1,0.4c0.1,0.3,0.2,0.6,0.3,0.9c0.2,0.5,0.5,1,0.8,1.5c0.3,0.5,0.7,0.9,1.1,1.3c0.5,0.4,1,0.8,1.6,1.1c0.6,0.3,1.2,0.6,1.9,0.8c0.3,0.1,0.7,0.2,1,0.3c0.7,0.2,1.4,0.3,2.1,0.4c0.4,0.1,0.8,0.1,1.2,0.2c0.8,0.1,1.6,0.1,2.4,0.1c0.5,0,1,0,1.5-0.1c0.2,0,0.5-0.1,0.7-0.1c0.2-0.1,0.5-0.2,0.7-0.3c0.2-0.1,0.4-0.3,0.6-0.5l0.1-0.1c0.5-0.6,1-1.2,1.4-1.9C994.4,249.7,994.7,248.9,994.9,248z M9.2,248.8L8.5,248l-0.7-0.9c-0.1-0.1-0.1-0.2-0.2-0.3c-0.1-0.1-0.1-0.3-0.2-0.4c-0.1-0.2-0.1-0.3-0.2-0.5c-0.1-0.2-0.1-0.4-0.1-0.6c0-0.2,0-0.4,0-0.6c0.1-0.4,0.1-0.9,0.2-1.3c0-0.1,0-0.2,0-0.3c0.1-0.4,0.2-0.8,0.3-1.2c0.1-0.2,0.2-0.5,0.3-0.7c0.1-0.2,0.2-0.4,0.4-0.6c0.1-0.2,0.2-0.3,0.4-0.5c0.2-0.2,0.3-0.4,0.5-0.5c0.4-0.4,0.9-0.7,1.4-1c0.2-0.1,0.5-0.2,0.7-0.3c0.5-0.3,1-0.5,1.5-0.7c0.3-0.1,0.5-0.2,0.8-0.3c0.5-0.2,1-0.4,1.6-0.5c0.3-0.1,0.6-0.1,0.9-0.2c0.3-0.1,0.5-0.1,0.8-0.1c0.6,0,1.1,0.1,1.7,0.2c0.3,0,0.6,0.1,0.9,0.2c0.6,0.1,1.1,0.3,1.7,0.5c0.3,0.1,0.6,0.2,0.9,0.3c0.5,0.2,1,0.5,1.5,0.8c0.2,0.1,0.5,0.3,0.7,0.4c0.5,0.3,0.9,0.7,1.3,1.1c0.2,0.2,0.4,0.4,0.6,0.6c0.4,0.5,0.7,1,1,1.5c0.2,0.3,0.3,0.6,0.5,0.9c0.3,0.7,0.6,1.4,0.8,2.1c0.1,0.4,0.2,0.8,0.3,1.2c0.1,0.4,0.2,0.9,0.2,1.3c0,0.5-0.1,0.9-0.2,1.4c0,0.1-0.1,0.3-0.1,0.4c-0.1,0.3-0.2,0.6-0.3,0.9c-0.2,0.5-0.5,1-0.8,1.5c-0.3,0.5-0.7,0.9-1.1,1.3c-0.5,0.4-1,0.8-1.6,1.1c-0.6,0.3-1.2,0.6-1.9,0.8c-0.3,0.1-0.7,0.2-1,0.3c-0.7,0.2-1.4,0.3-2.1,0.4c-0.4,0.1-0.8,0.1-1.2,0.2c-0.8,0.1-1.6,0.1-2.4,0.1c-0.6,0-1.1,0-1.7,0c-0.3,0-0.5-0.1-0.8-0.1c-0.3-0.1-0.6-0.1-0.9-0.2c-0.5-0.1-1.1-0.3-1.6-0.5c-0.3-0.1-0.5-0.2-0.8-0.3c-0.5-0.2-1-0.4-1.5-0.7c-0.2-0.1-0.5-0.2-0.7-0.3c-0.5-0.3-1-0.6-1.4-1c-0.2-0.2-0.3-0.3-0.5-0.5c-0.2-0.2-0.3-0.3-0.4-0.5c-0.1-0.2-0.3-0.4-0.4-0.6c-0.1-0.2-0.2-0.5-0.3-0.7c-0.1-0.4-0.2-0.8-0.3-1.2c0-0.1,0-0.2,0-0.3C9.3,249.7,9.3,249.2,9.2,248.8z";
+            // v3.1: real world geography (fetched from /world_land_map.json --
+            // Natural Earth land-110m, see backend/app.py), a bounded
+            // "Situations" card feed instead of an unbounded scrolling log,
+            // a layer toggle panel and zoom controls (worldmonitor.app /
+            // Palantir-style ops map), replacing the old single-blob SVG
+            // path and infinite log dump.
             return `
                 <div class="grid grid-cols-1 xl:grid-cols-4 gap-4 h-[calc(100vh-18rem)]">
                     <!-- Left Column: Map & Predictive Intelligence -->
                     <div class="xl:col-span-3 h-full flex flex-col gap-4">
-                        <div class="card p-2 rounded-xl flex-1 flex flex-col">
-                            <h4 class="text-base font-semibold text-white p-2">Global Predictive Matrix (Adversarial AI Modeling)</h4>
-                            <div class="flex-1 bg-black rounded-lg border border-border-color relative overflow-hidden matrix-grid-bg">
-                               <div id="world-map-container" class="w-full h-full opacity-80">
-                                   <svg id="world-map-svg" class="w-full h-full" viewBox="0 0 1000 500">
-                                       <path class="country" d="${worldMapPath}"></path>
-                                   </svg>
-                               </div>
-                               <svg id="threat-overlay" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
-                               <div id="threat-details-pane" class="absolute top-4 right-4 card p-4 w-80 rounded-lg hidden text-sm bg-black/80 backdrop-blur-md border-primary-color/50"></div>
+                        <div class="card p-2 rounded-xl flex-1 flex flex-col min-h-0">
+                            <div class="flex items-center justify-between px-2">
+                                <h4 class="text-base font-semibold text-white">Global Predictive Matrix (Adversarial AI Modeling)</h4>
+                                <span id="gpm-live-count" class="text-xs text-gray-400"></span>
+                            </div>
+                            <div id="gpm-map-shell" class="flex-1 bg-[#060a14] rounded-lg border border-border-color relative overflow-hidden mt-1">
+                                <svg id="gpm-map-svg" class="w-full h-full cursor-grab active:cursor-grabbing" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet">
+                                    <defs>
+                                        <radialGradient id="gpm-vignette" cx="50%" cy="45%" r="75%">
+                                            <stop offset="0%" stop-color="#0d1424" stop-opacity="0"></stop>
+                                            <stop offset="100%" stop-color="#000000" stop-opacity="0.55"></stop>
+                                        </radialGradient>
+                                        <filter id="gpm-glow" x="-100%" y="-100%" width="300%" height="300%">
+                                            <feGaussianBlur stdDeviation="2.2" result="blur"></feGaussianBlur>
+                                            <feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+                                        </filter>
+                                    </defs>
+                                    <rect x="0" y="0" width="1000" height="500" fill="#060a14"></rect>
+                                    <g id="gpm-graticule" stroke="#1b2740" stroke-width="0.5" fill="none"></g>
+                                    <path id="gpm-landmass" d="" fill="#111a2e" stroke="#2b3b5c" stroke-width="0.6"></path>
+                                    <g id="gpm-arcs" fill="none"></g>
+                                    <g id="gpm-origin-pins"></g>
+                                    <g id="gpm-target-pin"></g>
+                                    <rect x="0" y="0" width="1000" height="500" fill="url(#gpm-vignette)" pointer-events="none"></rect>
+                                </svg>
+
+                                <!-- Layer toggles (worldmonitor.app-style) -->
+                                <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-sm border border-border-color rounded-lg p-2.5 text-xs w-40 space-y-1.5 select-none">
+                                    <div class="text-gray-400 font-semibold tracking-wide mb-1">LAYERS</div>
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-200">
+                                        <input type="checkbox" checked data-gpm-layer="origins" class="accent-primary-color"> Threat Origins
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-200">
+                                        <input type="checkbox" checked data-gpm-layer="arcs" class="accent-primary-color"> Predictive Paths
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-200">
+                                        <input type="checkbox" checked data-gpm-layer="grid" class="accent-primary-color"> Grid
+                                    </label>
+                                </div>
+
+                                <!-- Zoom controls -->
+                                <div class="absolute top-3 right-3 flex flex-col bg-black/70 backdrop-blur-sm border border-border-color rounded-lg overflow-hidden text-white">
+                                    <button id="gpm-zoom-in" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 border-b border-border-color" title="Zoom in">+</button>
+                                    <button id="gpm-zoom-out" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 border-b border-border-color" title="Zoom out">&minus;</button>
+                                    <button id="gpm-zoom-reset" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 text-xs" title="Reset view">&#8635;</button>
+                                </div>
+
+                                <!-- Legend -->
+                                <div class="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm border border-border-color rounded-lg p-2.5 text-xs space-y-1 select-none">
+                                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#ef4444"></span><span class="text-gray-300">Data Exfiltration Zero-Day</span></div>
+                                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#f97316"></span><span class="text-gray-300">Adversarial Prompt Injection</span></div>
+                                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#eab308"></span><span class="text-gray-300">Automated Botnet Swarm</span></div>
+                                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#8b5cf6"></span><span class="text-gray-300">Deepfake Phishing Campaign</span></div>
+                                </div>
+
+                                <div id="threat-details-pane" class="absolute top-14 right-3 card p-4 w-80 rounded-lg hidden text-sm bg-black/85 backdrop-blur-md border-primary-color/50 z-10"></div>
                             </div>
                         </div>
-                        <div class="card p-2 rounded-xl flex-1 flex flex-col">
+                        <div class="card p-2 rounded-xl flex-1 flex flex-col min-h-0">
                              <h4 class="text-base font-semibold text-white p-2">Adversarial Predictive Paths (UCC Sync)</h4>
-                             <div class="flex-1 bg-gray-900 rounded-lg border border-border-color overflow-hidden relative">
+                             <p class="text-xs text-gray-400 px-2 -mt-1 mb-1">Link analysis: adversarial actors &rarr; exploited vulnerabilities &rarr; exposed assets</p>
+                             <div class="flex-1 bg-[#060a14] rounded-lg border border-border-color overflow-hidden relative">
                                 <svg id="ucc-graph" class="w-full h-full"></svg>
                              </div>
                         </div>
                     </div>
-                    <!-- Right Column: Controls & Log -->
-                    <div class="card p-4 rounded-xl flex flex-col h-full">
-                         <h3 class="text-lg font-bold text-primary-color mb-3">Matrix Controls & Log</h3>
+                    <!-- Right Column: Situations feed (bounded cards, Palantir-style) -->
+                    <div class="card p-4 rounded-xl flex flex-col h-full min-h-0">
+                         <h3 class="text-lg font-bold text-primary-color mb-3">Situations</h3>
                          <div class="space-y-2 mb-3">
                             <button onclick="window.deployCountermeasures()" class="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-sm flex items-center justify-center transition">
                                 <i data-lucide="shield" class="w-4 h-4 mr-2"></i>Deploy Global Countermeasures
@@ -2248,7 +2559,7 @@
                                 <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>AIP: Run Adversarial Analysis
                             </button>
                          </div>
-                         <div id="threat-log" class="flex-1 overflow-y-auto scrollbar-style text-sm space-y-2 bg-black rounded-lg p-2 border border-border-color"></div>
+                         <div id="gpm-situations" class="flex-1 overflow-y-auto scrollbar-style space-y-2"></div>
                     </div>
                 </div>
             `;
@@ -2274,26 +2585,156 @@
             );
         }
 
-        function startGlobalPredictiveMatrixSimulations() {
-            // Functionality merges the original startThreatMatrix and startUccGraph
-            const threatOverlay = document.getElementById('threat-overlay');
-            if(threatOverlay) {
-                const threatTypes = [
-                    { name: 'Adversarial Prompt Injection', color: '#f97316', icon: 'shield-alert', severity: 5 },
-                    { name: 'Automated Botnet Swarm', color: '#eab308', icon: 'wifi-off', severity: 4 },
-                    { name: 'Data Exfiltration Zero-Day', color: '#ef4444', icon: 'server-crash', severity: 5 },
-                    { name: 'Deepfake Phishing Campaign', color: '#8b5cf6', icon: 'message-square-quote', severity: 4 },
-                ];
+        const GPM_THREAT_TYPES = [
+            { name: 'Adversarial Prompt Injection', color: '#f97316', icon: 'shield-alert', severity: 5 },
+            { name: 'Automated Botnet Swarm', color: '#eab308', icon: 'wifi-off', severity: 4 },
+            { name: 'Data Exfiltration Zero-Day', color: '#ef4444', icon: 'server-crash', severity: 5 },
+            { name: 'Deepfake Phishing Campaign', color: '#8b5cf6', icon: 'message-square-quote', severity: 4 },
+        ];
 
+        // --- Map init: real landmass, graticule, pan/zoom, layer toggles ---
+        async function _gpmInitMap() {
+            const svg = document.getElementById('gpm-map-svg');
+            if (!svg) return;
+
+            // Graticule (drawn once; every 30 deg lon/lat on the same 1000x500 equirectangular grid the landmass path uses)
+            const graticule = document.getElementById('gpm-graticule');
+            if (graticule && !graticule.dataset.built) {
+                let g = '';
+                for (let lon = -180; lon <= 180; lon += 30) {
+                    const x = (lon + 180) * (1000 / 360);
+                    g += `<line x1="${x}" y1="0" x2="${x}" y2="500"></line>`;
+                }
+                for (let lat = -60; lat <= 60; lat += 30) {
+                    const y = (90 - lat) * (500 / 180);
+                    g += `<line x1="0" y1="${y}" x2="1000" y2="${y}"></line>`;
+                }
+                graticule.innerHTML = g;
+                graticule.dataset.built = '1';
+            }
+
+            // Landmass (fetched once, cached across page revisits this session)
+            const landPath = document.getElementById('gpm-landmass');
+            if (landPath && !landPath.getAttribute('d')) {
+                try {
+                    if (!_gpmWorldPath) {
+                        const res = await fetch('/world_land_map.json');
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+                        _gpmWorldPath = data.path;
+                    }
+                    landPath.setAttribute('d', _gpmWorldPath);
+                } catch (e) {
+                    console.warn('Global Predictive Matrix: world map data unavailable, showing grid only.', e);
+                }
+            }
+
+            // Origin + target pins (static, pulsing)
+            const originsG = document.getElementById('gpm-origin-pins');
+            if (originsG && !originsG.dataset.built) {
+                originsG.innerHTML = Object.entries(threatOrigins).map(([key, o]) => `
+                    <g class="gpm-origin-pin" data-region="${key}" style="cursor:pointer">
+                        <circle cx="${o.x}" cy="${o.y}" r="10" fill="#f97316" fill-opacity="0.15">
+                            <animate attributeName="r" values="6;16;6" dur="3s" repeatCount="indefinite"></animate>
+                            <animate attributeName="fill-opacity" values="0.35;0;0.35" dur="3s" repeatCount="indefinite"></animate>
+                        </circle>
+                        <circle cx="${o.x}" cy="${o.y}" r="3.5" fill="#f97316" filter="url(#gpm-glow)"></circle>
+                        <text x="${o.x}" y="${o.y - 12}" text-anchor="middle" fill="#cbd5e1" font-size="10" style="paint-order:stroke;stroke:#060a14;stroke-width:3px">${o.name}</text>
+                    </g>
+                `).join('');
+                originsG.dataset.built = '1';
+            }
+            const targetG = document.getElementById('gpm-target-pin');
+            if (targetG && !targetG.dataset.built) {
+                targetG.innerHTML = `
+                    <circle cx="${targetLocation.x}" cy="${targetLocation.y}" r="6" fill="none" stroke="#34d399" stroke-width="1.5"></circle>
+                    <path d="M${targetLocation.x - 5},${targetLocation.y} L${targetLocation.x + 5},${targetLocation.y} M${targetLocation.x},${targetLocation.y - 5} L${targetLocation.x},${targetLocation.y + 5}" stroke="#34d399" stroke-width="1.5"></path>
+                    <text x="${targetLocation.x}" y="${targetLocation.y + 18}" text-anchor="middle" fill="#34d399" font-size="10" style="paint-order:stroke;stroke:#060a14;stroke-width:3px">${targetLocation.name}</text>
+                `;
+                targetG.dataset.built = '1';
+            }
+
+            // Layer toggles
+            document.querySelectorAll('[data-gpm-layer]').forEach((cb) => {
+                cb.onchange = () => {
+                    const layer = cb.dataset.gpmLayer;
+                    const targets = { origins: '#gpm-origin-pins', arcs: '#gpm-arcs', grid: '#gpm-graticule' };
+                    const el = document.querySelector(targets[layer]);
+                    if (el) el.style.display = cb.checked ? '' : 'none';
+                };
+            });
+
+            // Pan/zoom via viewBox manipulation (no extra dependency)
+            if (!svg.dataset.zoomBound) {
+                let vb = { x: 0, y: 0, w: 1000, h: 500 };
+                const apply = () => svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+                const zoomAt = (factor) => {
+                    const newW = Math.max(150, Math.min(1000, vb.w * factor));
+                    const newH = newW * (500 / 1000);
+                    vb.x += (vb.w - newW) / 2;
+                    vb.y += (vb.h - newH) / 2;
+                    vb.w = newW; vb.h = newH;
+                    apply();
+                };
+                svg.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    zoomAt(e.deltaY > 0 ? 1.15 : 0.87);
+                }, { passive: false });
+                document.getElementById('gpm-zoom-in')?.addEventListener('click', () => zoomAt(0.8));
+                document.getElementById('gpm-zoom-out')?.addEventListener('click', () => zoomAt(1.25));
+                document.getElementById('gpm-zoom-reset')?.addEventListener('click', () => { vb = { x: 0, y: 0, w: 1000, h: 500 }; apply(); });
+
+                let dragging = false, lastX = 0, lastY = 0;
+                svg.addEventListener('mousedown', (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+                window.addEventListener('mouseup', () => { dragging = false; });
+                svg.addEventListener('mousemove', (e) => {
+                    if (!dragging) return;
+                    const scale = vb.w / svg.clientWidth;
+                    vb.x -= (e.clientX - lastX) * scale;
+                    vb.y -= (e.clientY - lastY) * scale;
+                    lastX = e.clientX; lastY = e.clientY;
+                    apply();
+                });
+                svg.dataset.zoomBound = '1';
+            }
+        }
+
+        // --- Bounded "Situations" feed (replaces the old unbounded scrolling log) ---
+        function _gpmAddSituation(threat) {
+            _gpmSituations.unshift(threat);
+            _gpmSituations = _gpmSituations.slice(0, GPM_MAX_SITUATIONS);
+            const container = document.getElementById('gpm-situations');
+            if (!container) return;
+            container.innerHTML = _gpmSituations.map((t) => `
+                <div class="border border-border-color rounded-lg p-2.5 bg-black/40 hover:border-primary-color/60 cursor-pointer transition" onclick='window.displayThreatDetails(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-semibold" style="color:${t.type.color}">${t.type.name}</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded-full ${t.type.severity >= 5 ? 'bg-red-900 text-red-300' : 'bg-yellow-900 text-yellow-300'}">${t.type.severity >= 5 ? 'CRITICAL' : 'ELEVATED'}</span>
+                    </div>
+                    <div class="text-xs text-gray-400">Origin: ${t.origin.name} &middot; ${t.time}</div>
+                </div>
+            `).join('');
+            const counter = document.getElementById('gpm-live-count');
+            if (counter) counter.textContent = `${_gpmSituations.length} active`;
+        }
+
+        function startGlobalPredictiveMatrixSimulations() {
+            _gpmInitMap();
+            const arcsLayer = document.getElementById('gpm-arcs');
+            if (arcsLayer) {
                 const interval = setInterval(() => {
                     const originKey = Object.keys(threatOrigins)[Math.floor(Math.random() * Object.keys(threatOrigins).length)];
                     const origin = threatOrigins[originKey];
-                    const type = threatTypes[Math.floor(Math.random() * threatTypes.length)];
-                    
+                    const type = GPM_THREAT_TYPES[Math.floor(Math.random() * GPM_THREAT_TYPES.length)];
+
                     const threatId = `threat-${Date.now()}`;
-                    const newThreat = { id: threatId, origin, type };
+                    const newThreat = {
+                        id: threatId, origin, type,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    };
                     activeThreats.push(newThreat);
-                    
+                    _gpmAddSituation(newThreat);
+
                     if (type.severity >= 5 && Math.random() > 0.8) {
                          window.showAppModal(
                             'High-Severity Predictive Threat Detected',
@@ -2304,32 +2745,32 @@
 
                     const threatGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     threatGroup.setAttribute('id', threatId);
-                    
+
+                    const midX = (origin.x + targetLocation.x) / 2;
+                    const midY = Math.min(origin.y, targetLocation.y) - 60; // arc bows toward the pole, like the Anduril/worldmonitor reference arcs
                     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    path.setAttribute('class', 'threat-path pointer-events-none');
-                    path.setAttribute('d', `M${origin.x},${origin.y} Q${(origin.x + targetLocation.x) / 2},${(origin.y + targetLocation.y) / 2 - 100} ${targetLocation.x},${targetLocation.y}`);
+                    path.setAttribute('class', 'gpm-threat-arc pointer-events-none');
+                    path.setAttribute('d', `M${origin.x},${origin.y} Q${midX},${midY} ${targetLocation.x},${targetLocation.y}`);
                     path.setAttribute('stroke', type.color);
-                    path.setAttribute('stroke-width', '2');
+                    path.setAttribute('stroke-width', '1.5');
+                    path.setAttribute('stroke-dasharray', '4 3');
                     path.setAttribute('fill', 'none');
+                    path.setAttribute('opacity', '0.85');
 
-                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    circle.setAttribute('class', 'threat-source');
-                    circle.setAttribute('cx', origin.x);
-                    circle.setAttribute('cy', origin.y);
-                    circle.setAttribute('r', 8);
-                    circle.setAttribute('fill', type.color);
-                    circle.onclick = () => displayThreatDetails(newThreat);
-                    
+                    const pulse = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    pulse.setAttribute('r', 5);
+                    pulse.setAttribute('fill', type.color);
+                    pulse.style.cursor = 'pointer';
+                    pulse.onclick = () => window.displayThreatDetails(newThreat);
+                    const anim = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
+                    anim.setAttribute('dur', '2.5s');
+                    anim.setAttribute('fill', 'freeze');
+                    anim.setAttribute('path', path.getAttribute('d'));
+                    pulse.appendChild(anim);
+
                     threatGroup.appendChild(path);
-                    threatGroup.appendChild(circle);
-                    threatOverlay.appendChild(threatGroup);
-
-                    const logDiv = document.getElementById('threat-log');
-                    if (logDiv) {
-                        const logEntryHtml = generateLogEntry(`Predictive Vector: ${type.name} from ${origin.name}`, type.color.replace('#', 'text-[').concat(']'), `lucide-${type.icon}`);
-                        logDiv.innerHTML = logEntryHtml + logDiv.innerHTML;
-                        lucide.createIcons();
-                    }
+                    threatGroup.appendChild(pulse);
+                    arcsLayer.appendChild(threatGroup);
 
                     setTimeout(() => {
                         const el = document.getElementById(threatId);
@@ -2340,10 +2781,10 @@
                 }, 4000);
                 activeIntervals.push(interval);
             }
-            
+
             // UCC Graph Logic
             const container = document.getElementById('ucc-graph');
-            if(container) {
+            if(container && window.d3) {
                 const width = container.clientWidth;
                 const height = container.clientHeight;
                 const svg = d3.select(container);
@@ -2393,7 +2834,7 @@
                         .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
                     node.attr("transform", d => `translate(${d.x},${d.y})`);
                 });
-                lucide.createIcons();
+                safeCreateIcons();
             }
         }
 
@@ -2411,41 +2852,34 @@
                     <p class="font-bold text-primary-color">Horizon AIP Prediction:</p>
                     <p>Horizon Engine predicts an 84% chance of adversarial AI exploiting public cloud endpoints within 24 hours. Recommended action: Preemptive Zero Trust deployment.</p>
                 </div>
-                <!-- Gemini Real-time Intel -->
+                <!-- AI threat assessment (model knowledge, not live search) -->
                 <button onclick="window.getThreatIntel('${threat.type.name}', '${threat.origin.name}')" class="w-full mt-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs flex items-center justify-center transition">
-                    <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>Get Real-time Intel
+                    <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>Get AI Assessment
                 </button>
                 <button onclick="document.getElementById('threat-details-pane').classList.add('hidden')" class="w-full mt-2 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs transition">Close</button>
             `;
-            lucide.createIcons();
+            safeCreateIcons();
         }
 
         window.getThreatIntel = async (threatName, originName) => {
             window.showAppModal("Fetching Intel...", '<div class="flex items-center justify-center"><i data-lucide="loader" class="w-6 h-6 animate-spin"></i><span class="ml-3">Contacting AIP...</span></div>');
-            lucide.createIcons();
+            safeCreateIcons();
 
-            const systemPrompt = "You are a world-class geopolitical threat intelligence analyst for the 'Horizon' system. You provide concise, real-time summaries of cybersecurity threats based on public web data. Your summary must be one paragraph. Always cite your sources.";
-            const userQuery = `Find the latest public reports or news about "${threatName}" originating from or associated with "${originName}".`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                tools: [{ "google_search": {} }], // Enable Google Search grounding
-            };
+            // Deliberately does NOT claim live web search or citations: no
+            // backend configured here (Claude via services/llm_client.py, or
+            // Ollama) has real-time browsing wired up. The old Gemini call
+            // requested "tools: [{google_search}]" grounding and rendered a
+            // fabricated-looking "Sources:" list from whatever the (always-
+            // failing) response happened to contain -- claiming a capability
+            // this platform does not have. This is a model-knowledge
+            // assessment, labeled as exactly that.
+            const systemPrompt = "You are a cybersecurity threat analyst for the 'Horizon' system. Based on your general knowledge, provide a concise one-paragraph assessment of this kind of threat and actor. You do NOT have live web access -- do not claim to cite sources or reference specific recent news.";
+            const userQuery = `Provide a threat assessment for a "${threatName}" threat associated with "${originName}".`;
 
             try {
-                const { text, sources } = await callGeminiApi(payload);
-                
-                let sourcesHtml = '';
-                if (sources.length > 0) {
-                    sourcesHtml = '<h5 class="font-semibold text-primary-color mt-4 mb-2">Sources:</h5><ul class="list-disc list-inside text-xs space-y-1">';
-                    sources.forEach(source => {
-                        sourcesHtml += `<li><a href="${source.uri}" target="_blank" class="text-cyan-400 hover:underline">${source.title}</a></li>`;
-                    });
-                    sourcesHtml += '</ul>';
-                }
+                const { text } = await callJakalLLM(systemPrompt, userQuery);
 
-                window.showAppModal("✨ Real-time Threat Intel", `<p>${text}</p>${sourcesHtml}`, false, () => {}, true);
+                window.showAppModal("AI Threat Assessment", `<p>${text}</p><p class="text-xs text-gray-500 mt-3">Model-knowledge assessment -- not live web search.</p>`, false, () => {}, true);
             } catch (error) {
                 console.error("Threat intel failed:", error);
                 window.showAppModal("Intel Failed", `The AI failed to retrieve intel. ${error.message}`);
@@ -2495,6 +2929,7 @@
             `).join('');
 
             operators.forEach((op, i) => {
+                if (!window.Chart) return;
                 const ctx = document.getElementById(`cognitive-chart-${i}`)?.getContext('2d');
                 if(!ctx) return;
                 chartInstances[`cognitiveChart${i}`] = new Chart(ctx, {
@@ -2607,6 +3042,7 @@
         function setupInteractiveGlobe() {
             const container = document.getElementById('globe-container');
             if (!container) return;
+            if (!window.THREE) { console.warn('Three.js unavailable (CDN blocked/offline) — skipping 3D globe.'); return; }
 
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -2765,6 +3201,7 @@
 
             resultsText.innerHTML = `<p class="text-yellow-400">Simulating Bell State...</p>`;
             setTimeout(() => {
+                if (!window.Chart) { resultsText.innerHTML = '<p class="text-red-400">Chart.js unavailable (CDN blocked/offline).</p>'; return; }
                 const data = {
                     labels: ['|00⟩', '|01⟩', '|10⟩', '|11⟩'],
                     datasets: [{
@@ -2807,18 +3244,35 @@
             selectedDeviceId: null,
             clientFilter: 'All'
         };
-        // Expose so js/jakal-live-data.js can populate the fleet from the real backend.
+        // js/jakal-live-data.js is a classic (non-module) script, so it can
+        // only reach this module-scoped `let` through window -- without this
+        // line its `if (!window.globalDashboardState) return;` guard always
+        // hit, meaning the real /api/dashboard/fleet sync had silently never
+        // once run; the dashboard always fell back to the 7-device mock
+        // above with no visible indication that live sync wasn't happening.
         window.globalDashboardState = globalDashboardState;
-        
+
         function renderGlobalAdminDashboard() {
-            // Upgraded Global Ops Console (real-time threat map, system health,
-            // alerts, admin & governance, data integration, compliance/audit).
-            // Embedded from global_ops.html so the app shell stays untouched;
-            // the legacy fleet/matrix/settings tabs now live under
-            // "Fleet & Assets" and "Integrations". Old renderers kept below.
             return `
-                 <iframe src="/global_ops.html?embed=1" title="Global Dashboard"
-                     style="width:100%;height:calc(100vh-7.5rem);border:0;border-radius:12px;background:#0a0e15"></iframe>
+                 <h2 class="text-3xl font-extrabold text-white mb-6">Global Dashboard</h2>
+                 
+                 <!-- Tab Navigation -->
+                 <div class="flex border-b border-border-color mb-4">
+                     <button onclick="window.switchDashboardTab('fleet')" id="tab-fleet" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                         <i data-lucide="monitor-smartphone" class="w-4 h-4 mr-2 inline"></i> Global Fleet
+                     </button>
+                     <button onclick="window.switchDashboardTab('matrix')" id="tab-matrix" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                         <i data-lucide="map" class="w-4 h-4 mr-2 inline"></i> Global Predictive Matrix
+                     </button>
+                     <button onclick="window.switchDashboardTab('settings')" id="tab-settings" class="dashboard-tab px-4 py-3 text-sm font-semibold text-gray-400 hover:text-white">
+                         <i data-lucide="settings-2" class="w-4 h-4 mr-2 inline"></i> Global Settings & Security
+                     </button>
+                 </div>
+                 
+                 <!-- Tab Content Area -->
+                 <div id="dashboard-content-area" class="h-[calc(100vh-14rem)]">
+                     <!-- Content injected by JS -->
+                 </div>
             `;
         }
         
@@ -2844,7 +3298,7 @@
                 if (tab === 'fleet') content.innerHTML = renderDeviceFleetTab();
                 if (tab === 'matrix') content.innerHTML = renderGlobalPredictiveMatrix(); // Using Horizon Predictive Matrix
                 if (tab === 'settings') content.innerHTML = renderGlobalSettingsTab();
-                lucide.createIcons();
+                safeCreateIcons();
                 
                 if (tab === 'fleet') startGlobalDashboardSimulations();
                 if (tab === 'matrix') startGlobalPredictiveMatrixSimulations(); // Using Horizon Predictive Engine
@@ -2856,35 +3310,70 @@
         
         function renderDeviceFleetTab() {
             return `
-                <div class="dashboard-tab-content grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
-                    <!-- Left Column: Device & User Fleet -->
-                    <div class="lg:col-span-3 card p-4 rounded-xl flex flex-col h-full">
-                        <div class="flex-shrink-0 flex justify-between items-center mb-3">
-                            <h3 class="text-lg font-bold text-primary-color">Global Device & User Fleet</h3>
-                            <select id="client-filter-select" onchange="window.updateClientFilter(this.value)" class="bg-gray-800 border border-border-color rounded-md px-3 py-1 text-sm focus:ring-primary-color focus:border-primary-color">
-                                <option value="All">All Clients</option>
-                                <option value="Beta Corp">Beta Corp</option>
-                                <option value="Alpha Inc">Alpha Inc</option>
-                                <option value="Gamma LLC">Gamma LLC</option>
-                            </select>
+                <div class="dashboard-tab-content flex flex-col h-full gap-4">
+                    <div id="fleet-summary-banner" class="flex-shrink-0"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-1 min-h-0">
+                        <!-- Left Column: Device & User Fleet -->
+                        <div class="lg:col-span-3 card p-4 rounded-xl flex flex-col h-full min-h-0">
+                            <div class="flex-shrink-0 flex justify-between items-center mb-3">
+                                <h3 class="text-lg font-bold text-primary-color">Global Device & User Fleet</h3>
+                                <select id="client-filter-select" onchange="window.updateClientFilter(this.value)" class="bg-gray-800 border border-border-color rounded-md px-3 py-1 text-sm focus:ring-primary-color focus:border-primary-color">
+                                    <option value="All">All Clients</option>
+                                    <option value="Beta Corp">Beta Corp</option>
+                                    <option value="Alpha Inc">Alpha Inc</option>
+                                    <option value="Gamma LLC">Gamma LLC</option>
+                                </select>
+                            </div>
+                            <div id="device-list-table" class="flex-1 overflow-y-auto scrollbar-style pr-2 min-h-0">
+                                <!-- Device Table injected by JS -->
+                            </div>
                         </div>
-                        <div id="device-list-table" class="flex-1 overflow-y-auto scrollbar-style pr-2">
-                            <!-- Device Table injected by JS -->
-                        </div>
-                    </div>
 
-                    <!-- Middle Column: Live Threats & Details -->
-                    <div class="lg:col-span-2 card p-4 rounded-xl flex flex-col h-full">
-                         <div id="device-details-pane" class="flex-1">
-                             <div class="h-full flex flex-col items-center justify-center text-center text-gray-500">
-                                 <i data-lucide="mouse-pointer-square" class="w-12 h-12 mb-4"></i>
-                                 <h4 class="text-lg font-semibold">Select a Device</h4>
-                                 <p class="text-sm">Select an action from the device table to view details.</p>
+                        <!-- Middle Column: Live Threats & Details -->
+                        <div class="lg:col-span-2 card p-4 rounded-xl flex flex-col h-full min-h-0">
+                             <div id="device-details-pane" class="flex-1 min-h-0 overflow-y-auto scrollbar-style">
+                                 <div class="h-full flex flex-col items-center justify-center text-center text-gray-500">
+                                     <i data-lucide="mouse-pointer-square" class="w-12 h-12 mb-4"></i>
+                                     <h4 class="text-lg font-semibold">Select a Device</h4>
+                                     <p class="text-sm">Select an action from the device table to view details.</p>
+                                 </div>
                              </div>
-                         </div>
+                        </div>
                     </div>
                 </div>
             `;
+        }
+
+        // RocketCyber/Datto-style device-count summary banner. Counts are
+        // always derived from globalDashboardState.devices at render time --
+        // never hardcoded -- so this reflects real /api/dashboard/fleet data
+        // once js/jakal-live-data.js has synced it, and an honestly-labeled
+        // demo count before that sync completes or if the backend is offline.
+        function renderFleetSummaryBanner() {
+            const el = document.getElementById('fleet-summary-banner');
+            if (!el) return;
+            const devices = globalDashboardState.devices || [];
+            const counts = { Healthy: 0, Warning: 0, Critical: 0 };
+            devices.forEach(d => { counts[d.status] = (counts[d.status] || 0) + 1; });
+            const isLive = window.__jkFleetLive === true;
+            const tile = (icon, color, value, label, statusClass) => `
+                <div class="jakal-metric-tile flex-1 min-w-[130px] flex items-center gap-3 text-left !text-left">
+                    <i data-lucide="${icon}" class="w-7 h-7 flex-shrink-0 text-${color}"></i>
+                    <div>
+                        <div class="value text-white">${value}</div>
+                        <div class="label">${label}</div>
+                    </div>
+                </div>`;
+            el.innerHTML = `
+                <div class="flex flex-wrap gap-3 items-stretch">
+                    ${tile('monitor-check', 'emerald-400', counts.Healthy, 'Healthy')}
+                    ${tile('monitor-x', 'yellow-400', counts.Warning, 'Warning')}
+                    ${tile('shield-alert', 'red-400', counts.Critical, 'Critical')}
+                    ${tile('server', 'blue-400', devices.length, 'Total Managed')}
+                </div>
+                <p class="text-xs text-gray-500 mt-2 flex items-center gap-2">${isLive ? '<span class="jakal-live-dot"></span> Live from /api/dashboard/fleet' : 'Demo data — connect a backend and open this tab to sync real devices'}</p>
+            `;
+            safeCreateIcons();
         }
         
         window.updateClientFilter = (client) => {
@@ -2893,10 +3382,11 @@
         }
 
         function renderDeviceFleetTable() {
+            renderFleetSummaryBanner();
             const tableEl = document.getElementById('device-list-table');
             if(!tableEl) return;
-            
-            const filteredDevices = globalDashboardState.devices.filter(d => 
+
+            const filteredDevices = globalDashboardState.devices.filter(d =>
                 globalDashboardState.clientFilter === 'All' || d.client === globalDashboardState.clientFilter
             );
             
@@ -2911,11 +3401,11 @@
                     ${filteredDevices.map(dev => {
                         const style = statusStyles[dev.status] || { text: 'text-gray-400', bg: 'bg-gray-700/10', border: 'border-gray-700' };
                         return `
-                        <div class="card p-4 rounded-xl ${style.bg} border ${style.border} hover:bg-gray-900/50 transition-all">
+                        <div class="jakal-device-card ${style.bg} border ${style.border}" onclick="window.selectDevice('${dev.id}')">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="font-semibold text-white">${dev.name}</p>
-                                    <p class="text-xs text-gray-400">${dev.client}</p>
+                                    <p class="device-name">${dev.name}</p>
+                                    <p class="device-meta">${dev.client}</p>
                                 </div>
                                 <div class="action-dropdown inline-block text-right">
                                     <button class="p-1 text-gray-400 hover:text-white rounded-md hover:bg-gray-700">
@@ -2958,7 +3448,7 @@
                     }).join('')}
                 </div>
             `;
-            lucide.createIcons();
+            safeCreateIcons();
         }
         
         window.deviceAction = (action, deviceId) => {
@@ -2983,7 +3473,7 @@
 
             pane.innerHTML = `
                 <div class="p-2 h-full flex flex-col fade-in">
-                    <h4 class="text-lg font-bold text-white mb-2 flex justify-between items-center">${device.name} <span class="text-xs px-2 py-1 rounded-full ${device.status === 'Healthy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">${device.status}</span></h4>
+                    <h4 class="text-lg font-bold text-white mb-2 flex justify-between items-center">${device.name} <span class="jakal-status ${device.status === 'Healthy' ? 'jakal-status-healthy' : device.status === 'Warning' ? 'jakal-status-warning' : 'jakal-status-critical'}">${device.status}</span></h4>
                     <p class="text-sm text-gray-400 mb-4">${device.type} on ${device.os}</p>
                     
                     <div class="grid grid-cols-2 gap-2 text-sm mb-4">
@@ -3000,12 +3490,20 @@
                     </div>
                 </div>
             `;
-            lucide.createIcons();
+            safeCreateIcons();
         }
         
         function startGlobalDashboardSimulations() {
             renderDeviceFleetTable();
             const interval = setInterval(() => {
+                // js/jakal-live-data.js has synced real devices from
+                // /api/dashboard/fleet -- this loop's randomized status
+                // flips exist only to make the demo/offline view feel
+                // alive, and must never mutate genuine fleet data.
+                // __jkFleetLive (not __jkFleetSynced, which just means a
+                // sync was *attempted*) is set only once real data has
+                // actually replaced the mock array.
+                if (window.__jkFleetLive) return;
                 const randomDevice = globalDashboardState.devices[Math.floor(Math.random() * globalDashboardState.devices.length)];
                 const oldStatus = randomDevice.status;
                 
@@ -3025,7 +3523,7 @@
                         if(logEl) {
                             logEl.innerHTML += generateLogEntry(`Device status changed from ${oldStatus} to ${randomDevice.status}`, 'yellow-400', 'lucide-alert-triangle');
                             logEl.scrollTop = logEl.scrollHeight;
-                            lucide.createIcons();
+                            safeCreateIcons();
                         }
                     }
                 }
@@ -3045,7 +3543,10 @@
                 { key: 'pen_test', label: 'Penetration Testing', icon: 'shield-zap' },
                 { key: 'rbac', label: 'RBAC', icon: 'users' },
                 { key: 'auditing', label: 'Auditing', icon: 'file-check-2' },
-                { key: 'kms', label: 'Key Management', icon: 'key-round' }
+                { key: 'kms', label: 'Key Management', icon: 'key-round' },
+                { key: 'developer', label: 'Developer', icon: 'code-2' },
+                { key: 'global_system', label: 'Global System', icon: 'sliders-horizontal' },
+                { key: 'user_profile', label: 'User Profile', icon: 'user-cog' }
             ];
             
             return `
@@ -3078,7 +3579,7 @@
                 });
                 
                 contentContainer.innerHTML = window.renderSettingsTabContent(tab);
-                lucide.createIcons();
+                safeCreateIcons();
             } else if (shouldRerender) {
                 window.switchDashboardTab('settings');
             }
@@ -3095,10 +3596,73 @@
                 case 'rbac': return renderRbacTab();
                 case 'auditing': return renderAuditingTab();
                 case 'kms': return renderKmsTab();
+                case 'developer': return renderDeveloperSettingsTab();
+                case 'global_system': return renderGlobalSystemSettingsTab();
+                case 'user_profile': return renderUserProfileSettingsTab();
                 default: return renderProfileTab();
             }
         };
         
+
+        function renderDeveloperSettingsTab() {
+            return `
+                <h3 class="text-xl font-semibold text-white mb-2">Developer Settings</h3>
+                <p class="text-sm text-gray-400 mb-6">Telemetry, live debug stream, and post-quantum crypto profile. Changes require system:* permission.</p>
+                <div id="dev-settings-panel" class="space-y-4">
+                    <div class="bg-gray-900/60 border border-border-color rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-200">Telemetry</span>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="dev-telemetry" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-700 peer-checked:bg-primary-color rounded-full relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500">Anonymous usage signals for operator console health.</p>
+                    </div>
+                    <div class="bg-gray-900/60 border border-border-color rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-200">Debug log stream</span>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="dev-debug" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-700 peer-checked:bg-primary-color rounded-full relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                            </label>
+                        </div>
+                        <pre id="dev-debug-log" class="mt-3 text-xs bg-black/50 text-green-400 p-3 rounded max-h-48 overflow-y-auto font-mono">Debug stream idle. Enable and open the live panel below.</pre>
+                    </div>
+                    <div class="bg-gray-900/60 border border-border-color rounded-lg p-4">
+                        <label class="block text-sm font-medium text-gray-200 mb-2">PQC profile</label>
+                        <select id="dev-pqc-profile" class="w-full bg-gray-800 border border-border-color text-white rounded-lg px-3 py-2 text-sm">
+                            <option value="commercial">commercial (ML-DSA-65)</option>
+                            <option value="cnsa2">cnsa2 (ML-DSA-87)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-2">A process restart is required for crypto modules to fully re-bind after a profile change.</p>
+                    </div>
+                    <button id="dev-settings-save" class="w-full bg-primary-color hover:opacity-90 text-white px-4 py-3 rounded-lg font-semibold">Save developer settings</button>
+                    <p id="dev-settings-status" class="text-xs text-gray-500"></p>
+                </div>
+            `;
+        }
+
+        function renderGlobalSystemSettingsTab() {
+            return `
+                <h3 class="text-xl font-semibold text-white mb-2">Global System Settings</h3>
+                <p class="text-sm text-gray-400 mb-6">Resonance automation knobs: auto-stage threshold, severity floor, low-risk auto-approve, trade-secret isolation, sandbox lifetime. Live-wired to <code class="text-xs">/api/resonance/automation-settings</code>.</p>
+                <div id="global-system-settings-panel" class="space-y-3">
+                    <p class="text-sm text-gray-500">Loading automation settings…</p>
+                </div>
+            `;
+        }
+
+        function renderUserProfileSettingsTab() {
+            return `
+                <h3 class="text-xl font-semibold text-white mb-2">User Profile Settings</h3>
+                <p class="text-sm text-gray-400 mb-6">Identity, password, MFA, and active sessions. Backed by <code class="text-xs">/api/iam/auth/*</code>.</p>
+                <div id="user-profile-settings-panel" class="space-y-4">
+                    <p class="text-sm text-gray-500">Loading profile…</p>
+                </div>
+            `;
+        }
+
         function renderProfileTab() {
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             return `
@@ -3329,7 +3893,7 @@
 
             btn.disabled = true;
             btn.innerHTML = '<i data-lucide="loader" class="w-5 h-5 mr-2 animate-spin"></i> Simulation Running...';
-            lucide.createIcons();
+            safeCreateIcons();
             
             resultsDiv.classList.remove('hidden');
             insightsDiv.innerHTML = `<p class="text-yellow-400">Simulation running... identifying vulnerabilities...</p>`;
@@ -3391,6 +3955,7 @@
         }
 
         function renderClientCharts() {
+            if (!window.Chart) { console.warn('Chart.js unavailable (CDN blocked/offline) — skipping chart init.'); return; }
             const ctx = document.getElementById('client-threat-chart')?.getContext('2d');
             if(!ctx) return;
             
@@ -3437,7 +4002,7 @@
                     <td class="p-2">${dev.login}</td>
                 </tr>
             `).join('');
-            lucide.createIcons();
+            safeCreateIcons();
         }
         
         function startClientThreatFeed() {
@@ -3458,7 +4023,7 @@
                 feedEl.innerHTML = generateLogEntry(threat.msg, threat.color, threat.icon) + feedEl.innerHTML;
                 if(feedEl.children.length > 10) feedEl.lastElementChild.remove();
                 threatIndex++;
-                lucide.createIcons();
+                safeCreateIcons();
             }, 10000);
             activeIntervals.push(interval);
         }
@@ -3659,6 +4224,7 @@
         function startOntologySimulation() {
             const container = document.getElementById('ontology-graph-container');
             if(!container) return;
+            if (!window.d3) { console.warn('D3 unavailable (CDN blocked/offline) — skipping ontology graph.'); return; }
 
             const width = container.clientWidth;
             const height = container.clientHeight;
@@ -3730,7 +4296,7 @@
                     .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
                 node.attr("transform", d => `translate(${d.x},${d.y})`);
             });
-            lucide.createIcons();
+            safeCreateIcons();
         }
 
         function startInvestigationCanvas() {
@@ -3745,7 +4311,7 @@
             ];
 
             nodeLayer.innerHTML = initialNodes.map(n => `<div id="${n.id}" class="absolute investigation-node" style="left:${n.x}; top:${n.y};">${n.content}</div>`).join('');
-            lucide.createIcons();
+            safeCreateIcons();
         }
         
         window.runAipInvestigator = async () => {
@@ -3754,7 +4320,7 @@
             if(!nodeLayer || !notesEl) return;
             
             notesEl.innerHTML += generateLogEntry('✨ AIP Investigator running...', 'purple-400', 'lucide-sparkles');
-            lucide.createIcons();
+            safeCreateIcons();
             notesEl.scrollTop = notesEl.scrollHeight;
 
             const evidence = Array.from(document.querySelectorAll('.investigation-node'))
@@ -3764,33 +4330,30 @@
             const systemPrompt = "You are an elite AI cybersecurity investigator, part of the 'Horizon' system. You analyze scattered evidence from an ongoing investigation. Your response must be concise, actionable, and formatted as a JSON object with 'analysis' (a short string) and 'nextSteps' (an array of 3 brief strings).";
             const userQuery = `Analyze the following evidence: "${evidence}". Provide a brief analysis and 3 recommended next investigation steps.`;
 
+            // Standard JSON Schema (lowercase types), not Gemini's
+            // proprietary uppercase dialect -- passed through to whichever
+            // backend is configured (Claude/Ollama via services/llm_client.py)
+            // as a plain formatting hint in the prompt.
             const schema = {
-                type: "OBJECT",
+                type: "object",
                 properties: {
-                    "analysis": { "type": "STRING" },
-                    "nextSteps": {
-                        "type": "ARRAY",
-                        "items": { "type": "STRING" }
+                    analysis: { type: "string" },
+                    nextSteps: {
+                        type: "array",
+                        items: { type: "string" }
                     }
                 },
                 required: ["analysis", "nextSteps"]
             };
 
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: schema,
-                    temperature: 0.5,
-                }
-            };
-
             try {
-                const { json } = await callGeminiApi(payload);
-                
+                const { json } = await callJakalLLM(systemPrompt, userQuery, schema);
+                if (!json) {
+                    throw new Error("Model did not return valid JSON for the schema requested.");
+                }
+
                 notesEl.innerHTML += generateLogEntry(`AIP Analysis: ${json.analysis}`, 'purple-400', 'lucide-brain');
-                lucide.createIcons();
+                safeCreateIcons();
 
                 json.nextSteps.forEach((step, index) => {
                     const x = 60 + (index * 5);
@@ -3803,7 +4366,7 @@
                  notesEl.innerHTML += generateLogEntry(`AIP Investigator failed: ${error.message}`, 'red-500', 'lucide-x-circle');
             } finally {
                  notesEl.scrollTop = notesEl.scrollHeight;
-                 lucide.createIcons();
+                 safeCreateIcons();
             }
         };
 
@@ -3822,7 +4385,7 @@
                 </div>`;
             
             nodeLayer.innerHTML += newNodeHtml;
-            lucide.createIcons();
+            safeCreateIcons();
         }
 
         // ============================================================
@@ -3963,7 +4526,7 @@
                     <div class="mt-3 text-xs text-orange-400 font-medium">View full reference →</div>
                 </div>`;
             }).join('');
-            if (window.lucide) lucide.createIcons();
+            safeCreateIcons();
         };
 
         window._csAllEntries = {};
@@ -3994,13 +4557,421 @@
             }
         };
 
+
+        // =========================================================================
+        // SECURITY OPERATIONS — SOAR, Vulnerabilities, Integrations, Audit Trail
+        // Real backend-wired modules (no fixture data). Added 2026-09-22: these
+        // backends (routers/soar.py, routers/vulnerability_management.py,
+        // routers/integrations.py, routers/iam.py's audit log) had zero frontend
+        // surface anywhere in this dashboard despite being fully real.
+        // =========================================================================
+
+        function renderSoarPlaybooks() {
+            return `
+                <div class="space-y-6">
+                    <div class="card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold text-white mb-1">Auto-Triage an Indicator</h3>
+                        <p class="text-sm text-gray-400 mb-4">Runs the real SOAR chain: live threat-intel enrichment &rarr; decision &rarr; staged containment (if malicious) &rarr; ticket.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input id="soar-indicator" placeholder="IP, domain, URL, or hash" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm md:col-span-2">
+                            <input id="soar-agent-id" placeholder="Endpoint agent_id (optional)" class="bg-gray-800 p-2 rounded-md border border-border-color text-sm">
+                        </div>
+                        <label class="flex items-center mt-3 text-xs text-gray-400">
+                            <input id="soar-auto-contain" type="checkbox" class="mr-2">
+                            Auto-approve containment if malicious (otherwise stages for approval)
+                        </label>
+                        <button id="soar-run-btn" onclick="window.runSoarTriage()" class="w-full mt-4 bg-primary-color text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center">
+                            <i data-lucide="workflow" class="w-4 h-4 mr-2"></i>Run Auto-Triage
+                        </button>
+                        <div id="soar-result" class="hidden mt-4 bg-gray-900 rounded-lg p-3 text-sm scrollbar-style overflow-y-auto" style="max-height:260px"></div>
+                    </div>
+
+                    <div class="card p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-white">Recent Tickets</h3>
+                            <button onclick="window.loadSoarTickets()" class="text-xs text-gray-400 hover:text-white flex items-center"><i data-lucide="refresh-cw" class="w-3 h-3 mr-1"></i>Refresh</button>
+                        </div>
+                        <div id="soar-tickets-list" class="text-sm text-gray-400">Loading…</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function _soarSeverityColor(verdict) {
+            if (verdict === 'malicious') return 'red-500';
+            if (verdict === 'suspicious') return 'yellow-500';
+            return 'emerald-500';
+        }
+
+        window.loadSoarTickets = async () => {
+            const el = document.getElementById('soar-tickets-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/soar/tickets?limit=50');
+                const tickets = r.tickets || [];
+                if (!tickets.length) {
+                    el.innerHTML = '<p class="text-gray-500 italic">No tickets yet — run an auto-triage above to create one.</p>';
+                    return;
+                }
+                el.innerHTML = `
+                    <div class="overflow-x-auto scrollbar-style">
+                    <table class="w-full text-left text-xs">
+                        <thead><tr class="text-gray-500 uppercase border-b border-border-color">
+                            <th class="py-2 pr-3">Ticket</th><th class="py-2 pr-3">Indicator</th>
+                            <th class="py-2 pr-3">Verdict</th><th class="py-2 pr-3">Status</th><th class="py-2">Created</th>
+                        </tr></thead>
+                        <tbody>
+                        ${tickets.map(t => `
+                            <tr class="border-b border-border-color/50">
+                                <td class="py-2 pr-3 font-mono">${escapeHtml(t.ticket_id)}</td>
+                                <td class="py-2 pr-3">${escapeHtml(t.indicator)}</td>
+                                <td class="py-2 pr-3"><span class="text-${_soarSeverityColor(t.verdict)} font-semibold">${escapeHtml(t.verdict || 'unknown')}</span></td>
+                                <td class="py-2 pr-3">${escapeHtml(t.status)}</td>
+                                <td class="py-2 text-gray-500">${new Date(t.created_at).toLocaleString()}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    </div>
+                `;
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load tickets: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.runSoarTriage = async () => {
+            const indicator = document.getElementById('soar-indicator').value.trim();
+            const agentId = document.getElementById('soar-agent-id').value.trim();
+            const autoContain = document.getElementById('soar-auto-contain').checked;
+            const btn = document.getElementById('soar-run-btn');
+            const resultEl = document.getElementById('soar-result');
+            if (!indicator) { window.showAppModal('Error', 'Enter an indicator (IP, domain, URL, or hash) first.'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Running chain…';
+            safeCreateIcons();
+            resultEl.classList.add('hidden');
+
+            try {
+                const r = await api('/api/soar/auto-triage', {
+                    method: 'POST',
+                    body: JSON.stringify({ indicator, agent_id: agentId || undefined, auto_contain: autoContain }),
+                });
+                resultEl.innerHTML = `
+                    <p class="mb-2"><span class="text-gray-500">Verdict:</span> <span class="text-${_soarSeverityColor(r.verdict)} font-bold">${escapeHtml(r.verdict)}</span> &middot; <span class="text-gray-500">Ticket:</span> <span class="font-mono">${escapeHtml(r.ticket_id)}</span></p>
+                    ${r.chain.map(s => `<p class="text-gray-400 mb-1">&rarr; <span class="text-white">${escapeHtml(s.step)}</span> (${escapeHtml(s.action)}): ${escapeHtml(JSON.stringify(s.result))}</p>`).join('')}
+                `;
+                resultEl.classList.remove('hidden');
+                window.loadSoarTickets();
+            } catch (e) {
+                resultEl.innerHTML = `<p class="text-red-400">Auto-triage failed: ${escapeHtml(e.message)}</p>`;
+                resultEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="workflow" class="w-4 h-4 mr-2"></i>Run Auto-Triage';
+                safeCreateIcons();
+            }
+        };
+
+        function startSoarPlaybooks() {
+            window.loadSoarTickets();
+        }
+
+        // ── Vulnerability Management ────────────────────────────────────────────
+
+        function renderVulnerabilityManagement() {
+            return `
+                <div class="space-y-6">
+                    <div class="card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold text-white mb-4">Vulnerability Posture</h3>
+                        <div id="vulnman-severity-pills" class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            ${renderMetricPill('vulnman-pill-critical', 'Critical', '…', 'red-500')}
+                            ${renderMetricPill('vulnman-pill-high', 'High', '…', 'orange-500')}
+                            ${renderMetricPill('vulnman-pill-medium', 'Medium', '…', 'yellow-500')}
+                            ${renderMetricPill('vulnman-pill-low', 'Low', '…', 'blue-400')}
+                            ${renderMetricPill('vulnman-pill-total', 'Total known', '…', 'white')}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-3">Source: live NVD scans persisted to vuln_db. Run a scan below to populate this.</p>
+                    </div>
+
+                    <div class="card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold text-white mb-1">Run a Real NVD Scan</h3>
+                        <p class="text-sm text-gray-400 mb-4">Select discovered devices; targets are derived from their OS fingerprint and versioned services, then queried live against NVD. NVD's public rate limit paces this at roughly 6&ndash;7 seconds per product, so this runs in the background.</p>
+                        <select id="vulnman-device-select" multiple class="w-full bg-gray-800 p-2 rounded-md border border-border-color text-sm mb-3" style="height:120px">
+                            <option disabled>Loading devices…</option>
+                        </select>
+                        <button id="vulnman-scan-btn" onclick="window.startVulnScan()" class="w-full bg-primary-color text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center">
+                            <i data-lucide="radar" class="w-4 h-4 mr-2"></i>Scan Selected Devices
+                        </button>
+                        <div id="vulnman-scan-progress" class="hidden mt-4"></div>
+                    </div>
+
+                    <div class="card p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-white">Known CVEs</h3>
+                            <button onclick="window.loadVulnCves()" class="text-xs text-gray-400 hover:text-white flex items-center"><i data-lucide="refresh-cw" class="w-3 h-3 mr-1"></i>Refresh</button>
+                        </div>
+                        <div id="vulnman-cve-list" class="text-sm text-gray-400 max-h-96 overflow-y-auto scrollbar-style">Loading…</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function _cvssColor(score) {
+            if (score >= 9) return 'red-500';
+            if (score >= 7) return 'orange-500';
+            if (score >= 4) return 'yellow-500';
+            return 'blue-400';
+        }
+
+        window.loadVulnCves = async () => {
+            const listEl = document.getElementById('vulnman-cve-list');
+            if (!listEl) return;
+            try {
+                const r = await api('/api/vulnerabilities/cves?limit=200');
+                const vulns = r.vulnerabilities || [];
+                const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+                vulns.forEach(v => { if (counts[v.severity] !== undefined) counts[v.severity]++; });
+                const setPill = (id, val) => { const e = document.getElementById(id); if (e) e.querySelector('span:last-child').textContent = val; };
+                setPill('vulnman-pill-critical', counts.CRITICAL);
+                setPill('vulnman-pill-high', counts.HIGH);
+                setPill('vulnman-pill-medium', counts.MEDIUM);
+                setPill('vulnman-pill-low', counts.LOW);
+                setPill('vulnman-pill-total', vulns.length);
+
+                if (!vulns.length) {
+                    listEl.innerHTML = '<p class="text-gray-500 italic">No CVEs recorded yet — run a scan above.</p>';
+                    return;
+                }
+                listEl.innerHTML = vulns.map(v => `
+                    <div class="p-3 bg-gray-900 rounded-lg mb-2 flex items-start justify-between">
+                        <div>
+                            <p class="font-mono text-white text-xs">${escapeHtml(v.vuln_id)}</p>
+                            <p class="text-gray-400 text-xs mt-1">${escapeHtml((v.description || '').slice(0, 160))}</p>
+                        </div>
+                        <span class="text-${_cvssColor(v.cvss_score || 0)} font-bold text-sm ml-3 flex-shrink-0">${v.cvss_score != null ? v.cvss_score.toFixed(1) : '—'}</span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                listEl.innerHTML = `<p class="text-red-400">Failed to load CVEs: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.loadVulnDevices = async () => {
+            const sel = document.getElementById('vulnman-device-select');
+            if (!sel) return;
+            try {
+                const r = await api('/api/fleet/devices?limit=200');
+                const devices = r.devices || [];
+                sel.innerHTML = devices.length
+                    ? devices.map(d => `<option value="${d.device_id}">${escapeHtml(d.hostname || d.ip_address || d.device_id)} — ${escapeHtml(d.os_fingerprint || 'unknown OS')}</option>`).join('')
+                    : '<option disabled>No devices discovered yet</option>';
+            } catch (e) {
+                sel.innerHTML = `<option disabled>Failed to load devices: ${escapeHtml(e.message)}</option>`;
+            }
+        };
+
+        window.startVulnScan = async () => {
+            const sel = document.getElementById('vulnman-device-select');
+            const ids = Array.from(sel.selectedOptions).map(o => o.value);
+            const btn = document.getElementById('vulnman-scan-btn');
+            const progressEl = document.getElementById('vulnman-scan-progress');
+            if (!ids.length) { window.showAppModal('Error', 'Select at least one device to scan.'); return; }
+
+            btn.disabled = true;
+            progressEl.classList.remove('hidden');
+            progressEl.innerHTML = '<p class="text-gray-400 text-sm">Deriving scan targets…</p>';
+
+            try {
+                const start = await api('/api/vulnerabilities/scan/immediate', {
+                    method: 'POST', body: JSON.stringify({ device_ids: ids }),
+                });
+                const scanId = start.scan_id;
+                progressEl.innerHTML = `<p class="text-gray-400 text-sm mb-2">Scanning ${start.targets_total} target(s): ${start.targets.map(t => escapeHtml(t.name + ' ' + t.version)).join(', ')}</p><div class="w-full bg-gray-800 rounded-full h-3"><div id="vulnman-progress-bar" class="bg-primary-color h-3 rounded-full transition-all" style="width:0%"></div></div><p id="vulnman-progress-text" class="text-xs text-gray-500 mt-1">0%</p>`;
+
+                const poll = async () => {
+                    const p = await api(`/api/vulnerabilities/scan/${scanId}/progress`);
+                    const bar = document.getElementById('vulnman-progress-bar');
+                    const text = document.getElementById('vulnman-progress-text');
+                    if (bar) bar.style.width = `${p.progress_percentage}%`;
+                    if (text) text.textContent = `${p.progress_percentage}% — ${p.findings_so_far} finding(s) so far (${p.critical} critical, ${p.high} high)`;
+                    if (p.status === 'completed' || p.status === 'failed') {
+                        if (p.status === 'failed') progressEl.innerHTML += `<p class="text-red-400 text-sm mt-2">Scan failed: ${escapeHtml(p.error || 'unknown error')}</p>`;
+                        else progressEl.innerHTML += `<p class="text-emerald-400 text-sm mt-2">Scan complete.</p>`;
+                        window.loadVulnCves();
+                        return;
+                    }
+                    setTimeout(poll, 2000);
+                };
+                poll();
+            } catch (e) {
+                progressEl.innerHTML = `<p class="text-red-400">Scan failed to start: ${escapeHtml(e.message)}</p>`;
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        function startVulnerabilityManagement() {
+            window.loadVulnCves();
+            window.loadVulnDevices();
+        }
+
+        // ── Integrations Vault ──────────────────────────────────────────────────
+
+        function renderIntegrationsVault() {
+            return `
+                <div class="card p-6 rounded-xl">
+                    <h3 class="text-xl font-semibold text-white mb-1">Integration Keys</h3>
+                    <p class="text-sm text-gray-400 mb-4">Keys are encrypted at rest (AES-256-GCM) and never returned once saved &mdash; only whether each provider is configured.</p>
+                    <div id="intvault-provider-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">Loading…</div>
+                </div>
+            `;
+        }
+
+        window.loadIntegrationsStatus = async () => {
+            const el = document.getElementById('intvault-provider-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/integrations/status');
+                const providers = r.integrations || [];
+                el.innerHTML = providers.map(p => `
+                    <div class="bg-gray-800/60 rounded-lg p-4 border border-border-color">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-white text-sm">${escapeHtml(p.label)}</h4>
+                            <span class="text-xs px-2 py-1 rounded-full ${p.configured ? 'bg-emerald-900 text-emerald-400' : 'bg-gray-700 text-gray-400'}">${p.configured ? ('configured' + (p.source === 'env' ? ' (env)' : '')) : 'not configured'}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">${escapeHtml(p.kind)} &middot; free tier: ${escapeHtml(p.free)}</p>
+                        <div class="flex gap-2">
+                            <input type="password" id="intvault-input-${p.provider}" placeholder="${escapeHtml(p.secret_label)}" class="flex-1 bg-gray-900 p-2 rounded-md border border-border-color text-xs">
+                            <button onclick="window.saveIntegrationKey('${p.provider}')" class="bg-primary-color text-white px-3 py-1 rounded-md text-xs font-semibold">Save</button>
+                        </div>
+                        <div class="flex gap-3 mt-2 text-xs">
+                            <button onclick="window.testIntegration('${p.provider}')" class="text-gray-400 hover:text-white">Test connection</button>
+                            ${p.configured && p.source === 'vault' ? `<button onclick="window.deleteIntegrationKey('${p.provider}')" class="text-red-400 hover:text-red-300">Remove</button>` : ''}
+                            ${p.docs ? `<a href="${p.docs}" target="_blank" class="text-gray-500 hover:text-gray-300">Get a key &rarr;</a>` : ''}
+                        </div>
+                        <p id="intvault-msg-${p.provider}" class="text-xs mt-2"></p>
+                    </div>
+                `).join('');
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Failed to load integrations: ${escapeHtml(e.message)}</p>`;
+            }
+        };
+
+        window.saveIntegrationKey = async (provider) => {
+            const input = document.getElementById(`intvault-input-${provider}`);
+            const msg = document.getElementById(`intvault-msg-${provider}`);
+            const secret = input.value.trim();
+            if (!secret) { msg.textContent = 'Enter a value first.'; msg.className = 'text-xs mt-2 text-red-400'; return; }
+            try {
+                await api('/api/integrations/key', { method: 'POST', body: JSON.stringify({ provider, secret }) });
+                msg.textContent = 'Saved.'; msg.className = 'text-xs mt-2 text-emerald-400';
+                input.value = '';
+                window.loadIntegrationsStatus();
+            } catch (e) {
+                msg.textContent = e.message; msg.className = 'text-xs mt-2 text-red-400';
+            }
+        };
+
+        window.deleteIntegrationKey = async (provider) => {
+            try {
+                await api(`/api/integrations/key/${provider}`, { method: 'DELETE' });
+                window.loadIntegrationsStatus();
+            } catch (e) {
+                window.showAppModal('Error', e.message);
+            }
+        };
+
+        window.testIntegration = async (provider) => {
+            const msg = document.getElementById(`intvault-msg-${provider}`);
+            msg.textContent = 'Testing…'; msg.className = 'text-xs mt-2 text-gray-400';
+            try {
+                const r = await api(`/api/integrations/test/${provider}`, { method: 'POST' });
+                msg.textContent = r.message || r.status;
+                msg.className = `text-xs mt-2 ${r.ok ? 'text-emerald-400' : 'text-yellow-400'}`;
+            } catch (e) {
+                msg.textContent = e.message; msg.className = 'text-xs mt-2 text-red-400';
+            }
+        };
+
+        function startIntegrationsVault() {
+            window.loadIntegrationsStatus();
+        }
+
+        // ── Audit Trail ──────────────────────────────────────────────────────────
+
+        function renderAuditTrail() {
+            return `
+                <div class="card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-white">Audit Trail</h3>
+                        <button onclick="window.loadAuditTrail()" class="text-xs text-gray-400 hover:text-white flex items-center"><i data-lucide="refresh-cw" class="w-3 h-3 mr-1"></i>Refresh</button>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-4">Every authenticated action recorded by the IAM layer &mdash; who did what, and when.</p>
+                    <div id="audit-trail-list" class="text-sm text-gray-400 max-h-[32rem] overflow-y-auto scrollbar-style">Loading…</div>
+                </div>
+            `;
+        }
+
+        window.loadAuditTrail = async () => {
+            const el = document.getElementById('audit-trail-list');
+            if (!el) return;
+            try {
+                const r = await api('/api/iam/audit/log?limit=200');
+                const entries = r.entries || r || [];
+                const list = Array.isArray(entries) ? entries : [];
+                if (!list.length) {
+                    el.innerHTML = '<p class="text-gray-500 italic">No audit entries yet.</p>';
+                    return;
+                }
+                el.innerHTML = `
+                    <div class="overflow-x-auto scrollbar-style">
+                    <table class="w-full text-left text-xs">
+                        <thead><tr class="text-gray-500 uppercase border-b border-border-color">
+                            <th class="py-2 pr-3">Time</th><th class="py-2 pr-3">Actor</th>
+                            <th class="py-2 pr-3">Action</th><th class="py-2 pr-3">Outcome</th><th class="py-2">Detail</th>
+                        </tr></thead>
+                        <tbody>
+                        ${list.map(a => `
+                            <tr class="border-b border-border-color/50">
+                                <td class="py-2 pr-3 text-gray-500">${a.timestamp ? new Date(a.timestamp).toLocaleString() : '—'}</td>
+                                <td class="py-2 pr-3">${escapeHtml(a.actor_label || a.actor_user_id || 'system')}</td>
+                                <td class="py-2 pr-3 font-mono">${escapeHtml(a.action || '')}</td>
+                                <td class="py-2 pr-3"><span class="${a.outcome === 'success' ? 'text-emerald-400' : a.outcome === 'denied' ? 'text-yellow-400' : 'text-red-400'}">${escapeHtml(a.outcome || '')}</span></td>
+                                <td class="py-2 text-gray-500">${escapeHtml(typeof a.detail === 'string' ? a.detail : JSON.stringify(a.detail || {}))}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    </div>
+                `;
+            } catch (e) {
+                if (e.status === 401) {
+                    el.innerHTML = '<p class="text-yellow-400">Sign in required to view the audit trail. Go to <b>Global Settings &amp; Security</b> to sign in.</p>';
+                } else if (e.status === 403) {
+                    el.innerHTML = '<p class="text-yellow-400">Your account does not have the <code>audit:read</code> permission.</p>';
+                } else {
+                    el.innerHTML = `<p class="text-red-400">Failed to load audit trail: ${escapeHtml(e.message)}</p>`;
+                }
+            }
+        };
+
+        function startAuditTrail() {
+            window.loadAuditTrail();
+        }
+
     </script>
 
-    <!-- Operator Command Console: self-contained, 404-proof, live+demo. -->
+    <!-- Operator console, reusable controls, and live-data bridge (js/) --
+         restored 2026-09-21: index.html was swapped to the xialot lineage
+         in PR #6 without its own <script src="./js/..."> tags, so these
+         3 files (596 lines: an operator console with slash-commands and
+         an inline approval gate, a per-module actions/settings popover,
+         and a fetch bridge that swaps the mock fleet array for real
+         /api/dashboard/fleet data) were served by app.py but never
+         loaded by any page. Order does not matter -- each self-inits on
+         DOMContentLoaded. -->
     <script src="./js/operator-console.js"></script>
     <script src="./js/jakal-controls.js"></script>
     <script src="./js/jakal-live-data.js"></script>
-    <script src="./js/jakal-integrations.js"></script>
 
     <!-- JAKAL backend integration: live telemetry SSE + button wiring.
          Skipped on GitHub Pages (static demo) - only runs against a live backend. -->

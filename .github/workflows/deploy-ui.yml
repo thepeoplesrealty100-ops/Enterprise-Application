@@ -1,0 +1,57 @@
+# Publishes the static project page in site/ to GitHub Pages.
+#
+# It publishes site/ and nothing else, deliberately. JAKAL is a FastAPI
+# backend with an embedded DuckDB database, so the operator dashboard
+# (index.html at the repo root) cannot function on static hosting --
+# every /api/* call 404s, and GitHub's own 404 HTML then gets rendered
+# into the dashboard's panels. Publishing the repo root shipped exactly
+# that: a dashboard that looked real and was permanently dead.
+# site/index.html is a documentation page that tells people how to run
+# the real thing locally instead.
+#
+# There used to be a second workflow (static.yml) that also deployed to
+# Pages on every push to main, sharing this same `pages` concurrency
+# group, with `path: '.'` -- the entire repository, backend included.
+# The two raced on every push and whichever finished last won, so what
+# was actually live was nondeterministic. It was removed; this is now
+# the only Pages deploy.
+name: Deploy project page to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "site/**"
+      - ".github/workflows/deploy-ui.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

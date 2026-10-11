@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JAKAL — Enterprise Security Platform</title>
+<meta name="description" content="A self-hosted security operations platform: pentest pipeline, human approval gates, post-quantum signed audit trail. Runs on your own machine with Docker.">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --sunk:#0b0f14;
+    --ink:#e6edf3; --ink2:#9daab7; --muted:#6e7f8f;
+    --rule:#232c36; --accent:#f0a04b; --accent2:#4b9ef0;
+    --ok:#3fb950;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:16px; line-height:1.65;
+  }
+  code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  a{color:var(--accent2)}
+  .wrap{max-width:880px; margin:0 auto; padding-inline:20px; padding-block:0}
+
+  header{border-bottom:1px solid var(--rule); background:linear-gradient(180deg,#11171f,var(--bg))}
+  header .wrap{padding-block:56px 44px}
+  .badge{
+    display:inline-block; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--accent); border:1px solid var(--rule); border-radius:999px;
+    padding:.28em .85em; margin-bottom:18px;
+  }
+  h1{font-size:clamp(2rem,6vw,2.9rem); margin:0 0 6px; letter-spacing:-.02em; line-height:1.15}
+  .tag{color:var(--ink2); font-size:clamp(1rem,2.6vw,1.15rem); margin:0; max-width:56ch}
+  .cta{display:flex; flex-wrap:wrap; gap:10px; margin-top:26px}
+  .btn{
+    display:inline-block; text-decoration:none; font-weight:600; font-size:.92rem;
+    padding:.6em 1.15em; border-radius:7px; border:1px solid var(--rule);
+    background:var(--panel); color:var(--ink);
+  }
+  .btn.primary{background:var(--accent); color:#1b1206; border-color:var(--accent)}
+  .btn:hover{border-color:var(--accent)}
+
+  .notice{
+    border:1px solid var(--rule); border-left:3px solid var(--accent);
+    background:var(--panel); border-radius:0 8px 8px 0;
+    padding:14px 18px; margin:34px 0 0;
+  }
+  .notice p{margin:0; color:var(--ink2); font-size:.93rem}
+  .notice strong{color:var(--ink)}
+
+  section{border-top:1px solid var(--rule)}
+  section .wrap{padding-block:44px}
+  h2{font-size:1.28rem; margin:0 0 4px; letter-spacing:-.01em}
+  .sub{color:var(--muted); font-size:.9rem; margin:0 0 22px}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px}
+  .card{background:var(--panel); border:1px solid var(--rule); border-radius:9px; padding:16px 18px}
+  .card h3{margin:0 0 6px; font-size:.98rem}
+  .card p{margin:0; color:var(--ink2); font-size:.89rem}
+
+  pre{
+    background:var(--sunk); border:1px solid var(--rule); border-radius:8px;
+    padding:14px 16px; overflow-x:auto; font-size:.86rem; margin:0 0 12px;
+  }
+  pre code{color:var(--ink)}
+  .cmt{color:var(--muted)}
+
+  ol.steps{padding-left:0; list-style:none; counter-reset:s; margin:0}
+  ol.steps li{counter-increment:s; position:relative; padding-left:34px; margin-bottom:20px}
+  ol.steps li::before{
+    content:counter(s); position:absolute; left:0; top:1px;
+    width:23px; height:23px; border-radius:50%; background:var(--panel);
+    border:1px solid var(--rule); color:var(--accent);
+    font-size:.78rem; font-weight:700; display:grid; place-items:center;
+  }
+  ol.steps h3{margin:0 0 7px; font-size:.97rem; font-weight:600}
+
+  table{width:100%; border-collapse:collapse; font-size:.9rem}
+  .scroll{overflow-x:auto}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{color:var(--muted); font-size:.74rem; text-transform:uppercase; letter-spacing:.07em; white-space:nowrap}
+  td:first-child{white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+
+  blockquote{
+    margin:0; padding:2px 0 2px 18px; border-left:2px solid var(--rule);
+    color:var(--ink2); font-size:.97rem;
+  }
+  footer{border-top:1px solid var(--rule); color:var(--muted); font-size:.85rem}
+  footer .wrap{padding-block:26px 40px}
+  footer a{color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="badge">Self-hosted · Open source</span>
+    <h1>JAKAL</h1>
+    <p class="tag">A security operations platform you run yourself — penetration-testing pipeline,
+    human approval gates on anything that touches a real machine, and a post-quantum-signed audit
+    trail behind all of it.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/thepeoplesrealty100-ops/Enterprise-Application">View on GitHub</a>
+      <a class="btn" href="https://github.com/thepeoplesrealty100-ops/Enterprise-Application/blob/main/DEPLOYMENT_GUIDE.md">Deployment guide</a>
+      <a class="btn" href="https://github.com/thepeoplesrealty100-ops/Enterprise-Application/blob/main/README.md">README</a>
+    </div>
+
+    <div class="notice">
+      <p><strong>This page is documentation, not a running instance.</strong> JAKAL is a FastAPI
+      backend with an embedded DuckDB database, so it can't run on static hosting like GitHub Pages —
+      there's no live demo here. Start it on your own machine with the one command below and the
+      dashboard comes up at <code>localhost:8000</code>.</p>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Run it</h2>
+    <p class="sub">Docker is the path that's actually exercised by the repo's own tooling.</p>
+<pre><code><span class="cmt"># from the repo root</span>
+docker compose up -d --build</code></pre>
+    <p style="margin:0;color:var(--ink2);font-size:.92rem">
+      Then open <code>http://localhost:8000</code> for the operator dashboard, or
+      <code>http://localhost:8000/docs</code> for the auto-generated API reference.
+      Want it pre-populated with a realistic sample engagement to click through?
+      Run <code>python3 seed_demo_data.py</code> from <code>backend/</code> first.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What's in it</h2>
+    <p class="sub">The parts that are built and tested, not the roadmap.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Pentest pipeline</h3>
+        <p>Recon → enumeration → web → report, staged through real security agents rather than
+        canned output.</p>
+      </div>
+      <div class="card">
+        <h3>Human approval gates</h3>
+        <p>Nothing that reaches out and touches a machine it doesn't own runs on its own. Isolation
+        and quarantine are staged as approval requests a person decides on.</p>
+      </div>
+      <div class="card">
+        <h3>Post-quantum audit trail</h3>
+        <p>ML-DSA-65 (Dilithium3) signs agent actions and audit entries, so the log is
+        non-repudiable.</p>
+      </div>
+      <div class="card">
+        <h3>Identity &amp; access</h3>
+        <p>Bcrypt password hashing, TOTP multi-factor, role-based permissions, and an audit log on
+        sensitive endpoints.</p>
+      </div>
+      <div class="card">
+        <h3>Ontology engine</h3>
+        <p>A graph of assets and findings that supports attack-path and blast-radius queries across
+        related hosts.</p>
+      </div>
+      <div class="card">
+        <h3>Quantum engine</h3>
+        <p>Real Qiskit circuits on the local Aer simulator, or routed to IBM hardware if you supply
+        a token.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How it's put together</h2>
+    <p class="sub">Deliberately boring where it counts: one process, one file for the database.</p>
+    <div class="scroll">
+    <table>
+      <tbody>
+        <tr><td><strong>Backend</strong></td><td>FastAPI (Python 3.11), 45 routers mounted on one app</td></tr>
+        <tr><td><strong>Database</strong></td><td>DuckDB, embedded — a single file on disk, no external database to run</td></tr>
+        <tr><td><strong>Dashboard</strong></td><td>Plain HTML and vanilla JavaScript, served by the backend. No build step, no bundler</td></tr>
+        <tr><td><strong>Deployment</strong></td><td>Docker Compose. Kubernetes manifests are included but not cluster-tested</td></tr>
+        <tr><td><strong>LLM</strong></td><td>Ollama by default, or Claude if you set an API key. Optional either way</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Getting oriented</h2>
+    <p class="sub">A reasonable first half-hour.</p>
+    <ol class="steps">
+      <li>
+        <h3>Bring it up and seed the demo data</h3>
+        <p style="margin:0;color:var(--ink2);font-size:.9rem">Gives you a sample engagement with
+        scope, findings, MITRE mappings and a pending approval request already in place.</p>
+      </li>
+      <li>
+        <h3>Open the dashboard at <code>localhost:8000</code></h3>
+        <p style="margin:0;color:var(--ink2);font-size:.9rem">Global Dashboard shows fleet posture
+        and recent agent activity pulled from the live database.</p>
+      </li>
+      <li>
+        <h3>Walk an approval through the gate</h3>
+        <p style="margin:0;color:var(--ink2);font-size:.9rem">Find the pending request, approve it,
+        and watch the signed decision land in the audit trail. This is the core safety loop.</p>
+      </li>
+      <li>
+        <h3>Browse <code>/docs</code></h3>
+        <p style="margin:0;color:var(--ink2);font-size:.9rem">Swagger UI generated from the routes
+        that are actually mounted — the honest API surface, not a written list that can drift.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>From the author</h2>
+    <blockquote>
+      <p style="margin:0 0 10px">“I've worked with computers and software applications for some time.
+      I won't claim to know coding or anything real technical, but what I do know is a good operation
+      and process for a system to run. I know there are a lot of things that go behind it, but this is
+      just an idea I had.</p>
+      <p style="margin:0">Anyways, if you want to help or add on or contribute, please feel free.
+      I'm not prideful or boastful about it, so I'm open to constructive feedback.”</p>
+    </blockquote>
+    <p style="margin:18px 0 0;font-size:.92rem">
+      Contributions and issues are welcome on
+      <a href="https://github.com/thepeoplesrealty100-ops/Enterprise-Application">GitHub</a>.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    JAKAL — self-hosted security operations platform ·
+    <a href="https://github.com/thepeoplesrealty100-ops/Enterprise-Application">source</a> ·
+    <a href="https://github.com/thepeoplesrealty100-ops/Enterprise-Application/blob/main/DEPLOYMENT_GUIDE.md">deployment</a>
+    <br>
+    Intended for authorized security testing on systems you own or have written permission to test.
+  </div>
+</footer>
+
+</body>
+</html>

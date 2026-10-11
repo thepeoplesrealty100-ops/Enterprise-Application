@@ -56,35 +56,59 @@ def main():
     py_version = subprocess.check_output("python --version", shell=True).decode().strip()
     print(f"✅ Python Version: {py_version}")
     
+    # Install the real dependency set. This used to name five packages
+    # inline (fastapi uvicorn duckdb pydantic httpx), a small fraction of
+    # requirements.txt -- the backend also needs the crypto stack, qiskit,
+    # bcrypt/pyjwt/pyotp and psutil, and app.py imports psutil at module
+    # scope, so it would not even start with only those five.
     if not run_command(
-        "pip install -q fastapi uvicorn duckdb pydantic httpx",
-        description="Installing Python dependencies..."
+        f'pip install -q -r "{backend_dir / "requirements.txt"}"',
+        description="Installing Python dependencies from backend/requirements.txt..."
     ):
         print("⚠️  Some dependencies may not have installed. Continuing anyway...")
-    
+
     # Phase 2: Database Initialization
     print("\n" + "="*60)
     print("PHASE 2: DATABASE INITIALIZATION")
     print("="*60)
-    
-    # Initialize DuckDB schema
-    schema_script = """
-import sys
-sys.path.insert(0, '.')
-from backend.database_schema_v4 import initialize_database
-initialize_database('jakal.duckdb')
-print("✅ Database schema initialized successfully")
-"""
-    
-    with open("_init_db.py", "w") as f:
-        f.write(schema_script)
-    
-    run_command(
-        f"python _init_db.py",
-        cwd=project_root,
-        description="Initializing DuckDB schema..."
+
+    # DuckDBManager.__init__ calls initialize_schema(), which creates every
+    # sequence and table the application uses. Constructing it against the
+    # target path IS the migration -- there is no separate schema step.
+    #
+    # This previously wrote a temporary _init_db.py that imported
+    # backend.database_schema_v4.initialize_database. That module is a
+    # Postgres-flavoured schema (JSONB columns) that raises
+    # "Type with name JSONB does not exist" on its very first CREATE TABLE
+    # under DuckDB, so this phase had never once succeeded -- run_command
+    # printed the failure and carried on. It also defined its own
+    # incompatible threat_intel and audit_log, which would have collided
+    # with the real ones had it ever run. That module has been removed.
+    db_path = os.getenv("DUCKDB_PATH", str(project_root / "data" / "jakal.duckdb"))
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+    schema_script = (
+        "import sys\n"
+        f"sys.path.insert(0, r'{backend_dir}')\n"
+        "from database import DuckDBManager\n"
+        f"db = DuckDBManager(r'{db_path}')\n"
+        "n = len(db.conn.execute(\"SELECT table_name FROM information_schema.tables \"\n"
+        "                        \"WHERE table_schema='main'\").fetchall())\n"
+        "db.conn.close()\n"
+        "print(f'Database schema initialized: {n} tables at {r\"" + db_path + "\"}')\n"
     )
-    
+
+    init_script = project_root / "_init_db.py"
+    try:
+        init_script.write_text(schema_script, encoding="utf-8")
+        run_command(
+            f'python "{init_script}"',
+            cwd=project_root,
+            description=f"Initializing DuckDB schema at {db_path}...",
+        )
+    finally:
+        # Don't leave scratch files in the user's repo.
+        init_script.unlink(missing_ok=True)
+
     # Phase 3: Verification
     print("\n" + "="*60)
     print("PHASE 3: DEPLOYMENT VERIFICATION")

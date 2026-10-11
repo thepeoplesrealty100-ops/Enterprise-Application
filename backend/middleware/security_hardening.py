@@ -310,31 +310,36 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         
         # Content Security Policy
-        # NOTE: the operator UI (index.html) intentionally loads a few pinned
-        # front-end libraries from public CDNs — Tailwind, Lucide icons,
-        # Chart.js, three.js, d3 — and Firebase auth/firestore from gstatic.
-        # The CSP must allow exactly those origins or the whole styled UI,
-        # icons, charts and 3D globe silently fail to load. Keep this list in
-        # sync with the <script>/<link> tags in index.html.
-        # A2: all front-end libraries (Tailwind, Lucide, Chart.js, three.js, d3,
-        # Inter) are now bundled locally under /css and /js/vendor, so the CSP no
-        # longer needs to allow third-party CDNs OR 'unsafe-eval' (that was only
-        # required by the Tailwind play-CDN). Tighter = smaller attack surface.
-        # www.gstatic.com stays for the optional Firebase auth/DB SDK only.
+        #
+        # index.html (served at same origin) loads a fixed set of external
+        # resources that must be explicitly allowlisted here or the browser
+        # silently drops them with no visible error: Tailwind's play-CDN
+        # script (generates all utility CSS classes at runtime -- without
+        # it the entire page renders unstyled), Lucide icons, Chart.js,
+        # Three.js, D3, a Google Fonts stylesheet + font files, a YouTube
+        # embed (Awareness Training page), and the Gemini API (phishing
+        # email generator, called directly from the browser). This is a
+        # host allowlist, not a wildcard -- only these specific origins.
+        # Verified against the actual <script>/<link> tags in index.html;
+        # keep this list in sync if those tags change.
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://www.gstatic.com; "
-            "style-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline' "
+            "https://cdn.tailwindcss.com https://unpkg.com "
+            "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
+            "https://d3js.org; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "img-src 'self' data: https:; "
-            "font-src 'self' data:; "
-            "connect-src 'self' ws: wss: https://www.gstatic.com https://*.googleapis.com; "
-            "frame-ancestors 'self'; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "connect-src 'self' ws: wss: https://generativelanguage.googleapis.com; "
+            "frame-src https://www.youtube.com; "
+            "frame-ancestors 'none'; "
             "base-uri 'self'; "
             "form-action 'self'"
         )
         
         # Prevent clickjacking
-        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["X-Frame-Options"] = "DENY"
         
         # Prevent MIME type sniffing
         response.headers["X-Content-Type-Options"] = "nosniff"

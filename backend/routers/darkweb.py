@@ -99,11 +99,7 @@ class ManualFindingRequest(BaseModel):
 
 def _hibp_check_account(email: str) -> dict:
     """Real HIBP v3 lookup. Requires HIBP_API_KEY (paid tier — HIBP's own requirement)."""
-    try:
-        from services.secrets import get_secret
-        api_key = get_secret("hibp") or ""
-    except Exception:
-        api_key = os.getenv("HIBP_API_KEY", "")
+    api_key = os.getenv("HIBP_API_KEY", "")
     if not api_key:
         return {"configured": False, "breaches": [], "note": "Set HIBP_API_KEY to enable live breach checks."}
     try:
@@ -132,11 +128,7 @@ async def connector_status():
     rate-limit unit or waiting on a watchlist to exist.
     """
     _require()
-    try:
-        from services.secrets import get_secret
-        configured = bool(get_secret("hibp"))
-    except Exception:
-        configured = bool(os.getenv("HIBP_API_KEY"))
+    configured = bool(os.getenv("HIBP_API_KEY"))
     return {
         "connector": "hibp",
         "configured": configured,

@@ -216,9 +216,15 @@ async def test_frontend_serves_ui_without_exposing_repo_source(client):
     root. That introduced a second issue: mounting the ENTIRE repo root as
     StaticFiles serves the whole backend source tree and .git over HTTP
     (confirmed live: GET /backend/database.py and GET /.git/config both
-    returned 200 with real file contents) -- fixed by mounting only the
-    js/ subdirectory index.html actually needs, plus one explicit
-    /integration.js route, instead of the whole tree.
+    returned 200 with real file contents) -- fixed by serving only the
+    specific files index.html actually needs through named, explicit
+    FileResponse routes instead of mounting the whole tree.
+
+    (js/api-client.js was one such asset when this test was written; it
+    and js/integration-loader.js were later found to be dead code -- never
+    instantiated anywhere despite being loaded -- and were deleted. The
+    js/ mount itself stays: three other files still live there and are
+    genuinely loaded by index.html. See app.py's frontend-mount comment.)
     """
     root = await client.get("/")
     assert root.status_code == 200
@@ -227,15 +233,44 @@ async def test_frontend_serves_ui_without_exposing_repo_source(client):
     integration_js = await client.get("/integration.js")
     assert integration_js.status_code == 200
 
-    api_client_js = await client.get("/js/api-client.js")
-    assert api_client_js.status_code == 200
+    world_land_map = await client.get("/world_land_map.json")
+    assert world_land_map.status_code == 200
 
-    # Must NOT be servable -- these are backend source, git internals, and
-    # docs, none of which index.html references.
+    # Must NOT be servable -- these are backend source, git internals,
+    # docs, and the two dead JS files removed above, none of which
+    # index.html references.
     for sensitive_path in ["/backend/database.py", "/backend/config/__init__.py",
-                            "/.git/config", "/docs/v2.6-global-settings-security-api.md"]:
+                            "/.git/config", "/docs/v2.6-global-settings-security-api.md",
+                            "/js/api-client.js", "/js/integration-loader.js"]:
         resp = await client.get(sensitive_path)
         assert resp.status_code == 404, f"{sensitive_path} should not be servable, got {resp.status_code}"
+
+
+@pytest.mark.asyncio
+async def test_frontend_js_directory_assets_are_actually_servable(client):
+    """
+    Positive counterpart to the negative-path assertions above: the three
+    real files under js/ (operator-console.js, jakal-controls.js,
+    jakal-live-data.js -- 596 lines total: an operator console with
+    slash-commands and an inline approval gate, a per-module
+    actions/settings popover, and a fetch bridge that swaps the mock
+    fleet array for real /api/dashboard/fleet data) must actually be
+    servable, not merely "not 404 for the deleted dead files."
+
+    This test runs against the checked-out source tree, where js/
+    already exists on disk, so it cannot catch a packaging bug where a
+    Docker image's COPY step omits the directory entirely -- exactly
+    what happened here: app.py's /js mount code was always correct, but
+    the image never had a js/ directory to mount, so it silently logged
+    "Frontend js/ directory missing" and index.html loaded with all
+    three of those features absent, undetected by this suite. That class
+    of bug is only caught by actually building the image (or running it)
+    and requesting these paths, which is exactly how it was found here.
+    """
+    for name in ("operator-console.js", "jakal-controls.js", "jakal-live-data.js"):
+        resp = await client.get(f"/js/{name}")
+        assert resp.status_code == 200, f"/js/{name} should be servable, got {resp.status_code}"
+        assert "javascript" in resp.headers.get("content-type", "") or len(resp.text) > 0
 
 
 def test_locked_connection_description_is_correct_after_chained_and_separate_access(tmp_path):

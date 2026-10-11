@@ -51,7 +51,8 @@ try:
     from threat_scoring import score_recon_finding
     from security_agents.edr_mdr import DEFAULT_PLAYBOOKS
     from security_agents.vm_orchestrator import get_vm_orchestrator
-    from security_agents.edr_connector import enforce_containment
+    from security_agents.edr_hardened import HardenedEnforcementOrchestrator
+    from security_agents.compliance_constraints import validate_containment_compliance
     from security_agents.exploit_agent import ExploitAgent
     _db = get_db_manager()
     _vm = get_vm_orchestrator(_db)
@@ -252,11 +253,14 @@ async def triage(req: TriageRequest, request: Request):
     threshold = req.auto_stage_threshold
     if threshold is None:
         threshold = _db.get_policy_value("response_auto_stage_threshold", 0.8)
+    # Hard lower bound: even an explicit per-call threshold below this never
+    # auto-stages. See routers/resonance.py's auto_stage_severity_floor.
+    severity_floor = _db.get_policy_value("auto_stage_severity_floor", 0.5)
 
     staged_request_id = None
     staged_risk_level = None
     maya_challenge = None
-    if severity >= threshold and recommended:
+    if severity >= threshold and severity >= severity_floor and recommended:
         staged_request_id = str(uuid.uuid4())
         staged_risk_level = "HIGH" if severity >= 0.9 else "MEDIUM"
         pqc_entry = _pqc_sign("triage_auto_stage", {
@@ -441,9 +445,12 @@ async def enforce_action(approval_request_id: str, request: Request,
     """
     Executes an already-APPROVED isolate_host_staged / quarantine_host_staged
     decision — never called automatically, never callable before a human
-    has approved at POST /api/approval/{id}/approve. See
-    security_agents/edr_connector.py for what "enforce" actually means:
-    real Docker network isolation for a JAKAL-owned sandbox, or a signed
+    has approved at POST /api/approval/{id}/approve. Routed through
+    security_agents/edr_hardened.py's HardenedEnforcementOrchestrator,
+    which adds a compliance pre-check (see /compliance/pre-check below)
+    and exponential-backoff retry (transient failures only) on top of
+    security_agents/edr_connector.py's actual enforcement mechanism: real
+    Docker network isolation for a JAKAL-owned sandbox, or a signed
     webhook to whatever real EDR/firewall integration this deployment's
     operator has configured for everything else.
     """
@@ -458,8 +465,9 @@ async def enforce_action(approval_request_id: str, request: Request,
 
     target = approval.get("target")
     detail = approval.get("payload_detail") or {}
-    result = enforce_containment(
-        approval["action_type"], target, detail, user["username"], db=_db, vm_orchestrator=_vm,
+    orchestrator = HardenedEnforcementOrchestrator(db=_db, vm_orchestrator=_vm)
+    result = orchestrator.enforce_with_retry(
+        approval["action_type"], target, detail, user["username"],
     )
 
     new_status = {"enforced": "enforced", "not_configured": "enforcement_not_configured",
@@ -469,3 +477,60 @@ async def enforce_action(approval_request_id: str, request: Request,
            approval_request_id, {"target": target, "result": dict(result)})
 
     return {"approval_request_id": approval_request_id, "target": target, **result}
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Compliance-aware containment
+# ══════════════════════════════════════════════════════════════════════════
+
+@router.get("/compliance/pre-check")
+async def check_compliance(action_type: str, target: str):
+    """
+    Pre-flight compliance check before staging a containment action.
+    Returns violations (if any) and whether an audit exception is required.
+    """
+    _require()
+    if action_type not in ("isolate_host_staged", "quarantine_host_staged"):
+        raise HTTPException(status_code=422, detail="Invalid action_type for compliance check")
+
+    try:
+        org_posture = _db.get_org_compliance_posture()
+        result = validate_containment_compliance(action_type, target, org_posture)
+        return {
+            "compliant": result["compliant"],
+            "violations": result["violations"],
+            "requires_audit_exception": result["requires_audit_exception"],
+            "target": target,
+            "action_type": action_type,
+        }
+    except Exception as e:
+        logger.exception("Compliance check failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Compliance check failed: {str(e)}")
+
+
+@router.get("/compliance/posture")
+async def get_compliance_posture():
+    """Current org compliance posture backing /compliance/pre-check."""
+    _require()
+    return {"posture": _db.get_org_compliance_posture()}
+
+
+@router.put("/compliance/posture", dependencies=[require_permission("response:manage")])
+async def set_compliance_posture(posture: Dict[str, Any], user: dict = Depends(get_authenticated_user)):
+    """
+    Configure the org compliance posture that /compliance/pre-check and
+    the hardened enforcement orchestrator (edr_hardened.py) validate
+    containment actions against. Recognized keys (all optional; see
+    security_agents/compliance_constraints.py):
+
+    - frameworks: list of framework names to enforce, e.g. ["HIPAA", "SOC2", "PCI-DSS"]
+    - hipaa_allowed_regions: region strings a target must be in for HIPAA
+    - soc2_critical_service_hosts: hostnames SOC2 availability protects
+    - pci_dss_cde_hosts: cardholder-data-environment hostnames PCI-DSS isolates
+
+    This fully replaces the stored posture (not a merge) — GET first if
+    you're only changing one field.
+    """
+    _require()
+    updated = _db.set_org_compliance_posture(posture, updated_by=user["username"])
+    return {"posture": updated}

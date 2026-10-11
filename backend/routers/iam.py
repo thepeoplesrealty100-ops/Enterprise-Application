@@ -532,3 +532,56 @@ async def export_audit_log(limit: int = 500):
             f"| {e.get('resource_type')}:{e.get('resource_id')} | {e.get('outcome')} | {e.get('ip_address') or ''} |"
         )
     return {"format": "markdown", "content": "\n".join(lines), "count": len(entries)}
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Sessions (User Profile Settings)
+# ══════════════════════════════════════════════════════════════════════════
+
+@router.get("/auth/sessions")
+async def list_sessions(request: Request, user: dict = Depends(get_authenticated_user)):
+    """List active sessions for the current operator."""
+    _require()
+    rows = _db.conn.execute(
+        "SELECT session_id, user_id, expires_at, ip_address, user_agent, revoked, issued_at "
+        "FROM sessions WHERE user_id = ? ORDER BY issued_at DESC LIMIT 50",
+        (user["user_id"],),
+    ).fetchall()
+    cols = [d[0] for d in _db.conn.description]
+    sessions = []
+    for r in rows:
+        d = dict(zip(cols, r))
+        for k in ("expires_at", "issued_at"):
+            if d.get(k) is not None:
+                d[k] = str(d[k])
+        d["is_current"] = False
+        sessions.append(d)
+    return {"sessions": sessions, "count": len(sessions)}
+
+
+@router.post("/auth/sessions/revoke-others")
+async def revoke_other_sessions(request: Request, user: dict = Depends(get_authenticated_user)):
+    """Revoke every session belonging to the current user except the one making this call."""
+    _require()
+    auth = request.headers.get("authorization", "")
+    token = auth[7:].strip() if auth.lower().startswith("bearer ") else ""
+    current_jti = None
+    try:
+        from dependencies import decode_access_token
+        claims = decode_access_token(token)
+        current_jti = claims.get("jti")
+    except Exception:
+        pass
+    if current_jti:
+        _db.conn.execute(
+            "UPDATE sessions SET revoked = true WHERE user_id = ? AND session_id != ?",
+            (user["user_id"], current_jti),
+        )
+    else:
+        _db.conn.execute(
+            "UPDATE sessions SET revoked = true WHERE user_id = ?",
+            (user["user_id"],),
+        )
+    _db.conn.commit()
+    _audit(request, user, "sessions_revoke_others", "success")
+    return {"status": "revoked_others"}

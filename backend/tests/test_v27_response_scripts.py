@@ -249,6 +249,60 @@ async def test_response_stats_endpoint(client):
     assert "total" in response.json()
 
 
+@pytest.mark.asyncio
+async def test_compliance_pre_check_no_longer_500s(client):
+    """
+    Regression test: GET /compliance/pre-check used to query
+    global_security_settings for columns ("setting_key", "data") that
+    never existed on that table, throwing a BinderException on every
+    call. Now backed by the real org_compliance_posture table.
+    """
+    response = await client.get(
+        "/api/response/compliance/pre-check",
+        params={"action_type": "isolate_host_staged", "target": "10.0.0.5"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is True
+    assert body["violations"] == []
+
+
+@pytest.mark.asyncio
+async def test_compliance_posture_set_then_gates_pre_check(client):
+    headers = await _root_admin_headers(client)
+
+    put_res = await client.put(
+        "/api/response/compliance/posture",
+        json={"frameworks": ["HIPAA"], "hipaa_allowed_regions": ["us-east"]},
+        headers=headers,
+    )
+    assert put_res.status_code == 200
+    assert put_res.json()["posture"]["frameworks"] == ["HIPAA"]
+
+    get_res = await client.get("/api/response/compliance/posture")
+    assert get_res.status_code == 200
+    assert get_res.json()["posture"]["hipaa_allowed_regions"] == ["us-east"]
+
+    blocked = await client.get(
+        "/api/response/compliance/pre-check",
+        params={"action_type": "isolate_host_staged", "target": "eu-db-prod"},
+    )
+    assert blocked.status_code == 200
+    body = blocked.json()
+    assert body["compliant"] is False
+    assert any(v["constraint"] == "hipaa_data_residency" for v in body["violations"])
+
+    # Reset posture so this test doesn't leak state into others sharing
+    # the on-disk demo DB.
+    await client.put("/api/response/compliance/posture", json={}, headers=headers)
+
+
+@pytest.mark.asyncio
+async def test_compliance_posture_write_requires_auth(client):
+    response = await client.put("/api/response/compliance/posture", json={"frameworks": ["HIPAA"]})
+    assert response.status_code == 401
+
+
 # ---------------------------------------------------------------------------
 # MFA QR code
 # ---------------------------------------------------------------------------

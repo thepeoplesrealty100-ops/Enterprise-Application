@@ -126,6 +126,39 @@ class ChatReq(BaseModel):
     executor_id: str = "operator"
 
 
+class GenerateReq(BaseModel):
+    """
+    Generic free-text (optionally JSON-schema-constrained) generation
+    against this platform's own configured LLM (config.LLM_ENGINE). Used
+    by operator-console features that need open-ended text -- phishing-
+    training content, evidence analysis -- rather than the tool-calling
+    /chat endpoint above. Replaces what were previously three separate
+    hardcoded calls straight to Google's Gemini API from the browser with
+    a permanently-empty API key (see index.html's removed
+    callGeminiApi()) -- calls that could never succeed.
+    """
+    system_prompt: str
+    user_prompt: str
+    json_schema: Optional[Dict[str, Any]] = None
+    temperature: float = 0.5
+    max_tokens: int = 1024
+
+
+@router.post("/generate")
+async def generate(req: GenerateReq):
+    from services.llm_client import generate as llm_generate, LLMUnavailable
+    try:
+        return {"ok": True, **llm_generate(
+            req.system_prompt, req.user_prompt, json_schema=req.json_schema,
+            temperature=req.temperature, max_tokens=req.max_tokens,
+        )}
+    except LLMUnavailable as e:
+        # Honest failure, not a fabricated response -- the operator sees
+        # exactly why (no key, engine unreachable) rather than silence or
+        # invented content.
+        return {"ok": False, "error": str(e)}
+
+
 @router.get("/status")
 async def status():
     from services.secrets import get_secret
@@ -165,7 +198,8 @@ async def _chat_router(message: str) -> Dict[str, Any]:
 async def _chat_llm(message: str, key: str) -> Dict[str, Any]:
     import anthropic
     client = anthropic.Anthropic(api_key=key)
-    model = "claude-3-5-sonnet-20241022"
+    from config import get_config
+    model = get_config().CLAUDE_MODEL
     system = ("You are the JAKAL operator assistant. Use the provided tools to take real "
               "security actions on the operator's behalf. Prefer acting via tools over guessing. "
               "Keep replies concise and operational.")
