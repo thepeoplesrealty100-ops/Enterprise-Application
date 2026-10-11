@@ -178,9 +178,9 @@ def _registry() -> Dict[str, ModuleAction]:
           "Enable/configure SAML or OIDC enterprise federation for a tenant.",
           "msp:admin", R.HIGH, {"tenant_id": "str", "protocol": "enum[saml,oidc]"},
           {"button": "primary", "cog": True, "radial": {"field": "protocol", "options": ["saml", "oidc"]}}),
-        # 9. Documentation & Vault (IT Glue parity)
+        # 9. Documentation & Vault (GACyber Documentation Engine parity)
         A("vault:map_relationships", C.DOCUMENTATION_VAULT, "Map Asset Relationships",
-          "Build the IT-Glue-style relationship graph across assets, apps and credentials.",
+          "Build the GACyber Documentation Engine-style relationship graph across assets, apps and credentials.",
           "vault:read", R.LOW, {}, {"button": "primary"}),
         A("vault:rotate_credential", C.DOCUMENTATION_VAULT, "Rotate Credential",
           "Rotate a tracked secret and reset its rotation clock.",

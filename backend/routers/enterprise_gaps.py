@@ -1,9 +1,9 @@
 """
 routers/enterprise_gaps.py — closes the benchmark gaps from the
-Kaseya / Datto / Cynet / IT Glue cross-reference table.
+Kaseya / Datto / Cynet / GACyber Documentation Engine cross-reference table.
 
 Covers the capabilities the platform was missing:
-  • Documentation & Vault  — IT-Glue-style asset relationship map,
+  • Documentation & Vault  — GACyber Documentation Engine-style asset relationship map,
                              credential rotation tracker.
   • Endpoint & Response    — process kill-tree (for visualization),
                              live memory-dump trigger.
@@ -61,11 +61,11 @@ def _setting(key: str, default: str = "false") -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 1. DOCUMENTATION & VAULT  (IT Glue parity)
+# 1. DOCUMENTATION & VAULT  (GACyber Documentation Engine parity)
 # ══════════════════════════════════════════════════════════════════════════
 @router.get("/docs/relationships")
 async def asset_relationships():
-    """IT-Glue-style asset relationship map — returns a graph (nodes + edges)
+    """GACyber Documentation Engine-style asset relationship map — returns a graph (nodes + edges)
     ready for the frontend relationship view."""
     rels = _rows("SELECT * FROM cap_asset_relationships")
     nodes: Dict[str, Dict[str, Any]] = {}
