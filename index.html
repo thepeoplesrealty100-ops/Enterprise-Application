@@ -3271,7 +3271,7 @@
 
         function renderQuantumDataNexus() {
             return `
-                <h2 class="text-3xl font-extrabold text-white mb-6">Quantum Nexus & Comms</h2>
+                <h2 class="text-xl font-bold text-white mb-4">Quantum Nexus & Comms</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6 rounded-xl">
                         <p class="text-sm text-gray-400 mb-4">The Quantum Data Nexus interfaces with leading quantum cloud providers for unparalleled computational power and data security simulation.</p>
@@ -3358,7 +3358,7 @@
 
         function renderEnergyCoreManagement() {
              return `
-                <h2 class="text-3xl font-extrabold text-white mb-6">Energy Core Management</h2>
+                <h2 class="text-xl font-bold text-white mb-4">Energy Core Management</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-1 card p-6 rounded-xl flex flex-col items-center justify-center">
                         <i data-lucide="zap" class="w-16 h-16 text-yellow-400 mb-4 animate-pulse"></i>
@@ -3887,7 +3887,7 @@
 
         function renderCognitiveLoadMonitor() {
             return `
-                <h2 class="text-3xl font-extrabold text-white mb-6">Cognitive Load Monitor</h2>
+                <h2 class="text-xl font-bold text-white mb-4">Cognitive Load Monitor</h2>
                 <div id="cognitive-load-container" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Operator cards will be injected here -->
                 </div>
@@ -3987,7 +3987,7 @@
         // --- QUANTUM COMPUTER MODULE ---
         function renderQuantumComputer() {
             return `
-                <h2 class="text-3xl font-extrabold text-white mb-6">Quantum Computer Interface</h2>
+                <h2 class="text-xl font-bold text-white mb-4">Quantum Computer Interface</h2>
                 <div class="space-y-6">
                     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                         <div class="xl:col-span-2 card p-4 rounded-xl">
@@ -6576,7 +6576,7 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
             ];
 
             return `
-                <h2 class="text-3xl font-extrabold text-white mb-6">Active Service Modules</h2>
+                <h2 class="text-xl font-bold text-white mb-4">Active Service Modules</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     ${services.map((service, index) => `
                         <div class="card p-6 rounded-xl flex flex-col justify-between">
@@ -6610,7 +6610,7 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
 
         function renderClientPortal() {
             return `
-                <h2 class="text-3xl font-extrabold text-white mb-6">Client Support Portal</h2>
+                <h2 class="text-xl font-bold text-white mb-4">Client Support Portal</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-1 card p-6 rounded-xl">
                         <h3 class="text-lg font-bold text-primary-color mb-3">Submit a New Support Ticket</h3>
@@ -6673,7 +6673,7 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
             const company = currentPortalClient() || 'Demo Client A';
             const emailLocal = company.toLowerCase().replace(/[^a-z0-9]+/g, '');
             return `
-                <h2 class="text-3xl font-extrabold text-white mb-6">Account Settings</h2>
+                <h2 class="text-xl font-bold text-white mb-4">Account Settings</h2>
                 <div class="card p-6 rounded-xl max-w-3xl mx-auto">
                     <h3 class="text-xl font-semibold text-white mb-6">Account Settings</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -6728,7 +6728,7 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
         
         function renderGlobalClientDashboard() {
             return `
-                 <h2 class="text-3xl font-extrabold text-white mb-6">Your Security Dashboard</h2>
+                 <h2 class="text-xl font-bold text-white mb-4">Your Security Dashboard</h2>
                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     ${renderMetricPill('','Protected Devices', '3', 'green-400')}
                     ${renderMetricPill('','Threats Neutralized (30d)', '182', 'primary-color')}
