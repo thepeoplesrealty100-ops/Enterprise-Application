@@ -8162,15 +8162,18 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
         window._atlasAllRecords = [];
         window.atlasSortBy = function(col) { /* simple client-side sort via DOM reorder */ };
 
-        window.atlasViewRecord = function(id) {
-            window.showModal('Record Detail', `<p class="text-gray-400 text-sm">Loading record <code>${escapeHtml(id)}</code>…</p>`, [], async () => {
+        window.atlasViewRecord = async function(id) {
+            try {
                 const resp = await fetch('/api/docs/assets/' + id);
                 const r = resp.ok ? await resp.json() : null;
-                if (!r) return;
+                if (!r) { window.showAppModal('Not Found', 'Record not found.'); return; }
                 const d = r.data || {};
-                const rows = Object.entries(d).map(([k,v]) => `<tr><td class="rpt-th pr-4">${escapeHtml(k)}</td><td class="text-gray-200">${escapeHtml(String(v))}</td></tr>`).join('');
-                document.getElementById('modal-message').innerHTML = `<div class="mb-2"><span class="text-lg font-bold text-white">${escapeHtml(r.name)}</span><span class="ml-2 text-xs text-gray-500">${escapeHtml(r.type_name||'')}</span></div><table class="w-full text-xs">${rows}</table><p class="text-xs text-gray-600 mt-3">Created: ${r.created_at||''} | Updated: ${r.updated_at||''}</p>`;
-            });
+                const rows = Object.entries(d).map(([k,v]) => `<tr><td class="text-gray-400 pr-4 py-1 text-xs font-medium">${escapeHtml(k)}</td><td class="text-gray-200 text-xs py-1">${escapeHtml(String(v))}</td></tr>`).join('');
+                window.showAppModal(escapeHtml(r.name), `
+                    <div class="mb-2"><span class="text-xs text-gray-500">${escapeHtml(r.type_name||'Asset')}</span></div>
+                    <table class="w-full mb-3">${rows}</table>
+                    <p class="text-xs text-gray-600">Created: ${r.created_at||''} &nbsp;|&nbsp; Updated: ${r.updated_at||''}</p>`);
+            } catch(e) { window.showAppModal('Error', escapeHtml(e.message)); }
         };
 
         window.atlasEditRecord = function(id) { window.showToast('Edit record: open full editor coming soon.','info'); };
