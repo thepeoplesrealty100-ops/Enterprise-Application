@@ -8373,7 +8373,61 @@ www.gacyberdefense.com | info@gacyberdefense.com`;
             } catch(e) { window.showAppModal('Error', escapeHtml(e.message)); }
         };
 
-        window.atlasEditRecord = function(id) { window.showToast('Edit record: open full editor coming soon.','info'); };
+        window.atlasEditRecord = async function(id) {
+            try {
+                const resp = await fetch('/api/docs/assets/' + encodeURIComponent(id));
+                if (!resp.ok) { window.showToast('Record not found','error'); return; }
+                const r = await resp.json();
+                const spec = (r.type && r.type.field_spec) || [];
+                const data = r.data || {};
+                const fields = spec.map(f => {
+                    const key = 'ae-f-' + String(f.name).replace(/\s+/g,'_');
+                    const val = data[f.name] != null ? data[f.name] : '';
+                    if (f.type === 'dropdown') {
+                        const opts = (f.options||[]).map(o => `<option ${String(o)===String(val)?'selected':''}>${escapeHtml(o)}</option>`).join('');
+                        return `<div><label class="text-xs text-gray-400 block mb-0.5">${escapeHtml(f.name)}</label><select id="${key}" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm"><option value="">—</option>${opts}</select></div>`;
+                    }
+                    if (f.type === 'bool') {
+                        return `<div><label class="text-xs text-gray-400"><input type="checkbox" id="${key}" ${val?'checked':''}> ${escapeHtml(f.name)}</label></div>`;
+                    }
+                    if (f.type === 'date') {
+                        return `<div><label class="text-xs text-gray-400 block mb-0.5">${escapeHtml(f.name)}</label><input type="date" id="${key}" value="${escapeHtml(String(val).slice(0,10))}" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm"></div>`;
+                    }
+                    return `<div><label class="text-xs text-gray-400 block mb-0.5">${escapeHtml(f.name)}</label><input id="${key}" value="${escapeHtml(String(val))}" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm"></div>`;
+                }).join('');
+                window._atlasEditCtx = { id, type_id: r.type_id, org_id: r.org_id || 'default', tags: r.tags || [], spec };
+                window.showAppModal('Edit ' + escapeHtml(r.name), `
+                    <div class="space-y-3 max-h-[60vh] overflow-y-auto scrollbar-style pr-1">
+                        <div><label class="text-xs text-gray-400 block mb-0.5">Name *</label>
+                        <input id="ae-name" value="${escapeHtml(r.name||'')}" class="w-full bg-gray-800 p-2 rounded border border-border-color text-sm"></div>
+                        ${fields || '<p class="text-xs text-gray-500">No extra fields on this type.</p>'}
+                        <button onclick="window.doUpdateAsset()" class="w-full py-2 bg-primary-color text-white rounded text-sm">Save changes</button>
+                    </div>`);
+            } catch (e) { window.showToast(e.message || 'Edit failed','error'); }
+        };
+        window.doUpdateAsset = async function() {
+            const ctx = window._atlasEditCtx;
+            if (!ctx) return;
+            const name = document.getElementById('ae-name')?.value?.trim();
+            if (!name) { window.showToast('Name is required','error'); return; }
+            const data = {};
+            (ctx.spec||[]).forEach(f => {
+                const el = document.getElementById('ae-f-' + String(f.name).replace(/\s+/g,'_'));
+                if (!el) return;
+                data[f.name] = f.type === 'bool' ? !!el.checked : el.value;
+            });
+            const resp = await fetch('/api/docs/assets/' + encodeURIComponent(ctx.id), {
+                method: 'PUT',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ name, type_id: ctx.type_id, org_id: ctx.org_id, data, tags: ctx.tags || [] })
+            });
+            if (!resp.ok) { window.showToast('Save failed','error'); return; }
+            window.hideModal();
+            window.showToast(name + ' updated.','success');
+            if (window._atlasSection && typeof _ATLAS_TYPE_MAP !== 'undefined' && _ATLAS_TYPE_MAP[window._atlasSection]) {
+                window.atlasLoadAssets(window._atlasSection);
+            }
+        };
         window.atlasDeleteRecord = async function(id) {
             if (!confirm('Delete this record?')) return;
             await fetch('/api/docs/assets/' + id, { method: 'DELETE' });
