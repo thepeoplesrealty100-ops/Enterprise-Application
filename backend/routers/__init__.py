@@ -44,6 +44,11 @@ v3.0 Phase 4 routers:
   aip_cheatsheet_router — /api/v3/aip/cheatsheet/* (thin prompt -> matching-playbook lookup
                                             over the existing playbook_library.PLAYBOOKS
                                             catalog -- see payloads/aip_cheatsheet_engine.py)
+
+Enterprise MSP Connectors:
+  nable_router      — /api/nable/*     (Nable Network Intelligence — real-time network behavior analysis)
+  datto_router      — /api/datto/*     (Datto EDR — endpoint detection + response, backup integration)
+  inky_router       — /api/inky/*      (Inky Email Security — phishing detection + quarantine)
 """
 
 from .pentest import router as pentest_router
@@ -96,6 +101,8 @@ from .settings_dev import router as settings_dev_router
 from .agent_workflows import router as agent_workflows_router
 from .report_builder import router as report_builder_router
 from .rfp import router as rfp_router
+# NEW: Enterprise MSP Connectors
+from .nable import router as nable_router
 
 __all__ = [
     "pentest_router",
@@ -147,4 +154,5 @@ __all__ = [
     "agent_workflows_router",
     "report_builder_router",
     "rfp_router",
+    "nable_router",
 ]
