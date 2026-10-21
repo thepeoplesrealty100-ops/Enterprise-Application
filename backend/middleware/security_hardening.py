@@ -311,26 +311,21 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         
         # Content Security Policy
         #
-        # index.html (served at same origin) loads a fixed set of external
-        # resources that must be explicitly allowlisted here or the browser
-        # silently drops them with no visible error: Tailwind's play-CDN
-        # script (generates all utility CSS classes at runtime -- without
-        # it the entire page renders unstyled), Lucide icons, Chart.js,
-        # Three.js, D3, a Google Fonts stylesheet + font files, a YouTube
-        # embed (Awareness Training page), and the Gemini API (phishing
-        # email generator, called directly from the browser). This is a
-        # host allowlist, not a wildcard -- only these specific origins.
-        # Verified against the actual <script>/<link> tags in index.html;
-        # keep this list in sync if those tags change.
+        # index.html (served at same origin) loads its scripts, stylesheet and
+        # fonts from this origin: the pre-built Tailwind CSS (css/app.min.css),
+        # Inter fonts (css/fonts/) and the vendored libraries (js/vendor/:
+        # lucide, chart.js, three, d3). No external script/style/font origin is
+        # needed -- which also means no 'unsafe-eval' (only Tailwind's dev-only
+        # play-CDN required it). The only remaining external origins are a
+        # YouTube embed (Awareness Training page) and the Gemini API (phishing
+        # email generator, called directly from the browser). If you add a
+        # <script>/<link> to index.html, serve it locally or allowlist it here.
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' "
-            "https://cdn.tailwindcss.com https://unpkg.com "
-            "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
-            "https://d3js.org; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data: https:; "
-            "font-src 'self' https://fonts.gstatic.com; "
+            "font-src 'self'; "
             "connect-src 'self' ws: wss: https://generativelanguage.googleapis.com; "
             "frame-src https://www.youtube.com; "
             "frame-ancestors 'none'; "

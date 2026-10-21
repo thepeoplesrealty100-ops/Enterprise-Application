@@ -1,309 +1,336 @@
 """
 backend/routers/nable.py
-=======================
-Nable Network Intelligence Connector — network behavior analysis, anomaly detection,
-and real-time alerting for MSP clients.
+========================
+N-able network-intelligence connector: ingest network-behaviour alerts
+(webhook), list / acknowledge / resolve them, and report integration health.
 
-Real endpoints backed by database:
-  GET  /api/nable/alerts          — Network behavior anomalies
-  POST /api/nable/alerts/{id}/ack — Acknowledge alert
-  POST /api/nable/alerts/{id}/resolve — Resolve with remediation
-  GET  /api/nable/networks        — Monitored network segments
-  POST /api/nable/webhook         — Ingest real-time alerts
-  GET  /api/nable/status          — Integration health
+Endpoints (all under /api/nable):
+  GET  /alerts                  list alerts (filter: severity, state)
+  POST /alerts/{id}/ack         acknowledge an alert
+  POST /alerts/{id}/resolve     resolve with remediation notes
+  GET  /networks                monitored network segments (+ alert counts)
+  POST /networks                register a monitored segment
+  POST /webhook                 ingest an alert from N-able
+  GET  /status                  integration health
+
+Storage: two DuckDB tables owned by this module (network_alerts,
+network_segments), created on first use. Nothing is simulated: an empty
+install returns empty lists and ``connected: false`` until a webhook has
+actually delivered something.
+
+Webhook auth: if NABLE_WEBHOOK_SECRET is set, the caller must send it in the
+``X-Nable-Secret`` header (constant-time compare). If it is NOT set, the
+webhook requires a normal authenticated user -- it is never open.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
-from datetime import datetime, timedelta, timezone
-from typing import Optional, List, Dict, Any
+from __future__ import annotations
+
+import hmac
 import json
+import logging
+import os
+import uuid
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
-from dependencies import get_current_user, get_db_connection
-from schemas import UserSchema
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from pydantic import BaseModel, Field
 
-router = APIRouter(prefix="/api/nable", tags=["Nable Network Intelligence"])
+from dependencies import get_authenticated_user, get_current_user
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/api/nable", tags=["N-able Network Intelligence"])
+
+try:
+    from database import get_db_manager
+    _db = get_db_manager()
+    NABLE_OK = True
+    _ERR: Optional[str] = None
+except Exception as _e:  # noqa: BLE001
+    NABLE_OK = False
+    _ERR = str(_e)
+    _db = None
+
+_SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
+_STATUSES = {"open", "acknowledged", "resolved"}
+_schema_ready = False
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _require() -> None:
+    if not NABLE_OK:
+        raise HTTPException(status_code=503, detail=f"N-able connector unavailable: {_ERR}")
+    _ensure_schema()
+
+
+def _ensure_schema() -> None:
+    global _schema_ready
+    if _schema_ready:
+        return
+    c = _db.conn
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS network_alerts (
+            id VARCHAR PRIMARY KEY,
+            source VARCHAR DEFAULT 'nable',
+            severity VARCHAR,
+            alert_type VARCHAR,
+            source_ip VARCHAR,
+            dest_ip VARCHAR,
+            dest_port INTEGER,
+            bytes_transferred BIGINT,
+            description VARCHAR,
+            device_name VARCHAR,
+            status VARCHAR DEFAULT 'open',
+            notes VARCHAR,
+            remediation VARCHAR,
+            action_taken VARCHAR,
+            acknowledged_by VARCHAR,
+            acknowledged_at VARCHAR,
+            resolved_by VARCHAR,
+            resolved_at VARCHAR,
+            created_at VARCHAR,
+            updated_at VARCHAR
+        )"""
+    )
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS network_segments (
+            id VARCHAR PRIMARY KEY,
+            source VARCHAR DEFAULT 'nable',
+            name VARCHAR,
+            cidr VARCHAR,
+            location VARCHAR,
+            status VARCHAR DEFAULT 'active',
+            created_at VARCHAR
+        )"""
+    )
+    _schema_ready = True
+
+
+def _audit(event: str, action: str, operator: str, details: Dict[str, Any]) -> None:
+    """Best-effort write to the shared agent_logs trail."""
+    try:
+        _db.conn.execute(
+            "INSERT INTO agent_logs (event, action, status, operator_id, details) "
+            "VALUES (?, ?, 'success', ?, ?)",
+            (event, action, operator, json.dumps(details)),
+        )
+    except Exception:  # noqa: BLE001
+        logger.warning("nable audit write failed", exc_info=True)
+
+
+def _uid(user: dict) -> str:
+    return str(user.get("user_id") or user.get("id") or user.get("username") or "unknown")
 
 
 class NableAlert(BaseModel):
-    severity: str  # CRITICAL, HIGH, MEDIUM, LOW
-    alert_type: str  # dns_exfil, port_scan, data_burst, c2_callback, anomalous_traffic
+    severity: str = Field(..., description="CRITICAL | HIGH | MEDIUM | LOW")
+    alert_type: str = Field(..., description="dns_exfil, port_scan, data_burst, c2_callback, anomalous_traffic, ...")
     source_ip: str
     dest_ip: Optional[str] = None
-    dest_port: Optional[int] = None
-    bytes_transferred: Optional[int] = None
-    description: str
+    dest_port: Optional[int] = Field(None, ge=0, le=65535)
+    bytes_transferred: Optional[int] = Field(None, ge=0)
+    description: str = Field(..., max_length=2000)
     device_name: Optional[str] = None
 
 
 class AlertAckRequest(BaseModel):
-    notes: str = ""
+    notes: str = Field("", max_length=2000)
 
 
 class AlertResolveRequest(BaseModel):
-    remediation: str
-    action_taken: str = ""
+    remediation: str = Field(..., max_length=2000)
+    action_taken: str = Field("", max_length=2000)
+
+
+class SegmentRequest(BaseModel):
+    name: str = Field(..., max_length=200)
+    cidr: str = Field(..., max_length=64)
+    location: str = Field("", max_length=200)
+
+
+_ALERT_COLS = (
+    "id, severity, alert_type, source_ip, dest_ip, dest_port, bytes_transferred, "
+    "description, device_name, status, created_at, updated_at"
+)
+
+
+def _alert_row(r) -> Dict[str, Any]:
+    return {
+        "alert_id": r[0], "severity": r[1], "alert_type": r[2], "source_ip": r[3],
+        "dest_ip": r[4], "dest_port": r[5], "bytes_transferred": r[6],
+        "description": r[7], "device_name": r[8], "status": r[9],
+        "created_at": r[10], "updated_at": r[11],
+    }
 
 
 @router.get("/alerts")
-async def list_nable_alerts(
+async def list_alerts(
     severity: Optional[str] = None,
-    status: Optional[str] = Query(None, description="open, acknowledged, resolved"),
+    # NOT named "status": middleware/security_hardening.py whitelists any
+    # parameter called "status" to the fleet values (online/offline/...).
+    state: Optional[str] = Query(None, description="open, acknowledged, resolved"),
     limit: int = Query(50, ge=1, le=200),
-    user: UserSchema = Depends(get_current_user),
-    db = Depends(get_db_connection),
-):
-    """
-    List network intelligence alerts from Nable integration.
-    
-    Returns real data from database (not simulated).
-    """
-    try:
-        where = ["source = 'nable'"]
-        params: List[Any] = []
-        
-        if severity:
-            where.append("severity = ?")
-            params.append(severity)
-        
-        if status:
-            where.append("status = ?")
-            params.append(status)
-        
-        where_clause = " AND ".join(where)
-        
-        rows = db.query(
-            f"""SELECT id, severity, alert_type, source_ip, dest_ip, dest_port,
-                   bytes_transferred, description, device_name, status, created_at, updated_at
-               FROM network_alerts WHERE {where_clause}
-               ORDER BY created_at DESC LIMIT ?""",
-            tuple(params + [limit])
-        )
-        
-        alerts = []
-        for row in (rows or []):
-            alerts.append({
-                "alert_id": row[0],
-                "severity": row[1],
-                "alert_type": row[2],
-                "source_ip": row[3],
-                "dest_ip": row[4],
-                "dest_port": row[5],
-                "bytes_transferred": row[6],
-                "description": row[7],
-                "device_name": row[8],
-                "status": row[9],
-                "created_at": row[10],
-                "updated_at": row[11],
-            })
-        
-        # Count by status
-        total_row = db.query("SELECT COUNT(*) FROM network_alerts WHERE source = 'nable'")
-        total = total_row[0][0] if total_row else 0
-        
-        open_row = db.query("SELECT COUNT(*) FROM network_alerts WHERE source = 'nable' AND status = 'open'")
-        open_count = open_row[0][0] if open_row else 0
-        
-        return {
-            "ok": True,
-            "alerts": alerts,
-            "total": total,
-            "open": open_count,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Nable alert query failed: {str(e)}")
+    user: dict = Depends(get_authenticated_user),
+) -> Dict[str, Any]:
+    _require()
+    where, params = ["source = 'nable'"], []
+    if severity:
+        if severity.upper() not in _SEVERITIES:
+            raise HTTPException(400, f"severity must be one of {sorted(_SEVERITIES)}")
+        where.append("severity = ?"); params.append(severity.upper())
+    if state:
+        if state not in _STATUSES:
+            raise HTTPException(400, f"state must be one of {sorted(_STATUSES)}")
+        where.append("status = ?"); params.append(state)
+    rows = _db.query(
+        f"SELECT {_ALERT_COLS} FROM network_alerts WHERE {' AND '.join(where)} "
+        "ORDER BY created_at DESC LIMIT ?",
+        tuple(params + [limit]),
+    )
+    total = _db.query("SELECT COUNT(*) FROM network_alerts WHERE source = 'nable'")[0][0]
+    open_n = _db.query(
+        "SELECT COUNT(*) FROM network_alerts WHERE source = 'nable' AND status = 'open'"
+    )[0][0]
+    return {"ok": True, "alerts": [_alert_row(r) for r in rows],
+            "total": total, "open": open_n, "timestamp": _now()}
+
+
+def _transition(alert_id: str, sql: str, params: tuple) -> None:
+    exists = _db.query("SELECT 1 FROM network_alerts WHERE id = ? AND source = 'nable'", (alert_id,))
+    if not exists:
+        raise HTTPException(404, f"Alert {alert_id} not found")
+    _db.conn.execute(sql, params)
 
 
 @router.post("/alerts/{alert_id}/ack")
 async def acknowledge_alert(
-    alert_id: str,
-    req: AlertAckRequest,
-    user: UserSchema = Depends(get_current_user),
-    db = Depends(get_db_connection),
-):
-    """Acknowledge a network alert (marks as reviewed)."""
-    try:
-        db.execute(
-            "UPDATE network_alerts SET status = 'acknowledged', acknowledged_by = ?, "
-            "acknowledged_at = ?, notes = ? WHERE id = ?",
-            (user.user_id, datetime.now(timezone.utc).isoformat(), req.notes, alert_id)
-        )
-        
-        # Audit
-        db.audit_log(
-            user.user_id, "acknowledge_alert", "nable_network_intel", "success",
-            f"Alert {alert_id} acknowledged"
-        )
-        
-        return {
-            "ok": True,
-            "alert_id": alert_id,
-            "status": "acknowledged",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to acknowledge alert: {str(e)}")
+    alert_id: str, req: AlertAckRequest,
+    user: dict = Depends(get_authenticated_user),
+) -> Dict[str, Any]:
+    _require()
+    now, uid = _now(), _uid(user)
+    _transition(
+        alert_id,
+        "UPDATE network_alerts SET status='acknowledged', acknowledged_by=?, "
+        "acknowledged_at=?, notes=?, updated_at=? WHERE id=?",
+        (uid, now, req.notes, now, alert_id),
+    )
+    _audit("network_alert_acknowledged", "nable", uid, {"alert_id": alert_id})
+    return {"ok": True, "alert_id": alert_id, "status": "acknowledged", "timestamp": now}
 
 
 @router.post("/alerts/{alert_id}/resolve")
 async def resolve_alert(
-    alert_id: str,
-    req: AlertResolveRequest,
-    user: UserSchema = Depends(get_current_user),
-    db = Depends(get_db_connection),
-):
-    """Resolve a network alert with remediation details."""
-    try:
-        db.execute(
-            "UPDATE network_alerts SET status = 'resolved', resolved_by = ?, "
-            "resolved_at = ?, remediation = ?, action_taken = ? WHERE id = ?",
-            (user.user_id, datetime.now(timezone.utc).isoformat(),
-             req.remediation, req.action_taken, alert_id)
-        )
-        
-        # Log to agent logs for audit trail
-        db.execute(
-            "INSERT INTO agent_logs (timestamp, event, action, status, operator_id, details) "
-            "VALUES (?, 'network_alert_resolved', 'nable', 'success', ?, ?)",
-            (datetime.now(timezone.utc).isoformat(), user.user_id,
-             json.dumps({"alert_id": alert_id, "remediation": req.remediation}))
-        )
-        
-        # Audit
-        db.audit_log(
-            user.user_id, "resolve_alert", "nable_network_intel", "success",
-            f"Alert {alert_id} resolved: {req.remediation}"
-        )
-        
-        return {
-            "ok": True,
-            "alert_id": alert_id,
-            "status": "resolved",
-            "remediation": req.remediation,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to resolve alert: {str(e)}")
+    alert_id: str, req: AlertResolveRequest,
+    user: dict = Depends(get_authenticated_user),
+) -> Dict[str, Any]:
+    _require()
+    now, uid = _now(), _uid(user)
+    _transition(
+        alert_id,
+        "UPDATE network_alerts SET status='resolved', resolved_by=?, resolved_at=?, "
+        "remediation=?, action_taken=?, updated_at=? WHERE id=?",
+        (uid, now, req.remediation, req.action_taken, now, alert_id),
+    )
+    _audit("network_alert_resolved", "nable", uid,
+           {"alert_id": alert_id, "remediation": req.remediation})
+    return {"ok": True, "alert_id": alert_id, "status": "resolved",
+            "remediation": req.remediation, "timestamp": now}
 
 
 @router.get("/networks")
-async def list_monitored_networks(
-    user: UserSchema = Depends(get_current_user),
-    db = Depends(get_db_connection),
-):
-    """List network segments currently monitored via Nable."""
+async def list_networks(user: dict = Depends(get_authenticated_user)) -> Dict[str, Any]:
+    _require()
+    rows = _db.query(
+        "SELECT id, name, cidr, location, status, created_at FROM network_segments "
+        "WHERE source = 'nable' ORDER BY name"
+    )
+    nets: List[Dict[str, Any]] = []
+    for r in rows:
+        prefix = str(r[2]).split("/")[0].rsplit(".", 1)[0] + "."
+        n = _db.query(
+            "SELECT COUNT(*) FROM network_alerts WHERE source='nable' AND source_ip LIKE ?",
+            (prefix + "%",),
+        )[0][0]
+        nets.append({"segment_id": r[0], "name": r[1], "cidr": r[2], "location": r[3],
+                     "status": r[4], "alerts": n, "created_at": r[5]})
+    return {"ok": True, "networks": nets, "total": len(nets), "timestamp": _now()}
+
+
+@router.post("/networks")
+async def add_network(req: SegmentRequest,
+                      user: dict = Depends(get_authenticated_user)) -> Dict[str, Any]:
+    _require()
+    import ipaddress
     try:
-        rows = db.query(
-            "SELECT id, name, cidr, location, status, created_at FROM network_segments "
-            "WHERE source = 'nable' ORDER BY name"
-        )
-        
-        networks = []
-        for row in (rows or []):
-            # Get alert count for this network
-            alert_count = db.query(
-                "SELECT COUNT(*) FROM network_alerts WHERE source = 'nable' "
-                "AND source_ip LIKE ?",
-                (f"{row[2].split('/')[0]}%",)
-            )
-            
-            networks.append({
-                "segment_id": row[0],
-                "name": row[1],
-                "cidr": row[2],
-                "location": row[3],
-                "status": row[4],
-                "alerts_24h": alert_count[0][0] if alert_count else 0,
-                "created_at": row[5],
-            })
-        
-        return {
-            "ok": True,
-            "networks": networks,
-            "total": len(networks),
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Network list failed: {str(e)}")
+        ipaddress.ip_network(req.cidr, strict=False)
+    except ValueError:
+        raise HTTPException(400, "cidr is not a valid network, e.g. 10.0.0.0/24")
+    seg_id = f"seg-{uuid.uuid4().hex[:12]}"
+    _db.conn.execute(
+        "INSERT INTO network_segments (id, source, name, cidr, location, status, created_at) "
+        "VALUES (?, 'nable', ?, ?, ?, 'active', ?)",
+        (seg_id, req.name, req.cidr, req.location, _now()),
+    )
+    _audit("network_segment_added", "nable", _uid(user), {"segment_id": seg_id, "cidr": req.cidr})
+    return {"ok": True, "segment_id": seg_id}
+
+
+async def _webhook_auth(request: Request, x_nable_secret: Optional[str]) -> str:
+    secret = os.environ.get("NABLE_WEBHOOK_SECRET", "")
+    if secret:
+        if x_nable_secret and hmac.compare_digest(x_nable_secret.encode(), secret.encode()):
+            return "nable-webhook"
+        raise HTTPException(401, "Invalid or missing X-Nable-Secret header")
+    user = await get_current_user(request)
+    if user is None:
+        raise HTTPException(
+            401, "Webhook requires authentication. Set NABLE_WEBHOOK_SECRET and send it "
+                 "as X-Nable-Secret, or authenticate as a user.")
+    return _uid(user)
 
 
 @router.post("/webhook")
-async def receive_nable_webhook(
-    alert: NableAlert,
-    db = Depends(get_db_connection),
-):
-    """
-    Webhook endpoint for real-time Nable alert ingestion.
-    
-    Stores alerts in network_alerts table for real-time visibility.
-    """
-    try:
-        alert_id = f"nable-{datetime.now(timezone.utc).timestamp()}"
-        
-        db.execute(
-            "INSERT INTO network_alerts "
-            "(id, source, severity, alert_type, source_ip, dest_ip, dest_port, "
-            "bytes_transferred, description, device_name, status, created_at) "
-            "VALUES (?, 'nable', ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?)",
-            (alert_id, alert.severity, alert.alert_type, alert.source_ip,
-             alert.dest_ip, alert.dest_port, alert.bytes_transferred,
-             alert.description, alert.device_name,
-             datetime.now(timezone.utc).isoformat())
-        )
-        
-        # Log to telemetry
-        db.execute(
-            "INSERT INTO agent_logs (timestamp, event, action, status, operator_id, details) "
-            "VALUES (?, 'network_alert_ingested', 'nable_webhook', 'success', 'webhook', ?)",
-            (datetime.now(timezone.utc).isoformat(),
-             json.dumps({"alert_type": alert.alert_type, "severity": alert.severity}))
-        )
-        
-        return {
-            "ok": True,
-            "alert_id": alert_id,
-            "status": "ingested",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Webhook ingestion failed: {str(e)}")
+async def receive_webhook(
+    alert: NableAlert, request: Request,
+    x_nable_secret: Optional[str] = Header(None),
+) -> Dict[str, Any]:
+    _require()
+    caller = await _webhook_auth(request, x_nable_secret)
+    sev = alert.severity.upper()
+    if sev not in _SEVERITIES:
+        raise HTTPException(400, f"severity must be one of {sorted(_SEVERITIES)}")
+    alert_id, now = f"nable-{uuid.uuid4().hex[:16]}", _now()
+    _db.conn.execute(
+        "INSERT INTO network_alerts (id, source, severity, alert_type, source_ip, dest_ip, "
+        "dest_port, bytes_transferred, description, device_name, status, created_at, updated_at) "
+        "VALUES (?, 'nable', ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)",
+        (alert_id, sev, alert.alert_type, alert.source_ip, alert.dest_ip, alert.dest_port,
+         alert.bytes_transferred, alert.description, alert.device_name, now, now),
+    )
+    _audit("network_alert_ingested", "nable_webhook", caller,
+           {"alert_id": alert_id, "alert_type": alert.alert_type, "severity": sev})
+    return {"ok": True, "alert_id": alert_id, "status": "ingested", "timestamp": now}
 
 
 @router.get("/status")
-async def nable_integration_status(
-    user: UserSchema = Depends(get_current_user),
-    db = Depends(get_db_connection),
-):
-    """Check Nable integration health and sync status."""
-    try:
-        # Get last alert received
-        last_alert = db.query(
-            "SELECT MAX(created_at) FROM network_alerts WHERE source = 'nable'"
-        )
-        last_sync = last_alert[0][0] if (last_alert and last_alert[0][0]) else None
-        
-        # Count open alerts
-        open_alerts = db.query(
-            "SELECT COUNT(*) FROM network_alerts WHERE source = 'nable' AND status = 'open'"
-        )
-        open_count = open_alerts[0][0] if open_alerts else 0
-        
-        # Count networks
-        networks = db.query(
-            "SELECT COUNT(*) FROM network_segments WHERE source = 'nable'"
-        )
-        network_count = networks[0][0] if networks else 0
-        
-        return {
-            "ok": True,
-            "status": "connected",
-            "last_sync": last_sync or datetime.now(timezone.utc).isoformat(),
-            "open_alerts": open_count,
-            "monitored_networks": network_count,
-            "webhook_url": "/api/nable/webhook",
-            "health": "healthy" if open_count < 100 else "degraded",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
+async def integration_status(user: dict = Depends(get_authenticated_user)) -> Dict[str, Any]:
+    _require()
+    last = _db.query("SELECT MAX(created_at) FROM network_alerts WHERE source='nable'")[0][0]
+    open_n = _db.query(
+        "SELECT COUNT(*) FROM network_alerts WHERE source='nable' AND status='open'")[0][0]
+    segs = _db.query("SELECT COUNT(*) FROM network_segments WHERE source='nable'")[0][0]
+    return {
+        "ok": True,
+        "connected": last is not None,
+        "last_alert_received": last,
+        "open_alerts": open_n,
+        "monitored_networks": segs,
+        "webhook_url": "/api/nable/webhook",
+        "webhook_auth": "shared-secret" if os.environ.get("NABLE_WEBHOOK_SECRET") else "user-auth",
+        "health": "degraded" if open_n >= 100 else "healthy",
+        "timestamp": _now(),
+    }

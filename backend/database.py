@@ -4135,8 +4135,16 @@ class DuckDBManager:
         revoked, expires_at = row
         if revoked:
             return False
-        if expires_at and expires_at < datetime.now(timezone.utc).replace(tzinfo=expires_at.tzinfo):
-            return False
+        if expires_at:
+            # DuckDB returns TIMESTAMPTZ as an aware datetime in the *local*
+            # zone (and naive values for plain TIMESTAMP). Compare real
+            # instants: never relabel "now in UTC" with the stored zone --
+            # that shifts the comparison by the local UTC offset and makes a
+            # fresh session look expired (or an expired one look valid).
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at < datetime.now(timezone.utc):
+                return False
         return True
 
     def revoke_session(self, session_id: str) -> bool:

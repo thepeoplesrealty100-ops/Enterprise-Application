@@ -398,6 +398,12 @@ class AuditLogger:
             Hex-encoded hash
         """
         ts = event["timestamp"]
+        # The hash was computed at write time from a UTC datetime. DuckDB hands
+        # TIMESTAMPTZ back in the *local* zone, whose isoformat() differs
+        # ("-04:00" vs "+00:00"), so normalise to UTC (naive == UTC) before
+        # re-hashing or the chain fails verification on any non-UTC host.
+        if hasattr(ts, "astimezone"):
+            ts = ts.replace(tzinfo=timezone.utc) if ts.tzinfo is None else ts.astimezone(timezone.utc)
         canonical = {
             "event_id": event["event_id"],
             "event_type": event["event_type"],

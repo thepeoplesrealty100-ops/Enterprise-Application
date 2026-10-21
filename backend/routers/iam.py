@@ -240,7 +240,9 @@ async def login(req: LoginRequest, request: Request):
 
     if user.get("locked_until"):
         locked_until = user["locked_until"]
-        if locked_until and locked_until.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+        if locked_until and locked_until.tzinfo is None:
+            locked_until = locked_until.replace(tzinfo=timezone.utc)
+        if locked_until and locked_until > datetime.now(timezone.utc):
             _audit(request, user, "login", "denied", detail={"reason": "account locked"})
             raise HTTPException(status_code=423, detail="Account temporarily locked; try again later")
 

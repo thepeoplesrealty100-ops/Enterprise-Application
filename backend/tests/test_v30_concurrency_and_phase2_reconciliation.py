@@ -101,10 +101,11 @@ async def test_native_and_dashboard_endpoints_coexist_with_distinct_shapes(clien
     dashboard = await client.get("/api/dashboard/fabric/status")
     assert native.status_code == 200
     assert dashboard.status_code == 200
-    # Different backends, different shapes -- fabric.py's native shape has
-    # no "overall_score"/"by_pillar", ui_bridge.py's dashboard shape does.
-    assert "overall_score" not in native.json()
-    assert "overall_score" in dashboard.json()
+    # Different backends, different shapes. Both carry an overall score, but
+    # fabric.py's native shape nests the full capability list + posture and has
+    # no per-pillar breakdown; ui_bridge.py's dashboard shape is the reverse.
+    assert "capabilities" in native.json() and "by_pillar" not in native.json()
+    assert "by_pillar" in dashboard.json() and "capabilities" not in dashboard.json()
 
     native_scripts = await client.get("/api/scripts/catalog")
     dashboard_scripts = await client.get("/api/dashboard/scripts/catalog")

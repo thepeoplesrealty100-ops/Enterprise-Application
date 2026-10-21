@@ -79,6 +79,7 @@ from routers import (
     agent_workflows_router,
     report_builder_router,
     rfp_router,
+    nable_router,
 )
 from routers.documentation import router as documentation_router
 from dependencies import require_permission
@@ -201,6 +202,7 @@ app.include_router(automation_router)
 app.include_router(agent_workflows_router)
 app.include_router(report_builder_router, prefix="/api")
 app.include_router(rfp_router,            prefix="/api")
+app.include_router(nable_router)  # prefix /api/nable is on the router itself
 app.include_router(documentation_router)
 
 # ============================================================================
@@ -738,6 +740,16 @@ if _FRONTEND_JS.is_dir():
 else:
     logger.warning("Frontend js/ directory missing at %s — operator-console.js, "
                     "jakal-controls.js and jakal-live-data.js will not be served", _FRONTEND_JS)
+
+# css/ holds the pre-built Tailwind stylesheet (app.min.css) and the Inter web
+# fonts; js/vendor/ (above) holds lucide/chart.js/three/d3. Together they replace
+# every runtime CDN the UI used to load, so the CSP below needs no external
+# script/style/font origins and the UI renders offline / air-gapped.
+_FRONTEND_CSS = _FRONTEND / "css"
+if _FRONTEND_CSS.is_dir():
+    app.mount("/css", StaticFiles(directory=str(_FRONTEND_CSS)), name="frontend-css")
+else:
+    logger.warning("Frontend css/ directory missing at %s — the UI will render unstyled", _FRONTEND_CSS)
 
 
 # ============================================================================

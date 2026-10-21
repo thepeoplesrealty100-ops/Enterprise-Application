@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horizon Unified Singularity OS</title>
-    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons --><script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Load Chart.js for graphs --><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Load Three.js for 3D Globe --><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Load D3.js for force-directed graphs --><script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Tailwind: pre-built (css/app.min.css) -- the play-CDN is dev-only and needs unsafe-eval -->
+    <link rel="stylesheet" href="./css/app.min.css">
+    <!-- Vendored libraries (js/vendor/): no runtime CDN, works offline, strict CSP -->
+    <script src="./js/vendor/lucide.min.js"></script>
+    <script src="./js/vendor/chart.umd.js"></script>
+    <script src="./js/vendor/three.min.js"></script>
+    <script src="./js/vendor/d3.min.js"></script>
     <style>
         /* Custom Styles for Futuristic Look */
         :root {
@@ -21,7 +23,11 @@
             --mid-bg-translucent: rgba(31, 41, 55, 0.85); /* Gray 800 with 85% opacity */
             --border-color: #374151; /* Gray 700 */
         }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+        @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url('./css/fonts/inter-latin-400-normal.woff2') format('woff2'); }
+        @font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url('./css/fonts/inter-latin-500-normal.woff2') format('woff2'); }
+        @font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url('./css/fonts/inter-latin-600-normal.woff2') format('woff2'); }
+        @font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap; src: url('./css/fonts/inter-latin-700-normal.woff2') format('woff2'); }
+        @font-face { font-family: 'Inter'; font-style: normal; font-weight: 900; font-display: swap; src: url('./css/fonts/inter-latin-900-normal.woff2') format('woff2'); }
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--dark-bg-opaque);
